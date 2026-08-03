@@ -26,8 +26,8 @@ class QueuePanelScreen extends StatefulWidget {
 }
 
 class _QueuePanelScreenState extends State<QueuePanelScreen> {
-  QueueEntry? _currentCalled;
   bool _actionLoading = false;
+  bool _finishLoading = false;
   bool _deleteLoading = false;
 
   @override
@@ -205,7 +205,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
               final called = entries
                   .where((e) => e.status == EntryStatus.called)
                   .toList();
-              final current = called.isNotEmpty ? called.first : _currentCalled;
+              final current = called.isNotEmpty ? called.first : null;
 
               return ListView(
                 padding: const EdgeInsets.all(16),
@@ -326,9 +326,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                     final called = entries
                         .where((e) => e.status == EntryStatus.called)
                         .toList();
-                    final current = called.isNotEmpty
-                        ? called.first
-                        : _currentCalled;
+                    final current = called.isNotEmpty ? called.first : null;
                     return Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -351,9 +349,11 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                                   horizontal: 16,
                                   vertical: 12,
                                 ),
-                                onPressed: current == null
+                                onPressed:
+                                    current == null || _finishLoading
                                     ? null
                                     : () => _markServed(current),
+                                isLoading: _finishLoading,
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -367,9 +367,11 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                                   horizontal: 16,
                                   vertical: 12,
                                 ),
-                                onPressed: current == null
+                                onPressed:
+                                    current == null || _finishLoading
                                     ? null
                                     : () => _markNoShow(current),
+                                isLoading: _finishLoading,
                               ),
                             ),
                           ],
@@ -390,9 +392,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
     setState(() => _actionLoading = true);
     try {
       final next = await QueueService.instance.callNext(widget.queueId);
-      if (next != null) {
-        setState(() => _currentCalled = next);
-      } else if (mounted) {
+      if (next == null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Ninguém na fila'),
@@ -416,18 +416,24 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
   }
 
   Future<void> _markServed(QueueEntry entry) async {
+    setState(() => _finishLoading = true);
     try {
       await QueueService.instance.markServed(widget.queueId, entry);
     } on Exception catch (e) {
       _showError(e);
+    } finally {
+      if (mounted) setState(() => _finishLoading = false);
     }
   }
 
   Future<void> _markNoShow(QueueEntry entry) async {
+    setState(() => _finishLoading = true);
     try {
       await QueueService.instance.markNoShow(widget.queueId, entry);
     } on Exception catch (e) {
       _showError(e);
+    } finally {
+      if (mounted) setState(() => _finishLoading = false);
     }
   }
 
