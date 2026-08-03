@@ -63,10 +63,19 @@ class QueueService {
     );
   }
 
+  Future<void> _ensureOwnerMirror(String queueId) async {
+    final snap = await _rtdb.ref('owners/$queueId').get();
+    final val = snap.value as Map<dynamic, dynamic>?;
+    if (val == null || val['ownerUid'] != _uid) {
+      await _rtdb.ref('owners/$queueId').set({'ownerUid': _uid});
+    }
+  }
+
   Future<void> updateQueueStatus(String queueId, QueueStatus status) async {
     await _firestore.collection('queues').doc(queueId).update({
       'status': status.value,
     });
+    await _ensureOwnerMirror(queueId);
     await _rtdb.ref('queues/$queueId/meta').update({
       'status': status.value,
       'updatedAt': ServerValue.timestamp,
@@ -85,7 +94,15 @@ class QueueService {
     }
     batch.delete(_firestore.collection('queues').doc(queueId));
     await batch.commit();
-    await _rtdb.ref('queues/$queueId').remove();
+    await _ensureOwnerMirror(queueId);
+    final entriesSnap = await _rtdb.ref('queues/$queueId/entries').get();
+    final map = entriesSnap.value as Map<dynamic, dynamic>?;
+    if (map != null) {
+      for (final key in map.keys) {
+        await _rtdb.ref('queues/$queueId/entries/$key').remove();
+      }
+    }
+    await _rtdb.ref('queues/$queueId/meta').remove();
     await _rtdb.ref('owners/$queueId').remove();
   }
 
@@ -124,6 +141,7 @@ class QueueService {
     final metaRef = _rtdb.ref('queues/$queueId/meta');
     final entriesRef = _rtdb.ref('queues/$queueId/entries');
 
+    await _ensureOwnerMirror(queueId);
     final now = DateTime.now().millisecondsSinceEpoch;
     final query = entriesRef.orderByChild('status').equalTo('waiting');
     final snap = await query.get();
@@ -153,6 +171,7 @@ class QueueService {
     EntryStatus result,
   ) async {
     final entriesRef = _rtdb.ref('queues/$queueId/entries');
+    await _ensureOwnerMirror(queueId);
     await entriesRef.child(entry.id).update({'status': result.value});
     await _archiveEntry(queueId, entry, result);
     await entriesRef.child(entry.id).remove();

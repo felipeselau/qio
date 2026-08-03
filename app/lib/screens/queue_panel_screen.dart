@@ -85,10 +85,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                   child: _StatusButton(
                     label: 'Reabrir',
                     color: QioColors.primary,
-                    onPressed: () => QueueService.instance.updateQueueStatus(
-                      widget.queueId,
-                      QueueStatus.open,
-                    ),
+                    onPressed: () => _updateStatus(QueueStatus.open),
                   ),
                 );
               }
@@ -98,8 +95,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                   _StatusButton(
                     label: status == QueueStatus.paused ? 'Reabrir' : 'Pausar',
                     color: QioColors.warning,
-                    onPressed: () => QueueService.instance.updateQueueStatus(
-                      widget.queueId,
+                    onPressed: () => _updateStatus(
                       status == QueueStatus.paused
                           ? QueueStatus.open
                           : QueueStatus.paused,
@@ -109,10 +105,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                   _StatusButton(
                     label: 'Fechar',
                     color: QioColors.error,
-                    onPressed: () => QueueService.instance.updateQueueStatus(
-                      widget.queueId,
-                      QueueStatus.closed,
-                    ),
+                    onPressed: () => _updateStatus(QueueStatus.closed),
                   ),
                   const SizedBox(width: 12),
                 ],
@@ -355,10 +348,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                                 ),
                                 onPressed: current == null
                                     ? null
-                                    : () => QueueService.instance.markServed(
-                                        widget.queueId,
-                                        current,
-                                      ),
+                                    : () => _markServed(current),
                               ),
                             ),
                             const SizedBox(width: 12),
@@ -374,10 +364,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                                 ),
                                 onPressed: current == null
                                     ? null
-                                    : () => QueueService.instance.markNoShow(
-                                        widget.queueId,
-                                        current,
-                                      ),
+                                    : () => _markNoShow(current),
                               ),
                             ),
                           ],
@@ -408,9 +395,45 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
           ),
         );
       }
+    } on Exception catch (e) {
+      _showError(e);
     } finally {
       if (mounted) setState(() => _actionLoading = false);
     }
+  }
+
+  Future<void> _updateStatus(QueueStatus status) async {
+    try {
+      await QueueService.instance.updateQueueStatus(widget.queueId, status);
+    } on Exception catch (e) {
+      _showError(e);
+    }
+  }
+
+  Future<void> _markServed(QueueEntry entry) async {
+    try {
+      await QueueService.instance.markServed(widget.queueId, entry);
+    } on Exception catch (e) {
+      _showError(e);
+    }
+  }
+
+  Future<void> _markNoShow(QueueEntry entry) async {
+    try {
+      await QueueService.instance.markNoShow(widget.queueId, entry);
+    } on Exception catch (e) {
+      _showError(e);
+    }
+  }
+
+  void _showError(Object e) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Não foi possível concluir a ação. Tente novamente.'),
+        backgroundColor: QioColors.error,
+      ),
+    );
   }
 
   void _share(BuildContext context, String url) {
