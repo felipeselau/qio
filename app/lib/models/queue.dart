@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 enum QueueStatus { open, paused, closed }
 
 extension QueueStatusX on QueueStatus {
@@ -62,10 +64,14 @@ class Queue {
       description: data['description'] as String?,
       status: QueueStatusX.fromValue(data['status'] as String?),
       avgServiceMin: (data['avgServiceMin'] as num?)?.toInt() ?? 10,
-      createdAt: (data['createdAt'] as dynamic) is DateTime
-          ? data['createdAt'] as DateTime
-          : DateTime.tryParse(data['createdAt'].toString()) ?? DateTime.now(),
+      createdAt: _parseCreatedAt(data['createdAt']),
     );
+  }
+
+  static DateTime _parseCreatedAt(dynamic v) {
+    if (v is DateTime) return v;
+    if (v is Timestamp) return v.toDate();
+    return DateTime.tryParse(v?.toString() ?? '') ?? DateTime.now();
   }
 
   Map<String, dynamic> toMap() => {

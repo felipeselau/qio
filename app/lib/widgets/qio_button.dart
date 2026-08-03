@@ -2,7 +2,14 @@ import 'package:flutter/material.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
 
-enum QioButtonVariant { primary, secondary, ghost, danger }
+enum QioButtonVariant {
+  primary,
+  secondary,
+  ghost,
+  danger,
+  successSoft,
+  dangerSoft,
+}
 
 class QioButton extends StatelessWidget {
   const QioButton({
@@ -48,6 +55,14 @@ class QioButton extends StatelessWidget {
       case QioButtonVariant.danger:
         backgroundColor = isDisabled ? QioColors.gray300 : QioColors.error;
         foregroundColor = Colors.white;
+        borderColor = Colors.transparent;
+      case QioButtonVariant.successSoft:
+        backgroundColor = QioColors.success.withValues(alpha: 0.12);
+        foregroundColor = isDisabled ? QioColors.gray400 : QioColors.success;
+        borderColor = Colors.transparent;
+      case QioButtonVariant.dangerSoft:
+        backgroundColor = QioColors.error.withValues(alpha: 0.12);
+        foregroundColor = isDisabled ? QioColors.gray400 : QioColors.error;
         borderColor = Colors.transparent;
     }
 

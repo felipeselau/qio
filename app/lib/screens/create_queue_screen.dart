@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
+import '../theme/qio_text_styles.dart';
 import '../widgets/qio_button.dart';
 import '../widgets/qio_input.dart';
 import 'queue_panel_screen.dart';
@@ -17,7 +18,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
-  final _timeCtrl = TextEditingController(text: '10');
+  final _timeCtrl = TextEditingController();
   bool _isLoading = false;
 
   @override
@@ -37,7 +38,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
         description: _descCtrl.text.trim().isEmpty
             ? null
             : _descCtrl.text.trim(),
-        avgServiceMin: int.tryParse(_timeCtrl.text.trim()) ?? 10,
+        avgServiceMin: int.tryParse(_timeCtrl.text.trim()) ?? 15,
       );
       if (mounted) {
         Navigator.of(context).pushReplacement(
@@ -64,10 +65,41 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Nova fila')),
+      appBar: AppBar(
+        backgroundColor: QioColors.surface,
+        leading: TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(
+            '← Voltar',
+            style: QioTextStyles.body.copyWith(
+              fontSize: 16,
+              color: QioColors.primary,
+            ),
+          ),
+        ),
+        leadingWidth: 100,
+        title: Text(
+          'Nova fila',
+          style: QioTextStyles.heading2.copyWith(
+            fontWeight: FontWeight.w700,
+            color: QioColors.textPrimary,
+          ),
+        ),
+        centerTitle: true,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: QioButton(
+              label: 'Criar',
+              onPressed: _isLoading ? null : _create,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            ),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(20),
           child: Form(
             key: _formKey,
             child: Column(
@@ -80,17 +112,17 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
                   validator: (v) =>
                       (v == null || v.trim().isEmpty) ? 'Informe o nome' : null,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
                 QioInput(
                   label: 'Descrição (opcional)',
-                  hint: 'Detalhes do atendimento',
+                  hint: 'Descreva o propósito da fila...',
                   controller: _descCtrl,
-                  maxLines: 3,
+                  maxLines: 4,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 24),
                 QioInput(
                   label: 'Tempo médio de atendimento (minutos)',
-                  hint: '10',
+                  hint: '15',
                   controller: _timeCtrl,
                   keyboardType: TextInputType.number,
                   validator: (v) {
@@ -105,7 +137,6 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
                   onPressed: _create,
                   isLoading: _isLoading,
                   isFullWidth: true,
-                  icon: Icons.check,
                 ),
               ],
             ),

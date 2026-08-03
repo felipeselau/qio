@@ -19,8 +19,16 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = AuthService.instance.currentUser;
     return Scaffold(
+      backgroundColor: QioColors.gray100,
       appBar: AppBar(
-        title: const Text('Minhas filas'),
+        backgroundColor: QioColors.surface,
+        title: Text(
+          'Minhas filas',
+          style: QioTextStyles.heading2.copyWith(
+            fontWeight: FontWeight.w700,
+            color: QioColors.textPrimary,
+          ),
+        ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -72,63 +80,65 @@ class HomeScreen extends StatelessWidget {
             );
           }
           return ListView.separated(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
             itemCount: queues.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
+            separatorBuilder: (_, _) => const SizedBox(height: 16),
             itemBuilder: (context, i) {
               final q = queues[i];
               return QioCard(
+                padding: const EdgeInsets.all(20),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) =>
                         QueuePanelScreen(queueId: q.id, queueName: q.name),
                   ),
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(q.name, style: QioTextStyles.heading3),
-                          if (q.description != null &&
-                              q.description!.isNotEmpty)
-                            Padding(
-                              padding: const EdgeInsets.only(top: 4),
-                              child: Text(
-                                q.description!,
-                                style: QioTextStyles.caption,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            q.name,
+                            style: QioTextStyles.heading3.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: QioColors.textPrimary,
                             ),
-                          const SizedBox(height: 8),
-                          StreamBuilder<int>(
-                            stream: QueueService.instance.watchWaitingCount(
-                              q.id,
-                            ),
-                            builder: (context, snap) {
-                              final count = snap.data ?? 0;
-                              return Text(
-                                '$count ${count == 1 ? "pessoa" : "pessoas"} esperando',
-                                style: QioTextStyles.caption,
-                              );
-                            },
                           ),
-                        ],
-                      ),
+                        ),
+                        QioBadge(
+                          label: q.status.label,
+                          status: switch (q.status) {
+                            QueueStatus.open => QioBadgeStatus.open,
+                            QueueStatus.paused => QioBadgeStatus.paused,
+                            QueueStatus.closed => QioBadgeStatus.closed,
+                          },
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    QioBadge(
-                      label: q.status.label,
-                      status: switch (q.status) {
-                        QueueStatus.open => QioBadgeStatus.open,
-                        QueueStatus.paused => QioBadgeStatus.paused,
-                        QueueStatus.closed => QioBadgeStatus.closed,
+                    const SizedBox(height: 12),
+                    StreamBuilder<int>(
+                      stream: QueueService.instance.watchWaitingCount(q.id),
+                      builder: (context, snap) {
+                        final count = snap.data ?? 0;
+                        return Text(
+                          '$count ${count == 1 ? "pessoa" : "pessoas"} esperando',
+                          style: QioTextStyles.body.copyWith(
+                            fontSize: 14,
+                            color: QioColors.gray700,
+                          ),
+                        );
                       },
                     ),
-                    const SizedBox(width: 8),
-                    const Icon(Icons.chevron_right, color: QioColors.gray400),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Criada em ${q.createdAt.day.toString().padLeft(2, '0')}/${q.createdAt.month.toString().padLeft(2, '0')}/${q.createdAt.year}',
+                      style: QioTextStyles.caption.copyWith(
+                        fontSize: 12,
+                        color: QioColors.gray400,
+                      ),
+                    ),
                   ],
                 ),
               );

@@ -91,30 +91,21 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: QioColors.primary,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: const Icon(
-                      Icons.qr_code_2,
-                      color: Colors.white,
-                      size: 36,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
                   Text(
                     'Qio',
-                    style: QioTextStyles.display,
+                    style: QioTextStyles.display.copyWith(
+                      fontSize: 48,
+                      fontWeight: FontWeight.w800,
+                      color: QioColors.primary,
+                    ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
                   Text(
-                    'Gerencie suas filas presenciais',
+                    'Sistema de filas inteligente',
                     style: QioTextStyles.body.copyWith(
-                      color: QioColors.textSecondary,
+                      fontSize: 16,
+                      color: QioColors.gray700,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -155,7 +146,35 @@ class _LoginScreenState extends State<LoginScreen> {
                     isLoading: _isLoading,
                     isFullWidth: true,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Divider(
+                          height: 1,
+                          thickness: 1,
+                          color: QioColors.gray100,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(
+                          'ou',
+                          style: QioTextStyles.caption.copyWith(
+                            color: QioColors.gray400,
+                          ),
+                        ),
+                      ),
+                      const Expanded(
+                        child: Divider(
+                          height: 1,
+                          thickness: 1,
+                          color: QioColors.gray100,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
                   QioButton(
                     label: 'Continuar com Google',
                     variant: QioButtonVariant.secondary,
@@ -167,9 +186,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextButton(
                     onPressed: () => setState(() => _isSignUp = !_isSignUp),
                     child: Text(
-                      _isSignUp
-                          ? 'Já tem conta? Entrar'
-                          : 'Não tem conta? Criar agora',
+                      _isSignUp ? 'Já tem conta? Entrar' : 'Criar conta',
+                      style: QioTextStyles.body.copyWith(
+                        fontSize: 14,
+                        color: QioColors.primary,
+                      ),
                     ),
                   ),
                 ],
