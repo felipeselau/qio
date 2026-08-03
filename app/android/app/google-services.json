@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "981965097928",
+    "firebase_url": "https://qio-app-default-rtdb.firebaseio.com",
+    "project_id": "qio-app",
+    "storage_bucket": "qio-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:981965097928:android:31c4fd9f1a0aa4dfd4cefd",
+        "android_client_info": {
+          "package_name": "com.example.qio"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAsqCztwlogBIyVpH1MR_kTsGNBgcwjb08"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:981965097928:android:1afa4bedefcdf0f6d4cefd",
+        "android_client_info": {
+          "package_name": "com.qio.qio_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAsqCztwlogBIyVpH1MR_kTsGNBgcwjb08"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

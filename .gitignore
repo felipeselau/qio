@@ -1,0 +1,34 @@
+# Flutter
+app/build/
+app/.dart_tool/
+app/.flutter-plugins
+app/.flutter-plugins-dependencies
+app/.packages
+app/ios/Pods/
+app/ios/Podfile.lock
+app/android/.gradle/
+app/android/local.properties
+app/macos/Pods/
+app/macos/Flutter/ephemeral/
+app/windows/ephemeral/
+app/linux/ephemeral/
+app/.pub-cache/
+app/.pub/
+app/pubspec.lock
+
+# Web (depois)
+web/node_modules/
+web/dist/
+
+# Functions (depois)
+functions/node_modules/
+functions/lib/
+
+# Firebase
+.firebase/
+
+# OS
+.DS_Store
+*.swp
+.idea/
+.vscode/

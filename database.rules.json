@@ -1,0 +1,25 @@
+{
+  "rules": {
+    "queues": {
+      "$queueId": {
+        "meta": {
+          ".read": "auth != null",
+          ".write": "root.child('owners').child($queueId).child('ownerUid').val() === auth.uid"
+        },
+        "entries": {
+          ".read": "auth != null",
+          "$entryId": {
+            ".read": "auth != null",
+            ".write": "(!data.exists() && newData.child('uid').val() === auth.uid) || (data.child('uid').val() === auth.uid) || (root.child('owners').child($queueId).child('ownerUid').val() === auth.uid)"
+          }
+        }
+      }
+    },
+    "owners": {
+      "$queueId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    }
+  }
+}
