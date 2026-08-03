@@ -31,4 +31,4 @@ functions/lib/
 .DS_Store
 *.swp
 .idea/
-.vscode/
+.vscode/app/ios/Runner.xcworkspace/xcshareddata/swiftpm/
