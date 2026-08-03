@@ -16,6 +16,9 @@ app/.pub-cache/
 app/.pub/
 app/pubspec.lock
 
+# iOS Xcode
+app/ios/Runner.xcworkspace/xcshareddata/swiftpm/
+
 # Web (depois)
 web/node_modules/
 web/dist/
@@ -31,4 +34,4 @@ functions/lib/
 .DS_Store
 *.swp
 .idea/
-.vscode/app/ios/Runner.xcworkspace/xcshareddata/swiftpm/
+.vscode/
