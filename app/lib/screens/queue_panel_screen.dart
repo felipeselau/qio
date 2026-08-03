@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../models/queue.dart';
 import '../models/queue_entry.dart';
@@ -122,42 +124,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                QioCard(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: QioColors.gray200),
-                        ),
-                        child: QrImageView(
-                          data: joinUrl,
-                          version: QrVersions.auto,
-                          size: 180,
-                          backgroundColor: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Escaneie para entrar na fila',
-                        style: QioTextStyles.body.copyWith(
-                          fontSize: 14,
-                          color: QioColors.gray700,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      QioButton(
-                        label: 'Compartilhar',
-                        variant: QioButtonVariant.secondary,
-                        isFullWidth: true,
-                        onPressed: () => _share(context, joinUrl),
-                      ),
-                    ],
-                  ),
-                ),
+                _buildQrCard(joinUrl),
                 const SizedBox(height: 16),
                 QioCard(
                   child: Padding(
@@ -210,42 +177,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
               return ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  QioCard(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: QioColors.gray200),
-                          ),
-                          child: QrImageView(
-                            data: joinUrl,
-                            version: QrVersions.auto,
-                            size: 180,
-                            backgroundColor: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Escaneie para entrar na fila',
-                          style: QioTextStyles.body.copyWith(
-                            fontSize: 14,
-                            color: QioColors.gray700,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        QioButton(
-                          label: 'Compartilhar',
-                          variant: QioButtonVariant.secondary,
-                          isFullWidth: true,
-                          onPressed: () => _share(context, joinUrl),
-                        ),
-                      ],
-                    ),
-                  ),
+                  _buildQrCard(joinUrl),
                   const SizedBox(height: 16),
                   _CurrentCalledCard(entry: current, queueId: widget.queueId),
                   const SizedBox(height: 16),
@@ -447,11 +379,116 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
     );
   }
 
-  void _share(BuildContext context, String url) {
-    // TODO: implement share via share_plus (fase 2)
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Link: $url')));
+  Widget _buildQrCard(String joinUrl) {
+    return QioCard(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: QioColors.gray200),
+            ),
+            child: QrImageView(
+              data: joinUrl,
+              version: QrVersions.auto,
+              size: 180,
+              backgroundColor: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Escaneie para entrar na fila',
+            style: QioTextStyles.body.copyWith(
+              fontSize: 14,
+              color: QioColors.gray700,
+            ),
+          ),
+          const SizedBox(height: 16),
+          GestureDetector(
+            onTap: () => _copyLink(joinUrl),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: QioColors.gray100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      joinUrl.replaceFirst('https://', ''),
+                      style: QioTextStyles.caption.copyWith(
+                        fontSize: 13,
+                        color: QioColors.gray700,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.copy, size: 16, color: QioColors.primary),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: QioButton(
+                  label: 'Copiar link',
+                  icon: Icons.copy,
+                  fontSize: 14,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  isFullWidth: true,
+                  onPressed: () => _copyLink(joinUrl),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: QioButton(
+                  label: 'Compartilhar',
+                  variant: QioButtonVariant.secondary,
+                  icon: Icons.share_outlined,
+                  fontSize: 14,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  isFullWidth: true,
+                  onPressed: () => _share(joinUrl),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _copyLink(String url) async {
+    await Clipboard.setData(ClipboardData(text: url));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Link copiado!'),
+        backgroundColor: QioColors.secondary,
+      ),
+    );
+  }
+
+  Future<void> _share(String url) async {
+    try {
+      await SharePlus.instance.share(ShareParams(text: url));
+    } on Exception catch (e) {
+      _showError(e);
+    }
   }
 
   Future<void> _confirmDelete() async {
