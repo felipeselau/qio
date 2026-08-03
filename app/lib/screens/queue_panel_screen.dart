@@ -264,7 +264,10 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                       children: [
                         QioButton(
                           label: 'Chamar próximo',
-                          onPressed: _actionLoading ? null : _callNext,
+                          onPressed:
+                              (_actionLoading || current != null)
+                              ? null
+                              : _callNext,
                           isLoading: _actionLoading,
                           isFullWidth: true,
                         ),
