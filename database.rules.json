@@ -20,6 +20,12 @@
         ".read": "auth != null",
         ".write": "auth != null"
       }
+    },
+    "tickets": {
+      "$queueId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
     }
   }
 }

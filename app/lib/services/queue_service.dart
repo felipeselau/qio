@@ -49,6 +49,8 @@ class QueueService {
       'serving': 0,
       'status': QueueStatus.open.value,
       'name': name,
+      'description': description,
+      'avgServiceMin': avgServiceMin,
       'updatedAt': ServerValue.timestamp,
     });
 
