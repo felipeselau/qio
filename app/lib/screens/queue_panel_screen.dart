@@ -237,6 +237,11 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                             label: 'Atendido',
                             variant: QioButtonVariant.successSoft,
                             isFullWidth: true,
+                            fontSize: 14,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
                             onPressed: current == null
                                 ? null
                                 : () => QueueService.instance.markServed(
@@ -251,6 +256,11 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                             label: 'Não compareceu',
                             variant: QioButtonVariant.dangerSoft,
                             isFullWidth: true,
+                            fontSize: 14,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
                             onPressed: current == null
                                 ? null
                                 : () => QueueService.instance.markNoShow(

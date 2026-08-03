@@ -21,6 +21,7 @@ class QioButton extends StatelessWidget {
     this.isLoading = false,
     this.isFullWidth = false,
     this.padding,
+    this.fontSize = 16,
   });
 
   final String label;
@@ -30,6 +31,7 @@ class QioButton extends StatelessWidget {
   final bool isLoading;
   final bool isFullWidth;
   final EdgeInsetsGeometry? padding;
+  final double fontSize;
 
   @override
   Widget build(BuildContext context) {
@@ -82,9 +84,15 @@ class QioButton extends StatelessWidget {
                 Icon(icon, size: 18),
                 const SizedBox(width: 8),
               ],
-              Text(
-                label,
-                style: QioTextStyles.button.copyWith(color: foregroundColor),
+              Flexible(
+                child: Text(
+                  label,
+                  style: QioTextStyles.button.copyWith(
+                    color: foregroundColor,
+                    fontSize: fontSize,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
             ],
           );

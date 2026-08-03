@@ -43,6 +43,7 @@ class QueueService {
     });
 
     final queueId = docRef.id;
+    await _rtdb.ref('owners/$queueId').set({'ownerUid': _uid});
     await _rtdb.ref('queues/$queueId/meta').set({
       'nextTicket': 0,
       'serving': 0,
@@ -50,7 +51,6 @@ class QueueService {
       'name': name,
       'updatedAt': ServerValue.timestamp,
     });
-    await _rtdb.ref('owners/$queueId').set({'ownerUid': _uid});
 
     return Queue(
       id: queueId,
