@@ -305,13 +305,18 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
               builder: (context, qSnap) {
                 final status = qSnap.data?.status ?? QueueStatus.open;
                 if (status == QueueStatus.closed) {
-                  return QioButton(
-                    label: 'Excluir fila',
-                    variant: QioButtonVariant.danger,
-                    icon: Icons.delete_outline,
-                    isFullWidth: true,
-                    onPressed: _deleteLoading ? null : _confirmDelete,
-                    isLoading: _deleteLoading,
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      QioButton(
+                        label: 'Excluir fila',
+                        variant: QioButtonVariant.danger,
+                        icon: Icons.delete_outline,
+                        isFullWidth: true,
+                        onPressed: _deleteLoading ? null : _confirmDelete,
+                        isLoading: _deleteLoading,
+                      ),
+                    ],
                   );
                 }
                 return StreamBuilder<List<QueueEntry>>(
