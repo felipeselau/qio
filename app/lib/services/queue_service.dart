@@ -73,6 +73,22 @@ class QueueService {
     });
   }
 
+  Future<void> deleteQueue(String queueId) async {
+    final historySnap = await _firestore
+        .collection('queues')
+        .doc(queueId)
+        .collection('history')
+        .get();
+    final batch = _firestore.batch();
+    for (final doc in historySnap.docs) {
+      batch.delete(doc.reference);
+    }
+    batch.delete(_firestore.collection('queues').doc(queueId));
+    await batch.commit();
+    await _rtdb.ref('queues/$queueId').remove();
+    await _rtdb.ref('owners/$queueId').remove();
+  }
+
   Stream<Queue> watchQueue(String queueId) {
     return _firestore
         .collection('queues')
