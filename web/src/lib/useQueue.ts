@@ -23,6 +23,7 @@ export type MyEntry = {
 export type QueueState = {
   meta: QueueMeta | null;
   myEntry: MyEntry | null;
+  myEntryResolved: boolean;
   position: number | null;
   estimatedWaitMin: number | null;
   loading: boolean;
@@ -33,6 +34,7 @@ export function useQueue(queueId: string, entryId: string | null): QueueState {
   const [meta, setMeta] = useState<QueueMeta | null>(null);
   const [entries, setEntries] = useState<Record<string, any> | null>(null);
   const [myEntry, setMyEntry] = useState<MyEntry | null>(null);
+  const [myEntryResolved, setMyEntryResolved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [exists, setExists] = useState(true);
 
@@ -68,11 +70,14 @@ export function useQueue(queueId: string, entryId: string | null): QueueState {
   useEffect(() => {
     if (!entryId) {
       setMyEntry(null);
+      setMyEntryResolved(false);
       return;
     }
+    setMyEntryResolved(false);
     const entryRef = ref(db, `queues/${queueId}/entries/${entryId}`);
     const unsub = onValue(entryRef, (snap) => {
       const val = snap.val();
+      setMyEntryResolved(true);
       if (!val) {
         setMyEntry(null);
       } else {
@@ -101,5 +106,5 @@ export function useQueue(queueId: string, entryId: string | null): QueueState {
     if (position != null) estimatedWaitMin = position * avg;
   }
 
-  return { meta, myEntry, position, estimatedWaitMin, loading, exists };
+  return { meta, myEntry, myEntryResolved, position, estimatedWaitMin, loading, exists };
 }

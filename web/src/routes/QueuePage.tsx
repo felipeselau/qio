@@ -17,10 +17,15 @@ export default function QueuePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const { meta, myEntry, position, estimatedWaitMin, loading, exists } = useQueue(
-    queueId,
-    entryId,
-  );
+  const {
+    meta,
+    myEntry,
+    myEntryResolved,
+    position,
+    estimatedWaitMin,
+    loading,
+    exists,
+  } = useQueue(queueId, entryId);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -34,17 +39,19 @@ export default function QueuePage() {
     return unsub;
   }, [queueId]);
 
-  // limpa entryId local se a entry sumiu do RTDB (served/no_show/left)
+  // limpa entryId local se a entry sumiu do RTDB (served/no_show/left).
+  // myEntryResolved garante que o listener já entregou o primeiro valor —
+  // sem isso, o gap entre setEntryId e o primeiro onValue limparia a entry
+  // recém-criada (bug: permitia re-entrar na fila infinitamente).
   useEffect(() => {
-    if (entryId && myEntry === null && !loading && authed) {
-      // só limpa se já tínhamos entry e ela desapareceu
+    if (entryId && myEntry === null && myEntryResolved && !loading && authed) {
       const had = getStoredEntryId(queueId);
       if (had === entryId) {
         clearStoredEntryId(queueId);
         setEntryId(null);
       }
     }
-  }, [myEntry, entryId, loading, authed, queueId]);
+  }, [myEntry, myEntryResolved, entryId, loading, authed, queueId]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

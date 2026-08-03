@@ -206,7 +206,7 @@ class QueueService {
           'calledAt': entry.calledAt != null
               ? Timestamp.fromDate(entry.calledAt!)
               : null,
-          'finishedAt': FieldValue.serverTimestamp,
+          'finishedAt': FieldValue.serverTimestamp(),
         });
   }
 
