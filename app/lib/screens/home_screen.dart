@@ -32,18 +32,22 @@ class HomeScreen extends StatelessWidget {
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 12),
-            child: GestureDetector(
-              onTap: () async {
-                await AuthService.instance.signOut();
-                if (context.mounted) {
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => const LoginScreen()),
-                  );
-                }
-              },
-              child: QioAvatar(
-                name: user?.displayName ?? user?.email ?? 'Q',
-                size: 36,
+            child: Semantics(
+              button: true,
+              label: 'Sair da conta',
+              child: GestureDetector(
+                onTap: () async {
+                  await AuthService.instance.signOut();
+                  if (context.mounted) {
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    );
+                  }
+                },
+                child: QioAvatar(
+                  name: user?.displayName ?? user?.email ?? 'Q',
+                  size: 36,
+                ),
               ),
             ),
           ),
@@ -147,6 +151,7 @@ class HomeScreen extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
+        tooltip: 'Criar fila',
         onPressed: () => Navigator.of(
           context,
         ).push(MaterialPageRoute(builder: (_) => const CreateQueueScreen())),

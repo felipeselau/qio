@@ -23,20 +23,26 @@ class QioAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: backgroundColor ?? QioColors.primary.withValues(alpha: 0.12),
-        shape: BoxShape.circle,
-      ),
-      child: Center(
-        child: Text(
-          _initials,
-          style: QioTextStyles.heading3.copyWith(
-            color: QioColors.primary,
-            fontSize: size * 0.4,
-            fontWeight: FontWeight.w600,
+    return Semantics(
+      label: 'Avatar: $name',
+      image: true,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          color: backgroundColor ?? QioColors.primary.withValues(alpha: 0.12),
+          shape: BoxShape.circle,
+        ),
+        child: ExcludeSemantics(
+          child: Center(
+            child: Text(
+              _initials,
+              style: QioTextStyles.heading3.copyWith(
+                color: QioColors.primary,
+                fontSize: size * 0.4,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ),
       ),

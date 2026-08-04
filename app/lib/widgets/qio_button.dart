@@ -97,23 +97,28 @@ class QioButton extends StatelessWidget {
             ],
           );
 
-    return Container(
-      width: isFullWidth ? double.infinity : null,
-      decoration: BoxDecoration(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: borderColor),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: isLoading ? null : onPressed,
+    return Semantics(
+      button: true,
+      enabled: !isDisabled && !isLoading,
+      label: label,
+      child: Container(
+        width: isFullWidth ? double.infinity : null,
+        decoration: BoxDecoration(
+          color: backgroundColor,
           borderRadius: BorderRadius.circular(10),
-          child: Padding(
-            padding:
-                padding ??
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-            child: Center(child: content),
+          border: Border.all(color: borderColor),
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: isLoading ? null : onPressed,
+            borderRadius: BorderRadius.circular(10),
+            child: Padding(
+              padding:
+                  padding ??
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              child: Center(child: content),
+            ),
           ),
         ),
       ),
