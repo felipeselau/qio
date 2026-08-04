@@ -264,8 +264,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                       children: [
                         QioButton(
                           label: 'Chamar próximo',
-                          onPressed:
-                              (_actionLoading || current != null)
+                          onPressed: (_actionLoading || current != null)
                               ? null
                               : _callNext,
                           isLoading: _actionLoading,
@@ -284,8 +283,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                                   horizontal: 16,
                                   vertical: 12,
                                 ),
-                                onPressed:
-                                    current == null || _finishLoading
+                                onPressed: current == null || _finishLoading
                                     ? null
                                     : () => _markServed(current),
                                 isLoading: _finishLoading,
@@ -302,8 +300,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                                   horizontal: 16,
                                   vertical: 12,
                                 ),
-                                onPressed:
-                                    current == null || _finishLoading
+                                onPressed: current == null || _finishLoading
                                     ? null
                                     : () => _markNoShow(current),
                                 isLoading: _finishLoading,
@@ -394,11 +391,15 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
               borderRadius: BorderRadius.circular(12),
               border: Border.all(color: QioColors.gray200),
             ),
-            child: QrImageView(
-              data: joinUrl,
-              version: QrVersions.auto,
-              size: 180,
-              backgroundColor: Colors.white,
+            child: Semantics(
+              image: true,
+              label: 'QR code para entrar na fila',
+              child: QrImageView(
+                data: joinUrl,
+                version: QrVersions.auto,
+                size: 180,
+                backgroundColor: Colors.white,
+              ),
             ),
           ),
           const SizedBox(height: 16),
@@ -410,30 +411,37 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
             ),
           ),
           const SizedBox(height: 16),
-          GestureDetector(
-            onTap: () => _copyLink(joinUrl),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              decoration: BoxDecoration(
-                color: QioColors.gray100,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      joinUrl.replaceFirst('https://', ''),
-                      style: QioTextStyles.caption.copyWith(
-                        fontSize: 13,
-                        color: QioColors.gray700,
+          Semantics(
+            button: true,
+            label: 'Copiar link da fila',
+            child: GestureDetector(
+              onTap: () => _copyLink(joinUrl),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: QioColors.gray100,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        joinUrl.replaceFirst('https://', ''),
+                        style: QioTextStyles.caption.copyWith(
+                          fontSize: 13,
+                          color: QioColors.gray700,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.copy, size: 16, color: QioColors.primary),
-                ],
+                    const SizedBox(width: 8),
+                    const Icon(Icons.copy, size: 16, color: QioColors.primary),
+                  ],
+                ),
               ),
             ),
           ),
