@@ -3,7 +3,8 @@ import { useParams } from 'react-router-dom';
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { auth } from '../firebase';
 import { getStoredEntryId, clearStoredEntryId } from '../lib/storage';
-import { joinQueue, leaveQueue } from '../lib/join';
+import { joinQueue, leaveQueue, saveFcmToken } from '../lib/join';
+import { getFcmToken, listenForMessages } from '../lib/fcm';
 import { useQueue } from '../lib/useQueue';
 
 type Phase = 'loading' | 'join' | 'ticket' | 'called' | 'left' | 'closed' | 'gone';
@@ -18,6 +19,7 @@ export default function QueuePage() {
   const [error, setError] = useState<string | null>(null);
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [fcmDone, setFcmDone] = useState(false);
 
   const {
     meta,
@@ -126,6 +128,23 @@ export default function QueuePage() {
     }
     if (phase !== 'called') setAlerted(false);
   }, [phase, alerted]);
+
+  // salva o FCM token da entry na tela do ticket (uma vez por entry)
+  useEffect(() => {
+    if (phase === 'ticket' && myEntry && entryId && !fcmDone) {
+      setFcmDone(true);
+      getFcmToken().then((token) => {
+        if (token) {
+          saveFcmToken(queueId, entryId, token).catch(() => {});
+        }
+      });
+    }
+  }, [phase, myEntry, entryId, fcmDone, queueId]);
+
+  // notificação foreground (page oculta) — RTDB já cuida do estado em tela
+  useEffect(() => {
+    return listenForMessages(() => {});
+  }, []);
 
   if (phase === 'loading') {
     return (

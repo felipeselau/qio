@@ -40,3 +40,13 @@ export async function leaveQueue(queueId: string, entryId: string): Promise<void
     status: 'left',
   });
 }
+
+export async function saveFcmToken(
+  queueId: string,
+  entryId: string,
+  token: string,
+): Promise<void> {
+  await update(ref(db, `queues/${queueId}/entries/${entryId}`), {
+    fcmToken: token,
+  });
+}
