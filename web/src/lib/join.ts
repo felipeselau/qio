@@ -1,4 +1,4 @@
-import { runTransaction, ref, push, set } from 'firebase/database';
+import { runTransaction, ref, push, set, update } from 'firebase/database';
 import { auth, db } from '../firebase';
 import { storeEntryId } from './storage';
 
@@ -32,4 +32,11 @@ export async function joinQueue(
 
   storeEntryId(queueId, entryId);
   return { entryId, ticket };
+}
+export async function leaveQueue(queueId: string, entryId: string): Promise<void> {
+  const uid = auth.currentUser?.uid;
+  if (!uid) throw new Error('Não autenticado');
+  await update(ref(db, `queues/${queueId}/entries/${entryId}`), {
+    status: 'left',
+  });
 }

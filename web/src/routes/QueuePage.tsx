@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { auth } from '../firebase';
 import { getStoredEntryId, clearStoredEntryId } from '../lib/storage';
-import { joinQueue } from '../lib/join';
+import { joinQueue, leaveQueue } from '../lib/join';
 import { useQueue } from '../lib/useQueue';
 
 type Phase = 'loading' | 'join' | 'ticket' | 'called' | 'left' | 'closed' | 'gone';
@@ -16,6 +16,8 @@ export default function QueuePage() {
   const [phone, setPhone] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmLeave, setConfirmLeave] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   const {
     meta,
@@ -68,6 +70,19 @@ export default function QueuePage() {
       setError(err?.message ?? 'Não foi possível entrar na fila');
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function handleLeave() {
+    if (!entryId) return;
+    setLeaving(true);
+    setError(null);
+    try {
+      await leaveQueue(queueId, entryId);
+      setConfirmLeave(false);
+    } catch (err: any) {
+      setError(err?.message ?? 'Não foi possível sair da fila');
+      setLeaving(false);
     }
   }
 
@@ -244,6 +259,45 @@ export default function QueuePage() {
               Mantenha esta página aberta. Você será avisado quando chegar sua vez.
             </p>
           </div>
+
+          {confirmLeave ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <p
+                style={{
+                  fontSize: 14,
+                  color: 'var(--gray-dark)',
+                  textAlign: 'center',
+                }}
+              >
+                Tem certeza? Você perderá sua posição na fila.
+              </p>
+              <button
+                type="button"
+                className="btn btn-danger"
+                disabled={leaving}
+                onClick={handleLeave}
+              >
+                {leaving ? 'Saindo...' : 'Confirmar saída'}
+              </button>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                disabled={leaving}
+                onClick={() => setConfirmLeave(false)}
+              >
+                Cancelar
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              className="btn btn-danger-ghost"
+              onClick={() => setConfirmLeave(true)}
+            >
+              Sair da fila
+            </button>
+          )}
+          {error && <p className="error-text">{error}</p>}
         </div>
       </div>
     );
