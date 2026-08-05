@@ -6,6 +6,7 @@ Sistema de filas para atendimentos presenciais. Proprietários criam filas no ap
 
 | Documento                        | Descrição                                        |
 | -------------------------------- | ------------------------------------------------ |
+| [`docs/INTRODUCAO.md`](docs/INTRODUCAO.md) | **Introdução** — contexto, problemas, impactos, solução e objetivos do trabalho |
 | [`docs/RESUMO_TECNICO.md`](docs/RESUMO_TECNICO.md) | **Resumo técnico completo** — stack, bibliotecas, arquitetura, comunicação entre módulos, modelo de dados, segurança, custos |
 | [`docs/SPEC.md`](docs/SPEC.md)           | Especificação do MVP — personas, fluxos, escopo, rules |
 | [`docs/FCM.md`](docs/FCM.md)             | Guia de ativação de push notifications (FCM)     |
