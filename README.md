@@ -1,16 +1,24 @@
 # Qio
 
-App para agendamentos e atendimentos presenciais, criação de filas.
+Sistema de filas para atendimentos presenciais. Proprietários criam filas no app móvel e geram QR Codes; clientes escaneiam o QR e entram na fila pelo navegador — sem instalar app.
+
+## Documentação
+
+| Documento                        | Descrição                                        |
+| -------------------------------- | ------------------------------------------------ |
+| [`docs/RESUMO_TECNICO.md`](docs/RESUMO_TECNICO.md) | **Resumo técnico completo** — stack, bibliotecas, arquitetura, comunicação entre módulos, modelo de dados, segurança, custos |
+| [`docs/SPEC.md`](docs/SPEC.md)           | Especificação do MVP — personas, fluxos, escopo, rules |
+| [`docs/FCM.md`](docs/FCM.md)             | Guia de ativação de push notifications (FCM)     |
 
 ## Estrutura
 
 ```
 qio/
-├── app/          # Flutter (owner)
-├── web/          # React + Vite + TS (client)
-├── functions/    # Cloud Functions (FCM)
-├── docs/SPEC.md  # especificação do MVP
-├── design/       # arquivos .pen (Pencil)
+├── app/          # Flutter — app do proprietário (Android/iOS)
+├── web/          # React + Vite + TypeScript — página do cliente (navegador)
+├── functions/    # Cloud Functions — notificações push (FCM)
+├── docs/         # Documentação do projeto
+├── design/       # Arquivos de design (Pencil .pen)
 ├── firebase.json
 ├── firestore.rules
 ├── database.rules.json
@@ -18,20 +26,24 @@ qio/
 
 ## Stack
 
-- **Owner**: Flutter 3.x + Firebase (Auth, Firestore, RTDB, qr_flutter, share_plus)
-- **Client**: React + Vite + TypeScript + Firebase JS SDK (https://qio.web.app/q/{queueId})
-- **Backend**: Firebase (projeto `qio-app`)
+| Módulo       | Tecnologia                                              |
+| ------------ | ------------------------------------------------------- |
+| **App Owner**  | Flutter 3.x + Firebase (Auth, Firestore, RTDB) + Provider |
+| **Web Client** | React 19 + TypeScript + Vite + Firebase JS SDK          |
+| **Backend**    | Firebase: Auth, Firestore, RTDB, Cloud Functions, Hosting, FCM |
 
-## Setup Flutter
+## Setup
+
+### Flutter (proprietário)
 
 ```bash
 cd app
 flutter pub get
-flutterfire configure --project=qio-app  # se precisar regenerar firebase_options.dart
+flutterfire configure --project=qio-app
 flutter run
 ```
 
-## Setup Web
+### Web (cliente)
 
 ```bash
 cd web
@@ -40,31 +52,22 @@ npm run dev        # desenvolvimento
 npm run build      # produção (dist/)
 ```
 
-## Firebase
+### Firebase
 
-Projeto: `qio-app`
-
-- Auth: email/password + Google (owner), anônima (client)
-- Firestore: `owners/{uid}`, `queues/{queueId}`, `queues/{queueId}/history/{entryId}`
-- RTDB: `queues/{queueId}/meta`, `queues/{queueId}/entries/{entryId}`, `queues/{queueId}/tickets`, `owners/{queueId}`
-
-Deploy das rules:
 ```bash
+# Regras
 firebase deploy --only firestore:rules,database:rules
-```
 
-Deploy do hosting:
-```bash
+# Hosting
 firebase deploy --only hosting
 ```
 
-## Release Android (assinatura)
+## Release Android
 
 - Keystore: `app/android/release.keystore` (alias `qio-key`) — **gitignored**
-- Credenciais: `app/android/key.properties` (storePassword/keyPassword) — **gitignored**
-- **Backup das credenciais**: `~/.qio/keystore-credentials.txt` (chmod 600)
+- Credenciais: `app/android/key.properties` — **gitignored**
+- Backup: `~/.qio/keystore-credentials.txt` (chmod 600)
 
-Build do APK release:
 ```bash
 cd app
 flutter build apk --release
@@ -75,4 +78,5 @@ flutter build apk --release
 
 ## MVP
 
-Ver `docs/SPEC.md` para especificação completa. Ver `docs/FCM.md` para ativação de push notifications.
+Ver [`docs/RESUMO_TECNICO.md`](docs/RESUMO_TECNICO.md) para visão técnica completa.
+Ver [`docs/SPEC.md`](docs/SPEC.md) para especificação detalhada de personas, fluxos e escopo.
