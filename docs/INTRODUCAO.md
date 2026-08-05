@@ -90,12 +90,12 @@ Este trabalho tem como objetivo desenvolver e validar o **Qio** como solução p
 ## Referências
 
 1. Waitwhile. *The State of Waiting in Line 2024*. Disponível em: https://waitwhile.com/blog/consumer-survey-waiting-in-line-2024/
-2. Waitwhile. *The State of Waiting in Line 2025: Retail as the Global Waiting Crisis Epicenter*. Disponível em: https://www.mynewsdesk.com/waitwhile/blog_posts/the-state-of-waiting-in-line-2025
+2. Waitwhile. *The State of Waiting in Line 2025: Retail as the Global Waiting Crisis Epicenter*. Disponível em: https://www.mynewsdesk.com/waitwhile/blog_posts/the-state-of-waiting-in-line-2025-retail-as-the-global-waiting-crisis-epicenter-125962
 3. ScanQueue. *47 Wait Time Statistics (2026): Customers Leave at 8 Min*. Disponível em: https://scanqueue.com/blog/state-of-customer-waiting-2026
-4. de Vries, J., Roy, D., & de Koster, R. (2018). Worth the wait? How restaurant waiting time influences customer behavior and revenue. *Journal of Operations Management*, 64(3), 294-310. DOI: 10.1016/j.jom.2018.05.001
+4. de Vries, J., Roy, D., & de Koster, R. (2018). Worth the wait? How restaurant waiting time influences customer behavior and revenue. *Journal of Operations Management*, 64(3), 294-310. DOI: https://doi.org/10.1016/j.jom.2018.05.001
 5. Qminder. *60+ Queue Management Facts and Statistics*. Disponível em: https://www.qminder.com/blog/queue-management/queue-management-statistics-facts/
-6. Zendesk. *CX Trends 2025*.
+6. Zendesk. *CX Trends 2025*. Disponível em: https://www.zendesk.com/newsroom/articles/2025-cx-trends-report/
 7. NRC Health. *2021 Consumer Panel: The Impact of Wait Times on NPS Scores*. Disponível em: https://nrchealth.com/2021-consumer-panel-highlights-the-impact-of-wait-times-on-nps-scores/
-8. Buell, R. W. & Norton, M. I. (2011). Think Customers Hate Waiting? Not So Fast... *Harvard Business Review*, 89(5).
-9. FasterLines. (2024). *Queue Perception Study*.
-10. SSRN. *The Psychology of Virtual Queue: When Waiting Feels Less Like Waiting*. (2024).
+8. Buell, R. W. & Norton, M. I. (2011). Think Customers Hate Waiting? Not So Fast... *Harvard Business Review*, 89(5). Disponível em: https://hbr.org/2011/05/think-customers-hate-waiting-not-so-fast
+9. FasterLines. *Customer Wait Times and Why They Matter* (2024). Disponível em: https://www.fasterlines.com/knowledge-hub/customer-wait-times-and-why-they-matter/
+10. Hu, K., Xu, X., & Qu, A. (2021). The Psychology of Virtual Queue: When Waiting Feels Less Like Waiting. *SSRN Electronic Journal*. DOI: https://doi.org/10.2139/ssrn.3933040
