@@ -6,6 +6,7 @@ import { getStoredEntryId, clearStoredEntryId } from '../lib/storage';
 import { joinQueue, leaveQueue, saveFcmToken } from '../lib/join';
 import { getFcmToken, listenForMessages } from '../lib/fcm';
 import { useQueue } from '../lib/useQueue';
+import { formatPhone, isValidPhone } from '../lib/format';
 
 type Phase = 'loading' | 'join' | 'ticket' | 'called' | 'left' | 'closed' | 'gone';
 
@@ -61,6 +62,10 @@ export default function QueuePage() {
     e.preventDefault();
     if (!name.trim()) {
       setError('Informe seu nome');
+      return;
+    }
+    if (phone.trim() && !isValidPhone(phone.trim())) {
+      setError('Telefone inválido. Use o formato (00) 00000-0000');
       return;
     }
     setSubmitting(true);
@@ -367,7 +372,7 @@ export default function QueuePage() {
               id="phone"
               type="tel"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => setPhone(formatPhone(e.target.value))}
               placeholder="(00) 00000-0000"
               autoComplete="tel"
             />
