@@ -4,7 +4,7 @@
 
 O atendimento presencial continua sendo a principal forma de prestação de serviços em diversos segmentos — clínicas médicas, consultórios odontológicos, salões de beleza, academias, lojas de serviços e estabelecimentos comerciais em geral. Independentemente do porte ou do nicho, um elemento comum a esses ambientes é a **fila de espera**: o cliente chega, registra sua presença e aguarda ser chamado para ser atendido.
 
-Esse modelo tradicional, baseado em listas de papel, bloquinhos de senha ou até mesmo na simples喊喊喊 de nomes, apresenta uma série de problemas que afetam diretamente a experiência do cliente e a eficiência do estabelecimento.
+Esse modelo tradicional, baseado em listas de papel, bloquinhos de senha ou até mesmo na simples lista de nomes, apresenta uma série de problemas que afetam diretamente a experiência do cliente e a eficiência do estabelecimento.
 
 ## Problemas do Modelo Atual
 
