@@ -187,6 +187,11 @@ owners/{queueId}/ownerUid
 - **Cliente**: autenticação anônima → só lê/escreve sua própria entry na fila (rules RTDB)
 - **Regras RTDB**: escrita em `entries/{id}` só permitida pelo `uid` dono da entry OU pelo owner da fila
 - **Regras Firestore**: escrita em `queues/{id}` só permitida pelo `ownerId` que criou a fila
+- **App Check (reCAPTCHA v3)**: o cliente web (`web/src/firebase.ts`) inicializa o Firebase App Check com `ReCaptchaV3Provider` quando `VITE_RECAPTCHA_SITE_KEY` está configurada. Isso faz o Firebase anexar um token de atestação a cada chamada à RTDB/Firestore, permitindo habilitar "Enforce" no console e rejeitar no backend requisições que não venham do site legítimo (ex.: scripts chamando a REST API do Firebase diretamente, fora do navegador, para gerar entradas falsas em massa). Ver `web/.env.example` para os passos de configuração.
+
+### Limitação conhecida: entradas falsas via QR Code
+
+A auth anônima do cliente **não distingue** alguém fisicamente presente no estabelecimento de alguém que fotografou o QR Code (ou reencaminhou o link) e entra na fila remotamente. O App Check bloqueia o vetor mais grave — scripts/bots automatizando entradas em massa fora do navegador — mas não impede um humano determinado de abrir algumas abas anônimas manualmente e criar entradas falsas em pequena escala; esse risco residual é inerente a qualquer QR Code físico e fica registrado como trabalho futuro (ex.: geolocalização na entrada, QR Code com token rotativo de curta duração).
 
 ## 7. Notificações Push (FCM)
 

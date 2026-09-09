@@ -49,9 +49,14 @@ flutter run
 ```bash
 cd web
 npm ci
+cp .env.example .env   # preencher VITE_VAPID_KEY e VITE_RECAPTCHA_SITE_KEY
 npm run dev        # desenvolvimento
 npm run build      # produção (dist/)
 ```
+
+> App Check (`VITE_RECAPTCHA_SITE_KEY`) é opcional em dev — sem ele o app funciona
+> normalmente, só sem a proteção contra bots/scripts na entrada da fila. Ver
+> `web/.env.example` e a seção 6 de [`docs/RESUMO_TECNICO.md`](docs/RESUMO_TECNICO.md).
 
 ### Firebase
 
