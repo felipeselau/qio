@@ -67,7 +67,7 @@ class AuthService {
       await ref.set({
         'name': name,
         'businessName': '',
-        'createdAt': FieldValue.serverTimestamp,
+        'createdAt': FieldValue.serverTimestamp(),
       });
     }
   }

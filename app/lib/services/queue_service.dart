@@ -113,7 +113,8 @@ class QueueService {
         .collection('queues')
         .doc(queueId)
         .snapshots()
-        .map((d) => Queue.fromDoc(d.id, d.data() as Map<String, dynamic>));
+        .where((d) => d.exists && d.data() != null)
+        .map((d) => Queue.fromDoc(d.id, d.data()!));
   }
 
   Stream<List<QueueEntry>> watchEntries(String queueId) {
