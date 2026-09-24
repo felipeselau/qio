@@ -18,7 +18,7 @@
     "owners": {
       "$queueId": {
         ".read": "auth != null",
-        ".write": "auth != null"
+        ".write": "auth != null && ((!data.exists() && newData.child('ownerUid').val() === auth.uid) || (data.child('ownerUid').val() === auth.uid && (!newData.exists() || newData.child('ownerUid').val() === auth.uid)))"
       }
     },
     "tickets": {

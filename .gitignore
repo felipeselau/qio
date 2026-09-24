@@ -23,6 +23,8 @@ app/ios/Runner.xcworkspace/xcshareddata/swiftpm/
 # Web (depois)
 web/node_modules/
 web/dist/
+web/.env
+web/.env.local
 
 # Functions (depois)
 functions/node_modules/

@@ -1,5 +1,5 @@
 import { getToken, isSupported, onMessage } from 'firebase/messaging';
-import { messaging } from '../firebase';
+import { getMessagingSafe } from '../firebase';
 
 const vapidKey = import.meta.env.VITE_VAPID_KEY as string | undefined;
 
@@ -7,6 +7,8 @@ export async function getFcmToken(): Promise<string | null> {
   if (!vapidKey) return null;
   try {
     if (!(await isSupported())) return null;
+    const messaging = getMessagingSafe();
+    if (!messaging) return null;
     const token = await getToken(messaging, { vapidKey });
     return token || null;
   } catch {
@@ -19,6 +21,8 @@ export function listenForMessages(onTurn: () => void): () => void {
   let unsub: (() => void) | null = null;
   isSupported().then((supported) => {
     if (!supported) return;
+    const messaging = getMessagingSafe();
+    if (!messaging) return;
     unsub = onMessage(messaging, () => {
       if (document.hidden) {
         new Notification('É a sua vez!', {
