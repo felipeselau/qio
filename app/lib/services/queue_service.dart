@@ -76,11 +76,16 @@ class QueueService {
     }
   }
 
+  final Set<String> _mirrorChecked = {};
+
   Future<void> _ensureOwnerMirrorIfOwner(String queueId) async {
+    final key = '$_uid/$queueId';
+    if (_mirrorChecked.contains(key)) return;
     final doc = await _firestore.collection('queues').doc(queueId).get();
     if (doc.data()?['ownerId'] == _uid) {
       await _ensureOwnerMirror(queueId);
     }
+    _mirrorChecked.add(key);
   }
 
   Future<void> updateQueueStatus(String queueId, QueueStatus status) async {
@@ -95,6 +100,7 @@ class QueueService {
   }
 
   Future<void> deleteQueue(String queueId) async {
+    await _ensureOwnerMirror(queueId);
     await OperatorService.instance.deleteOperatorData(queueId);
     final historySnap = await _firestore
         .collection('queues')
@@ -107,7 +113,6 @@ class QueueService {
     }
     batch.delete(_firestore.collection('queues').doc(queueId));
     await batch.commit();
-    await _ensureOwnerMirror(queueId);
     final entriesSnap = await _rtdb.ref('queues/$queueId/entries').get();
     final map = entriesSnap.value as Map<dynamic, dynamic>?;
     if (map != null) {
@@ -168,13 +173,19 @@ class QueueService {
     for (final candidate in candidates) {
       final claimed = await _claimEntry(entriesRef.child(candidate.id));
       if (claimed == null) continue;
-      await metaRef.update({
-        'serving': claimed.ticket,
-        'updatedAt': ServerValue.timestamp,
-      });
+      await _advanceServing(metaRef, claimed.ticket);
       return claimed;
     }
     return null;
+  }
+
+  Future<void> _advanceServing(DatabaseReference metaRef, int ticket) async {
+    await metaRef.child('serving').runTransaction((current) {
+      final serving = (current as num?)?.toInt() ?? 0;
+      if (ticket <= serving) return Transaction.abort();
+      return Transaction.success(ticket);
+    }, applyLocally: false);
+    await metaRef.update({'updatedAt': ServerValue.timestamp});
   }
 
   Future<QueueEntry?> _claimEntry(DatabaseReference entryRef) async {
