@@ -48,7 +48,11 @@ service cloud.firestore {
 
       match /history/{entryId} {
         allow read, write: if signedIn() && isQueueOwner(queueId);
-        allow create: if signedIn() && isQueueOperator(queueId);
+        allow create: if signedIn()
+          && isQueueOperator(queueId)
+          && request.resource.data.operatorId == request.auth.uid
+          && request.resource.data.result in ['served', 'no_show']
+          && request.resource.data.keys().hasOnly(['ticket', 'name', 'phone', 'result', 'joinedAt', 'calledAt', 'calledBy', 'operatorId', 'finishedAt']);
       }
 
       match /operators/{opUid} {
