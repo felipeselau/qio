@@ -30,6 +30,9 @@ web/.env.local
 functions/node_modules/
 functions/lib/
 
+# Rules tests
+rules-tests/node_modules/
+
 # Firebase
 .firebase/
 
@@ -41,3 +44,4 @@ functions/lib/
 
 # Documentos de trabalho do TCC
 Claude outputs/
+*-debug.log

@@ -1,0 +1,264 @@
+import { after, before, beforeEach, describe, it } from 'node:test';
+import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
+import {
+  Timestamp,
+  collection,
+  collectionGroup,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  setDoc,
+  updateDoc,
+  where,
+} from 'firebase/firestore';
+import { OPERATOR, OWNER, QUEUE, STRANGER, setupEnv } from './helpers.js';
+
+const hoursFromNow = (h) => Timestamp.fromMillis(Date.now() + h * 3600 * 1000);
+
+const historyEntry = (operatorId) => ({
+  ticket: 1,
+  name: 'Ana',
+  phone: null,
+  result: 'served',
+  joinedAt: Timestamp.now(),
+  calledAt: Timestamp.now(),
+  calledBy: operatorId,
+  operatorId,
+  finishedAt: Timestamp.now(),
+});
+
+describe('Firestore rules', () => {
+  let env;
+  const db = (uid) => env.authenticatedContext(uid).firestore();
+
+  before(async () => {
+    env = await setupEnv();
+  });
+
+  after(async () => {
+    await env.cleanup();
+  });
+
+  beforeEach(async () => {
+    await env.clearFirestore();
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      const fs = ctx.firestore();
+      await setDoc(doc(fs, 'queues', QUEUE), { ownerId: OWNER, name: 'Balcão', status: 'open' });
+      await setDoc(doc(fs, 'queues', QUEUE, 'operators', OPERATOR), { uid: OPERATOR, queueId: QUEUE });
+      await setDoc(doc(fs, 'queues', QUEUE, 'history', 'h1'), historyEntry(OWNER));
+      await setDoc(doc(fs, 'operatorInvites', 'VALID1'), { queueId: QUEUE, ownerId: OWNER, expiresAt: hoursFromNow(24) });
+      await setDoc(doc(fs, 'operatorInvites', 'EXPIR1'), { queueId: QUEUE, ownerId: OWNER, expiresAt: hoursFromNow(-1) });
+      await setDoc(doc(fs, 'operatorInvites', 'OTHER1'), { queueId: 'q2', ownerId: OWNER, expiresAt: hoursFromNow(24) });
+      await setDoc(doc(fs, 'queues', QUEUE, 'operatorRequests', 'pendingUser'), {
+        uid: 'pendingUser',
+        queueId: QUEUE,
+        code: 'VALID1',
+        status: 'pending',
+      });
+    });
+  });
+
+  describe('fila', () => {
+    it('operador lê a fila', async () => {
+      await assertSucceeds(getDoc(doc(db(OPERATOR), 'queues', QUEUE)));
+    });
+
+    it('estranho não lê a fila', async () => {
+      await assertFails(getDoc(doc(db(STRANGER), 'queues', QUEUE)));
+    });
+
+    it('operador não altera status da fila', async () => {
+      await assertFails(updateDoc(doc(db(OPERATOR), 'queues', QUEUE), { status: 'paused' }));
+    });
+
+    it('operador não altera o convite da fila', async () => {
+      await assertFails(updateDoc(doc(db(OPERATOR), 'queues', QUEUE), { operatorInviteCode: 'HACK01' }));
+    });
+
+    it('operador não exclui a fila', async () => {
+      await assertFails(deleteDoc(doc(db(OPERATOR), 'queues', QUEUE)));
+    });
+
+    it('dono altera status da fila', async () => {
+      await assertSucceeds(updateDoc(doc(db(OWNER), 'queues', QUEUE), { status: 'paused' }));
+    });
+  });
+
+  describe('histórico', () => {
+    it('operador cria registro com o próprio operatorId', async () => {
+      await assertSucceeds(setDoc(doc(db(OPERATOR), 'queues', QUEUE, 'history', 'h2'), historyEntry(OPERATOR)));
+    });
+
+    it('operador não cria registro em nome de outro', async () => {
+      await assertFails(setDoc(doc(db(OPERATOR), 'queues', QUEUE, 'history', 'h2'), historyEntry(OWNER)));
+    });
+
+    it('operador não cria registro com resultado inválido', async () => {
+      await assertFails(
+        setDoc(doc(db(OPERATOR), 'queues', QUEUE, 'history', 'h2'), { ...historyEntry(OPERATOR), result: 'left' }),
+      );
+    });
+
+    it('operador não cria registro com campos extras', async () => {
+      await assertFails(
+        setDoc(doc(db(OPERATOR), 'queues', QUEUE, 'history', 'h2'), { ...historyEntry(OPERATOR), extra: true }),
+      );
+    });
+
+    it('operador não sobrescreve registro existente', async () => {
+      await assertFails(setDoc(doc(db(OPERATOR), 'queues', QUEUE, 'history', 'h1'), historyEntry(OPERATOR)));
+    });
+
+    it('operador não lê o histórico', async () => {
+      await assertFails(getDoc(doc(db(OPERATOR), 'queues', QUEUE, 'history', 'h1')));
+      await assertFails(getDocs(collection(db(OPERATOR), 'queues', QUEUE, 'history')));
+    });
+
+    it('estranho não cria registro', async () => {
+      await assertFails(setDoc(doc(db(STRANGER), 'queues', QUEUE, 'history', 'h2'), historyEntry(STRANGER)));
+    });
+
+    it('dono lê o histórico', async () => {
+      await assertSucceeds(getDocs(collection(db(OWNER), 'queues', QUEUE, 'history')));
+    });
+  });
+
+  describe('convites', () => {
+    it('usuário logado lê convite pelo código', async () => {
+      await assertSucceeds(getDoc(doc(db(STRANGER), 'operatorInvites', 'VALID1')));
+    });
+
+    it('estranho não cria convite para a fila de outro', async () => {
+      await assertFails(
+        setDoc(doc(db(STRANGER), 'operatorInvites', 'NEW001'), { queueId: QUEUE, ownerId: STRANGER, expiresAt: null }),
+      );
+    });
+
+    it('operador não cria convite', async () => {
+      await assertFails(
+        setDoc(doc(db(OPERATOR), 'operatorInvites', 'NEW001'), { queueId: QUEUE, ownerId: OPERATOR, expiresAt: null }),
+      );
+    });
+
+    it('dono cria convite', async () => {
+      await assertSucceeds(
+        setDoc(doc(db(OWNER), 'operatorInvites', 'NEW001'), { queueId: QUEUE, ownerId: OWNER, expiresAt: hoursFromNow(24) }),
+      );
+    });
+
+    it('estranho não revoga convite', async () => {
+      await assertFails(deleteDoc(doc(db(STRANGER), 'operatorInvites', 'VALID1')));
+    });
+  });
+
+  describe('pedidos de operador', () => {
+    const request = (uid, code, status = 'pending') => ({ uid, queueId: QUEUE, code, status });
+    const requestDoc = (uid, as = uid) => doc(db(as), 'queues', QUEUE, 'operatorRequests', uid);
+
+    it('pedido com convite válido é criado', async () => {
+      await assertSucceeds(setDoc(requestDoc(STRANGER), request(STRANGER, 'VALID1')));
+    });
+
+    it('pedido com convite expirado falha', async () => {
+      await assertFails(setDoc(requestDoc(STRANGER), request(STRANGER, 'EXPIR1')));
+    });
+
+    it('pedido com convite de outra fila falha', async () => {
+      await assertFails(setDoc(requestDoc(STRANGER), request(STRANGER, 'OTHER1')));
+    });
+
+    it('pedido com código inexistente falha', async () => {
+      await assertFails(setDoc(requestDoc(STRANGER), request(STRANGER, 'NOPE00')));
+    });
+
+    it('pedido já aprovado na criação falha', async () => {
+      await assertFails(setDoc(requestDoc(STRANGER), request(STRANGER, 'VALID1', 'approved')));
+    });
+
+    it('pedido em nome de outro usuário falha', async () => {
+      await assertFails(setDoc(requestDoc('victim', STRANGER), request('victim', 'VALID1')));
+    });
+
+    it('solicitante não aprova o próprio pedido', async () => {
+      await assertFails(updateDoc(requestDoc('pendingUser'), { status: 'approved' }));
+    });
+
+    it('operador não aprova pedido de outro', async () => {
+      await assertFails(updateDoc(requestDoc('pendingUser', OPERATOR), { status: 'approved' }));
+    });
+
+    it('dono aprova', async () => {
+      await assertSucceeds(updateDoc(requestDoc('pendingUser', OWNER), { status: 'approved' }));
+    });
+
+    it('dono recusa', async () => {
+      await assertSucceeds(updateDoc(requestDoc('pendingUser', OWNER), { status: 'rejected' }));
+    });
+
+    it('dono marca como removido', async () => {
+      await assertSucceeds(updateDoc(requestDoc('pendingUser', OWNER), { status: 'removed' }));
+    });
+
+    it('dono não altera outros campos do pedido', async () => {
+      await assertFails(updateDoc(requestDoc('pendingUser', OWNER), { status: 'approved', uid: OWNER }));
+    });
+
+    it('só o dono lista os pedidos da fila', async () => {
+      await assertSucceeds(getDocs(collection(db(OWNER), 'queues', QUEUE, 'operatorRequests')));
+      await assertFails(getDocs(collection(db(OPERATOR), 'queues', QUEUE, 'operatorRequests')));
+    });
+  });
+
+  describe('operadores', () => {
+    it('operador não se adiciona sozinho', async () => {
+      await assertFails(setDoc(doc(db(STRANGER), 'queues', QUEUE, 'operators', STRANGER), { uid: STRANGER }));
+    });
+
+    it('operador não remove outro operador', async () => {
+      await assertFails(deleteDoc(doc(db(STRANGER), 'queues', QUEUE, 'operators', OPERATOR)));
+    });
+
+    it('dono remove operador', async () => {
+      await assertSucceeds(deleteDoc(doc(db(OWNER), 'queues', QUEUE, 'operators', OPERATOR)));
+    });
+
+    it('operador lê o próprio vínculo', async () => {
+      await assertSucceeds(getDoc(doc(db(OPERATOR), 'queues', QUEUE, 'operators', OPERATOR)));
+    });
+
+    it('usuário lê o próprio vínculo mesmo se não existir', async () => {
+      await assertSucceeds(getDoc(doc(db(STRANGER), 'queues', QUEUE, 'operators', STRANGER)));
+    });
+
+    it('estranho não lê vínculo de outro', async () => {
+      await assertFails(getDoc(doc(db(STRANGER), 'queues', QUEUE, 'operators', OPERATOR)));
+    });
+  });
+
+  describe('collectionGroup', () => {
+    it('operador consulta só os próprios vínculos', async () => {
+      await assertSucceeds(
+        getDocs(query(collectionGroup(db(OPERATOR), 'operators'), where('uid', '==', OPERATOR))),
+      );
+    });
+
+    it('consulta de vínculos de outro usuário falha', async () => {
+      await assertFails(
+        getDocs(query(collectionGroup(db(STRANGER), 'operators'), where('uid', '==', OPERATOR))),
+      );
+    });
+
+    it('consulta sem filtro falha', async () => {
+      await assertFails(getDocs(collectionGroup(db(STRANGER), 'operators')));
+      await assertFails(getDocs(collectionGroup(db(STRANGER), 'operatorRequests')));
+    });
+
+    it('usuário consulta só os próprios pedidos', async () => {
+      await assertSucceeds(
+        getDocs(query(collectionGroup(db('pendingUser'), 'operatorRequests'), where('uid', '==', 'pendingUser'))),
+      );
+    });
+  });
+});
