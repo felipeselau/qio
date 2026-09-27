@@ -125,7 +125,7 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
   Widget _buildInviteCard(Queue? queue) {
     final code = queue?.operatorInviteCode;
     final expiresAt = queue?.operatorInviteExpiresAt;
-    final expired = expiresAt != null && expiresAt.isBefore(DateTime.now());
+    final expired = isInviteExpired(expiresAt, DateTime.now());
     final active = code != null && !expired;
 
     return QioCard(

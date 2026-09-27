@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-enum OperatorRequestStatus { pending, approved, rejected }
+enum OperatorRequestStatus { pending, approved, rejected, removed }
 
 extension OperatorRequestStatusX on OperatorRequestStatus {
   String get value {
@@ -11,6 +11,8 @@ extension OperatorRequestStatusX on OperatorRequestStatus {
         return 'approved';
       case OperatorRequestStatus.rejected:
         return 'rejected';
+      case OperatorRequestStatus.removed:
+        return 'removed';
     }
   }
 
@@ -20,6 +22,8 @@ extension OperatorRequestStatusX on OperatorRequestStatus {
         return OperatorRequestStatus.approved;
       case 'rejected':
         return OperatorRequestStatus.rejected;
+      case 'removed':
+        return OperatorRequestStatus.removed;
       default:
         return OperatorRequestStatus.pending;
     }
@@ -27,6 +31,9 @@ extension OperatorRequestStatusX on OperatorRequestStatus {
 }
 
 DateTime? _toDate(dynamic v) => v is Timestamp ? v.toDate() : null;
+
+bool isInviteExpired(DateTime? expiresAt, DateTime now) =>
+    expiresAt != null && !expiresAt.isAfter(now);
 
 class QueueOperator {
   QueueOperator({

@@ -212,6 +212,12 @@ class _OperatorPendingScreenState extends State<OperatorPendingScreen> {
               'Pedido recusado',
               'O dono da fila recusou seu pedido.',
             ),
+            OperatorRequestStatus.removed => (
+              Icons.person_off_outlined,
+              QioColors.error,
+              'Você foi removido',
+              'O dono da fila removeu seu acesso de operador.',
+            ),
             null => (
               Icons.help_outline,
               QioColors.gray400,

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -105,7 +106,8 @@ class OperatorService {
       throw OperatorInviteException('Código inválido ou revogado.');
     }
     final expiresAt = invite['expiresAt'];
-    if (expiresAt is Timestamp && expiresAt.toDate().isBefore(DateTime.now())) {
+    if (expiresAt is Timestamp &&
+        isInviteExpired(expiresAt.toDate(), DateTime.now())) {
       throw OperatorInviteException('Código expirado. Peça um novo ao dono.');
     }
     if (invite['ownerId'] == _uid) {
@@ -186,6 +188,19 @@ class OperatorService {
         );
   }
 
+  Stream<bool> watchIsOperator(String queueId) {
+    return _queueDoc(queueId)
+        .collection('operators')
+        .doc(_uid)
+        .snapshots()
+        .map((d) => d.exists)
+        .transform(
+          StreamTransformer<bool, bool>.fromHandlers(
+            handleError: (_, _, sink) => sink.add(false),
+          ),
+        );
+  }
+
   Stream<List<OperatorRequest>> watchOperatorRequests(String queueId) {
     return _queueDoc(queueId)
         .collection('operatorRequests')
@@ -241,9 +256,16 @@ class OperatorService {
 
   Future<void> removeOperator(String queueId, String uid) async {
     final queueRef = _queueDoc(queueId);
+    final requestRef = queueRef.collection('operatorRequests').doc(uid);
+    final request = await requestRef.get();
     final batch = _firestore.batch();
     batch.delete(queueRef.collection('operators').doc(uid));
-    batch.delete(queueRef.collection('operatorRequests').doc(uid));
+    if (request.exists) {
+      batch.update(requestRef, {
+        'status': OperatorRequestStatus.removed.value,
+        'respondedAt': FieldValue.serverTimestamp(),
+      });
+    }
     await batch.commit();
     await syncOperatorMirror(queueId);
   }
