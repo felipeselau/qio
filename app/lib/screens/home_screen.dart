@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../models/operator.dart';
 import '../models/queue.dart';
 import '../services/auth_service.dart';
+import '../services/operator_service.dart';
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
@@ -9,11 +11,26 @@ import '../widgets/qio_avatar.dart';
 import '../widgets/qio_badge.dart';
 import '../widgets/qio_card.dart';
 import 'create_queue_screen.dart';
+import 'join_operator_screen.dart';
 import 'login_screen.dart';
 import 'queue_panel_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  late final Stream<List<Queue>> _ownedStream = QueueService.instance
+      .watchOwnerQueues();
+  late final Stream<List<QueueOperator>> _operatingStream = OperatorService
+      .instance
+      .watchMyOperatorQueues();
+  late final Stream<List<OperatorRequest>> _requestsStream = OperatorService
+      .instance
+      .watchMyRequests();
 
   @override
   Widget build(BuildContext context) {
@@ -30,6 +47,13 @@ class HomeScreen extends StatelessWidget {
           ),
         ),
         actions: [
+          IconButton(
+            tooltip: 'Entrar como operador',
+            icon: const Icon(Icons.badge_outlined, color: QioColors.primary),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const JoinOperatorScreen()),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: Semantics(
@@ -54,97 +78,23 @@ class HomeScreen extends StatelessWidget {
         ],
       ),
       body: StreamBuilder<List<Queue>>(
-        stream: QueueService.instance.watchOwnerQueues(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          final queues = snapshot.data ?? [];
-          if (queues.isEmpty) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.qr_code_2, size: 64, color: QioColors.gray300),
-                    const SizedBox(height: 16),
-                    Text('Nenhuma fila ainda', style: QioTextStyles.heading2),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Crie sua primeira fila e comece a atender',
-                      style: QioTextStyles.body.copyWith(
-                        color: QioColors.textSecondary,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }
-          return ListView.separated(
-            padding: const EdgeInsets.all(20),
-            itemCount: queues.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 16),
-            itemBuilder: (context, i) {
-              final q = queues[i];
-              return QioCard(
-                padding: const EdgeInsets.all(20),
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        QueuePanelScreen(queueId: q.id, queueName: q.name),
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            q.name,
-                            style: QioTextStyles.heading3.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: QioColors.textPrimary,
-                            ),
-                          ),
-                        ),
-                        QioBadge(
-                          label: q.status.label,
-                          status: switch (q.status) {
-                            QueueStatus.open => QioBadgeStatus.open,
-                            QueueStatus.paused => QioBadgeStatus.paused,
-                            QueueStatus.closed => QioBadgeStatus.closed,
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    StreamBuilder<int>(
-                      stream: QueueService.instance.watchWaitingCount(q.id),
-                      builder: (context, snap) {
-                        final count = snap.data ?? 0;
-                        return Text(
-                          '$count ${count == 1 ? "pessoa" : "pessoas"} esperando',
-                          style: QioTextStyles.body.copyWith(
-                            fontSize: 14,
-                            color: QioColors.gray700,
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Criada em ${q.createdAt.day.toString().padLeft(2, '0')}/${q.createdAt.month.toString().padLeft(2, '0')}/${q.createdAt.year}',
-                      style: QioTextStyles.caption.copyWith(
-                        fontSize: 12,
-                        color: QioColors.gray400,
-                      ),
-                    ),
-                  ],
-                ),
+        stream: _ownedStream,
+        builder: (context, ownedSnap) {
+          return StreamBuilder<List<QueueOperator>>(
+            stream: _operatingStream,
+            builder: (context, operatingSnap) {
+              return StreamBuilder<List<OperatorRequest>>(
+                stream: _requestsStream,
+                builder: (context, requestsSnap) {
+                  if (ownedSnap.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  return _buildBody(
+                    ownedSnap.data ?? [],
+                    operatingSnap.data ?? [],
+                    requestsSnap.data ?? [],
+                  );
+                },
               );
             },
           );
@@ -156,6 +106,237 @@ class HomeScreen extends StatelessWidget {
           context,
         ).push(MaterialPageRoute(builder: (_) => const CreateQueueScreen())),
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildBody(
+    List<Queue> owned,
+    List<QueueOperator> operating,
+    List<OperatorRequest> requests,
+  ) {
+    if (owned.isEmpty && operating.isEmpty && requests.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.qr_code_2, size: 64, color: QioColors.gray300),
+              const SizedBox(height: 16),
+              Text('Nenhuma fila ainda', style: QioTextStyles.heading2),
+              const SizedBox(height: 8),
+              Text(
+                'Crie sua primeira fila ou entre como operador com um código de convite',
+                style: QioTextStyles.body.copyWith(
+                  color: QioColors.textSecondary,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    final showHeaders = operating.isNotEmpty || requests.isNotEmpty;
+    return ListView(
+      padding: const EdgeInsets.all(20),
+      children: [
+        if (showHeaders && owned.isNotEmpty) _sectionTitle('SOU DONO'),
+        for (final q in owned) ...[
+          _QueueCard(queue: q, isOwner: true),
+          const SizedBox(height: 16),
+        ],
+        if (operating.isNotEmpty) _sectionTitle('SOU OPERADOR'),
+        for (final op in operating) ...[
+          _OperatorQueueCard(operator: op),
+          const SizedBox(height: 16),
+        ],
+        if (requests.isNotEmpty) _sectionTitle('PEDIDOS DE OPERADOR'),
+        for (final r in requests) ...[
+          _RequestCard(request: r),
+          const SizedBox(height: 16),
+        ],
+      ],
+    );
+  }
+
+  Widget _sectionTitle(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        text,
+        style: QioTextStyles.label.copyWith(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: QioColors.gray700,
+        ),
+      ),
+    );
+  }
+}
+
+class _QueueCard extends StatelessWidget {
+  const _QueueCard({required this.queue, required this.isOwner});
+
+  final Queue queue;
+  final bool isOwner;
+
+  @override
+  Widget build(BuildContext context) {
+    final q = queue;
+    return QioCard(
+      padding: const EdgeInsets.all(20),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => QueuePanelScreen(
+            queueId: q.id,
+            queueName: q.name,
+            isOwner: isOwner,
+          ),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  q.name,
+                  style: QioTextStyles.heading3.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: QioColors.textPrimary,
+                  ),
+                ),
+              ),
+              QioBadge(
+                label: q.status.label,
+                status: switch (q.status) {
+                  QueueStatus.open => QioBadgeStatus.open,
+                  QueueStatus.paused => QioBadgeStatus.paused,
+                  QueueStatus.closed => QioBadgeStatus.closed,
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          StreamBuilder<int>(
+            stream: QueueService.instance.watchWaitingCount(q.id),
+            builder: (context, snap) {
+              final count = snap.data ?? 0;
+              return Text(
+                '$count ${count == 1 ? "pessoa" : "pessoas"} esperando',
+                style: QioTextStyles.body.copyWith(
+                  fontSize: 14,
+                  color: QioColors.gray700,
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 4),
+          Text(
+            isOwner
+                ? 'Criada em ${q.createdAt.day.toString().padLeft(2, '0')}/${q.createdAt.month.toString().padLeft(2, '0')}/${q.createdAt.year}'
+                : 'Você é operador desta fila',
+            style: QioTextStyles.caption.copyWith(
+              fontSize: 12,
+              color: QioColors.gray400,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OperatorQueueCard extends StatefulWidget {
+  const _OperatorQueueCard({required this.operator});
+
+  final QueueOperator operator;
+
+  @override
+  State<_OperatorQueueCard> createState() => _OperatorQueueCardState();
+}
+
+class _OperatorQueueCardState extends State<_OperatorQueueCard> {
+  late final Stream<Queue> _queueStream = QueueService.instance.watchQueue(
+    widget.operator.queueId,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<Queue>(
+      stream: _queueStream,
+      builder: (context, snap) {
+        final queue = snap.data;
+        if (queue == null) {
+          return QioCard(
+            padding: const EdgeInsets.all(20),
+            child: Text(
+              widget.operator.queueName,
+              style: QioTextStyles.heading3.copyWith(
+                color: QioColors.gray400,
+              ),
+            ),
+          );
+        }
+        return _QueueCard(queue: queue, isOwner: false);
+      },
+    );
+  }
+}
+
+class _RequestCard extends StatelessWidget {
+  const _RequestCard({required this.request});
+
+  final OperatorRequest request;
+
+  @override
+  Widget build(BuildContext context) {
+    final pending = request.status == OperatorRequestStatus.pending;
+    return QioCard(
+      padding: const EdgeInsets.all(20),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => OperatorPendingScreen(
+            queueId: request.queueId,
+            queueName: request.queueName,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            pending ? Icons.hourglass_top : Icons.block,
+            color: pending ? QioColors.warning : QioColors.error,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  request.queueName,
+                  style: QioTextStyles.bodyMedium.copyWith(
+                    color: QioColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  pending ? 'Aguardando aprovação' : 'Pedido recusado',
+                  style: QioTextStyles.caption.copyWith(fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          if (!pending)
+            IconButton(
+              tooltip: 'Dispensar',
+              icon: const Icon(Icons.close, color: QioColors.gray400),
+              onPressed: () =>
+                  OperatorService.instance.cancelMyRequest(request.queueId),
+            ),
+        ],
       ),
     );
   }

@@ -4,13 +4,28 @@
       "$queueId": {
         "meta": {
           ".read": "auth != null",
-          ".write": "root.child('owners').child($queueId).child('ownerUid').val() === auth.uid"
+          ".write": "root.child('owners').child($queueId).child('ownerUid').val() === auth.uid",
+          "serving": {
+            ".write": "root.child('queues').child($queueId).child('operatorUids').child(auth.uid).val() === true"
+          },
+          "updatedAt": {
+            ".write": "root.child('queues').child($queueId).child('operatorUids').child(auth.uid).val() === true"
+          }
         },
         "entries": {
           ".read": "auth != null",
+          ".indexOn": ["status", "ticket"],
           "$entryId": {
             ".read": "auth != null",
-            ".write": "(!data.exists() && newData.child('uid').val() === auth.uid) || (data.child('uid').val() === auth.uid) || (root.child('owners').child($queueId).child('ownerUid').val() === auth.uid)"
+            ".write": "(!data.exists() && newData.child('uid').val() === auth.uid) || (data.child('uid').val() === auth.uid) || (root.child('owners').child($queueId).child('ownerUid').val() === auth.uid) || (root.child('queues').child($queueId).child('operatorUids').child(auth.uid).val() === true)"
+          }
+        },
+        "operatorUids": {
+          ".read": "root.child('owners').child($queueId).child('ownerUid').val() === auth.uid",
+          ".write": "root.child('owners').child($queueId).child('ownerUid').val() === auth.uid",
+          "$uid": {
+            ".read": "auth != null && auth.uid === $uid",
+            ".validate": "newData.isBoolean()"
           }
         }
       }
