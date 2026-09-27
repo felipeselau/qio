@@ -34,6 +34,13 @@ flutter run
 npm ci
 ```
 
+### rules-tests/
+```bash
+npm ci
+npm test           # sobe emulators firestore+database e roda node --test (roda no CI)
+```
+Precisa de `firebase-tools` e Java 21+. Testes em `rules-tests/test/`.
+
 Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
 `~/.claude/CLAUDE.md`). Não há testes em `web/` nem `functions/`.
 
@@ -46,7 +53,27 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
   (contador de senha, incrementado por transação no cliente web). Rules:
   `database.rules.json`.
 - O app faz **dual-write**: Firestore (fonte da verdade) + espelho no RTDB
-  (`meta` + `owners/{queueId}`). `_ensureOwnerMirror` reconcilia antes de escritas.
+  (`meta` + `owners/{queueId}`). `_ensureOwnerMirror` reconcilia antes de escritas;
+  `_ensureOwnerMirrorIfOwner` fica em cache por sessão (`uid/queueId`).
+
+## Operadores
+
+- **Convite**: `operatorInvites/{code}` (6 chars, validade padrão 24 h) é a fonte
+  da verdade. `queues/{id}.operatorInviteCode`/`operatorInviteExpiresAt` são só
+  ponteiro p/ o dono exibir/revogar; os dois são gravados no mesmo batch. Não há
+  link de convite: o operador digita o código no app.
+- **Pedido**: `queues/{id}/operatorRequests/{uid}` com status
+  `pending → approved | rejected | removed`. Só o dono muda status (rules).
+- **Operador ativo**: `queues/{id}/operators/{uid}`. Home do operador usa
+  `collectionGroup` filtrado por `uid`.
+- **Espelho RTDB** `queues/{id}/operatorUids/{uid}: true`: escrito pelo dono em
+  `syncOperatorMirror` ao aprovar/remover. Rules do RTDB usam esse espelho p/
+  liberar `meta/serving`, `meta/updatedAt` e `entries` ao operador. Remover o
+  operador apaga do espelho → perde acesso na hora; o painel escuta
+  `operators/{uid}` e fecha com aviso.
+- `callNext` reserva a entry por transação (`_claimEntry`) e avança
+  `meta/serving` por transação (nunca volta). Histórico grava `calledBy` e
+  `operatorId`; rule exige `operatorId == auth.uid` p/ operador.
 
 ## Fluxo de estados da entry
 
@@ -65,6 +92,9 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
   `web/public/firebase-messaging-sw.js` — mantenha os dois em sincronia.
 - URL de join: `https://qio.web.app/q/{queueId}` (hosting site `qio`). Duplicada em
   `functions/index.js` e `app/lib/services/queue_service.dart`.
+- `web/src/lib/useQueue.ts`: listeners do RTDB só são anexados com `ready`
+  (auth anônima concluída). Anexar antes faz a leitura ser negada e o `onValue`
+  morre sem retry → spinner infinito no primeiro acesso pelo QR.
 - Deploy hosting é automático no push p/ `main` (`.github/workflows/ci.yml`), se
   `secrets.FIREBASE_TOKEN` existir. Functions e rules **não** têm deploy no CI.
 
