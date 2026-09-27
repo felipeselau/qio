@@ -46,6 +46,8 @@ class Queue {
     this.status = QueueStatus.open,
     this.avgServiceMin = 10,
     required this.createdAt,
+    this.operatorInviteCode,
+    this.operatorInviteExpiresAt,
   });
 
   final String id;
@@ -55,6 +57,8 @@ class Queue {
   final QueueStatus status;
   final int avgServiceMin;
   final DateTime createdAt;
+  final String? operatorInviteCode;
+  final DateTime? operatorInviteExpiresAt;
 
   factory Queue.fromDoc(String id, Map<String, dynamic> data) {
     return Queue(
@@ -65,6 +69,10 @@ class Queue {
       status: QueueStatusX.fromValue(data['status'] as String?),
       avgServiceMin: (data['avgServiceMin'] as num?)?.toInt() ?? 10,
       createdAt: _parseCreatedAt(data['createdAt']),
+      operatorInviteCode: data['operatorInviteCode'] as String?,
+      operatorInviteExpiresAt: data['operatorInviteExpiresAt'] is Timestamp
+          ? (data['operatorInviteExpiresAt'] as Timestamp).toDate()
+          : null,
     );
   }
 

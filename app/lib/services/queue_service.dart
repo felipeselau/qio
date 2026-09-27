@@ -1,10 +1,11 @@
 import 'dart:async';
-import 'package:cloud_firestore/cloud_firestore.dart' hide Query;
+import 'package:cloud_firestore/cloud_firestore.dart' hide Query, Transaction;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 
 import '../models/queue.dart';
 import '../models/queue_entry.dart';
+import 'operator_service.dart';
 
 class QueueService {
   QueueService._();
@@ -15,6 +16,8 @@ class QueueService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   String get _uid => _auth.currentUser?.uid ?? '';
+
+  String get currentUid => _uid;
 
   Stream<List<Queue>> watchOwnerQueues() {
     return _firestore
@@ -73,6 +76,13 @@ class QueueService {
     }
   }
 
+  Future<void> _ensureOwnerMirrorIfOwner(String queueId) async {
+    final doc = await _firestore.collection('queues').doc(queueId).get();
+    if (doc.data()?['ownerId'] == _uid) {
+      await _ensureOwnerMirror(queueId);
+    }
+  }
+
   Future<void> updateQueueStatus(String queueId, QueueStatus status) async {
     await _firestore.collection('queues').doc(queueId).update({
       'status': status.value,
@@ -85,6 +95,7 @@ class QueueService {
   }
 
   Future<void> deleteQueue(String queueId) async {
+    await OperatorService.instance.deleteOperatorData(queueId);
     final historySnap = await _firestore
         .collection('queues')
         .doc(queueId)
@@ -144,28 +155,50 @@ class QueueService {
     final metaRef = _rtdb.ref('queues/$queueId/meta');
     final entriesRef = _rtdb.ref('queues/$queueId/entries');
 
-    await _ensureOwnerMirror(queueId);
-    final now = DateTime.now().millisecondsSinceEpoch;
+    await _ensureOwnerMirrorIfOwner(queueId);
     final query = entriesRef.orderByChild('status').equalTo('waiting');
     final snap = await query.get();
     final map = snap.value as Map<dynamic, dynamic>?;
     if (map == null || map.isEmpty) return null;
 
-    final entries = map.entries.map((e) {
+    final candidates = map.entries.map((e) {
       return QueueEntry.fromSnapshot(e.key, e.value as Map<dynamic, dynamic>);
     }).toList()..sort((a, b) => a.ticket.compareTo(b.ticket));
 
-    final next = entries.first;
-    await entriesRef.child(next.id).update({
-      'status': EntryStatus.called.value,
-      'calledAt': now,
-    });
-    await metaRef.update({
-      'serving': next.ticket,
-      'updatedAt': ServerValue.timestamp,
-    });
+    for (final candidate in candidates) {
+      final claimed = await _claimEntry(entriesRef.child(candidate.id));
+      if (claimed == null) continue;
+      await metaRef.update({
+        'serving': claimed.ticket,
+        'updatedAt': ServerValue.timestamp,
+      });
+      return claimed;
+    }
+    return null;
+  }
 
-    return next;
+  Future<QueueEntry?> _claimEntry(DatabaseReference entryRef) async {
+    final uid = _uid;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final result = await entryRef.runTransaction((current) {
+      if (current == null) return Transaction.success(null);
+      final data = Map<Object?, Object?>.from(current as Map);
+      if (data['status'] != EntryStatus.waiting.value) {
+        return Transaction.abort();
+      }
+      data['status'] = EntryStatus.called.value;
+      data['calledAt'] = now;
+      data['operatorId'] = uid;
+      return Transaction.success(data);
+    }, applyLocally: false);
+
+    final value = result.snapshot.value;
+    if (!result.committed || value is! Map) return null;
+    final entry = QueueEntry.fromSnapshot(result.snapshot.key!, value);
+    if (entry.status != EntryStatus.called || entry.operatorId != uid) {
+      return null;
+    }
+    return entry;
   }
 
   Future<void> _finishEntry(
@@ -174,8 +207,11 @@ class QueueService {
     EntryStatus result,
   ) async {
     final entriesRef = _rtdb.ref('queues/$queueId/entries');
-    await _ensureOwnerMirror(queueId);
-    await entriesRef.child(entry.id).update({'status': result.value});
+    await _ensureOwnerMirrorIfOwner(queueId);
+    await entriesRef.child(entry.id).update({
+      'status': result.value,
+      'operatorId': _uid,
+    });
     await _archiveEntry(queueId, entry, result);
     await entriesRef.child(entry.id).remove();
   }
@@ -207,6 +243,8 @@ class QueueService {
           'calledAt': entry.calledAt != null
               ? Timestamp.fromDate(entry.calledAt!)
               : null,
+          'calledBy': entry.operatorId,
+          'operatorId': _uid,
           'finishedAt': FieldValue.serverTimestamp(),
         });
   }

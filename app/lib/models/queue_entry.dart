@@ -43,6 +43,7 @@ class QueueEntry {
     required this.status,
     required this.joinedAt,
     this.calledAt,
+    this.operatorId,
   });
 
   final String id;
@@ -54,6 +55,7 @@ class QueueEntry {
   final EntryStatus status;
   final DateTime joinedAt;
   final DateTime? calledAt;
+  final String? operatorId;
 
   factory QueueEntry.fromSnapshot(String id, Map<dynamic, dynamic> data) {
     return QueueEntry(
@@ -73,6 +75,7 @@ class QueueEntry {
               (data['calledAt'] as num).toInt(),
             )
           : null,
+      operatorId: data['operatorId'] as String?,
     );
   }
 
@@ -85,5 +88,6 @@ class QueueEntry {
     'status': status.value,
     'joinedAt': joinedAt.millisecondsSinceEpoch,
     if (calledAt != null) 'calledAt': calledAt!.millisecondsSinceEpoch,
+    if (operatorId != null) 'operatorId': operatorId,
   };
 }

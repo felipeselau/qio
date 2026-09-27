@@ -12,16 +12,19 @@ import '../widgets/qio_avatar.dart';
 import '../widgets/qio_badge.dart';
 import '../widgets/qio_button.dart';
 import '../widgets/qio_card.dart';
+import 'operators_screen.dart';
 
 class QueuePanelScreen extends StatefulWidget {
   const QueuePanelScreen({
     super.key,
     required this.queueId,
     required this.queueName,
+    this.isOwner = true,
   });
 
   final String queueId;
   final String queueName;
+  final bool isOwner;
 
   @override
   State<QueuePanelScreen> createState() => _QueuePanelScreenState();
@@ -31,6 +34,11 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
   bool _actionLoading = false;
   bool _finishLoading = false;
   bool _deleteLoading = false;
+
+  bool _isMine(QueueEntry e) {
+    final uid = QueueService.instance.currentUid;
+    return e.operatorId == uid || (e.operatorId == null && widget.isOwner);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,44 +84,47 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
         ),
         centerTitle: true,
         actions: [
-          StreamBuilder<Queue>(
-            stream: QueueService.instance.watchQueue(widget.queueId),
-            builder: (context, snap) {
-              final q = snap.data;
-              final status = q?.status ?? QueueStatus.open;
-              if (status == QueueStatus.closed) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 12),
-                  child: _StatusButton(
-                    label: 'Reabrir',
-                    color: QioColors.primary,
-                    onPressed: () => _updateStatus(QueueStatus.open),
-                  ),
-                );
-              }
-              return Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _StatusButton(
-                    label: status == QueueStatus.paused ? 'Reabrir' : 'Pausar',
-                    color: QioColors.warning,
-                    onPressed: () => _updateStatus(
-                      status == QueueStatus.paused
-                          ? QueueStatus.open
-                          : QueueStatus.paused,
+          if (widget.isOwner)
+            StreamBuilder<Queue>(
+              stream: QueueService.instance.watchQueue(widget.queueId),
+              builder: (context, snap) {
+                final q = snap.data;
+                final status = q?.status ?? QueueStatus.open;
+                if (status == QueueStatus.closed) {
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: _StatusButton(
+                      label: 'Reabrir',
+                      color: QioColors.primary,
+                      onPressed: () => _updateStatus(QueueStatus.open),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  _StatusButton(
-                    label: 'Fechar',
-                    color: QioColors.error,
-                    onPressed: () => _updateStatus(QueueStatus.closed),
-                  ),
-                  const SizedBox(width: 12),
-                ],
-              );
-            },
-          ),
+                  );
+                }
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _StatusButton(
+                      label: status == QueueStatus.paused
+                          ? 'Reabrir'
+                          : 'Pausar',
+                      color: QioColors.warning,
+                      onPressed: () => _updateStatus(
+                        status == QueueStatus.paused
+                            ? QueueStatus.open
+                            : QueueStatus.paused,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _StatusButton(
+                      label: 'Fechar',
+                      color: QioColors.error,
+                      onPressed: () => _updateStatus(QueueStatus.closed),
+                    ),
+                    const SizedBox(width: 12),
+                  ],
+                );
+              },
+            ),
         ],
       ),
       body: StreamBuilder<Queue>(
@@ -126,6 +137,10 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
               children: [
                 _buildQrCard(joinUrl),
                 const SizedBox(height: 16),
+                if (widget.isOwner) ...[
+                  _buildOperatorsTile(),
+                  const SizedBox(height: 16),
+                ],
                 QioCard(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(vertical: 24),
@@ -151,7 +166,9 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24),
                   child: Text(
-                    'A fila está fechada. Você pode reabri-la ou excluí-la.',
+                    widget.isOwner
+                        ? 'A fila está fechada. Você pode reabri-la ou excluí-la.'
+                        : 'A fila está fechada. Aguarde o dono reabrir.',
                     style: QioTextStyles.body.copyWith(
                       fontSize: 14,
                       color: QioColors.gray400,
@@ -172,15 +189,57 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
               final called = entries
                   .where((e) => e.status == EntryStatus.called)
                   .toList();
-              final current = called.isNotEmpty ? called.first : null;
+              final mine = called.where(_isMine).toList();
+              final others = called.where((e) => !_isMine(e)).toList();
+              final current = mine.isNotEmpty ? mine.first : null;
 
               return ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
                   _buildQrCard(joinUrl),
                   const SizedBox(height: 16),
+                  if (widget.isOwner) ...[
+                    _buildOperatorsTile(),
+                    const SizedBox(height: 16),
+                  ],
                   _CurrentCalledCard(entry: current, queueId: widget.queueId),
                   const SizedBox(height: 16),
+                  if (others.isNotEmpty) ...[
+                    Text(
+                      'EM ATENDIMENTO POR OUTROS',
+                      style: QioTextStyles.label.copyWith(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: QioColors.gray700,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ...others.map(
+                      (e) => _WaitingTile(
+                        entry: e,
+                        trailing: widget.isOwner
+                            ? PopupMenuButton<EntryStatus>(
+                                tooltip: 'Finalizar atendimento',
+                                onSelected: (result) =>
+                                    result == EntryStatus.served
+                                    ? _markServed(e)
+                                    : _markNoShow(e),
+                                itemBuilder: (_) => const [
+                                  PopupMenuItem(
+                                    value: EntryStatus.served,
+                                    child: Text('Atendido'),
+                                  ),
+                                  PopupMenuItem(
+                                    value: EntryStatus.noShow,
+                                    child: Text('Não compareceu'),
+                                  ),
+                                ],
+                              )
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                   if (waiting.isNotEmpty) ...[
                     Text(
                       'PRÓXIMOS NA FILA',
@@ -237,6 +296,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
               builder: (context, qSnap) {
                 final status = qSnap.data?.status ?? QueueStatus.open;
                 if (status == QueueStatus.closed) {
+                  if (!widget.isOwner) return const SizedBox.shrink();
                   return Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -255,10 +315,12 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                   stream: QueueService.instance.watchEntries(widget.queueId),
                   builder: (context, snap) {
                     final entries = snap.data ?? [];
-                    final called = entries
-                        .where((e) => e.status == EntryStatus.called)
+                    final mine = entries
+                        .where(
+                          (e) => e.status == EntryStatus.called && _isMine(e),
+                        )
                         .toList();
-                    final current = called.isNotEmpty ? called.first : null;
+                    final current = mine.isNotEmpty ? mine.first : null;
                     return Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -375,6 +437,31 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
       const SnackBar(
         content: Text('Não foi possível concluir a ação. Tente novamente.'),
         backgroundColor: QioColors.error,
+      ),
+    );
+  }
+
+  Widget _buildOperatorsTile() {
+    return QioCard(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => OperatorsScreen(queueId: widget.queueId),
+        ),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.groups_outlined, color: QioColors.primary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Operadores e convites',
+              style: QioTextStyles.bodyMedium.copyWith(
+                color: QioColors.textPrimary,
+              ),
+            ),
+          ),
+          const Icon(Icons.chevron_right, color: QioColors.gray400),
+        ],
       ),
     );
   }
@@ -705,9 +792,10 @@ class _CurrentCalledCard extends StatelessWidget {
 }
 
 class _WaitingTile extends StatelessWidget {
-  const _WaitingTile({required this.entry});
+  const _WaitingTile({required this.entry, this.trailing});
 
   final QueueEntry entry;
+  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -753,6 +841,7 @@ class _WaitingTile extends StatelessWidget {
                 ],
               ),
             ),
+            ?trailing,
           ],
         ),
       ),
