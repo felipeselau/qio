@@ -38,6 +38,7 @@ void main() {
         'status': 'called',
         'joinedAt': joined,
         'calledAt': called,
+        'operatorId': 'op1',
       });
 
       expect(e.id, 'e1');
@@ -49,6 +50,7 @@ void main() {
       expect(e.status, EntryStatus.called);
       expect(e.joinedAt.millisecondsSinceEpoch, joined);
       expect(e.calledAt!.millisecondsSinceEpoch, called);
+      expect(e.operatorId, 'op1');
     });
 
     test('applies defaults for missing fields', () {
@@ -61,6 +63,7 @@ void main() {
       expect(e.fcmToken, isNull);
       expect(e.status, EntryStatus.waiting);
       expect(e.calledAt, isNull);
+      expect(e.operatorId, isNull);
     });
 
     test('calledAt stays null when absent', () {
@@ -90,6 +93,7 @@ void main() {
       expect(map['status'], 'waiting');
       expect(map['joinedAt'], joined.millisecondsSinceEpoch);
       expect(map.containsKey('calledAt'), isFalse);
+      expect(map.containsKey('operatorId'), isFalse);
     });
 
     test('includes calledAt when set', () {
@@ -106,6 +110,20 @@ void main() {
       );
 
       expect(e.toMap()['calledAt'], called.millisecondsSinceEpoch);
+    });
+
+    test('includes operatorId when set', () {
+      final e = QueueEntry(
+        id: 'e6',
+        ticket: 5,
+        name: 'Ana',
+        uid: 'user4',
+        status: EntryStatus.called,
+        joinedAt: DateTime(2026, 1, 15, 10),
+        operatorId: 'op2',
+      );
+
+      expect(e.toMap()['operatorId'], 'op2');
     });
   });
 }
