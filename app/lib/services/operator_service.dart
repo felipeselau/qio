@@ -51,9 +51,6 @@ class OperatorService {
     final queueSnap = await _queueDoc(queueId).get();
     final queueData = queueSnap.data() ?? {};
     final oldCode = queueData['operatorInviteCode'] as String?;
-    if (oldCode != null) {
-      await _invites.doc(oldCode).delete();
-    }
 
     String? code;
     for (var i = 0; i < 5 && code == null; i++) {
@@ -68,30 +65,33 @@ class OperatorService {
     final expiresAt = validFor == null
         ? null
         : Timestamp.fromDate(DateTime.now().add(validFor));
-    await _invites.doc(code).set({
+    final batch = _firestore.batch();
+    if (oldCode != null) batch.delete(_invites.doc(oldCode));
+    batch.set(_invites.doc(code), {
       'queueId': queueId,
       'ownerId': _uid,
       'queueName': queueData['name'] as String? ?? '',
       'expiresAt': expiresAt,
       'createdAt': FieldValue.serverTimestamp(),
     });
-    await _queueDoc(queueId).update({
+    batch.update(_queueDoc(queueId), {
       'operatorInviteCode': code,
       'operatorInviteExpiresAt': expiresAt,
     });
+    await batch.commit();
     return code;
   }
 
   Future<void> revokeOperatorInvite(String queueId) async {
     final queueSnap = await _queueDoc(queueId).get();
     final code = queueSnap.data()?['operatorInviteCode'] as String?;
-    if (code != null) {
-      await _invites.doc(code).delete();
-    }
-    await _queueDoc(queueId).update({
+    final batch = _firestore.batch();
+    if (code != null) batch.delete(_invites.doc(code));
+    batch.update(_queueDoc(queueId), {
       'operatorInviteCode': FieldValue.delete(),
       'operatorInviteExpiresAt': FieldValue.delete(),
     });
+    await batch.commit();
   }
 
   Future<OperatorRequest> requestToJoinAsOperator(String rawCode) async {
