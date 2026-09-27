@@ -71,5 +71,49 @@ void main() {
     test('uppercases and strips separators', () {
       expect(OperatorService.normalizeCode(' k7m-2qx '), 'K7M2QX');
     });
+
+    test('drops accents and symbols', () {
+      expect(OperatorService.normalizeCode('ab.c d/é1'), 'ABCD1');
+    });
+  });
+
+  group('removed status', () {
+    test('parses removed', () {
+      expect(
+        OperatorRequestStatusX.fromValue('removed'),
+        OperatorRequestStatus.removed,
+      );
+      expect(OperatorRequestStatus.removed.value, 'removed');
+    });
+  });
+
+  group('isInviteExpired', () {
+    final now = DateTime(2026, 9, 27, 12);
+
+    test('no expiration never expires', () {
+      expect(isInviteExpired(null, now), isFalse);
+    });
+
+    test('future expiration is valid', () {
+      expect(
+        isInviteExpired(now.add(const Duration(minutes: 1)), now),
+        isFalse,
+      );
+    });
+
+    test('past expiration is expired', () {
+      expect(
+        isInviteExpired(now.subtract(const Duration(seconds: 1)), now),
+        isTrue,
+      );
+    });
+
+    test('expires exactly at expiresAt', () {
+      expect(isInviteExpired(now, now), isTrue);
+    });
+
+    test('default validity is 24 hours', () {
+      expect(OperatorService.defaultInviteValidity, const Duration(hours: 24));
+    });
   });
 }

@@ -3,7 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:qio_app/theme/qio_colors.dart';
 import 'package:qio_app/widgets/qio_badge.dart';
 
-Widget wrap(Widget child) => MaterialApp(home: Scaffold(body: Center(child: child)));
+Widget wrap(Widget child) => MaterialApp(
+  home: Scaffold(body: Center(child: child)),
+);
 
 void main() {
   testWidgets('renders label', (tester) async {
