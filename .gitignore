@@ -38,3 +38,6 @@ functions/lib/
 *.swp
 .idea/
 .vscode/
+
+# Documentos de trabalho do TCC
+Claude outputs/
