@@ -52,7 +52,8 @@ service cloud.firestore {
           && isQueueOperator(queueId)
           && request.resource.data.operatorId == request.auth.uid
           && request.resource.data.result in ['served', 'no_show']
-          && request.resource.data.keys().hasOnly(['ticket', 'name', 'phone', 'result', 'joinedAt', 'calledAt', 'calledBy', 'operatorId', 'finishedAt']);
+          && request.resource.data.keys().hasOnly(['ticket', 'name', 'phone', 'result', 'joinedAt', 'calledAt', 'calledBy', 'operatorId', 'finishedAt'])
+          && request.resource.data.keys().hasAll(['ticket', 'name', 'phone', 'result', 'joinedAt', 'calledAt', 'calledBy', 'operatorId', 'finishedAt']);
       }
 
       match /operators/{opUid} {

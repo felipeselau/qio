@@ -107,6 +107,12 @@ describe('Firestore rules', () => {
       );
     });
 
+    it('operador não cria registro incompleto', async () => {
+      await assertFails(
+        setDoc(doc(db(OPERATOR), 'queues', QUEUE, 'history', 'h2'), { operatorId: OPERATOR, result: 'served' }),
+      );
+    });
+
     it('operador não sobrescreve registro existente', async () => {
       await assertFails(setDoc(doc(db(OPERATOR), 'queues', QUEUE, 'history', 'h1'), historyEntry(OPERATOR)));
     });
