@@ -28,6 +28,7 @@ export type QueueState = {
   estimatedWaitMin: number | null;
   loading: boolean;
   exists: boolean;
+  failed: boolean;
 };
 
 export function useQueue(
@@ -41,6 +42,7 @@ export function useQueue(
   const [myEntryResolved, setMyEntryResolved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [exists, setExists] = useState(true);
+  const [failed, setFailed] = useState(false);
 
   // As regras da RTDB exigem auth != null para ler meta/entries. Se o listener
   // for anexado antes do signInAnonymously terminar, a leitura é negada, o
@@ -66,9 +68,13 @@ export function useQueue(
             description: val.description ?? null,
           });
         }
+        setFailed(false);
         setLoading(false);
       },
-      () => setLoading(false),
+      () => {
+        setFailed(true);
+        setLoading(false);
+      },
     );
     return unsub;
   }, [queueId, ready]);
@@ -122,5 +128,5 @@ export function useQueue(
     if (position != null) estimatedWaitMin = position * avg;
   }
 
-  return { meta, myEntry, myEntryResolved, position, estimatedWaitMin, loading, exists };
+  return { meta, myEntry, myEntryResolved, position, estimatedWaitMin, loading, exists, failed };
 }

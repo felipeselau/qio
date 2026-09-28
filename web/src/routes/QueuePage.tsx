@@ -30,6 +30,7 @@ export default function QueuePage() {
     estimatedWaitMin,
     loading,
     exists,
+    failed,
   } = useQueue(queueId, entryId, authed);
 
   const [authFailed, setAuthFailed] = useState(false);
@@ -114,7 +115,7 @@ export default function QueuePage() {
   }
 
   const phase: Phase = (() => {
-    if (loading || !authed) return 'loading';
+    if (loading || !authed || failed) return 'loading';
     if (!exists) return 'gone';
     if (meta?.status === 'closed' && !myEntry) return 'closed';
     if (!myEntry) return 'join';
@@ -154,7 +155,7 @@ export default function QueuePage() {
   }, []);
 
   if (phase === 'loading') {
-    if (authFailed) {
+    if (authFailed || failed) {
       return (
         <div className="center-col">
           <h1 style={{ fontSize: 20, fontWeight: 700 }}>Não foi possível conectar</h1>
