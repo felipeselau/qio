@@ -1,7 +1,9 @@
 # Firebase Console — configuração usada (projeto `qio-app`)
 
-Snapshot em 2026-09-08, coletado via Firebase MCP / CLI (conta
-`felipeselau159@gmail.com`). Substitui screenshots do console.
+Snapshot **histórico** de 2026-09-08, coletado via Firebase MCP / CLI, antes da
+feature de operadores. Substitui screenshots do console. As rules atuais estão em
+`firestore.rules` e `database.rules.json`; as rules mostradas abaixo são as da
+época e **não** devem ser usadas para deploy.
 
 ## Projeto
 
@@ -32,14 +34,13 @@ Snapshot em 2026-09-08, coletado via Firebase MCP / CLI (conta
 
 | Provedor | Status | Evidência |
 | --- | --- | --- |
-| **E-mail/senha** | Ativo | contas `felipetccqio@gmail.com`, `teste@teste.com` existem |
+| **E-mail/senha** | Ativo | contas de proprietário de teste existem |
 | **Anônimo** | Ativo | dezenas de usuários anônimos (clientes web) |
 | **Google** | No código do app (`google_sign_in`, `signInWithGoogle`) — enablement no console não verificável via MCP; confirmar em Authentication → Sign-in method |
 
-Contas de proprietário reais: `felipetccqio@gmail.com` (Felipe tcc),
-`teste@teste.com` (Teste). O resto são clientes anônimos.
+Duas contas de proprietário (e-mails omitidos). O resto são clientes anônimos.
 
-## Firestore — Regras (deploy ativo, confere com `firestore.rules` do repo)
+## Firestore — Regras (snapshot de 2026-09-08, antes dos operadores)
 
 ```
 rules_version = '2';
@@ -66,7 +67,8 @@ Coleções em uso: `owners/{uid}`, `queues/{queueId}`,
 
 ## Realtime Database — Regras
 
-Versão do repo (`database.rules.json`) após correção desta branch — o nó
+Snapshot de 2026-09-08, antes dos operadores (sem `operatorUids` e sem acesso de
+operador em `meta/serving`, `meta/updatedAt` e `entries`). Na época, o nó
 `owners/{queueId}` foi restringido a *criar-ou-dono* (antes qualquer usuário
 autenticado podia se declarar dono de qualquer fila):
 
@@ -120,7 +122,7 @@ Para ativar: upgrade para Blaze → `firebase deploy --only functions`.
 | Item | Valor |
 | --- | --- |
 | Site | `qio` (`qio.web.app`) |
-| Último deploy | 3 ago 2026 19:56 — por `felipeselau159@gmail.com` |
+| Último deploy | 3 ago 2026 19:56 |
 | Origem | `web/dist` (build do Vite) |
 | Rewrites | `**` → `/index.html` (SPA) |
 | CI | deploy automático no push p/ `main` se `secrets.FIREBASE_TOKEN` existir (`.github/workflows/ci.yml`) |
