@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qio_app/widgets/qio_button.dart';
 
-Widget wrap(Widget child) => MaterialApp(home: Scaffold(body: Center(child: child)));
+Widget wrap(Widget child) => MaterialApp(
+  home: Scaffold(body: Center(child: child)),
+);
 
 void main() {
   testWidgets('renders label and fires onPressed', (tester) async {
@@ -28,7 +30,11 @@ void main() {
     var tapped = false;
     await tester.pumpWidget(
       wrap(
-        QioButton(label: 'Salvando', isLoading: true, onPressed: () => tapped = true),
+        QioButton(
+          label: 'Salvando',
+          isLoading: true,
+          onPressed: () => tapped = true,
+        ),
       ),
     );
 
@@ -40,12 +46,7 @@ void main() {
 
   testWidgets('renders icon when provided', (tester) async {
     await tester.pumpWidget(
-      wrap(
-        const QioButton(
-          label: 'Compartilhar',
-          icon: Icons.share,
-        ),
-      ),
+      wrap(const QioButton(label: 'Compartilhar', icon: Icons.share)),
     );
 
     expect(find.byIcon(Icons.share), findsOneWidget);

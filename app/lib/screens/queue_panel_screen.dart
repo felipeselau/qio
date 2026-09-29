@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
@@ -5,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../models/queue.dart';
 import '../models/queue_entry.dart';
+import '../services/operator_service.dart';
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
@@ -34,10 +37,56 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
   bool _actionLoading = false;
   bool _finishLoading = false;
   bool _deleteLoading = false;
+  StreamSubscription<bool>? _accessSub;
+  bool _accessLost = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.isOwner) {
+      _accessSub = OperatorService.instance
+          .watchIsOperator(widget.queueId)
+          .listen((isOperator) {
+            if (!isOperator) _onAccessLost();
+          });
+    }
+  }
+
+  @override
+  void dispose() {
+    _accessSub?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _onAccessLost() async {
+    if (_accessLost || !mounted) return;
+    _accessLost = true;
+    await _accessSub?.cancel();
+    if (!mounted) return;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Acesso encerrado'),
+        content: const Text(
+          'Você não é mais operador desta fila. O dono removeu seu acesso ou a fila foi excluída.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+    if (mounted) Navigator.of(context).pop();
+  }
 
   bool _isMine(QueueEntry e) {
-    final uid = QueueService.instance.currentUid;
-    return e.operatorId == uid || (e.operatorId == null && widget.isOwner);
+    return e.isHandledBy(
+      QueueService.instance.currentUid,
+      isOwner: widget.isOwner,
+    );
   }
 
   @override

@@ -79,6 +79,9 @@ class QueueEntry {
     );
   }
 
+  bool isHandledBy(String uid, {required bool isOwner}) =>
+      operatorId == uid || (operatorId == null && isOwner);
+
   Map<String, dynamic> toMap() => {
     'ticket': ticket,
     'name': name,

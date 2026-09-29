@@ -48,7 +48,12 @@ service cloud.firestore {
 
       match /history/{entryId} {
         allow read, write: if signedIn() && isQueueOwner(queueId);
-        allow create: if signedIn() && isQueueOperator(queueId);
+        allow create: if signedIn()
+          && isQueueOperator(queueId)
+          && request.resource.data.operatorId == request.auth.uid
+          && request.resource.data.result in ['served', 'no_show']
+          && request.resource.data.keys().hasOnly(['ticket', 'name', 'phone', 'result', 'joinedAt', 'calledAt', 'calledBy', 'operatorId', 'finishedAt'])
+          && request.resource.data.keys().hasAll(['ticket', 'name', 'phone', 'result', 'joinedAt', 'calledAt', 'calledBy', 'operatorId', 'finishedAt']);
       }
 
       match /operators/{opUid} {
@@ -67,7 +72,7 @@ service cloud.firestore {
         allow update: if signedIn() && (
           (isQueueOwner(queueId)
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'respondedAt'])
-            && request.resource.data.status in ['approved', 'rejected'])
+            && request.resource.data.status in ['approved', 'rejected', 'removed'])
           || (request.auth.uid == reqUid
             && resource.data.status != 'pending'
             && request.resource.data.uid == reqUid

@@ -275,9 +275,7 @@ class _OperatorQueueCardState extends State<_OperatorQueueCard> {
             padding: const EdgeInsets.all(20),
             child: Text(
               widget.operator.queueName,
-              style: QioTextStyles.heading3.copyWith(
-                color: QioColors.gray400,
-              ),
+              style: QioTextStyles.heading3.copyWith(color: QioColors.gray400),
             ),
           );
         }
@@ -322,10 +320,12 @@ class _RequestCard extends StatelessWidget {
                     color: QioColors.textPrimary,
                   ),
                 ),
-                Text(
-                  pending ? 'Aguardando aprovação' : 'Pedido recusado',
-                  style: QioTextStyles.caption.copyWith(fontSize: 12),
-                ),
+                Text(switch (request.status) {
+                  OperatorRequestStatus.removed =>
+                    'Você foi removido desta fila',
+                  OperatorRequestStatus.rejected => 'Pedido recusado',
+                  _ => 'Aguardando aprovação',
+                }, style: QioTextStyles.caption.copyWith(fontSize: 12)),
               ],
             ),
           ),

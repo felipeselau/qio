@@ -28,46 +28,68 @@ export type QueueState = {
   estimatedWaitMin: number | null;
   loading: boolean;
   exists: boolean;
+  failed: boolean;
 };
 
-export function useQueue(queueId: string, entryId: string | null): QueueState {
+export function useQueue(
+  queueId: string,
+  entryId: string | null,
+  ready: boolean,
+): QueueState {
   const [meta, setMeta] = useState<QueueMeta | null>(null);
   const [entries, setEntries] = useState<Record<string, any> | null>(null);
   const [myEntry, setMyEntry] = useState<MyEntry | null>(null);
   const [myEntryResolved, setMyEntryResolved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [exists, setExists] = useState(true);
+  const [failed, setFailed] = useState(false);
 
+  // As regras da RTDB exigem auth != null para ler meta/entries. Se o listener
+  // for anexado antes do signInAnonymously terminar, a leitura é negada, o
+  // onValue cai no callback de erro e o listener é descartado sem retry —
+  // deixando a tela presa no spinner no PRIMEIRO acesso de cada usuário
+  // (justamente o fluxo do QR code). Só anexamos quando `ready` (autenticado).
   useEffect(() => {
+    if (!ready) return;
     const metaRef = ref(db, `queues/${queueId}/meta`);
-    const unsub = onValue(metaRef, (snap) => {
-      const val = snap.val();
-      if (!val) {
-        setExists(false);
-        setMeta(null);
-      } else {
-        setMeta({
-          name: val.name ?? 'Fila',
-          status: val.status ?? 'open',
-          serving: val.serving ?? 0,
-          avgServiceMin: val.avgServiceMin ?? null,
-          description: val.description ?? null,
-        });
-      }
-      setLoading(false);
-    });
+    const unsub = onValue(
+      metaRef,
+      (snap) => {
+        const val = snap.val();
+        if (!val) {
+          setExists(false);
+          setMeta(null);
+        } else {
+          setMeta({
+            name: val.name ?? 'Fila',
+            status: val.status ?? 'open',
+            serving: val.serving ?? 0,
+            avgServiceMin: val.avgServiceMin ?? null,
+            description: val.description ?? null,
+          });
+        }
+        setFailed(false);
+        setLoading(false);
+      },
+      () => {
+        setFailed(true);
+        setLoading(false);
+      },
+    );
     return unsub;
-  }, [queueId]);
+  }, [queueId, ready]);
 
   useEffect(() => {
+    if (!ready) return;
     const entriesRef = ref(db, `queues/${queueId}/entries`);
     const unsub = onValue(entriesRef, (snap) => {
       setEntries(snap.val() ?? {});
     });
     return unsub;
-  }, [queueId]);
+  }, [queueId, ready]);
 
   useEffect(() => {
+    if (!ready) return;
     if (!entryId) {
       setMyEntry(null);
       setMyEntryResolved(false);
@@ -91,7 +113,7 @@ export function useQueue(queueId: string, entryId: string | null): QueueState {
       }
     });
     return unsub;
-  }, [queueId, entryId]);
+  }, [queueId, entryId, ready]);
 
   let position: number | null = null;
   let estimatedWaitMin: number | null = null;
@@ -106,5 +128,5 @@ export function useQueue(queueId: string, entryId: string | null): QueueState {
     if (position != null) estimatedWaitMin = position * avg;
   }
 
-  return { meta, myEntry, myEntryResolved, position, estimatedWaitMin, loading, exists };
+  return { meta, myEntry, myEntryResolved, position, estimatedWaitMin, loading, exists, failed };
 }

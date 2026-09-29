@@ -126,4 +126,46 @@ void main() {
       expect(e.toMap()['operatorId'], 'op2');
     });
   });
+
+  group('QueueEntry.isHandledBy', () {
+    QueueEntry entry({String? operatorId}) => QueueEntry(
+      id: 'e1',
+      ticket: 1,
+      name: 'Ana',
+      phone: '',
+      uid: 'c1',
+      status: EntryStatus.called,
+      joinedAt: DateTime(2026, 9, 27),
+      operatorId: operatorId,
+    );
+
+    test('operator handles own entry', () {
+      expect(
+        entry(operatorId: 'op1').isHandledBy('op1', isOwner: false),
+        isTrue,
+      );
+    });
+
+    test('operator does not handle entry of another operator', () {
+      expect(
+        entry(operatorId: 'op2').isHandledBy('op1', isOwner: false),
+        isFalse,
+      );
+    });
+
+    test('owner handles legacy entry without operatorId', () {
+      expect(entry().isHandledBy('owner', isOwner: true), isTrue);
+    });
+
+    test('operator does not handle legacy entry without operatorId', () {
+      expect(entry().isHandledBy('op1', isOwner: false), isFalse);
+    });
+
+    test('owner does not handle entry called by an operator', () {
+      expect(
+        entry(operatorId: 'op1').isHandledBy('owner', isOwner: true),
+        isFalse,
+      );
+    });
+  });
 }

@@ -30,15 +30,18 @@ export default function QueuePage() {
     estimatedWaitMin,
     loading,
     exists,
-  } = useQueue(queueId, entryId);
+    failed,
+  } = useQueue(queueId, entryId, authed);
 
+  const [authFailed, setAuthFailed] = useState(false);
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
       if (user) {
         setAuthed(true);
+        setAuthFailed(false);
         setEntryId(getStoredEntryId(queueId));
       } else {
-        signInAnonymously(auth).catch(() => setError('Falha na autenticação'));
+        signInAnonymously(auth).catch(() => setAuthFailed(true));
       }
     });
     return unsub;
@@ -112,7 +115,7 @@ export default function QueuePage() {
   }
 
   const phase: Phase = (() => {
-    if (loading || !authed) return 'loading';
+    if (loading || !authed || failed) return 'loading';
     if (!exists) return 'gone';
     if (meta?.status === 'closed' && !myEntry) return 'closed';
     if (!myEntry) return 'join';
@@ -152,6 +155,14 @@ export default function QueuePage() {
   }, []);
 
   if (phase === 'loading') {
+    if (authFailed || failed) {
+      return (
+        <div className="center-col">
+          <h1 style={{ fontSize: 20, fontWeight: 700 }}>Não foi possível conectar</h1>
+          <p className="muted">Verifique sua conexão e recarregue a página.</p>
+        </div>
+      );
+    }
     return (
       <div className="center-col">
         <div className="spinner" />

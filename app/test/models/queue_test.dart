@@ -59,6 +59,24 @@ void main() {
       expect(q.createdAt, DateTime(2026, 2, 20, 14));
     });
 
+    test('parses operator invite fields', () {
+      final expires = DateTime(2026, 9, 28, 12);
+      final q = Queue.fromDoc('q4', {
+        'operatorInviteCode': 'K7M2QX',
+        'operatorInviteExpiresAt': Timestamp.fromDate(expires),
+      });
+
+      expect(q.operatorInviteCode, 'K7M2QX');
+      expect(q.operatorInviteExpiresAt, expires);
+    });
+
+    test('invite fields are null when absent or malformed', () {
+      final q = Queue.fromDoc('q5', {'operatorInviteExpiresAt': 'amanhã'});
+
+      expect(q.operatorInviteCode, isNull);
+      expect(q.operatorInviteExpiresAt, isNull);
+    });
+
     test('applies defaults for missing fields', () {
       final q = Queue.fromDoc('q3', {});
 
