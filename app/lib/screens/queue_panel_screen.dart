@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../models/queue.dart';
 import '../models/queue_entry.dart';
+import '../services/entry_diff.dart';
 import '../services/operator_service.dart';
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
@@ -39,10 +40,15 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
   bool _deleteLoading = false;
   StreamSubscription<bool>? _accessSub;
   bool _accessLost = false;
+  StreamSubscription<List<QueueEntry>>? _joinSub;
+  Set<String>? _lastWaiting;
 
   @override
   void initState() {
     super.initState();
+    _joinSub = QueueService.instance
+        .watchEntries(widget.queueId)
+        .listen(_onEntries, onError: (_) {});
     if (widget.isOwner) {
       _repairMirror();
     } else {
@@ -52,6 +58,22 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
             if (!isOperator) _onAccessLost();
           });
     }
+  }
+
+  void _onEntries(List<QueueEntry> entries) {
+    final added = newWaitingIds(_lastWaiting, entries);
+    _lastWaiting = waitingIdsOf(entries);
+    if (added.isEmpty || !mounted) return;
+    HapticFeedback.mediumImpact();
+    SystemSound.play(SystemSoundType.alert);
+    final message = added.length == 1
+        ? 'Nova pessoa na fila: ${entries.firstWhere((e) => e.id == added.first).name}'
+        : '${added.length} novas pessoas na fila';
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(message), duration: const Duration(seconds: 3)),
+      );
   }
 
   Future<void> _repairMirror() async {
@@ -76,6 +98,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
   @override
   void dispose() {
     _accessSub?.cancel();
+    _joinSub?.cancel();
     super.dispose();
   }
 
