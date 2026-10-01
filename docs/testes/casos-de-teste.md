@@ -40,7 +40,7 @@ obtido" depois de executado.
 | CLI-08 | Cliente | Sair da fila | Com senha ativa, tocar "Sair da fila" e confirmar | Tela "Você saiu da fila"; entry some do painel do dono | [emulator] "Tem certeza?" → "Confirmar saída" → "Você saiu da fila"; entry sumiu da lista do dono | Aprovado | 30/09/2026 |
 | CLI-09 | Cliente | Recuperar a senha ao reabrir | Entrar na fila, fechar a aba, abrir o mesmo link | Mesma senha e posição exibidas | [emulator] Após recarregar a página: mesma senha #7 e posição 3º | Aprovado | 30/09/2026 |
 | CLI-10 | Cliente | Alerta na página | Aba aberta; dono chama a senha | Tela "É a sua vez", som e vibração | [emulator] "É a sua vez! Senha #1 — Dirija-se ao atendimento." em tempo real. Som e vibração não verificáveis no navegador de teste | Aprovado (visual) | 30/09/2026 |
-| CLI-11 | Cliente | Push com a aba em segundo plano (Android/Chrome) | Permitir notificações, minimizar o Chrome, dono chama | Notificação push | Cloud Function `onEntryCalled` não publicada: o projeto está no plano Spark e Functions v2 exigem Blaze | Bloqueado | 30/09/2026 |
+| CLI-11 | Cliente | Push com a aba em segundo plano (Android/Chrome) | Permitir notificações, minimizar o Chrome, dono chama | Notificação push | Function `onEntryCalled` publicada em 01/10/2026, mas o build publicado da web não tem `VITE_VAPID_KEY`: o cliente não obtém token FCM | Bloqueado | 01/10/2026 |
 | CLI-12 | Cliente | iOS: limitação | Abrir o link no Safari do iPhone | Funciona com alerta na página; push web só com a página instalada na tela inicial (iOS 16.4+) | | Pendente | |
 
 ## Dono (app)
@@ -81,14 +81,15 @@ obtido" depois de executado.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | INT-01 | Sistema | Web ↔ RTDB | Cliente anônimo lê `queues/{id}/meta` em produção | Leitura liberada após o login anônimo | SDK web 12.x em produção: login anônimo e `get(queues/{id}/meta)` retornaram `null` para fila inexistente, sem erro de permissão | Aprovado | 30/09/2026 |
 | INT-02 | Sistema | App ↔ Firestore/RTDB | Executar DON-01 a DON-05 | Dual-write: Firestore e espelho `meta`/`owners` no RTDB | [emulator] Dual-write conferido nos emulators após DON-01 a DON-05 | Aprovado | 30/09/2026 |
-| INT-03 | Sistema | RTDB → Cloud Function → FCM | Executar CLI-11 | Push entregue | Function não publicada (plano Spark) | Bloqueado | 30/09/2026 |
+| INT-03 | Sistema | RTDB → Cloud Function → FCM | Executar CLI-11 | Push entregue | Function publicada (v2, gatilho `ref.v1.written`); entrega não testada por falta de token FCM no cliente (ver CLI-11) | Bloqueado | 01/10/2026 |
 | INT-04 | Sistema | App Check ↔ web | Verificar `VITE_RECAPTCHA_SITE_KEY` no build publicado | App Check ativo | Build publicado sem chave do reCAPTCHA: App Check desativado em produção | Bloqueado | 30/09/2026 |
 | INT-05 | Sistema | Operador ↔ rules | Rodar AUT-04 e executar OPE-05 a OPE-07 | Rules liberam só atendimento | [emulator] OPE-05 a OPE-07 executados com as rules do repo nos emulators | Aprovado (emulator) | 30/09/2026 |
 
 ## Limitações conhecidas
 
-- Push com a aba em segundo plano não funciona em produção: o projeto está no
-  plano Spark e Cloud Functions v2 exigem Blaze.
+- Push com a aba em segundo plano ainda não chega: a Cloud Function foi
+  publicada em 01/10/2026 (plano Blaze), mas o build da web não tem
+  `VITE_VAPID_KEY`.
 - App Check desativado em produção (sem `VITE_RECAPTCHA_SITE_KEY` no build).
 - Fila pausada: o bloqueio de entrada é só na interface; as rules do RTDB não
   impedem a criação de entry com a fila pausada.
