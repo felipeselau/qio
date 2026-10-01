@@ -62,7 +62,7 @@ O sistema é composto por **3 módulos** que se comunicam via **Firebase** (BaaS
   - **Authentication**: login do proprietário (email/Google) e do cliente (anônimo)
   - **Firestore**: banco de dados relacional para dados duráveis (proprietários, filas, histórico)
   - **Realtime Database (RTDB)**: banco de dados em tempo real para estado vivo das filas (posições, chamadas)
-  - **Cloud Functions**: funções serverless que disparam notificações push
+  - **Cloud Functions** (v2): `joinQueue`, `syncPublicTicket`, `onEntryCalled` (push) e `updateServiceEstimate`
   - **Hosting**: hospedagem do site do cliente (React)
   - **Cloud Messaging (FCM)**: envio de notificações push
 
@@ -211,7 +211,9 @@ O sistema usa uma abordagem **híbrida** para notificar o cliente:
 | Cloud Functions  | Google Cloud (serverless)    | `firebase deploy --only functions` |
 | Firestore/RTDB   | Firebase (managed)           | `firebase deploy --only rules`     |
 
-## 9. Custos (Free Tier Spark)
+## 9. Custos (plano Blaze, cota gratuita)
+
+O projeto está no plano Blaze desde 01/10/2026 (exigido pelas Cloud Functions v2). O custo esperado no volume do TCC fica dentro da cota gratuita.
 
 | Serviço                | Limite grátis           | Uso no Qio                        |
 | ---------------------- | ----------------------- | --------------------------------- |
@@ -219,10 +221,10 @@ O sistema usa uma abordagem **híbrida** para notificar o cliente:
 | Firestore              | 50k reads/dia           | Baixo (1 read por entrada)        |
 | RTDB                   | 100 conexões simultâneas| 1 por client com página aberta    |
 | Hosting                | 10GB/mês                | Web React                         |
-| Cloud Functions        | 2M invocações/mês       | 1 por chamada de cliente          |
+| Cloud Functions        | 2M invocações/mês       | `joinQueue` por entrada; gatilhos de RTDB/Firestore |
 | FCM                    | Gratuito                | Notificações push                 |
 
-**Gargalo principal**: 100 conexões simultâneas no RTDB. Suficiente para validar o MVP; escalar exige plano Blaze.
+**Gargalo principal**: conexões simultâneas no RTDB. No Spark o limite era 100; no Blaze sobe para 200 mil por instância, bem acima do necessário para o MVP.
 
 ## 10. Referências
 

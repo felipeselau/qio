@@ -18,7 +18,7 @@ Qio é um sistema de filas para atendimentos presenciais. Owners criam filas e g
 - **Backend**: Firebase (projeto `qio-app`)
   - Firestore: dados duráveis (owners, queues, histórico)
   - RTDB: estado vivo das filas (posições, contador, entries)
-  - Cloud Functions: trigger RTDB → FCM push (fase de notificações)
+  - Cloud Functions v2 (plano Blaze desde 01/10/2026): `joinQueue`, `syncPublicTicket`, `onEntryCalled` (RTDB → FCM push) e `updateServiceEstimate`
   - Auth: email/Google (owner) + anônima (client)
 
 ## 3. Arquitetura
@@ -58,7 +58,7 @@ Owner chama próximo → entry.status = "called"
 
 **Limite duro de plataforma**: iOS Safari não entrega web push em aba comum — só se o site for instalado na tela de início (iOS 16.4+). Sem app instalado, não existe workaround gratuito. No iOS o MVP depende da aba aberta (banner na página: "mantenha esta aba aberta"). FCM cobre Android/desktop.
 
-**Requisitos**: VAPID key (console Firebase → Cloud Messaging → Web Push certificates) + service worker `firebase-messaging-sw.js` no Hosting + 1 Cloud Function (free tier Spark, 2M invocações/mês, FCM grátis).
+**Requisitos**: VAPID key (console Firebase → Cloud Messaging → Web Push certificates) + service worker `firebase-messaging-sw.js` no Hosting + Cloud Function `onEntryCalled` (plano Blaze, dentro da cota gratuita de 2M invocações/mês; FCM grátis).
 
 ## 5. Modelo de dados
 
@@ -157,7 +157,9 @@ service cloud.firestore {
 }
 ```
 
-## 8. Orçamento free tier (Spark)
+## 8. Orçamento (plano Blaze, cota gratuita)
+
+Projeto no plano Blaze desde 01/10/2026 (Cloud Functions v2). Custo esperado dentro da cota gratuita no volume do TCC.
 
 | Serviço | Limite grátis | Uso Qio | Risco |
 |---------|--------------|---------|-------|
@@ -165,7 +167,7 @@ service cloud.firestore {
 | Firestore | 50k reads, 20k writes/dia | baixo (1 read por entrada de client) | — |
 | RTDB | 100 conexões simultâneas, 10GB/mês tráfego | 1 conexão por client com página aberta + owner | ⚠️ gargalo do MVP |
 | Hosting | 10GB/mês | web React | — |
-| FCM/Functions | grátis | fase 2 | — |
+| FCM/Functions | 2M invocações/mês (Functions); FCM grátis | `joinQueue`, `syncPublicTicket`, `onEntryCalled`, `updateServiceEstimate` | dentro da cota no volume do TCC |
 
 100 conexões simultâneas ≈ ~100 clientes com página aberta ao mesmo tempo no projeto todo. Suficiente p/ validar; monitorar.
 
@@ -181,7 +183,7 @@ service cloud.firestore {
 qio/
 ├── app/          # Flutter (owner)
 ├── web/          # React + Vite + TS (client)
-├── functions/    # Cloud Function: RTDB trigger → FCM push
+├── functions/    # Cloud Functions v2: joinQueue, syncPublicTicket, onEntryCalled (FCM), updateServiceEstimate
 ├── docs/SPEC.md  # este desenho
 ├── design/       # arquivos .pen
 ├── firebase.json

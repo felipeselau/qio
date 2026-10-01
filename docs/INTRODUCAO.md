@@ -66,7 +66,7 @@ O **Qio** surge como uma solução digital para modernizar o gerenciamento de fi
 - **Zero barreira de entrada para o cliente**: não há app para instalar. O QR Code direciona para uma página web que funciona em qualquer navegador moderno.
 - **Notificação em tempo real**: o cliente é alertado visual e sonoramente quando chamado, podendo estar em outra parte do estabelecimento.
 - **Funciona offline (quase)**: a página do cliente mantém conexão em tempo real com o servidor, atualizando posição e status automaticamente.
-- **Custo zero para o cliente**: o sistema roda na camada gratuita do Firebase (Spark), viável para validação do MVP e pequenos estabelecimentos.
+- **Custo zero para o cliente**: o cliente não paga nem instala nada. O projeto está no plano Blaze (pay-as-you-go) desde 01/10/2026, por causa das Cloud Functions v2; no volume do TCC o uso esperado fica dentro da cota gratuita.
 - **Experiência mobile-first**: projetado para o contexto real de uso — celular do cliente escaneando QR Code, proprietário usando o app no dia a dia.
 
 ### Evidências de que filas virtuais funcionam

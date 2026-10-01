@@ -43,6 +43,8 @@ obtido" depois de executado.
 | CLI-11 | Cliente | Push com a aba em segundo plano (Android/Chrome) | Permitir notificações, minimizar o Chrome, dono chama | Notificação push | Function `onEntryCalled` publicada em 01/10/2026, mas o build publicado da web não tem `VITE_VAPID_KEY`: o cliente não obtém token FCM | Bloqueado | 01/10/2026 |
 | CLI-12 | Cliente | iOS: limitação | Abrir o link no Safari do iPhone | Funciona com alerta na página; push web só com a página instalada na tela inicial (iOS 16.4+) | | Pendente | |
 
+Nota CLI-03 (01/10/2026): a partir da 1.2.0 a `joinQueue` também bloqueia a entrada em fila pausada ou fechada no servidor, não só pela interface. O resultado obtido acima (30/09/2026) foi na interface e não foi reexecutado contra a function.
+
 ## Dono (app)
 
 | ID | Perfil | Cenário | Passos | Resultado esperado | Resultado obtido | Situação | Data |
@@ -93,6 +95,9 @@ obtido" depois de executado.
 - App Check desativado em produção (sem `VITE_RECAPTCHA_SITE_KEY` no build).
 - Fila pausada: o bloqueio de entrada é só na interface; as rules do RTDB não
   impedem a criação de entry com a fila pausada.
+  Nota de 01/10/2026: a Cloud Function `joinQueue` (1.2.0) passou a recusar
+  entrada em fila pausada ou fechada no servidor (`failed-precondition`). O
+  resultado registrado acima é anterior a isso e não foi reexecutado.
 - O cliente pode alterar campos da própria entry no RTDB (ticket, status).
 - O app Flutter compilado para web perde a sessão ao recarregar a página
   (observado só no ambiente de teste com emulator; o app é distribuído como

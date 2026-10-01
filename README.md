@@ -17,7 +17,7 @@ Sistema de filas para atendimentos presenciais. Proprietários criam filas no ap
 qio/
 ├── app/          # Flutter — app do proprietário (Android/iOS)
 ├── web/          # React + Vite + TypeScript — página do cliente (navegador)
-├── functions/    # Cloud Functions — notificações push (FCM)
+├── functions/    # Cloud Functions v2 — joinQueue, espelho público, push (FCM) e estimativa
 ├── docs/         # Documentação do projeto
 ├── design/       # Arquivos de design (Pencil .pen)
 ├── firebase.json
