@@ -24,12 +24,14 @@ describe('RTDB rules', () => {
           [QUEUE]: {
             meta: { name: 'Balcão', status: 'open', serving: 3, updatedAt: 0 },
             entries: {
-              e1: { uid: 'client1', ticket: 4, status: 'waiting', name: 'Ana', joinedAt: 0 },
+              e1: { uid: 'client1', ticket: 4, status: 'waiting', name: 'Ana', phone: '(11) 91234-5678', joinedAt: 0 },
             },
+            public: { e1: { ticket: 4, status: 'waiting' } },
             operatorUids: { [OPERATOR]: true, other: true },
           },
         },
         tickets: { [QUEUE]: 4 },
+        rateLimits: { [QUEUE]: { client1: [1] } },
       });
     });
   });
@@ -85,10 +87,82 @@ describe('RTDB rules', () => {
       await assertFails(update(ref(rtdb(STRANGER), path('entries/e1')), { status: 'called' }));
     });
 
-    it('cliente cria a própria entry', async () => {
-      await assertSucceeds(
+    it('cliente não cria entry diretamente', async () => {
+      await assertFails(
         set(ref(rtdb(STRANGER), path('entries/e2')), { uid: STRANGER, ticket: 5, status: 'waiting', name: 'Bia' }),
       );
+    });
+
+    it('anônimo não lista entries', async () => {
+      await assertFails(get(ref(rtdb(STRANGER), path('entries'))));
+    });
+
+    it('cliente lê a própria entry', async () => {
+      await assertSucceeds(get(ref(rtdb('client1'), path('entries/e1'))));
+    });
+
+    it('cliente não lê entry de outro', async () => {
+      await assertFails(get(ref(rtdb(STRANGER), path('entries/e1'))));
+    });
+
+    it('dono lista entries', async () => {
+      await assertSucceeds(get(ref(rtdb(OWNER), path('entries'))));
+    });
+
+    it('operador lista entries', async () => {
+      await assertSucceeds(get(ref(rtdb(OPERATOR), path('entries'))));
+    });
+
+    it('cliente marca a própria entry como left', async () => {
+      await assertSucceeds(update(ref(rtdb('client1'), path('entries/e1')), { status: 'left' }));
+    });
+
+    it('cliente não volta a própria entry para called', async () => {
+      await assertFails(update(ref(rtdb('client1'), path('entries/e1')), { status: 'called' }));
+    });
+
+    it('cliente grava fcmToken', async () => {
+      await assertSucceeds(update(ref(rtdb('client1'), path('entries/e1')), { fcmToken: 'tok' }));
+    });
+
+    it('cliente não muda o próprio ticket, nome ou telefone', async () => {
+      await assertFails(update(ref(rtdb('client1'), path('entries/e1')), { ticket: 1 }));
+      await assertFails(update(ref(rtdb('client1'), path('entries/e1')), { name: 'Outro' }));
+      await assertFails(update(ref(rtdb('client1'), path('entries/e1')), { phone: '(11) 3333-4444' }));
+    });
+  });
+
+  describe('public, tickets e rateLimits', () => {
+    it('cliente lê public', async () => {
+      await assertSucceeds(get(ref(rtdb(STRANGER), path('public'))));
+    });
+
+    it('cliente não escreve em public', async () => {
+      await assertFails(set(ref(rtdb('client1'), path('public/e9')), { ticket: 1, status: 'waiting' }));
+      await assertFails(remove(ref(rtdb('client1'), path('public/e1'))));
+    });
+
+    it('dono não escreve em public', async () => {
+      await assertFails(set(ref(rtdb(OWNER), path('public/e9')), { ticket: 1, status: 'waiting' }));
+    });
+
+    it('cliente não escreve tickets', async () => {
+      await assertFails(set(ref(rtdb(STRANGER), `tickets/${QUEUE}`), 99));
+    });
+
+    it('cliente não lê tickets', async () => {
+      await assertFails(get(ref(rtdb(STRANGER), `tickets/${QUEUE}`)));
+    });
+
+    it('dono remove tickets', async () => {
+      await assertSucceeds(remove(ref(rtdb(OWNER), `tickets/${QUEUE}`)));
+    });
+
+    it('ninguém lê ou escreve rateLimits', async () => {
+      for (const uid of [OWNER, OPERATOR, 'client1', STRANGER]) {
+        await assertFails(get(ref(rtdb(uid), `rateLimits/${QUEUE}/client1`)));
+        await assertFails(set(ref(rtdb(uid), `rateLimits/${QUEUE}/client1`), []));
+      }
     });
   });
 
@@ -158,7 +232,7 @@ describe('RTDB rules', () => {
       calledAt: null,
       ...extra,
     });
-    const create = (extra) => set(ref(rtdb(STRANGER), entryPath('e2')), valid(extra));
+    const create = (extra) => set(ref(rtdb(OWNER), entryPath('e2')), valid(extra));
 
     it('aceita entry válida com telefone celular', async () => {
       await assertSucceeds(create());
