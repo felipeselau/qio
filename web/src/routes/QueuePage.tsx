@@ -297,7 +297,7 @@ export default function QueuePage() {
             </p>
           </div>
 
-          {(installPrompt.canInstall || installPrompt.isIos) && (
+          {(installPrompt.canInstall || installPrompt.hint) && (
             <section className="install-banner" role="region" aria-label="Instalar o Qio">
               {installPrompt.canInstall ? (
                 <>
@@ -321,7 +321,11 @@ export default function QueuePage() {
                 </>
               ) : (
                 <>
-                  <p>No Safari, toque em Compartilhar › Adicionar à Tela de Início.</p>
+                  <p>
+                    {installPrompt.hint === 'ios'
+                      ? 'No Safari, toque em Compartilhar › Adicionar à Tela de Início.'
+                      : 'No Chrome, toque em ⋮ › Instalar app para acompanhar sua senha com um toque.'}
+                  </p>
                   <div className="install-banner-actions">
                     <button
                       type="button"

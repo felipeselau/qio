@@ -51,11 +51,20 @@ function detectIosSafari(): boolean {
   return !/CriOS|FxiOS|EdgiOS|OPiOS|GSA/.test(ua);
 }
 
+function detectAndroidChrome(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent;
+  return /Android/.test(ua) && /Chrome\//.test(ua) && !/SamsungBrowser|EdgA|OPR|Firefox/.test(ua);
+}
+
+export type InstallHint = 'ios' | 'android' | null;
+
 export function useInstallPrompt() {
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [dismissed, setDismissed] = useState(readDismissed);
   const [standalone, setStandalone] = useState(detectStandalone);
   const isIos = detectIosSafari();
+  const isAndroidChrome = detectAndroidChrome();
 
   useEffect(() => {
     function onBeforeInstall(e: Event) {
@@ -95,12 +104,15 @@ export function useInstallPrompt() {
     isIos: false,
   });
 
-  const showIosHint = shouldShowInstallBanner({
-    standalone,
-    dismissed,
-    hasPrompt: false,
-    isIos,
-  });
+  const showManualHint =
+    !canInstall &&
+    shouldShowInstallBanner({
+      standalone,
+      dismissed,
+      hasPrompt: false,
+      isIos: isIos || isAndroidChrome,
+    });
+  const hint: InstallHint = showManualHint ? (isIos ? 'ios' : 'android') : null;
 
-  return { canInstall, isIos: showIosHint, install, dismiss };
+  return { canInstall, hint, install, dismiss };
 }
