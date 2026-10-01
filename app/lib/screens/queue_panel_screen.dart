@@ -18,6 +18,7 @@ import '../widgets/qio_button.dart';
 import '../widgets/qio_card.dart';
 import 'history_screen.dart';
 import 'operators_screen.dart';
+import 'qr_poster_screen.dart';
 
 class QueuePanelScreen extends StatefulWidget {
   const QueuePanelScreen({
@@ -668,6 +669,23 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 12),
+          QioButton(
+            label: 'Cartaz para impressão',
+            variant: QioButtonVariant.ghost,
+            icon: Icons.print,
+            fontSize: 14,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            isFullWidth: true,
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => QrPosterScreen(
+                  queueName: widget.queueName,
+                  joinUrl: joinUrl,
+                ),
+              ),
+            ),
           ),
         ],
       ),
