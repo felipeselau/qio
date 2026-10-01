@@ -224,7 +224,7 @@ O projeto está no plano Blaze desde 01/10/2026 (exigido pelas Cloud Functions v
 | Cloud Functions        | 2M invocações/mês       | `joinQueue` por entrada; gatilhos de RTDB/Firestore |
 | FCM                    | Gratuito                | Notificações push                 |
 
-**Gargalo principal**: 100 conexões simultâneas no RTDB. Suficiente para validar o MVP; escalar exige plano Blaze.
+**Gargalo principal**: conexões simultâneas no RTDB. No Spark o limite era 100; no Blaze sobe para 200 mil por instância, bem acima do necessário para o MVP.
 
 ## 10. Referências
 
