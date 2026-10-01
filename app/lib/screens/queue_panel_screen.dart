@@ -43,12 +43,33 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
   @override
   void initState() {
     super.initState();
-    if (!widget.isOwner) {
+    if (widget.isOwner) {
+      _repairMirror();
+    } else {
       _accessSub = OperatorService.instance
           .watchIsOperator(widget.queueId)
           .listen((isOperator) {
             if (!isOperator) _onAccessLost();
           });
+    }
+  }
+
+  Future<void> _repairMirror() async {
+    try {
+      await QueueService.instance.ensureMirror(widget.queueId);
+    } on Exception {
+      if (!mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Não foi possível sincronizar a fila. Tente reabrir.',
+            ),
+            backgroundColor: QioColors.error,
+          ),
+        );
+      });
     }
   }
 
