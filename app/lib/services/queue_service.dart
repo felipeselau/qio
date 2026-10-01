@@ -121,6 +121,7 @@ class QueueService {
       }
     }
     await _rtdb.ref('queues/$queueId/meta').remove();
+    await _rtdb.ref('tickets/$queueId').remove();
     await _rtdb.ref('owners/$queueId').remove();
   }
 
