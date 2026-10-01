@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
-import { getAuth } from 'firebase/auth';
-import { getDatabase } from 'firebase/database';
+import { connectAuthEmulator, getAuth } from 'firebase/auth';
+import { connectDatabaseEmulator, getDatabase } from 'firebase/database';
 import { getMessaging, type Messaging } from 'firebase/messaging';
 
 const firebaseConfig = {
@@ -31,6 +31,11 @@ if (recaptchaSiteKey) {
 
 export const auth = getAuth(app);
 export const db = getDatabase(app);
+
+if (import.meta.env.VITE_USE_EMULATORS === 'true') {
+  connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+  connectDatabaseEmulator(db, 'localhost', 9000);
+}
 
 // getMessaging() lança sincronamente em navegadores sem suporte a FCM
 // (muitos webviews de apps, Safari iOS antigo). Como firebase.ts é importado
