@@ -1,6 +1,6 @@
 import { ref, update } from 'firebase/database';
 import { httpsCallable } from 'firebase/functions';
-import { auth, db, getFunctionsSafe } from '../firebase';
+import { auth, db, functions } from '../firebase';
 import { storeEntryId } from './storage';
 
 export type JoinResult = { entryId: string; ticket: number; existing: boolean };
@@ -28,7 +28,7 @@ export async function joinQueue(
     const call = httpsCallable<
       { queueId: string; name: string; phone: string },
       JoinResult
-    >(getFunctionsSafe(), 'joinQueue');
+    >(functions, 'joinQueue');
     result = (await call({ queueId, name, phone })).data;
   } catch (err) {
     const code = (err as { code?: string } | null)?.code ?? '';

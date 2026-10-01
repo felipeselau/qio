@@ -44,10 +44,6 @@ if (import.meta.env.VITE_USE_EMULATORS === 'true') {
 // (muitos webviews de apps, Safari iOS antigo). Como firebase.ts é importado
 // por toda a aplicação, chamá-lo no topo do módulo derrubaria a página inteira.
 // Resolvido de forma preguiçosa: retorna null quando não há suporte.
-export function getFunctionsSafe() {
-  return functions;
-}
-
 let _messaging: Messaging | null | undefined;
 export function getMessagingSafe(): Messaging | null {
   if (_messaging !== undefined) return _messaging;
