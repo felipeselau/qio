@@ -1,5 +1,7 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../services/auth_errors.dart';
 import '../services/auth_service.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
@@ -47,8 +49,10 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
       if (mounted) _goHome();
-    } on Exception catch (e) {
-      if (mounted) _showError(e.toString());
+    } on FirebaseAuthException catch (e) {
+      if (mounted) _showError(authErrorMessage(e.code));
+    } on Exception {
+      if (mounted) _showError(authErrorMessage(''));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -59,8 +63,10 @@ class _LoginScreenState extends State<LoginScreen> {
     try {
       await AuthService.instance.signInWithGoogle();
       if (mounted) _goHome();
-    } on Exception catch (e) {
-      if (mounted) _showError(e.toString());
+    } on FirebaseAuthException catch (e) {
+      if (mounted) _showError(authErrorMessage(e.code));
+    } on Exception {
+      if (mounted) _showError(authErrorMessage(''));
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
