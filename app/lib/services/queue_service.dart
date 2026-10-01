@@ -5,6 +5,7 @@ import 'package:firebase_database/firebase_database.dart';
 
 import '../models/queue.dart';
 import '../models/queue_entry.dart';
+import 'mirror.dart';
 import 'operator_service.dart';
 
 class QueueService {
@@ -46,16 +47,23 @@ class QueueService {
     });
 
     final queueId = docRef.id;
-    await _rtdb.ref('owners/$queueId').set({'ownerUid': _uid});
-    await _rtdb.ref('queues/$queueId/meta').set({
-      'nextTicket': 0,
-      'serving': 0,
-      'status': QueueStatus.open.value,
-      'name': name,
-      'description': description,
-      'avgServiceMin': avgServiceMin,
-      'updatedAt': ServerValue.timestamp,
-    });
+    try {
+      await _rtdb.ref('owners/$queueId').set({'ownerUid': _uid});
+      await _rtdb.ref('queues/$queueId/meta').set({
+        'nextTicket': 0,
+        'serving': 0,
+        'status': QueueStatus.open.value,
+        'name': name,
+        'description': description,
+        'avgServiceMin': avgServiceMin,
+        'updatedAt': ServerValue.timestamp,
+      });
+    } catch (_) {
+      try {
+        await docRef.delete();
+      } catch (_) {}
+      rethrow;
+    }
 
     return Queue(
       id: queueId,
@@ -86,6 +94,33 @@ class QueueService {
       await _ensureOwnerMirror(queueId);
     }
     _mirrorChecked.add(key);
+  }
+
+  Future<void> ensureMirror(String queueId) async {
+    final ownerSnap = await _rtdb.ref('owners/$queueId').get();
+    final metaSnap = await _rtdb.ref('queues/$queueId/meta').get();
+    final owner = ownerSnap.value as Map<dynamic, dynamic>?;
+    final meta = metaSnap.value as Map<dynamic, dynamic>?;
+    if (!mirrorNeedsRepair(owner, meta, _uid)) return;
+
+    final doc = await _firestore.collection('queues').doc(queueId).get();
+    final data = doc.data();
+    if (data == null || data['ownerId'] != _uid) return;
+
+    await _rtdb.ref('owners/$queueId').set({'ownerUid': _uid});
+    if (meta == null) {
+      final queue = Queue.fromDoc(queueId, data);
+      await _rtdb.ref('queues/$queueId/meta').set({
+        'nextTicket': 0,
+        'serving': 0,
+        'status': queue.status.value,
+        'name': queue.name,
+        'description': queue.description,
+        'avgServiceMin': queue.avgServiceMin,
+        'updatedAt': ServerValue.timestamp,
+      });
+    }
+    _mirrorChecked.add('$_uid/$queueId');
   }
 
   Future<void> updateQueueStatus(String queueId, QueueStatus status) async {
