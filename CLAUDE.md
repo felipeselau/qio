@@ -91,6 +91,21 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
   APK v1.1.0 (dono/operador) continua compatível com as rules novas. Web antigo em
   cache falha ao entrar na fila até recarregar.
 
+## Estimativa de espera automática
+
+- `queues/{id}/meta/avgServiceMinAuto` (RTDB) é escrito só pela function
+  `updateServiceEstimate` (Admin). Dono/operador/cliente não escrevem (rules).
+- Convenção: **tempo de atendimento** = `finishedAt − calledAt` (igual a `service` em
+  `app/lib/services/history_metrics.dart`), só `result == 'served'`. Não usa `joinedAt`.
+- Cálculo em `functions/src/estimate.js`: últimas 20 amostras válidas, descarta
+  > 3× a mediana, média com 1 casa; menos de 3 amostras → não grava.
+- Trigger `onDocumentCreated('queues/{id}/history/{entryId}')`; não recria `meta`
+  se a fila não existe no RTDB.
+- Web usa `avgServiceMinAuto ?? avgServiceMin ?? 10` (`useQueue.ts`).
+- Query exige índice composto `history: result ASC, finishedAt DESC`
+  (`firestore.indexes.json`). Deploy manual: `firebase deploy --only
+  firestore:indexes` e `--only functions:updateServiceEstimate`.
+
 ## Operadores
 
 - **Convite**: `operatorInvites/{code}` (6 chars, validade padrão 24 h) é a fonte
