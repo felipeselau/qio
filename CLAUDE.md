@@ -128,8 +128,21 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
 ## Fluxo de estados da entry
 
 `waiting → called → served | no_show` (owner) ou `→ left` (cliente).
-`served`/`no_show` arquivam em `history/` e removem do RTDB. Web limpa o
-`entryId` de `localStorage` quando a entry some do RTDB (`useQueue.ts`).
+`served`/`no_show` arquivam em `history/` e removem do RTDB. `_finishEntry` faz
+(1) `_archiveEntry` (history `set`; `permission-denied` em re-tentativa é tratado
+como sucesso, pois o doc já existe), (2) update de status/operatorId, (3) remove.
+`left`: o trigger `syncPublicTicket` grava `history/{entryId}` com
+`result: 'left'` via Admin (só se o doc da fila existir; `create` idempotente),
+remove `entries/{id}` e `public/{id}` do RTDB. A rule de create de history do
+operador segue restrita a `served`/`no_show`. O app conta `left` como
+"Desistiram" (não entra na taxa de no_show). Web limpa o `entryId` de
+`localStorage` quando a entry some do RTDB (`useQueue.ts`) e mantém a tela
+"Você saiu da fila" com estado local (`hasLeft`) após `leaveQueue`.
+- `watchWaitingCount` (home) lê `queues/{id}/public` (sem PII), não `entries`.
+- `deleteQueue`: remove do RTDB entries, `public`, `meta`, `tickets`,
+  `deleteOperatorData` (operatorUids + docs de operadores/convite) e por último
+  `owners/{id}` (rules de meta/entries dependem dele); só então apaga history e
+  o doc da fila no Firestore. O dono pode remover `public` (rule só permite delete).
 
 ## Gotchas
 
