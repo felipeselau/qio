@@ -2,11 +2,14 @@
 
 ## Status atual
 
-O código está **100% implementado e commitado**, mas o deploy da Cloud Function
-exige o plano **Blaze (pay-as-you-go)** do Firebase (Cloud Functions não rodam
-no plano Spark grátis — `cloudbuild.googleapis.com` só habilita com billing).
+O projeto está no plano **Blaze (pay-as-you-go)** desde 01/10/2026 (Cloud
+Functions não rodam no plano Spark grátis — `cloudbuild.googleapis.com` só
+habilita com billing) e as functions v2 (`joinQueue`, `syncPublicTicket`,
+`onEntryCalled`, `updateServiceEstimate`) estão publicadas. O custo esperado
+fica dentro da cota gratuita no volume do TCC. O push web ainda depende de
+`VITE_VAPID_KEY` no build da web.
 
-Enquanto isso, o alerta **in-page** continua funcionando (listener RTDB no client
+O alerta **in-page** continua funcionando (listener RTDB no client
 web: som + vibração + tela verde quando a senha é chamada).
 
 ## O que já está pronto (commit XXXX)
