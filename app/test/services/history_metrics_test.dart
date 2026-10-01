@@ -55,6 +55,20 @@ void main() {
       expect(m.avgServiceMin, isNull);
     });
 
+    test('left conta como desistência e fora da taxa de no_show', () {
+      final m = computeHistoryMetrics([
+        entry(joinedAt: base),
+        entry(id: 'b', result: 'no_show', joinedAt: base),
+        entry(id: 'c', result: 'left', joinedAt: base),
+        entry(id: 'd', result: 'left', joinedAt: base),
+      ]);
+      expect(m.total, 4);
+      expect(m.left, 2);
+      expect(m.noShow, 1);
+      expect(m.noShowRate, 0.25);
+      expect(m.avgServiceMin, isNull);
+    });
+
     test('calledAt nulo fica fora das médias', () {
       final m = computeHistoryMetrics([
         entry(joinedAt: base, finishedAt: base.add(const Duration(minutes: 9))),
@@ -127,6 +141,18 @@ void main() {
       ]);
     });
 
+    test('filtra desistências', () {
+      final left = entry(
+        id: 'left',
+        result: 'left',
+        joinedAt: DateTime(2026, 5, 10, 9),
+        finishedAt: DateTime(2026, 5, 10, 9, 30),
+      );
+      expect(ids(filterHistory([...all, left], result: 'left', now: now)), [
+        'left',
+      ]);
+    });
+
     test('hoje', () {
       expect(ids(filterHistory(all, period: HistoryPeriod.today, now: now)), [
         'today',
@@ -194,6 +220,13 @@ void main() {
       expect(e.wait, isNull);
       expect(e.service, isNull);
       expect(e.referenceTime, DateTime(2026, 5, 10, 9));
+    });
+
+    test('result left', () {
+      final e = HistoryEntry.fromDoc('x', {'result': 'left'});
+      expect(e.isLeft, isTrue);
+      expect(e.isServed, isFalse);
+      expect(e.isNoShow, isFalse);
     });
 
     test('documento vazio', () {

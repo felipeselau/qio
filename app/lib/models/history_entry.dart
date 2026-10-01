@@ -23,6 +23,7 @@ class HistoryEntry {
 
   bool get isServed => result == 'served';
   bool get isNoShow => result == 'no_show';
+  bool get isLeft => result == 'left';
 
   DateTime get referenceTime => finishedAt ?? joinedAt;
 

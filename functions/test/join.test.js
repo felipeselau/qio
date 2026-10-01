@@ -5,6 +5,7 @@ const {
   isValidPhone,
   pruneTimestamps,
   isRateLimited,
+  rateLimitFromEnv,
 } = require('../src/join');
 
 describe('normalizeName', () => {
@@ -94,5 +95,27 @@ describe('isRateLimited', () => {
 
   it('respeita opções customizadas', () => {
     assert.equal(isRateLimited([now - 1], now, { max: 1, windowMs: 1000 }), true);
+  });
+});
+
+describe('rateLimitFromEnv', () => {
+  it('usa os defaults sem variáveis', () => {
+    assert.deepEqual(rateLimitFromEnv({}), { max: 3, windowMs: 10 * 60 * 1000 });
+    assert.deepEqual(rateLimitFromEnv(), { max: 3, windowMs: 10 * 60 * 1000 });
+  });
+
+  it('lê max e janela em minutos', () => {
+    assert.deepEqual(
+      rateLimitFromEnv({ JOIN_RATE_LIMIT_MAX: '20', JOIN_RATE_LIMIT_WINDOW_MIN: '1' }),
+      { max: 20, windowMs: 60 * 1000 },
+    );
+  });
+
+  it('ignora valores inválidos', () => {
+    assert.deepEqual(
+      rateLimitFromEnv({ JOIN_RATE_LIMIT_MAX: 'abc', JOIN_RATE_LIMIT_WINDOW_MIN: '-5' }),
+      { max: 3, windowMs: 10 * 60 * 1000 },
+    );
+    assert.deepEqual(rateLimitFromEnv({ JOIN_RATE_LIMIT_MAX: '0' }).max, 3);
   });
 });

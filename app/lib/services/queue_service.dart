@@ -137,7 +137,18 @@ class QueueService {
 
   Future<void> deleteQueue(String queueId) async {
     await _ensureOwnerMirror(queueId);
+    final entriesSnap = await _rtdb.ref('queues/$queueId/entries').get();
+    final entries = entriesSnap.value as Map<dynamic, dynamic>?;
+    if (entries != null) {
+      for (final key in entries.keys) {
+        await _rtdb.ref('queues/$queueId/entries/$key').remove();
+      }
+    }
+    await _rtdb.ref('queues/$queueId/public').remove();
+    await _rtdb.ref('queues/$queueId/meta').remove();
+    await _rtdb.ref('tickets/$queueId').remove();
     await OperatorService.instance.deleteOperatorData(queueId);
+    await _rtdb.ref('owners/$queueId').remove();
     final historySnap = await _firestore
         .collection('queues')
         .doc(queueId)
@@ -149,16 +160,6 @@ class QueueService {
     }
     batch.delete(_firestore.collection('queues').doc(queueId));
     await batch.commit();
-    final entriesSnap = await _rtdb.ref('queues/$queueId/entries').get();
-    final map = entriesSnap.value as Map<dynamic, dynamic>?;
-    if (map != null) {
-      for (final key in map.keys) {
-        await _rtdb.ref('queues/$queueId/entries/$key').remove();
-      }
-    }
-    await _rtdb.ref('queues/$queueId/meta').remove();
-    await _rtdb.ref('tickets/$queueId').remove();
-    await _rtdb.ref('owners/$queueId').remove();
   }
 
   Stream<Queue> watchQueue(String queueId) {
@@ -203,9 +204,13 @@ class QueueService {
   }
 
   Stream<int> watchWaitingCount(String queueId) {
-    return watchEntries(queueId).map(
-      (entries) => entries.where((e) => e.status == EntryStatus.waiting).length,
-    );
+    return _rtdb.ref('queues/$queueId/public').onValue.map((event) {
+      final map = event.snapshot.value as Map<dynamic, dynamic>?;
+      if (map == null) return 0;
+      return map.values
+          .where((v) => v is Map && v['status'] == EntryStatus.waiting.value)
+          .length;
+    });
   }
 
   Future<QueueEntry?> callNext(String queueId) async {
@@ -271,11 +276,11 @@ class QueueService {
   ) async {
     final entriesRef = _rtdb.ref('queues/$queueId/entries');
     await _ensureOwnerMirrorIfOwner(queueId);
+    await _archiveEntry(queueId, entry, result);
     await entriesRef.child(entry.id).update({
       'status': result.value,
       'operatorId': _uid,
     });
-    await _archiveEntry(queueId, entry, result);
     await entriesRef.child(entry.id).remove();
   }
 
@@ -292,24 +297,28 @@ class QueueService {
     QueueEntry entry,
     EntryStatus result,
   ) async {
-    await _firestore
-        .collection('queues')
-        .doc(queueId)
-        .collection('history')
-        .doc(entry.id)
-        .set({
-          'ticket': entry.ticket,
-          'name': entry.name,
-          'phone': entry.phone,
-          'result': result.value,
-          'joinedAt': Timestamp.fromDate(entry.joinedAt),
-          'calledAt': entry.calledAt != null
-              ? Timestamp.fromDate(entry.calledAt!)
-              : null,
-          'calledBy': entry.operatorId,
-          'operatorId': _uid,
-          'finishedAt': FieldValue.serverTimestamp(),
-        });
+    try {
+      await _firestore
+          .collection('queues')
+          .doc(queueId)
+          .collection('history')
+          .doc(entry.id)
+          .set({
+            'ticket': entry.ticket,
+            'name': entry.name,
+            'phone': entry.phone,
+            'result': result.value,
+            'joinedAt': Timestamp.fromDate(entry.joinedAt),
+            'calledAt': entry.calledAt != null
+                ? Timestamp.fromDate(entry.calledAt!)
+                : null,
+            'calledBy': entry.operatorId,
+            'operatorId': _uid,
+            'finishedAt': FieldValue.serverTimestamp(),
+          });
+    } on FirebaseException catch (e) {
+      if (e.code != 'permission-denied') rethrow;
+    }
   }
 
   String queueJoinUrl(String queueId) => 'https://qio.web.app/q/$queueId';

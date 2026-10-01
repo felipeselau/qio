@@ -26,9 +26,23 @@ function isRateLimited(timestamps, now, options = DEFAULT_RATE_LIMIT) {
   return pruneTimestamps(timestamps, now, windowMs).length >= max;
 }
 
+function positiveInt(value, fallback) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function rateLimitFromEnv(env = {}) {
+  return {
+    max: positiveInt(env.JOIN_RATE_LIMIT_MAX, DEFAULT_RATE_LIMIT.max),
+    windowMs:
+      positiveInt(env.JOIN_RATE_LIMIT_WINDOW_MIN, DEFAULT_RATE_LIMIT.windowMs / 60000) * 60000,
+  };
+}
+
 module.exports = {
   MAX_NAME_LENGTH,
   DEFAULT_RATE_LIMIT,
+  rateLimitFromEnv,
   normalizeName,
   isValidPhone,
   pruneTimestamps,

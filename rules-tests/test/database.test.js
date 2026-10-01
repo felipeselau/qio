@@ -154,6 +154,16 @@ describe('RTDB rules', () => {
       await assertFails(set(ref(rtdb(OWNER), path('public/e9')), { ticket: 1, status: 'waiting' }));
     });
 
+    it('dono remove public mas não cria', async () => {
+      await assertSucceeds(remove(ref(rtdb(OWNER), path('public/e1'))));
+      await assertSucceeds(remove(ref(rtdb(OWNER), path('public'))));
+    });
+
+    it('operador e estranho não removem public', async () => {
+      await assertFails(remove(ref(rtdb(OPERATOR), path('public/e1'))));
+      await assertFails(remove(ref(rtdb(STRANGER), path('public'))));
+    });
+
     it('cliente não escreve tickets', async () => {
       await assertFails(set(ref(rtdb(STRANGER), `tickets/${QUEUE}`), 99));
     });

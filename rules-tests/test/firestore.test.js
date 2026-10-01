@@ -145,6 +145,19 @@ describe('Firestore rules', () => {
       await assertFails(setDoc(doc(db(STRANGER), 'queues', QUEUE, 'history', 'h2'), historyEntry(STRANGER)));
     });
 
+    it('dono lê registro com result left', async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), 'queues', QUEUE, 'history', 'left1'), {
+          ...historyEntry(null),
+          result: 'left',
+          calledAt: null,
+          calledBy: null,
+        });
+      });
+      await assertSucceeds(getDoc(doc(db(OWNER), 'queues', QUEUE, 'history', 'left1')));
+      await assertFails(getDoc(doc(db(OPERATOR), 'queues', QUEUE, 'history', 'left1')));
+    });
+
     it('dono lê o histórico', async () => {
       await assertSucceeds(getDocs(collection(db(OWNER), 'queues', QUEUE, 'history')));
     });
