@@ -87,7 +87,7 @@ describe('RTDB rules', () => {
 
     it('cliente cria a própria entry', async () => {
       await assertSucceeds(
-        set(ref(rtdb(STRANGER), path('entries/e2')), { uid: STRANGER, ticket: 5, status: 'waiting' }),
+        set(ref(rtdb(STRANGER), path('entries/e2')), { uid: STRANGER, ticket: 5, status: 'waiting', name: 'Bia' }),
       );
     });
   });
@@ -143,6 +143,107 @@ describe('RTDB rules', () => {
     it('usuário cria posse de fila nova só para si', async () => {
       await assertSucceeds(set(ref(rtdb(STRANGER), 'owners/q2'), { ownerUid: STRANGER }));
       await assertFails(set(ref(rtdb(STRANGER), 'owners/q3'), { ownerUid: OWNER }));
+    });
+  });
+
+  describe('validação de entries', () => {
+    const entryPath = (id) => path(`entries/${id}`);
+    const valid = (extra = {}) => ({
+      uid: STRANGER,
+      ticket: 5,
+      name: 'Bia',
+      phone: '(11) 91234-5678',
+      status: 'waiting',
+      joinedAt: 1,
+      calledAt: null,
+      ...extra,
+    });
+    const create = (extra) => set(ref(rtdb(STRANGER), entryPath('e2')), valid(extra));
+
+    it('aceita entry válida com telefone celular', async () => {
+      await assertSucceeds(create());
+    });
+
+    it('aceita telefone fixo', async () => {
+      await assertSucceeds(create({ phone: '(11) 3333-4444' }));
+    });
+
+    it('aceita telefone vazio', async () => {
+      await assertSucceeds(create({ phone: '' }));
+    });
+
+    it('rejeita telefone fora do formato', async () => {
+      await assertFails(create({ phone: '11912345678' }));
+      await assertFails(create({ phone: '<script>' }));
+    });
+
+    it('rejeita nome vazio', async () => {
+      await assertFails(create({ name: '' }));
+    });
+
+    it('rejeita nome com mais de 60 caracteres', async () => {
+      await assertFails(create({ name: 'a'.repeat(61) }));
+      await assertSucceeds(create({ name: 'a'.repeat(60) }));
+    });
+
+    it('rejeita status inválido', async () => {
+      await assertFails(create({ status: 'vip' }));
+    });
+
+    it('rejeita ticket não numérico', async () => {
+      await assertFails(create({ ticket: '5' }));
+    });
+
+    it('rejeita campo desconhecido', async () => {
+      await assertFails(create({ admin: true }));
+    });
+
+    it('rejeita troca de uid', async () => {
+      await assertFails(
+        update(ref(rtdb(OPERATOR), entryPath('e1')), { uid: OPERATOR }),
+      );
+    });
+
+    it('dono atualiza status de entry antiga com telefone fora do padrão', async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await set(ref(ctx.database(), entryPath('old')), {
+          uid: 'client1',
+          ticket: 1,
+          name: 'x'.repeat(80),
+          phone: '123',
+          status: 'waiting',
+          joinedAt: 0,
+        });
+      });
+      await assertSucceeds(
+        update(ref(rtdb(OWNER), entryPath('old')), { status: 'called', operatorId: OWNER }),
+      );
+    });
+
+    it('operador faz o equivalente à transação de _claimEntry', async () => {
+      await assertSucceeds(
+        set(ref(rtdb(OPERATOR), entryPath('e1')), {
+          uid: 'client1',
+          ticket: 4,
+          status: 'called',
+          name: 'Ana',
+          joinedAt: 0,
+          calledAt: Date.now(),
+          operatorId: OPERATOR,
+        }),
+      );
+    });
+
+    it('cliente marca left', async () => {
+      await assertSucceeds(update(ref(rtdb('client1'), entryPath('e1')), { status: 'left' }));
+    });
+
+    it('cliente grava fcmToken', async () => {
+      await assertSucceeds(update(ref(rtdb('client1'), entryPath('e1')), { fcmToken: 'tok' }));
+    });
+
+    it('dono remove entry', async () => {
+      await assertSucceeds(remove(ref(rtdb(OWNER), entryPath('e1'))));
     });
   });
 });

@@ -52,6 +52,7 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
   `owners/{queueId}/ownerUid` (espelho de posse p/ rules), `tickets/{queueId}`
   (contador de senha, incrementado por transação no cliente web). Rules:
   `database.rules.json`.
+- Rules do RTDB validam `queues/{id}/entries/{entryId}`: `ticket` número, `status` ∈ waiting/called/served/no_show/left, `uid` imutável, `name` 1–60 chars e `phone` vazio ou `(DD) 9999-9999`/`(DD) 99999-9999` (os dois só são checados na criação ou quando mudam), campos fora de ticket/name/phone/uid/fcmToken/status/joinedAt/calledAt/operatorId são rejeitados. `.validate` não roda em `remove()`.
 - O app faz **dual-write**: Firestore (fonte da verdade) + espelho no RTDB
   (`meta` + `owners/{queueId}`). `_ensureOwnerMirror` reconcilia antes de escritas;
   `_ensureOwnerMirrorIfOwner` fica em cache por sessão (`uid/queueId`).

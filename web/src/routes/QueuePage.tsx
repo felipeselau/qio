@@ -375,6 +375,7 @@ export default function QueuePage() {
               onChange={(e) => setName(e.target.value)}
               placeholder="Seu nome"
               autoComplete="name"
+              maxLength={60}
             />
           </div>
           <div className="field">
