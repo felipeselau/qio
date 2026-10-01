@@ -46,16 +46,23 @@ class QueueService {
     });
 
     final queueId = docRef.id;
-    await _rtdb.ref('owners/$queueId').set({'ownerUid': _uid});
-    await _rtdb.ref('queues/$queueId/meta').set({
-      'nextTicket': 0,
-      'serving': 0,
-      'status': QueueStatus.open.value,
-      'name': name,
-      'description': description,
-      'avgServiceMin': avgServiceMin,
-      'updatedAt': ServerValue.timestamp,
-    });
+    try {
+      await _rtdb.ref('owners/$queueId').set({'ownerUid': _uid});
+      await _rtdb.ref('queues/$queueId/meta').set({
+        'nextTicket': 0,
+        'serving': 0,
+        'status': QueueStatus.open.value,
+        'name': name,
+        'description': description,
+        'avgServiceMin': avgServiceMin,
+        'updatedAt': ServerValue.timestamp,
+      });
+    } catch (_) {
+      try {
+        await docRef.delete();
+      } catch (_) {}
+      rethrow;
+    }
 
     return Queue(
       id: queueId,
