@@ -31,8 +31,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 - CI: o deploy do hosting era pulado sem aviso.
 
 ### Limitações conhecidas
-- Push com a aba em segundo plano não funciona em produção: o projeto está no
-  plano Spark e Cloud Functions exigem Blaze.
+- Push com a aba em segundo plano ainda não chega: a Cloud Function
+  `onEntryCalled` foi publicada (plano Blaze), mas o build da web não tem
+  `VITE_VAPID_KEY`, então o cliente não registra token FCM.
 - App Check desativado em produção (sem chave reCAPTCHA no build).
 - Fila pausada é bloqueada só na interface; o cliente pode alterar a própria
   entry no RTDB.
