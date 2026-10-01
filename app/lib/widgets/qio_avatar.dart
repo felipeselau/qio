@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/account_format.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
 
@@ -13,13 +14,6 @@ class QioAvatar extends StatelessWidget {
   final String name;
   final double size;
   final Color? backgroundColor;
-
-  String get _initials {
-    final parts = name.trim().split(RegExp(r'\s+'));
-    if (parts.isEmpty || parts.first.isEmpty) return '?';
-    if (parts.length == 1) return parts.first[0].toUpperCase();
-    return '${parts.first[0]}${parts[1][0]}'.toUpperCase();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +30,7 @@ class QioAvatar extends StatelessWidget {
         child: ExcludeSemantics(
           child: Center(
             child: Text(
-              _initials,
+              initialsOf(name),
               style: QioTextStyles.heading3.copyWith(
                 color: QioColors.primary,
                 fontSize: size * 0.4,
