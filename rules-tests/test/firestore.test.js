@@ -9,6 +9,8 @@ import {
   getDoc,
   getCountFromServer,
   getDocs,
+  limit,
+  orderBy,
   query,
   setDoc,
   updateDoc,
@@ -145,6 +147,22 @@ describe('Firestore rules', () => {
 
     it('dono lê o histórico', async () => {
       await assertSucceeds(getDocs(collection(db(OWNER), 'queues', QUEUE, 'history')));
+    });
+
+    it('dono lê history ordenado por finishedAt', async () => {
+      await assertSucceeds(
+        getDocs(
+          query(collection(db(OWNER), 'queues', QUEUE, 'history'), orderBy('finishedAt', 'desc'), limit(200)),
+        ),
+      );
+    });
+
+    it('operador não lê history ordenado por finishedAt', async () => {
+      await assertFails(
+        getDocs(
+          query(collection(db(OPERATOR), 'queues', QUEUE, 'history'), orderBy('finishedAt', 'desc'), limit(200)),
+        ),
+      );
     });
   });
 
