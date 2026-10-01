@@ -51,6 +51,14 @@ describe('RTDB rules', () => {
       await assertFails(set(ref(rtdb(OPERATOR), path('meta/status')), 'closed'));
     });
 
+    it('cliente não escreve meta/avgServiceMinAuto', async () => {
+      await assertFails(set(ref(rtdb('client1'), path('meta/avgServiceMinAuto')), 1));
+    });
+
+    it('operador não escreve meta/avgServiceMinAuto', async () => {
+      await assertFails(set(ref(rtdb(OPERATOR), path('meta/avgServiceMinAuto')), 1));
+    });
+
     it('operador não escreve meta/name', async () => {
       await assertFails(set(ref(rtdb(OPERATOR), path('meta/name')), 'Hack'));
     });
