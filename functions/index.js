@@ -9,7 +9,7 @@ const {
   isValidPhone,
   pruneTimestamps,
   isRateLimited,
-} = require('./lib/join');
+} = require('./src/join');
 
 initializeApp();
 

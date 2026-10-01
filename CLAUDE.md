@@ -71,7 +71,7 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
   exige `meta/status == 'open'`, devolve a entry ativa existente do mesmo `uid`
   (`existing: true`), recusa telefone já ativo na fila (`already-exists`), aplica
   rate limit de 3 joins / 10 min por `uid` (`resource-exhausted`) e cria a entry
-  com ticket por transação Admin. Lógica pura em `functions/lib/join.js`.
+  com ticket por transação Admin. Lógica pura em `functions/src/join.js`.
 - `entries` só é legível por dono, operador (`operatorUids`) e pelo autor
   (`uid == auth.uid`, por entry). O cliente só altera a própria entry para
   `status: 'left'` ou `fcmToken` (ticket/name/phone/joinedAt/calledAt/operatorId
