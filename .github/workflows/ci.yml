@@ -41,6 +41,21 @@ jobs:
       - run: npm ci
       - run: npm run build
 
+  functions:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: functions
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+      - run: npm ci
+      - run: npm test
+
   rules:
     runs-on: ubuntu-latest
     defaults:
@@ -58,11 +73,13 @@ jobs:
           cache: npm
           cache-dependency-path: rules-tests/package-lock.json
       - run: npm ci
+      - run: npm ci
+        working-directory: functions
       - run: npm install -g firebase-tools
       - run: npm test
 
   deploy-hosting:
-    needs: [flutter, web, rules]
+    needs: [flutter, web, functions, rules]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     env:
