@@ -6,15 +6,18 @@ const { getMessaging } = require('firebase-admin/messaging');
 const { getDatabase } = require('firebase-admin/database');
 const { getFirestore } = require('firebase-admin/firestore');
 const {
-  DEFAULT_RATE_LIMIT,
+  rateLimitFromEnv,
   normalizeName,
   isValidPhone,
   pruneTimestamps,
   isRateLimited,
 } = require('./src/join');
+const { historyFromLeftEntry } = require('./src/history');
 const { MAX_SAMPLES, estimateServiceMin } = require('./src/estimate');
 
 initializeApp();
+
+const RATE_LIMIT = rateLimitFromEnv(process.env);
 
 exports.onEntryCalled = onValueWritten(
   {
@@ -151,8 +154,8 @@ exports.joinQueue = onCall(
     const now = Date.now();
     let limited = false;
     await db.ref(`rateLimits/${queueId}/${uid}`).transaction((current) => {
-      const recent = pruneTimestamps(current, now, DEFAULT_RATE_LIMIT.windowMs);
-      if (isRateLimited(recent, now, DEFAULT_RATE_LIMIT)) {
+      const recent = pruneTimestamps(current, now, RATE_LIMIT.windowMs);
+      if (isRateLimited(recent, now, RATE_LIMIT)) {
         limited = true;
         return recent;
       }
@@ -193,8 +196,16 @@ exports.syncPublicTicket = onValueWritten(
   async (event) => {
     const after = event.data.after.val();
     const { queueId, entryId } = event.params;
-    const publicRef = getDatabase().ref(`queues/${queueId}/public/${entryId}`);
-    if (after && ACTIVE_STATUSES.includes(after.status)) {
+    const db = getDatabase();
+    const publicRef = db.ref(`queues/${queueId}/public/${entryId}`);
+    if (after && after.status === 'left') {
+      try {
+        await archiveLeftEntry(queueId, entryId, after);
+        await db.ref(`queues/${queueId}/entries/${entryId}`).remove();
+      } finally {
+        await publicRef.remove();
+      }
+    } else if (after && ACTIVE_STATUSES.includes(after.status)) {
       await publicRef.set({ ticket: after.ticket, status: after.status });
     } else {
       await publicRef.remove();
@@ -202,6 +213,19 @@ exports.syncPublicTicket = onValueWritten(
     return null;
   },
 );
+
+async function archiveLeftEntry(queueId, entryId, entry) {
+  const firestore = getFirestore();
+  const queueDoc = await firestore.doc(`queues/${queueId}`).get();
+  if (!queueDoc.exists) return;
+  try {
+    await firestore
+      .doc(`queues/${queueId}/history/${entryId}`)
+      .create(historyFromLeftEntry(entry, Date.now()));
+  } catch (err) {
+    if (err?.code !== 6) throw err;
+  }
+}
 
 exports.updateServiceEstimate = onDocumentCreated(
   {
