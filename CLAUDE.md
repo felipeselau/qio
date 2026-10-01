@@ -122,7 +122,12 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
   Use sempre `getMessagingSafe()` (lazy, retorna `null`). Nunca chame
   `getMessaging` no topo de um módulo.
 - FCM é **opcional**: sem `VITE_VAPID_KEY` o app funciona só com alerta na página.
-  App Check é opcional sem `VITE_RECAPTCHA_SITE_KEY`.
+  App Check é opcional sem `VITE_RECAPTCHA_SITE_KEY`; usa **reCAPTCHA Enterprise**
+  (Fraud Defense), não v3. A chave não aceita `localhost` e não roda com
+  emulators. No CI, as chaves vêm de `vars.VITE_RECAPTCHA_SITE_KEY` e
+  `vars.VITE_VAPID_KEY` (GitHub → Actions → Variables). O app Flutter não usa App
+  Check: APK fora da Play Store não passa no Play Integrity, então nunca ligue
+  enforcement em RTDB/Firestore, só na callable `joinQueue` (chamada só pela web).
 - `firebaseConfig` é duplicado em `web/src/firebase.ts` e
   `web/public/firebase-messaging-sw.js` — mantenha os dois em sincronia.
 - URL de join: `https://qio.web.app/q/{queueId}` (hosting site `qio`). Duplicada em
