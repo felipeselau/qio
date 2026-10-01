@@ -7,6 +7,7 @@ import {
   deleteDoc,
   doc,
   getDoc,
+  getCountFromServer,
   getDocs,
   query,
   setDoc,
@@ -57,6 +58,22 @@ describe('Firestore rules', () => {
         code: 'VALID1',
         status: 'pending',
       });
+    });
+  });
+
+  describe('conta do dono', () => {
+    it('usuário lê o próprio owners/{uid}', async () => {
+      await assertSucceeds(getDoc(doc(db(OWNER), 'owners', OWNER)));
+    });
+
+    it('usuário não lê owners de outro', async () => {
+      await assertFails(getDoc(doc(db(STRANGER), 'owners', OWNER)));
+    });
+
+    it('dono conta as próprias filas', async () => {
+      await assertSucceeds(
+        getCountFromServer(query(collection(db(OWNER), 'queues'), where('ownerId', '==', OWNER))),
+      );
     });
   });
 

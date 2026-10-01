@@ -10,9 +10,9 @@ import '../theme/qio_text_styles.dart';
 import '../widgets/qio_avatar.dart';
 import '../widgets/qio_badge.dart';
 import '../widgets/qio_card.dart';
+import 'account_screen.dart';
 import 'create_queue_screen.dart';
 import 'join_operator_screen.dart';
-import 'login_screen.dart';
 import 'queue_panel_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -58,16 +58,11 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.only(right: 12),
             child: Semantics(
               button: true,
-              label: 'Sair da conta',
+              label: 'Minha conta',
               child: GestureDetector(
-                onTap: () async {
-                  await AuthService.instance.signOut();
-                  if (context.mounted) {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (_) => const LoginScreen()),
-                    );
-                  }
-                },
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const AccountScreen()),
+                ),
                 child: QioAvatar(
                   name: user?.displayName ?? user?.email ?? 'Q',
                   size: 36,
