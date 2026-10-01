@@ -7,6 +7,7 @@ import { joinQueue, leaveQueue, saveFcmToken } from '../lib/join';
 import { getFcmToken, listenForMessages } from '../lib/fcm';
 import { useQueue } from '../lib/useQueue';
 import { formatPhone, isValidPhone } from '../lib/format';
+import { useInstallPrompt } from '../lib/useInstallPrompt';
 
 type Phase = 'loading' | 'join' | 'ticket' | 'called' | 'left' | 'closed' | 'gone';
 
@@ -21,6 +22,7 @@ export default function QueuePage() {
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [fcmDone, setFcmDone] = useState(false);
+  const installPrompt = useInstallPrompt();
 
   const {
     meta,
@@ -294,6 +296,49 @@ export default function QueuePage() {
               Mantenha esta página aberta. Você será avisado quando chegar sua vez.
             </p>
           </div>
+
+          {(installPrompt.canInstall || installPrompt.hint) && (
+            <section className="install-banner" role="region" aria-label="Instalar o Qio">
+              {installPrompt.canInstall ? (
+                <>
+                  <p>Instale o Qio para acompanhar sua senha com um toque.</p>
+                  <div className="install-banner-actions">
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      onClick={installPrompt.install}
+                    >
+                      Instalar
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={installPrompt.dismiss}
+                    >
+                      Agora não
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p>
+                    {installPrompt.hint === 'ios'
+                      ? 'No Safari, toque em Compartilhar › Adicionar à Tela de Início.'
+                      : 'No Chrome, toque em ⋮ › Instalar app para acompanhar sua senha com um toque.'}
+                  </p>
+                  <div className="install-banner-actions">
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={installPrompt.dismiss}
+                    >
+                      Entendi
+                    </button>
+                  </div>
+                </>
+              )}
+            </section>
+          )}
 
           {confirmLeave ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

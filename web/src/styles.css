@@ -205,3 +205,27 @@ a {
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+.install-banner {
+  background: var(--white);
+  border: 1px solid var(--gray-light);
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.install-banner p {
+  font-size: 14px;
+  color: var(--gray-dark);
+}
+
+.install-banner-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.install-banner .btn {
+  padding: 10px 16px;
+  font-size: 14px;
+}

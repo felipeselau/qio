@@ -146,6 +146,11 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
   `vars.VITE_VAPID_KEY` (GitHub → Actions → Variables). O app Flutter não usa App
   Check: APK fora da Play Store não passa no Play Integrity, então nunca ligue
   enforcement em RTDB/Firestore, só na callable `joinQueue` (chamada só pela web).
+- PWA instalável (`web/public/manifest.webmanifest` + ícones PNG) **sem cache
+  offline e sem service worker próprio**: a fila é tempo real e bundle velho em
+  cache é risco. Banner via `useInstallPrompt.ts` (só aparece na fase `ticket`).
+  O Chrome pode não disparar `beforeinstallprompt` sem SW com `fetch` handler
+  cobrindo `/`; o menu "Instalar app" e o fluxo iOS funcionam só com o manifest.
 - `firebaseConfig` é duplicado em `web/src/firebase.ts` e
   `web/public/firebase-messaging-sw.js` — mantenha os dois em sincronia.
 - URL de join: `https://qio.web.app/q/{queueId}` (hosting site `qio`). Duplicada em
