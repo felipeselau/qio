@@ -1,5 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
 
 import 'firebase_options.dart';
 import 'screens/home_screen.dart';
@@ -10,6 +13,15 @@ import 'theme/qio_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  if (const bool.fromEnvironment('USE_EMULATORS')) {
+    const host = String.fromEnvironment(
+      'EMULATOR_HOST',
+      defaultValue: 'localhost',
+    );
+    await FirebaseAuth.instance.useAuthEmulator(host, 9099);
+    FirebaseFirestore.instance.useFirestoreEmulator(host, 8080);
+    FirebaseDatabase.instance.useDatabaseEmulator(host, 9000);
+  }
   runApp(const QioApp());
 }
 
