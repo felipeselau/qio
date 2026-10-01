@@ -4,6 +4,7 @@ import { initializeApp, deleteApp } from 'firebase/app';
 import { connectAuthEmulator, getAuth, signInAnonymously } from 'firebase/auth';
 import { connectFunctionsEmulator, getFunctions, httpsCallable } from 'firebase/functions';
 import { get, ref, set, update } from 'firebase/database';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { QUEUE, setupEnv } from './helpers.js';
 
 const [FUNCTIONS_HOST, FUNCTIONS_PORT] = (process.env.FUNCTIONS_EMULATOR_HOST ?? 'localhost:5001').split(':');
@@ -117,6 +118,62 @@ describe('callable joinQueue (emulador)', () => {
     const c = await newClient('f');
     await rejects(c.join({ queueId: 'closed', name: 'Fábio', phone: '' }), 'failed-precondition');
     await rejects(c.join({ queueId: 'nope', name: 'Fábio', phone: '' }), 'not-found');
+  });
+
+  async function leaveAndWait(c, entryId) {
+    await update(ref(env.authenticatedContext(c.uid).database(), `queues/${QUEUE}/entries/${entryId}`), {
+      status: 'left',
+    });
+    await waitFor(() =>
+      adminDb(async (db) => !(await get(ref(db, `queues/${QUEUE}/entries/${entryId}`))).exists()),
+    );
+  }
+
+  const history = async (entryId) => {
+    let data = null;
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      const snap = await getDoc(doc(ctx.firestore(), 'queues', QUEUE, 'history', entryId));
+      data = snap.exists() ? snap.data() : null;
+    });
+    return data;
+  };
+
+  it('cliente marca left: entry e public somem do RTDB e history result left é criado', async () => {
+    await env.clearFirestore();
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'queues', QUEUE), { ownerId: 'owner', name: 'Balcão', status: 'open' });
+    });
+    const c = await newClient('h');
+    const res = await c.join({ queueId: QUEUE, name: 'Hugo', phone: '(11) 91234-5678' });
+    await waitFor(() =>
+      adminDb(async (db) => (await get(ref(db, `queues/${QUEUE}/public/${res.entryId}`))).exists()),
+    );
+    await leaveAndWait(c, res.entryId);
+    const pubGone = await waitFor(() =>
+      adminDb(async (db) => !(await get(ref(db, `queues/${QUEUE}/public/${res.entryId}`))).exists()),
+    );
+    assert.equal(pubGone, true);
+    const hist = await waitFor(() => history(res.entryId));
+    assert.equal(hist.result, 'left');
+    assert.equal(hist.ticket, res.ticket);
+    assert.equal(hist.name, 'Hugo');
+    assert.equal(hist.phone, '(11) 91234-5678');
+    assert.equal(hist.calledAt, null);
+    assert.equal(hist.calledBy, null);
+    assert.equal(hist.operatorId, null);
+    assert.ok(hist.joinedAt.toMillis() > 0);
+    assert.ok(hist.finishedAt.toMillis() >= hist.joinedAt.toMillis());
+  });
+
+  it('left sem doc da fila no Firestore remove a entry e não cria history', async () => {
+    await env.clearFirestore();
+    const c = await newClient('i');
+    const res = await c.join({ queueId: QUEUE, name: 'Iris', phone: '' });
+    await waitFor(() =>
+      adminDb(async (db) => (await get(ref(db, `queues/${QUEUE}/public/${res.entryId}`))).exists()),
+    );
+    await leaveAndWait(c, res.entryId);
+    assert.equal(await history(res.entryId), null);
   });
 
   it('bloqueia o 4o join em 10 minutos', async () => {
