@@ -99,8 +99,9 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
   se** `secrets.FIREBASE_TOKEN` existir; sem ele o job passa verde com um warning
   e o site **não** é atualizado. Confira o bundle publicado em `qio.web.app`.
   Functions e rules **não** têm deploy no CI.
-- Projeto no plano **Spark**: Cloud Functions não são publicadas → push com a aba
-  em segundo plano não funciona em produção.
+- Projeto no plano **Blaze** desde 01/10/2026; `onEntryCalled` publicada. Push
+  em segundo plano só funciona com `VITE_VAPID_KEY` no build da web (ainda não
+  configurada).
 
 ## Tooling (adaptado do OpenCode)
 
