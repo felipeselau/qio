@@ -7,6 +7,7 @@ export type QueueMeta = {
   status: 'open' | 'paused' | 'closed';
   serving: number;
   avgServiceMin: number | null;
+  avgServiceMinAuto: number | null;
   description: string | null;
 };
 
@@ -65,6 +66,7 @@ export function useQueue(
             status: val.status ?? 'open',
             serving: val.serving ?? 0,
             avgServiceMin: val.avgServiceMin ?? null,
+            avgServiceMinAuto: val.avgServiceMinAuto ?? null,
             description: val.description ?? null,
           });
         }
@@ -124,7 +126,7 @@ export function useQueue(
       ).length;
       position = ahead + 1;
     }
-    const avg = meta?.avgServiceMin ?? 10;
+    const avg = meta?.avgServiceMinAuto ?? meta?.avgServiceMin ?? 10;
     if (position != null) estimatedWaitMin = position * avg;
   }
 
