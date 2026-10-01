@@ -87,6 +87,7 @@ function findActive(snap) {
 exports.joinQueue = onCall(
   {
     region: 'us-central1',
+    invoker: 'public',
     enforceAppCheck: process.env.ENFORCE_APP_CHECK === 'true',
   },
   async (request) => {
