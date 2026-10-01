@@ -95,8 +95,12 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
 - `web/src/lib/useQueue.ts`: listeners do RTDB só são anexados com `ready`
   (auth anônima concluída). Anexar antes faz a leitura ser negada e o `onValue`
   morre sem retry → spinner infinito no primeiro acesso pelo QR.
-- Deploy hosting é automático no push p/ `main` (`.github/workflows/ci.yml`), se
-  `secrets.FIREBASE_TOKEN` existir. Functions e rules **não** têm deploy no CI.
+- Deploy hosting é automático no push p/ `main` (`.github/workflows/ci.yml`) **só
+  se** `secrets.FIREBASE_TOKEN` existir; sem ele o job passa verde com um warning
+  e o site **não** é atualizado. Confira o bundle publicado em `qio.web.app`.
+  Functions e rules **não** têm deploy no CI.
+- Projeto no plano **Spark**: Cloud Functions não são publicadas → push com a aba
+  em segundo plano não funciona em produção.
 
 ## Tooling (adaptado do OpenCode)
 
