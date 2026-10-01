@@ -16,6 +16,7 @@ import '../widgets/qio_avatar.dart';
 import '../widgets/qio_badge.dart';
 import '../widgets/qio_button.dart';
 import '../widgets/qio_card.dart';
+import 'history_screen.dart';
 import 'operators_screen.dart';
 
 class QueuePanelScreen extends StatefulWidget {
@@ -177,6 +178,16 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
         ),
         centerTitle: true,
         actions: [
+          if (widget.isOwner)
+            IconButton(
+              icon: const Icon(Icons.history, color: QioColors.gray700),
+              tooltip: 'Histórico',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => HistoryScreen(queueId: widget.queueId),
+                ),
+              ),
+            ),
           if (widget.isOwner)
             StreamBuilder<Queue>(
               stream: QueueService.instance.watchQueue(widget.queueId),

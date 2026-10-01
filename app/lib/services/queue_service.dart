@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart' hide Query, Transaction;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 
+import '../models/history_entry.dart';
 import '../models/queue.dart';
 import '../models/queue_entry.dart';
 import 'mirror.dart';
@@ -184,6 +185,21 @@ class QueueService {
             );
           }).toList()..sort((a, b) => a.ticket.compareTo(b.ticket));
         });
+  }
+
+  Stream<List<HistoryEntry>> watchHistory(String queueId, {int limit = 200}) {
+    return _firestore
+        .collection('queues')
+        .doc(queueId)
+        .collection('history')
+        .orderBy('finishedAt', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map(
+          (snap) => snap.docs
+              .map((d) => HistoryEntry.fromDoc(d.id, d.data()))
+              .toList(),
+        );
   }
 
   Stream<int> watchWaitingCount(String queueId) {
