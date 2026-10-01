@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { initializeAppCheck, ReCaptchaV3Provider } from 'firebase/app-check';
 import { connectAuthEmulator, getAuth } from 'firebase/auth';
 import { connectDatabaseEmulator, getDatabase } from 'firebase/database';
+import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
 import { getMessaging, type Messaging } from 'firebase/messaging';
 
 const firebaseConfig = {
@@ -31,16 +32,22 @@ if (recaptchaSiteKey) {
 
 export const auth = getAuth(app);
 export const db = getDatabase(app);
+export const functions = getFunctions(app);
 
 if (import.meta.env.VITE_USE_EMULATORS === 'true') {
   connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
   connectDatabaseEmulator(db, 'localhost', 9000);
+  connectFunctionsEmulator(functions, 'localhost', 5001);
 }
 
 // getMessaging() lança sincronamente em navegadores sem suporte a FCM
 // (muitos webviews de apps, Safari iOS antigo). Como firebase.ts é importado
 // por toda a aplicação, chamá-lo no topo do módulo derrubaria a página inteira.
 // Resolvido de forma preguiçosa: retorna null quando não há suporte.
+export function getFunctionsSafe() {
+  return functions;
+}
+
 let _messaging: Messaging | null | undefined;
 export function getMessagingSafe(): Messaging | null {
   if (_messaging !== undefined) return _messaging;

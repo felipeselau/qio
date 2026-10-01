@@ -37,14 +37,14 @@ export function useQueue(
   ready: boolean,
 ): QueueState {
   const [meta, setMeta] = useState<QueueMeta | null>(null);
-  const [entries, setEntries] = useState<Record<string, any> | null>(null);
+  const [publicTickets, setPublicTickets] = useState<Record<string, any> | null>(null);
   const [myEntry, setMyEntry] = useState<MyEntry | null>(null);
   const [myEntryResolved, setMyEntryResolved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [exists, setExists] = useState(true);
   const [failed, setFailed] = useState(false);
 
-  // As regras da RTDB exigem auth != null para ler meta/entries. Se o listener
+  // As regras da RTDB exigem auth != null para ler meta/public. Se o listener
   // for anexado antes do signInAnonymously terminar, a leitura é negada, o
   // onValue cai no callback de erro e o listener é descartado sem retry —
   // deixando a tela presa no spinner no PRIMEIRO acesso de cada usuário
@@ -81,9 +81,9 @@ export function useQueue(
 
   useEffect(() => {
     if (!ready) return;
-    const entriesRef = ref(db, `queues/${queueId}/entries`);
-    const unsub = onValue(entriesRef, (snap) => {
-      setEntries(snap.val() ?? {});
+    const publicRef = ref(db, `queues/${queueId}/public`);
+    const unsub = onValue(publicRef, (snap) => {
+      setPublicTickets(snap.val() ?? {});
     });
     return unsub;
   }, [queueId, ready]);
@@ -117,13 +117,13 @@ export function useQueue(
 
   let position: number | null = null;
   let estimatedWaitMin: number | null = null;
-  if (myEntry && entries) {
-    const waiting = Object.values(entries)
-      .filter((e: any) => e.status === 'waiting')
-      .map((e: any) => e.ticket as number)
-      .sort((a, b) => a - b);
-    const idx = waiting.indexOf(myEntry.ticket);
-    if (idx >= 0) position = idx + 1;
+  if (myEntry && publicTickets) {
+    if (myEntry.status === 'waiting') {
+      const ahead = Object.values(publicTickets).filter(
+        (e: any) => e.status === 'waiting' && e.ticket < myEntry.ticket,
+      ).length;
+      position = ahead + 1;
+    }
     const avg = meta?.avgServiceMin ?? 10;
     if (position != null) estimatedWaitMin = position * avg;
   }
