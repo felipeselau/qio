@@ -118,6 +118,9 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
 
 ## Gotchas
 
+- Aviso ao dono quando alguém entra na fila (som + vibração + SnackBar) é
+  in-app: `QueuePanelScreen` assina `watchEntries` e usa `entry_diff.dart`. Só
+  funciona com o painel aberto; push com o app fechado é trabalho futuro.
 - `web/src/firebase.ts`: `getMessaging()` lança em navegadores sem suporte a FCM.
   Use sempre `getMessagingSafe()` (lazy, retorna `null`). Nunca chame
   `getMessaging` no topo de um módulo.
