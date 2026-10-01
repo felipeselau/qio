@@ -13,11 +13,11 @@
           }
         },
         "entries": {
-          ".read": "auth != null",
-          ".indexOn": ["status", "ticket"],
+          ".read": "(root.child('owners').child($queueId).child('ownerUid').val() === auth.uid) || (root.child('queues').child($queueId).child('operatorUids').child(auth.uid).val() === true)",
+          ".indexOn": ["status", "ticket", "uid", "phone"],
           "$entryId": {
-            ".read": "auth != null",
-            ".write": "(!data.exists() && newData.child('uid').val() === auth.uid) || (data.child('uid').val() === auth.uid) || (root.child('owners').child($queueId).child('ownerUid').val() === auth.uid) || (root.child('queues').child($queueId).child('operatorUids').child(auth.uid).val() === true)",
+            ".read": "(root.child('owners').child($queueId).child('ownerUid').val() === auth.uid) || (root.child('queues').child($queueId).child('operatorUids').child(auth.uid).val() === true) || data.child('uid').val() === auth.uid",
+            ".write": "(data.child('uid').val() === auth.uid && (!newData.exists() || (newData.child('ticket').val() === data.child('ticket').val() && newData.child('name').val() === data.child('name').val() && newData.child('phone').val() === data.child('phone').val() && newData.child('joinedAt').val() === data.child('joinedAt').val() && newData.child('calledAt').val() === data.child('calledAt').val() && newData.child('operatorId').val() === data.child('operatorId').val() && newData.child('uid').val() === data.child('uid').val() && (newData.child('status').val() === data.child('status').val() || newData.child('status').val() === 'left')))) || (root.child('owners').child($queueId).child('ownerUid').val() === auth.uid) || (root.child('queues').child($queueId).child('operatorUids').child(auth.uid).val() === true)",
             ".validate": "newData.hasChildren(['ticket', 'status', 'uid']) && (data.exists() || newData.child('name').exists())",
             "ticket": {
               ".validate": "newData.isNumber()"
@@ -51,6 +51,10 @@
             }
           }
         },
+        "public": {
+          ".read": "auth != null",
+          ".write": false
+        },
         "operatorUids": {
           ".read": "root.child('owners').child($queueId).child('ownerUid').val() === auth.uid",
           ".write": "root.child('owners').child($queueId).child('ownerUid').val() === auth.uid",
@@ -69,9 +73,13 @@
     },
     "tickets": {
       "$queueId": {
-        ".read": "auth != null",
-        ".write": "auth != null"
+        ".read": false,
+        ".write": "root.child('owners').child($queueId).child('ownerUid').val() === auth.uid"
       }
+    },
+    "rateLimits": {
+      ".read": false,
+      ".write": false
     }
   }
 }
