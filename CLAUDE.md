@@ -32,6 +32,7 @@ flutter run
 ### functions/
 ```bash
 npm ci
+npm test           # node --test (lógica pura em lib/join.js)
 ```
 
 ### rules-tests/
@@ -39,23 +40,56 @@ npm ci
 npm ci
 npm test           # sobe emulators firestore+database e roda node --test (roda no CI)
 ```
-Precisa de `firebase-tools` e Java 21+. Testes em `rules-tests/test/`.
+Precisa de `firebase-tools` e Java 21+. Testes em `rules-tests/test/`. Sobe também
+os emulators `functions` e `auth` (`join-callable.test.js` chama a callable
+`joinQueue`), então rode `npm ci` em `functions/` antes. Roda com
+`--test-concurrency=1` (arquivos compartilham o mesmo namespace do RTDB). A porta
+5001 do emulator de functions precisa estar livre.
 
 Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
-`~/.claude/CLAUDE.md`). Não há testes em `web/` nem `functions/`.
+`~/.claude/CLAUDE.md`). Não há testes em `web/`.
 
 ## Modelo de dados
 
 - **Firestore** (durável, lado owner): `owners/{uid}`, `queues/{queueId}`,
   `queues/{queueId}/history/{entryId}`. Rules: `firestore.rules`.
 - **RTDB** (tempo real): `queues/{queueId}/meta`, `queues/{queueId}/entries/{id}`,
-  `owners/{queueId}/ownerUid` (espelho de posse p/ rules), `tickets/{queueId}`
-  (contador de senha, incrementado por transação no cliente web). Rules:
-  `database.rules.json`.
+  `queues/{queueId}/public/{id}`, `owners/{queueId}/ownerUid` (espelho de posse p/
+  rules), `tickets/{queueId}` (contador de senha, incrementado por transação na
+  callable `joinQueue`), `rateLimits/{queueId}/{uid}` (timestamps dos joins).
+  Rules: `database.rules.json`.
 - Rules do RTDB validam `queues/{id}/entries/{entryId}`: `ticket` número, `status` ∈ waiting/called/served/no_show/left, `uid` imutável, `name` 1–60 chars e `phone` vazio ou `(DD) 9999-9999`/`(DD) 99999-9999` (os dois só são checados na criação ou quando mudam), campos fora de ticket/name/phone/uid/fcmToken/status/joinedAt/calledAt/operatorId são rejeitados. `.validate` não roda em `remove()`.
 - O app faz **dual-write**: Firestore (fonte da verdade) + espelho no RTDB
   (`meta` + `owners/{queueId}`). `_ensureOwnerMirror` reconcilia antes de escritas;
   `_ensureOwnerMirrorIfOwner` fica em cache por sessão (`uid/queueId`).
+
+## Entrada na fila (join)
+
+- O cliente web **não escreve** em `entries` nem em `tickets`: chama a callable
+  `joinQueue` (`functions/index.js`, região us-central1) com `{queueId, name, phone}`.
+  Ela exige auth, valida nome (1–60) e telefone (vazio ou `(00) 00000-0000`),
+  exige `meta/status == 'open'`, devolve a entry ativa existente do mesmo `uid`
+  (`existing: true`), recusa telefone já ativo na fila (`already-exists`), aplica
+  rate limit de 3 joins / 10 min por `uid` (`resource-exhausted`) e cria a entry
+  com ticket por transação Admin. Lógica pura em `functions/src/join.js`.
+- `entries` só é legível por dono, operador (`operatorUids`) e pelo autor
+  (`uid == auth.uid`, por entry). O cliente só altera a própria entry para
+  `status: 'left'` ou `fcmToken` (ticket/name/phone/joinedAt/calledAt/operatorId
+  imutáveis para ele); dono/operador mantêm acesso total.
+- Espelho público sem PII: trigger `syncPublicTicket` grava
+  `queues/{id}/public/{entryId} = {ticket, status}` enquanto a entry está
+  `waiting`/`called` e remove nos demais casos. `public` é legível por qualquer
+  autenticado e não tem escrita por cliente. O web calcula posição a partir dele.
+- `ENFORCE_APP_CHECK` (`functions/.env`, commitado com `false`) liga
+  `enforceAppCheck` na callable. Só mude para `true` depois de ativar App Check no
+  web (`VITE_RECAPTCHA_SITE_KEY`) e registrar o app no console.
+- Backfill único do `public` para entries já existentes:
+  `node functions/scripts/backfill-public.js` (credencial padrão do Admin SDK,
+  ex. `GOOGLE_APPLICATION_CREDENTIALS`/`GOOGLE_CLOUD_PROJECT=qio-app`).
+- **Ordem de deploy**: functions → backfill → hosting → database rules. Rules por
+  último, senão o web antigo perde a escrita/leitura antes de o novo estar no ar.
+  APK v1.1.0 (dono/operador) continua compatível com as rules novas. Web antigo em
+  cache falha ao entrar na fila até recarregar.
 
 ## Operadores
 

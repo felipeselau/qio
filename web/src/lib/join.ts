@@ -1,8 +1,19 @@
-import { runTransaction, ref, push, set, update } from 'firebase/database';
-import { auth, db } from '../firebase';
+import { ref, update } from 'firebase/database';
+import { httpsCallable } from 'firebase/functions';
+import { auth, db, functions } from '../firebase';
 import { storeEntryId } from './storage';
 
-export type JoinResult = { entryId: string; ticket: number };
+export type JoinResult = { entryId: string; ticket: number; existing: boolean };
+
+const JOIN_ERROR_MESSAGES: Record<string, string> = {
+  'functions/already-exists': 'Este telefone já está na fila.',
+  'functions/resource-exhausted': 'Muitas tentativas. Aguarde alguns minutos.',
+  'functions/failed-precondition': 'Fila fechada ou pausada.',
+  'functions/invalid-argument': 'Dados inválidos. Confira nome e telefone.',
+  'functions/not-found': 'Fila não encontrada.',
+};
+
+const JOIN_ERROR_FALLBACK = 'Não foi possível entrar na fila. Tente novamente.';
 
 export async function joinQueue(
   queueId: string,
@@ -12,27 +23,22 @@ export async function joinQueue(
   const uid = auth.currentUser?.uid;
   if (!uid) throw new Error('Não autenticado');
 
-  const ticketSnap = await runTransaction(ref(db, `tickets/${queueId}`), (current) => {
-    return (current ?? 0) + 1;
-  });
-  const ticket = ticketSnap.snapshot.val() as number;
+  let result: JoinResult;
+  try {
+    const call = httpsCallable<
+      { queueId: string; name: string; phone: string },
+      JoinResult
+    >(functions, 'joinQueue');
+    result = (await call({ queueId, name, phone })).data;
+  } catch (err) {
+    const code = (err as { code?: string } | null)?.code ?? '';
+    throw new Error(JOIN_ERROR_MESSAGES[code] ?? JOIN_ERROR_FALLBACK);
+  }
 
-  const entriesRef = ref(db, `queues/${queueId}/entries`);
-  const newRef = push(entriesRef);
-  const entryId = newRef.key!;
-  await set(newRef, {
-    ticket,
-    name,
-    phone,
-    uid,
-    status: 'waiting',
-    joinedAt: Date.now(),
-    calledAt: null,
-  });
-
-  storeEntryId(queueId, entryId);
-  return { entryId, ticket };
+  storeEntryId(queueId, result.entryId);
+  return result;
 }
+
 export async function leaveQueue(queueId: string, entryId: string): Promise<void> {
   const uid = auth.currentUser?.uid;
   if (!uid) throw new Error('Não autenticado');
