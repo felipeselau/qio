@@ -21,6 +21,7 @@ export default function QueuePage() {
   const [error, setError] = useState<string | null>(null);
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [leaving, setLeaving] = useState(false);
+  const [hasLeft, setHasLeft] = useState(false);
   const [fcmDone, setFcmDone] = useState(false);
   const installPrompt = useInstallPrompt();
 
@@ -91,6 +92,7 @@ export default function QueuePage() {
     setError(null);
     try {
       await leaveQueue(queueId, entryId);
+      setHasLeft(true);
       setConfirmLeave(false);
     } catch (err: any) {
       setError(err?.message ?? 'Não foi possível sair da fila');
@@ -119,6 +121,7 @@ export default function QueuePage() {
   const phase: Phase = (() => {
     if (loading || !authed || failed) return 'loading';
     if (!exists) return 'gone';
+    if (hasLeft) return 'left';
     if (meta?.status === 'closed' && !myEntry) return 'closed';
     if (!myEntry) return 'join';
     if (myEntry.status === 'called') {
