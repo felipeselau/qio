@@ -20,6 +20,7 @@ class HistoryMetrics {
     required this.total,
     required this.served,
     required this.noShow,
+    required this.left,
     required this.noShowRate,
     this.avgWaitMin,
     this.avgServiceMin,
@@ -28,6 +29,7 @@ class HistoryMetrics {
   final int total;
   final int served;
   final int noShow;
+  final int left;
   final double noShowRate;
   final double? avgWaitMin;
   final double? avgServiceMin;
@@ -61,6 +63,7 @@ double? _averageMinutes(Iterable<Duration> durations) {
 HistoryMetrics computeHistoryMetrics(List<HistoryEntry> entries) {
   final served = entries.where((e) => e.isServed).length;
   final noShow = entries.where((e) => e.isNoShow).length;
+  final left = entries.where((e) => e.isLeft).length;
   final total = entries.length;
   final waits = entries.map((e) => e.wait).whereType<Duration>();
   final services = entries
@@ -71,6 +74,7 @@ HistoryMetrics computeHistoryMetrics(List<HistoryEntry> entries) {
     total: total,
     served: served,
     noShow: noShow,
+    left: left,
     noShowRate: total == 0 ? 0 : noShow / total,
     avgWaitMin: _averageMinutes(waits),
     avgServiceMin: _averageMinutes(services),

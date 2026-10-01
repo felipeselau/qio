@@ -21,6 +21,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     'Todos': null,
     'Atendidos': 'served',
     'Não compareceram': 'no_show',
+    'Desistiram': 'left',
   };
 
   late final Stream<List<HistoryEntry>> _stream;
@@ -170,6 +171,7 @@ class _MetricsCard extends StatelessWidget {
                 label: 'Não compareceram',
                 value: '${metrics.noShow} ($pct%)',
               ),
+              _Metric(label: 'Desistiram', value: '${metrics.left}'),
             ],
           ),
           const SizedBox(height: 16),
@@ -219,8 +221,16 @@ class _HistoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = entry.isServed ? QioColors.success : QioColors.error;
-    final label = entry.isServed ? 'Atendido' : 'Não compareceu';
+    final color = entry.isServed
+        ? QioColors.success
+        : entry.isLeft
+        ? QioColors.textSecondary
+        : QioColors.error;
+    final label = entry.isServed
+        ? 'Atendido'
+        : entry.isLeft
+        ? 'Desistiu'
+        : 'Não compareceu';
     final wait = entry.wait;
     final subtitle = [
       _formatDateTime(entry.referenceTime),
