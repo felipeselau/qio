@@ -12,6 +12,7 @@ import '../theme/qio_text_styles.dart';
 import '../widgets/qio_avatar.dart';
 import '../widgets/qio_button.dart';
 import '../widgets/qio_card.dart';
+import '../widgets/qio_responsive_body.dart';
 
 enum _Validity {
   hour(Duration(hours: 1)),
@@ -75,42 +76,46 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
         ),
         centerTitle: true,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          StreamBuilder<Queue>(
-            stream: _queueStream,
-            builder: (context, snap) => _buildInviteCard(snap.data),
-          ),
-          const SizedBox(height: 24),
-          _sectionTitle(l10n.pendingRequestsSection),
-          const SizedBox(height: 12),
-          StreamBuilder<List<OperatorRequest>>(
-            stream: _requestsStream,
-            builder: (context, snap) {
-              final requests = snap.data ?? [];
-              if (requests.isEmpty) {
-                return _emptyCard(l10n.noPendingRequests);
-              }
-              return Column(children: requests.map(_buildRequestTile).toList());
-            },
-          ),
-          const SizedBox(height: 24),
-          _sectionTitle(l10n.activeOperatorsSection),
-          const SizedBox(height: 12),
-          StreamBuilder<List<QueueOperator>>(
-            stream: _operatorsStream,
-            builder: (context, snap) {
-              final operators = snap.data ?? [];
-              if (operators.isEmpty) {
-                return _emptyCard(l10n.noOperatorsYet);
-              }
-              return Column(
-                children: operators.map(_buildOperatorTile).toList(),
-              );
-            },
-          ),
-        ],
+      body: QioResponsiveBody(
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            StreamBuilder<Queue>(
+              stream: _queueStream,
+              builder: (context, snap) => _buildInviteCard(snap.data),
+            ),
+            const SizedBox(height: 24),
+            _sectionTitle(l10n.pendingRequestsSection),
+            const SizedBox(height: 12),
+            StreamBuilder<List<OperatorRequest>>(
+              stream: _requestsStream,
+              builder: (context, snap) {
+                final requests = snap.data ?? [];
+                if (requests.isEmpty) {
+                  return _emptyCard(l10n.noPendingRequests);
+                }
+                return Column(
+                  children: requests.map(_buildRequestTile).toList(),
+                );
+              },
+            ),
+            const SizedBox(height: 24),
+            _sectionTitle(l10n.activeOperatorsSection),
+            const SizedBox(height: 12),
+            StreamBuilder<List<QueueOperator>>(
+              stream: _operatorsStream,
+              builder: (context, snap) {
+                final operators = snap.data ?? [];
+                if (operators.isEmpty) {
+                  return _emptyCard(l10n.noOperatorsYet);
+                }
+                return Column(
+                  children: operators.map(_buildOperatorTile).toList(),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

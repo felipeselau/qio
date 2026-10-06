@@ -195,6 +195,15 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   em segundo plano só funciona com `VITE_VAPID_KEY` no build da web (ainda não
   configurada).
 
+## Release do app
+
+- `flutter build apk --release` exige `app/android/key.properties`; sem ele o
+  Gradle falha (escape: `QIO_ALLOW_DEBUG_SIGNING=true`). R8 e shrink ligados
+  (`proguard-rules.pro`). Crashlytics só reporta fora de debug e sem
+  `USE_EMULATORS`. Depois de mexer em dependências Firebase, rode um build de
+  release: versões desalinhadas de `firebase_core`/`firebase_auth` quebram a
+  compilação Android.
+
 ## Marca
 
 - Fonte da verdade em `design/brand/` (SVGs, PNGs, `generate.py`, regras de uso).

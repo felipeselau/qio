@@ -17,6 +17,7 @@ import '../theme/qio_text_styles.dart';
 import '../widgets/qio_card.dart';
 import '../widgets/qio_empty_state.dart';
 import '../widgets/qio_skeleton.dart';
+import '../widgets/qio_responsive_body.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key, required this.queueId, this.queueName = ''});
@@ -132,65 +133,67 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
         ],
       ),
-      body: StreamBuilder<List<HistoryEntry>>(
-        stream: _stream,
-        builder: (context, snap) {
-          if (snap.hasError) {
-            return QioErrorState(
-              message: l10n.loadHistoryError,
-              onRetry: () => setState(() {
-                _stream = QueueService.instance.watchHistory(widget.queueId);
-              }),
+      body: QioResponsiveBody(
+        child: StreamBuilder<List<HistoryEntry>>(
+          stream: _stream,
+          builder: (context, snap) {
+            if (snap.hasError) {
+              return QioErrorState(
+                message: l10n.loadHistoryError,
+                onRetry: () => setState(() {
+                  _stream = QueueService.instance.watchHistory(widget.queueId);
+                }),
+              );
+            }
+            if (!snap.hasData) {
+              return const QioSkeletonList(count: 4);
+            }
+            final all = snap.data!;
+            if (all.isEmpty) {
+              return QioEmptyState(
+                icon: Icons.history,
+                title: l10n.noHistoryYet,
+                message: l10n.emptyHistoryHint,
+              );
+            }
+            final filtered = filterHistory(
+              all,
+              result: _result,
+              period: _period,
+              now: DateTime.now(),
             );
-          }
-          if (!snap.hasData) {
-            return const QioSkeletonList(count: 4);
-          }
-          final all = snap.data!;
-          if (all.isEmpty) {
-            return QioEmptyState(
-              icon: Icons.history,
-              title: l10n.noHistoryYet,
-              message: l10n.emptyHistoryHint,
-            );
-          }
-          final filtered = filterHistory(
-            all,
-            result: _result,
-            period: _period,
-            now: DateTime.now(),
-          );
-          _filtered = filtered;
-          final metrics = computeHistoryMetrics(filtered);
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              _buildFilters(),
-              const SizedBox(height: 16),
-              _MetricsCard(
-                metrics: metrics,
-                feedback: summarizeFeedback(
-                  _feedback.values,
-                  onlyEntryIds: {for (final e in filtered) e.id},
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (filtered.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Center(
-                    child: Text(
-                      l10n.noHistoryInFilter,
-                      style: QioTextStyles.caption,
-                    ),
+            _filtered = filtered;
+            final metrics = computeHistoryMetrics(filtered);
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _buildFilters(),
+                const SizedBox(height: 16),
+                _MetricsCard(
+                  metrics: metrics,
+                  feedback: summarizeFeedback(
+                    _feedback.values,
+                    onlyEntryIds: {for (final e in filtered) e.id},
                   ),
-                )
-              else
-                for (final e in filtered)
-                  _HistoryTile(entry: e, rating: _feedback[e.id]?.rating),
-            ],
-          );
-        },
+                ),
+                const SizedBox(height: 16),
+                if (filtered.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Center(
+                      child: Text(
+                        l10n.noHistoryInFilter,
+                        style: QioTextStyles.caption,
+                      ),
+                    ),
+                  )
+                else
+                  for (final e in filtered)
+                    _HistoryTile(entry: e, rating: _feedback[e.id]?.rating),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -351,39 +354,44 @@ class _HistoryTile extends StatelessWidget {
         l10n.waitSubtitle(_formatMinutes(l10n, wait.inMilliseconds / 60000)),
       if (rating != null) '★ $rating',
     ].join(' · ');
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: QioCard(
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.ticketAndName(entry.ticket, entry.name),
-                    style: QioTextStyles.bodyMedium,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(subtitle, style: QioTextStyles.caption),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                label,
-                style: QioTextStyles.caption.copyWith(
-                  color: textColor,
-                  fontWeight: FontWeight.w500,
+    return MergeSemantics(
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: QioCard(
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.ticketAndName(entry.ticket, entry.name),
+                      style: QioTextStyles.bodyMedium,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(subtitle, style: QioTextStyles.caption),
+                  ],
                 ),
               ),
-            ),
-          ],
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  label,
+                  style: QioTextStyles.caption.copyWith(
+                    color: textColor,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

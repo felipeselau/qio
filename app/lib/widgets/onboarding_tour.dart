@@ -64,6 +64,7 @@ Future<void> showOnboardingTour(
     opacityShadow: 0.85,
     textSkip: AppLocalizations.of(context).skip,
     paddingFocus: 6,
+    disableBackButton: true,
     onFinish: () {
       done();
     },

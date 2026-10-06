@@ -10,6 +10,7 @@ import '../widgets/qio_card.dart';
 import '../widgets/qio_input.dart';
 import 'queue_panel_screen.dart';
 import '../widgets/qio_skeleton.dart';
+import '../widgets/qio_responsive_body.dart';
 
 class JoinOperatorScreen extends StatefulWidget {
   const JoinOperatorScreen({super.key, this.initialCode});
@@ -83,39 +84,41 @@ class _JoinOperatorScreenState extends State<JoinOperatorScreen> {
         ),
         centerTitle: true,
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  l10n.joinOperatorIntro,
-                  style: QioTextStyles.body.copyWith(
-                    color: QioColors.textSecondary,
+      body: QioResponsiveBody(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    l10n.joinOperatorIntro,
+                    style: QioTextStyles.body.copyWith(
+                      color: QioColors.textSecondary,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
-                QioInput(
-                  label: l10n.inviteCodeLabel,
-                  hint: l10n.inviteCodeHint,
-                  controller: _codeCtrl,
-                  prefixIcon: Icons.vpn_key_outlined,
-                  validator: (v) =>
-                      OperatorService.normalizeCode(v ?? '').length != 6
-                      ? l10n.inviteCodeLength
-                      : null,
-                ),
-                const SizedBox(height: 32),
-                QioButton(
-                  label: l10n.sendRequest,
-                  onPressed: _isLoading ? null : _submit,
-                  isLoading: _isLoading,
-                  isFullWidth: true,
-                ),
-              ],
+                  const SizedBox(height: 24),
+                  QioInput(
+                    label: l10n.inviteCodeLabel,
+                    hint: l10n.inviteCodeHint,
+                    controller: _codeCtrl,
+                    prefixIcon: Icons.vpn_key_outlined,
+                    validator: (v) =>
+                        OperatorService.normalizeCode(v ?? '').length != 6
+                        ? l10n.inviteCodeLength
+                        : null,
+                  ),
+                  const SizedBox(height: 32),
+                  QioButton(
+                    label: l10n.sendRequest,
+                    onPressed: _isLoading ? null : _submit,
+                    isLoading: _isLoading,
+                    isFullWidth: true,
+                  ),
+                ],
+              ),
             ),
           ),
         ),

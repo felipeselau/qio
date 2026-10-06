@@ -14,7 +14,18 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 - Skeletons no lugar dos spinners nas listas; web com transições entre fases e
   esqueleto no primeiro carregamento.
 
+### Segurança e release
+- Build de release com R8 (minify e shrink de recursos) e Crashlytics; sem
+  `android/key.properties` o build de release falha em vez de assinar com a
+  chave de debug (`QIO_ALLOW_DEBUG_SIGNING=true` libera para uso local).
+
 ### Alterado
+- Acessibilidade do app: tiles e cartões lidos como um item só, resumo falado do
+  gráfico de picos e testes de tamanho de toque, contraste e texto ampliado.
+- Tablets: conteúdo limitado em largura e painel da fila em duas colunas a
+  partir de 900 dp.
+- Voltar: confirmação ao sair da criação de fila com campos preenchidos e
+  bloqueio durante ações no painel; o tour não fecha com o botão voltar.
 - Identidade visual: símbolo do Qio (Q com fila de pontos), ícone do app
   (adaptativo e monocromático), splash nativa (Android 12+ e iOS), tela de
   carregamento e logo no login, ícones/favicon/manifest da web, fonte Inter
