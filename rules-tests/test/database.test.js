@@ -47,6 +47,38 @@ describe('RTDB rules', () => {
       await assertSucceeds(set(ref(rtdb(OPERATOR), path('meta/updatedAt')), 1));
     });
 
+    it('dono grava limite, mensagem e retorno válidos', async () => {
+      await assertSucceeds(set(ref(rtdb(OWNER), path('meta/maxWaiting')), 30));
+      await assertSucceeds(set(ref(rtdb(OWNER), path('meta/statusMessage')), 'Volto em 10 min'));
+      await assertSucceeds(set(ref(rtdb(OWNER), path('meta/resumeAt')), 1790000000000));
+    });
+
+    it('rejeita limite negativo, fracionário ou acima de 1000', async () => {
+      for (const v of [-1, 2.5, 1001, 'x']) {
+        await assertFails(set(ref(rtdb(OWNER), path('meta/maxWaiting')), v));
+      }
+    });
+
+    it('rejeita mensagem longa demais ou que não seja texto', async () => {
+      await assertFails(set(ref(rtdb(OWNER), path('meta/statusMessage')), 'a'.repeat(121)));
+      await assertFails(set(ref(rtdb(OWNER), path('meta/statusMessage')), 5));
+    });
+
+    it('operador, cliente e estranho não gravam limite nem mensagem', async () => {
+      for (const uid of [OPERATOR, 'client1', STRANGER]) {
+        await assertFails(set(ref(rtdb(uid), path('meta/maxWaiting')), 5));
+        await assertFails(set(ref(rtdb(uid), path('meta/statusMessage')), 'oi'));
+      }
+    });
+
+    it('qualquer autenticado lê a mensagem de status', async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await set(ref(ctx.database(), path('meta/statusMessage')), 'Intervalo');
+      });
+      const snap = await assertSucceeds(get(ref(rtdb('client1'), path('meta/statusMessage'))));
+      if (snap.val() !== 'Intervalo') throw new Error('mensagem não lida');
+    });
+
     it('operador não escreve meta/status', async () => {
       await assertFails(set(ref(rtdb(OPERATOR), path('meta/status')), 'closed'));
     });

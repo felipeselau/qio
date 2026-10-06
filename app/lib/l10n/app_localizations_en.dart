@@ -812,4 +812,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get discard => 'Discard';
+
+  @override
+  String get maxWaitingLabel => 'Maximum people waiting (optional)';
+
+  @override
+  String get maxWaitingHint => 'No limit';
+
+  @override
+  String get maxWaitingInvalid => 'Use a number from 1 to 1000';
+
+  @override
+  String get queueLimitTitle => 'Queue limit';
+
+  @override
+  String get queueLimitNone => 'No waiting limit';
+
+  @override
+  String queueLimitValue(int max) {
+    return 'Up to $max people waiting';
+  }
+
+  @override
+  String get save => 'Save';
+
+  @override
+  String get pauseQueueTitle => 'Pause the queue';
+
+  @override
+  String get closeQueueTitle => 'Close the queue';
+
+  @override
+  String get statusMessageLabel => 'Message for customers (optional)';
+
+  @override
+  String get statusSuggestionBack10 => 'Back in 10 minutes';
+
+  @override
+  String get statusSuggestionBreak => 'Quick break';
+
+  @override
+  String get statusSuggestionClosedToday => 'Queue closed for today';
+
+  @override
+  String get resumeAtLabel => 'Expected return';
+
+  @override
+  String get resumeAtNone => 'No estimate';
+
+  @override
+  String get clear => 'Clear';
+
+  @override
+  String waitingCounter(int count, int max) {
+    return '$count/$max waiting';
+  }
 }

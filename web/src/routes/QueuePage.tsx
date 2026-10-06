@@ -12,9 +12,32 @@ import {
 } from '../lib/storage';
 import { joinQueue, leaveQueue, saveFcmToken, submitFeedback } from '../lib/join';
 import { getFcmToken, listenForMessages } from '../lib/fcm';
-import { useQueue } from '../lib/useQueue';
+import { useQueue, type QueueMeta } from '../lib/useQueue';
 import { formatPhone, isValidPhone } from '../lib/format';
 import { useInstallPrompt } from '../lib/useInstallPrompt';
+
+function StatusNotice({ meta }: { meta: QueueMeta | null }) {
+  const { t, i18n } = useTranslation();
+  if (!meta || meta.status === 'open') return null;
+  const time = meta.resumeAt
+    ? new Date(meta.resumeAt).toLocaleTimeString(i18n.language, {
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    : null;
+  return (
+    <div
+      className={`notice ${meta.status === 'paused' ? 'notice-warning' : 'notice-closed'}`}
+      role="status"
+    >
+      <strong>
+        {meta.status === 'paused' ? t('queue.pausedTitle') : t('queue.closedTitle')}
+      </strong>
+      {meta.statusMessage && <span>{meta.statusMessage}</span>}
+      {time && <span>{t('queue.returnAt', { time })}</span>}
+    </div>
+  );
+}
 
 type Phase =
   | 'loading'
@@ -55,6 +78,7 @@ export default function QueuePage() {
     myEntryResolved,
     position,
     estimatedWaitMin,
+    full,
     loading,
     exists,
     failed,
@@ -256,6 +280,7 @@ export default function QueuePage() {
       <div className="center-col fade-in" key="closed">
         <h1 style={{ fontSize: 20, fontWeight: 700 }}>{meta?.name}</h1>
         <span className="badge badge-closed">{t('queue.closedBadge')}</span>
+        <StatusNotice meta={meta} />
         <p className="muted">{t('queue.closedHint')}</p>
       </div>
     );
@@ -443,6 +468,8 @@ export default function QueuePage() {
             </p>
           </div>
 
+          <StatusNotice meta={meta} />
+
           {(installPrompt.canInstall || installPrompt.hint) && (
             <section className="install-banner" role="region" aria-label={t('queue.installAria')}>
               {installPrompt.canInstall ? (
@@ -553,6 +580,15 @@ export default function QueuePage() {
           </p>
         )}
 
+        <StatusNotice meta={meta} />
+
+        {full && meta?.status === 'open' && (
+          <div className="notice notice-warning" role="status">
+            <strong>{t('queue.fullTitle')}</strong>
+            <span>{t('queue.fullHint')}</span>
+          </div>
+        )}
+
         <form
           onSubmit={handleSubmit}
           style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
@@ -584,7 +620,7 @@ export default function QueuePage() {
           <button
             type="submit"
             className="btn btn-primary"
-            disabled={submitting || meta?.status !== 'open'}
+            disabled={submitting || meta?.status !== 'open' || full}
           >
             {submitting ? t('queue.joining') : t('queue.join')}
           </button>

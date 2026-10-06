@@ -37,6 +37,7 @@ class QueueService {
     required String name,
     String? description,
     int avgServiceMin = 10,
+    int maxWaiting = 0,
   }) async {
     final now = DateTime.now();
     final docRef = await _firestore.collection('queues').add({
@@ -45,6 +46,7 @@ class QueueService {
       'description': description,
       'status': QueueStatus.open.value,
       'avgServiceMin': avgServiceMin,
+      'maxWaiting': maxWaiting,
       'createdAt': Timestamp.fromDate(now),
     });
 
@@ -58,6 +60,7 @@ class QueueService {
         'name': name,
         'description': description,
         'avgServiceMin': avgServiceMin,
+        'maxWaiting': maxWaiting,
         'updatedAt': ServerValue.timestamp,
       });
     } catch (_) {
@@ -125,13 +128,40 @@ class QueueService {
     _mirrorChecked.add('$_uid/$queueId');
   }
 
-  Future<void> updateQueueStatus(String queueId, QueueStatus status) async {
+  Future<void> updateQueueStatus(
+    String queueId,
+    QueueStatus status, {
+    String? message,
+    DateTime? resumeAt,
+  }) async {
+    final keepNotice = status != QueueStatus.open;
+    final text = keepNotice && message != null && message.trim().isNotEmpty
+        ? message.trim()
+        : null;
+    final until = keepNotice ? resumeAt : null;
     await _firestore.collection('queues').doc(queueId).update({
       'status': status.value,
+      'statusMessage': text ?? FieldValue.delete(),
+      'resumeAt': until != null
+          ? Timestamp.fromDate(until)
+          : FieldValue.delete(),
     });
     await _ensureOwnerMirror(queueId);
     await _rtdb.ref('queues/$queueId/meta').update({
       'status': status.value,
+      'statusMessage': text,
+      'resumeAt': until?.millisecondsSinceEpoch,
+      'updatedAt': ServerValue.timestamp,
+    });
+  }
+
+  Future<void> updateMaxWaiting(String queueId, int maxWaiting) async {
+    await _firestore.collection('queues').doc(queueId).update({
+      'maxWaiting': maxWaiting,
+    });
+    await _ensureOwnerMirror(queueId);
+    await _rtdb.ref('queues/$queueId/meta').update({
+      'maxWaiting': maxWaiting,
       'updatedAt': ServerValue.timestamp,
     });
   }

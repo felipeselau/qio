@@ -429,3 +429,23 @@ a {
     opacity: 1;
   }
 }
+
+.notice {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.notice-warning {
+  background: rgba(245, 158, 11, 0.16);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+}
+
+.notice-closed {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}

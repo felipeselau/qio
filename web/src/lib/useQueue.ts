@@ -10,7 +10,14 @@ export type QueueMeta = {
   avgServiceMin: number | null;
   avgServiceMinAuto: number | null;
   description: string | null;
+  maxWaiting: number;
+  statusMessage: string | null;
+  resumeAt: number | null;
 };
+
+export function isQueueFull(maxWaiting: number, waitingCount: number): boolean {
+  return maxWaiting > 0 && waitingCount >= maxWaiting;
+}
 
 export type EntryStatus = 'waiting' | 'called' | 'served' | 'no_show' | 'left';
 
@@ -28,6 +35,8 @@ export type QueueState = {
   myEntryResolved: boolean;
   position: number | null;
   estimatedWaitMin: number | null;
+  waitingCount: number;
+  full: boolean;
   loading: boolean;
   exists: boolean;
   failed: boolean;
@@ -69,6 +78,9 @@ export function useQueue(
             avgServiceMin: val.avgServiceMin ?? null,
             avgServiceMinAuto: val.avgServiceMinAuto ?? null,
             description: val.description ?? null,
+            maxWaiting: typeof val.maxWaiting === 'number' ? val.maxWaiting : 0,
+            statusMessage: val.statusMessage ?? null,
+            resumeAt: typeof val.resumeAt === 'number' ? val.resumeAt : null,
           });
         }
         setFailed(false);
@@ -134,5 +146,21 @@ export function useQueue(
     if (position != null) estimatedWaitMin = position * avg;
   }
 
-  return { meta, myEntry, myEntryResolved, position, estimatedWaitMin, loading, exists, failed };
+  const waitingCount = Object.values(publicTickets ?? {}).filter(
+    (e: any) => e.status === 'waiting',
+  ).length;
+  const full = isQueueFull(meta?.maxWaiting ?? 0, waitingCount);
+
+  return {
+    meta,
+    myEntry,
+    myEntryResolved,
+    position,
+    estimatedWaitMin,
+    waitingCount,
+    full,
+    loading,
+    exists,
+    failed,
+  };
 }

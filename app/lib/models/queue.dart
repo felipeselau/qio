@@ -50,6 +50,9 @@ class Queue {
     required this.createdAt,
     this.operatorInviteCode,
     this.operatorInviteExpiresAt,
+    this.maxWaiting = 0,
+    this.statusMessage,
+    this.resumeAt,
   });
 
   final String id;
@@ -61,6 +64,11 @@ class Queue {
   final DateTime createdAt;
   final String? operatorInviteCode;
   final DateTime? operatorInviteExpiresAt;
+  final int maxWaiting;
+  final String? statusMessage;
+  final DateTime? resumeAt;
+
+  bool get hasLimit => maxWaiting > 0;
 
   factory Queue.fromDoc(String id, Map<String, dynamic> data) {
     return Queue(
@@ -74,6 +82,11 @@ class Queue {
       operatorInviteCode: data['operatorInviteCode'] as String?,
       operatorInviteExpiresAt: data['operatorInviteExpiresAt'] is Timestamp
           ? (data['operatorInviteExpiresAt'] as Timestamp).toDate()
+          : null,
+      maxWaiting: (data['maxWaiting'] as num?)?.toInt() ?? 0,
+      statusMessage: data['statusMessage'] as String?,
+      resumeAt: data['resumeAt'] is Timestamp
+          ? (data['resumeAt'] as Timestamp).toDate()
           : null,
     );
   }

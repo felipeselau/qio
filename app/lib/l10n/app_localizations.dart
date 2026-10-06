@@ -1575,6 +1575,108 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Descartar'**
   String get discard;
+
+  /// No description provided for @maxWaitingLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Limite de pessoas esperando (opcional)'**
+  String get maxWaitingLabel;
+
+  /// No description provided for @maxWaitingHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem limite'**
+  String get maxWaitingHint;
+
+  /// No description provided for @maxWaitingInvalid.
+  ///
+  /// In pt, this message translates to:
+  /// **'Use um número de 1 a 1000'**
+  String get maxWaitingInvalid;
+
+  /// No description provided for @queueLimitTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Limite da fila'**
+  String get queueLimitTitle;
+
+  /// No description provided for @queueLimitNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem limite de espera'**
+  String get queueLimitNone;
+
+  /// No description provided for @queueLimitValue.
+  ///
+  /// In pt, this message translates to:
+  /// **'Até {max} pessoas esperando'**
+  String queueLimitValue(int max);
+
+  /// No description provided for @save.
+  ///
+  /// In pt, this message translates to:
+  /// **'Salvar'**
+  String get save;
+
+  /// No description provided for @pauseQueueTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pausar a fila'**
+  String get pauseQueueTitle;
+
+  /// No description provided for @closeQueueTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fechar a fila'**
+  String get closeQueueTitle;
+
+  /// No description provided for @statusMessageLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mensagem para os clientes (opcional)'**
+  String get statusMessageLabel;
+
+  /// No description provided for @statusSuggestionBack10.
+  ///
+  /// In pt, this message translates to:
+  /// **'Volto em 10 minutos'**
+  String get statusSuggestionBack10;
+
+  /// No description provided for @statusSuggestionBreak.
+  ///
+  /// In pt, this message translates to:
+  /// **'Intervalo rápido'**
+  String get statusSuggestionBreak;
+
+  /// No description provided for @statusSuggestionClosedToday.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fila encerrada por hoje'**
+  String get statusSuggestionClosedToday;
+
+  /// No description provided for @resumeAtLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Previsão de retorno'**
+  String get resumeAtLabel;
+
+  /// No description provided for @resumeAtNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem previsão'**
+  String get resumeAtNone;
+
+  /// No description provided for @clear.
+  ///
+  /// In pt, this message translates to:
+  /// **'Limpar'**
+  String get clear;
+
+  /// No description provided for @waitingCounter.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count}/{max} esperando'**
+  String waitingCounter(int count, int max);
 }
 
 class _AppLocalizationsDelegate
