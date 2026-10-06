@@ -1725,6 +1725,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Esta pessoa já não está aguardando'**
   String get entryUnavailable;
+
+  /// No description provided for @linkForCustomers.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este link é para clientes. Abrindo no navegador.'**
+  String get linkForCustomers;
 }
 
 class _AppLocalizationsDelegate

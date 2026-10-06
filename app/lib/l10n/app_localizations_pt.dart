@@ -897,4 +897,8 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get entryUnavailable => 'Esta pessoa já não está aguardando';
+
+  @override
+  String get linkForCustomers =>
+      'Este link é para clientes. Abrindo no navegador.';
 }

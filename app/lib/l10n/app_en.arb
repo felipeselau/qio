@@ -276,5 +276,6 @@
   "callResent": "Call sent again",
   "movedToEnd": "{name} moved to the end of the queue",
   "@movedToEnd": {"placeholders": {"name": {"type": "String"}}},
-  "entryUnavailable": "This person is no longer waiting"
+  "entryUnavailable": "This person is no longer waiting",
+  "linkForCustomers": "This link is for customers. Opening in the browser."
 }

@@ -1,11 +1,16 @@
+import 'dart:async';
+
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../l10n/app_localizations.dart';
 import '../controllers/home_controller.dart';
 import '../models/operator.dart';
 import '../models/queue.dart';
 import '../services/auth_service.dart';
+import '../services/deep_link.dart';
 import '../services/onboarding_service.dart';
 import '../services/operator_service.dart';
 import '../services/queue_service.dart';
@@ -38,8 +43,47 @@ class _HomeScreenState extends State<HomeScreen> {
     requestsSource: OperatorService.instance.watchMyRequests,
   );
 
+  StreamSubscription<Uri>? _linkSub;
+
+  @override
+  void initState() {
+    super.initState();
+    final links = AppLinks();
+    links.getInitialLink().then((uri) {
+      if (uri != null && mounted) _openLink(uri);
+    });
+    _linkSub = links.uriLinkStream.listen(_openLink);
+  }
+
+  Future<void> _openLink(Uri uri) async {
+    final queueId = queueIdFromLink(uri);
+    if (queueId == null) return;
+    final access = await QueueService.instance.resolveAccess(queueId);
+    if (!mounted) return;
+    if (access == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).linkForCustomers)),
+      );
+      await launchUrl(
+        clientUrlForQueue(queueId),
+        mode: LaunchMode.externalApplication,
+      );
+      return;
+    }
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => QueuePanelScreen(
+          queueId: queueId,
+          queueName: access.queue.name,
+          isOwner: access.isOwner,
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
+    _linkSub?.cancel();
     _controller.dispose();
     super.dispose();
   }

@@ -5,6 +5,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 ## [Não lançado]
 
 ### Adicionado
+- Links de fila (`qio.web.app/q/{id}`) abrem o painel direto no app para dono e
+  operador (Android App Links); para quem não é da equipe o app repassa ao
+  navegador em `/c/{id}`, que o app não captura.
 - Operação da fila: "Chamar de novo" (reenvia o aviso ao cliente e conta as
   chamadas), "Chamar agora" uma pessoa específica e "Mover para o fim" (mantém
   a senha, muda só a ordem). O histórico guarda `recalls` e `skips`.

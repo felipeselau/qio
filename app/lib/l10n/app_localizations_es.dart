@@ -899,4 +899,8 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get entryUnavailable => 'Esta persona ya no está esperando';
+
+  @override
+  String get linkForCustomers =>
+      'Este enlace es para clientes. Abriendo en el navegador.';
 }
