@@ -140,7 +140,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 child: Text(
                   l10n.loadHistoryError,
                   textAlign: TextAlign.center,
-                  style: QioTextStyles.body.copyWith(color: QioColors.error),
+                  style: QioTextStyles.body.copyWith(
+                    color: QioColors.statusClosedText,
+                  ),
                 ),
               ),
             );
@@ -339,6 +341,11 @@ class _HistoryTile extends StatelessWidget {
         : entry.isLeft
         ? QioColors.textSecondary
         : QioColors.error;
+    final textColor = entry.isServed
+        ? QioColors.statusOpenText
+        : entry.isLeft
+        ? QioColors.textSecondary
+        : QioColors.statusClosedText;
     final label = entry.isServed
         ? l10n.served
         : entry.isLeft
@@ -378,7 +385,7 @@ class _HistoryTile extends StatelessWidget {
               child: Text(
                 label,
                 style: QioTextStyles.caption.copyWith(
-                  color: color,
+                  color: textColor,
                   fontWeight: FontWeight.w500,
                 ),
               ),

@@ -44,6 +44,9 @@ Future<void> showOnboardingTour(
           keyTarget: visible[i].key,
           shape: visible[i].shape,
           enableOverlayTab: true,
+          alignSkip: visible[i].above
+              ? Alignment.topRight
+              : Alignment.bottomRight,
           radius: 12,
           contents: [
             TargetContent(

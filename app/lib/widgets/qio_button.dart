@@ -48,23 +48,33 @@ class QioButton extends StatelessWidget {
         borderColor = Colors.transparent;
       case QioButtonVariant.secondary:
         backgroundColor = isDisabled ? QioColors.gray100 : QioColors.surface;
-        foregroundColor = isDisabled ? QioColors.gray400 : QioColors.primary;
+        foregroundColor = isDisabled
+            ? QioColors.gray400
+            : QioColors.primaryText;
         borderColor = isDisabled ? QioColors.gray200 : QioColors.gray300;
       case QioButtonVariant.ghost:
         backgroundColor = Colors.transparent;
-        foregroundColor = isDisabled ? QioColors.gray400 : QioColors.primary;
+        foregroundColor = isDisabled
+            ? QioColors.gray400
+            : QioColors.primaryText;
         borderColor = Colors.transparent;
       case QioButtonVariant.danger:
-        backgroundColor = isDisabled ? QioColors.gray300 : QioColors.error;
+        backgroundColor = isDisabled
+            ? QioColors.gray300
+            : QioColors.dangerStrong;
         foregroundColor = Colors.white;
         borderColor = Colors.transparent;
       case QioButtonVariant.successSoft:
         backgroundColor = QioColors.success.withValues(alpha: 0.12);
-        foregroundColor = isDisabled ? QioColors.gray400 : QioColors.success;
+        foregroundColor = isDisabled
+            ? QioColors.gray400
+            : QioColors.statusOpenText;
         borderColor = Colors.transparent;
       case QioButtonVariant.dangerSoft:
         backgroundColor = QioColors.error.withValues(alpha: 0.12);
-        foregroundColor = isDisabled ? QioColors.gray400 : QioColors.error;
+        foregroundColor = isDisabled
+            ? QioColors.gray400
+            : QioColors.statusClosedText;
         borderColor = Colors.transparent;
     }
 

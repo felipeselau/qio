@@ -24,11 +24,11 @@ class QioBadge extends StatelessWidget {
   Color get _foregroundColor {
     switch (status) {
       case QioBadgeStatus.open:
-        return QioColors.statusOpen;
+        return QioColors.statusOpenText;
       case QioBadgeStatus.paused:
-        return QioColors.statusPaused;
+        return QioColors.statusPausedText;
       case QioBadgeStatus.closed:
-        return QioColors.statusClosed;
+        return QioColors.statusClosedText;
     }
   }
 
