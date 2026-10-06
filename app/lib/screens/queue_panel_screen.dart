@@ -8,10 +8,12 @@ import 'package:share_plus/share_plus.dart';
 import '../models/queue.dart';
 import '../models/queue_entry.dart';
 import '../services/entry_diff.dart';
+import '../services/onboarding_service.dart';
 import '../services/operator_service.dart';
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
+import '../widgets/onboarding_tour.dart';
 import '../widgets/qio_avatar.dart';
 import '../widgets/qio_badge.dart';
 import '../widgets/qio_button.dart';
@@ -44,10 +46,32 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
   bool _accessLost = false;
   StreamSubscription<List<QueueEntry>>? _joinSub;
   Set<String>? _lastWaiting;
+  final _qrKey = GlobalKey();
+  final _callNextKey = GlobalKey();
 
   @override
   void initState() {
     super.initState();
+    if (widget.isOwner) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await Future<void>.delayed(const Duration(milliseconds: 600));
+        if (!mounted) return;
+        showOnboardingTour(context, OnboardingTour.panel, [
+          OnboardingStep(
+            key: _qrKey,
+            title: 'Compartilhe o QR code',
+            body:
+                'Seus clientes escaneiam para entrar na fila, sem instalar nada.',
+          ),
+          OnboardingStep(
+            key: _callNextKey,
+            title: 'Chame o próximo',
+            body: 'Toque aqui para chamar a próxima pessoa da fila.',
+            above: true,
+          ),
+        ]);
+      });
+    }
     _joinSub = QueueService.instance
         .watchEntries(widget.queueId)
         .listen(_onEntries, onError: (_) {});
@@ -430,6 +454,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         QioButton(
+                          key: _callNextKey,
                           label: 'Chamar próximo',
                           onPressed: (_actionLoading || current != null)
                               ? null
@@ -573,6 +598,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
 
   Widget _buildQrCard(String joinUrl) {
     return QioCard(
+      key: _qrKey,
       padding: const EdgeInsets.all(24),
       child: Column(
         children: [
