@@ -3,14 +3,31 @@ import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { auth } from '../firebase';
-import { getStoredEntryId, clearStoredEntryId } from '../lib/storage';
-import { joinQueue, leaveQueue, saveFcmToken } from '../lib/join';
+import {
+  getStoredEntryId,
+  clearStoredEntryId,
+  getPendingFeedback,
+  storePendingFeedback,
+  clearPendingFeedback,
+} from '../lib/storage';
+import { joinQueue, leaveQueue, saveFcmToken, submitFeedback } from '../lib/join';
 import { getFcmToken, listenForMessages } from '../lib/fcm';
 import { useQueue } from '../lib/useQueue';
 import { formatPhone, isValidPhone } from '../lib/format';
 import { useInstallPrompt } from '../lib/useInstallPrompt';
 
-type Phase = 'loading' | 'join' | 'ticket' | 'called' | 'left' | 'closed' | 'gone';
+type Phase =
+  | 'loading'
+  | 'join'
+  | 'ticket'
+  | 'called'
+  | 'left'
+  | 'closed'
+  | 'gone'
+  | 'feedback'
+  | 'thanks';
+
+const MAX_COMMENT = 300;
 
 export default function QueuePage() {
   const { t } = useTranslation();
@@ -26,6 +43,11 @@ export default function QueuePage() {
   const [hasLeft, setHasLeft] = useState(false);
   const [fcmDone, setFcmDone] = useState(false);
   const installPrompt = useInstallPrompt();
+  const [feedbackId, setFeedbackId] = useState<string | null>(() => getPendingFeedback(queueId));
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
+  const [sendingFeedback, setSendingFeedback] = useState(false);
+  const [thanked, setThanked] = useState(false);
 
   const {
     meta,
@@ -125,6 +147,8 @@ export default function QueuePage() {
     if (!exists) return 'gone';
     if (hasLeft) return 'left';
     if (meta?.status === 'closed' && !myEntry) return 'closed';
+    if (!myEntry && thanked) return 'thanks';
+    if (!myEntry && feedbackId) return 'feedback';
     if (!myEntry) return 'join';
     if (myEntry.status === 'called') {
       // dispara alerta uma vez ao entrar no estado
@@ -143,6 +167,35 @@ export default function QueuePage() {
     }
     if (phase !== 'called') setAlerted(false);
   }, [phase, alerted]);
+
+  useEffect(() => {
+    if (phase === 'called' && entryId) {
+      storePendingFeedback(queueId, entryId);
+      setFeedbackId(entryId);
+    }
+  }, [phase, entryId, queueId]);
+
+  async function handleFeedbackSend() {
+    if (!feedbackId || rating < 1) return;
+    setSendingFeedback(true);
+    setError(null);
+    try {
+      await submitFeedback(queueId, feedbackId, rating, comment.trim());
+      clearPendingFeedback(queueId);
+      setFeedbackId(null);
+      setThanked(true);
+    } catch (err: any) {
+      setError(err?.message ?? t('errors.feedbackFailed'));
+    } finally {
+      setSendingFeedback(false);
+    }
+  }
+
+  function handleFeedbackSkip() {
+    clearPendingFeedback(queueId);
+    setFeedbackId(null);
+    setError(null);
+  }
 
   // salva o FCM token da entry na tela do ticket (uma vez por entry)
   useEffect(() => {
@@ -220,6 +273,72 @@ export default function QueuePage() {
         <p style={{ fontSize: 14, opacity: 0.9 }}>
           {t('queue.goToService')}
         </p>
+      </div>
+    );
+  }
+
+  if (phase === 'thanks') {
+    return (
+      <div className="center-col">
+        <div style={{ fontSize: 48 }}>🙏</div>
+        <h1 style={{ fontSize: 20, fontWeight: 700 }}>{t('queue.feedbackThanks')}</h1>
+        <p className="muted">{t('queue.feedbackThanksHint')}</p>
+      </div>
+    );
+  }
+
+  if (phase === 'feedback') {
+    return (
+      <div className="page">
+        <div className="page-scroll">
+          <div className="card" style={{ textAlign: 'center' }}>
+            <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>
+              {t('queue.feedbackTitle')}
+            </h1>
+            <div className="stars" role="radiogroup" aria-label={t('queue.feedbackTitle')}>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  role="radio"
+                  aria-checked={rating === n}
+                  aria-label={t('queue.feedbackStar', { count: n })}
+                  className={`star${n <= rating ? ' star-on' : ''}`}
+                  onClick={() => setRating(n)}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+            <div className="field" style={{ marginTop: 16, textAlign: 'left' }}>
+              <label htmlFor="feedback-comment">{t('queue.feedbackComment')}</label>
+              <textarea
+                id="feedback-comment"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                maxLength={MAX_COMMENT}
+                rows={3}
+              />
+            </div>
+          </div>
+          {error && <p className="error-text">{error}</p>}
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={rating < 1 || sendingFeedback}
+            onClick={handleFeedbackSend}
+          >
+            {sendingFeedback ? t('queue.feedbackSending') : t('queue.feedbackSend')}
+          </button>
+          <button
+            type="button"
+            className="btn btn-danger-ghost"
+            disabled={sendingFeedback}
+            onClick={handleFeedbackSkip}
+          >
+            {t('queue.feedbackSkip')}
+          </button>
+        </div>
       </div>
     );
   }

@@ -106,6 +106,22 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
   (`firestore.indexes.json`). Deploy manual: `firebase deploy --only
   firestore:indexes` e `--only functions:updateServiceEstimate`.
 
+## Feedback pós-atendimento
+
+- Web: quando a entry some do RTDB depois de ter estado `called`, mostra 1–5 estrelas
+  + comentário opcional (≤300). `entryId` pendente fica em `localStorage`
+  (`qio:feedback`) até enviar ou pular. `no_show` também vê a tela; a callable
+  responde `failed-precondition` e o web trata como concluído, sem erro.
+- Callable `submitFeedback` (`functions/index.js`, lógica pura em
+  `functions/src/feedback.js`): exige auth, `history/{entryId}` existente com
+  `result == 'served'` e grava `queues/{id}/feedback/{entryId}` com `create`
+  (idempotente: 2ª avaliação não sobrescreve). O `entryId` (push key) é a
+  capacidade; não há `uid` no history. Respeita `ENFORCE_APP_CHECK`.
+- Firestore `queues/{id}/feedback/{entryId}` `{rating, comment, uid, createdAt}`:
+  só o dono lê/apaga; ninguém escreve por cliente (rules). `deleteQueue` apaga.
+- App: `HistoryScreen` mostra média/contagem (respeitando os filtros) e `★ n` por
+  atendimento. Deploy: `--only functions:submitFeedback` e depois `--only firestore:rules`.
+
 ## Operadores
 
 - **Convite**: `operatorInvites/{code}` (6 chars, validade padrão 24 h) é a fonte

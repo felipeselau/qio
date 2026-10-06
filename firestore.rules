@@ -56,6 +56,10 @@ service cloud.firestore {
           && request.resource.data.keys().hasAll(['ticket', 'name', 'phone', 'result', 'joinedAt', 'calledAt', 'calledBy', 'operatorId', 'finishedAt']);
       }
 
+      match /feedback/{entryId} {
+        allow read, delete: if signedIn() && isQueueOwner(queueId);
+      }
+
       match /operators/{opUid} {
         allow get: if signedIn() && (request.auth.uid == opUid || isQueueOwner(queueId));
         allow list, write: if signedIn() && isQueueOwner(queueId);
