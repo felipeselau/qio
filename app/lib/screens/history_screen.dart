@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
@@ -7,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/history_entry.dart';
+import '../models/queue_feedback.dart';
 import '../services/history_export.dart';
 import '../services/history_metrics.dart';
 import '../services/queue_service.dart';
@@ -30,6 +32,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
   String? _result;
   List<HistoryEntry> _filtered = const [];
   bool _exporting = false;
+  StreamSubscription<List<QueueFeedback>>? _feedbackSub;
+  Map<String, QueueFeedback> _feedback = const {};
 
   String get _baseName => 'historico-${widget.queueId}';
 
@@ -85,6 +89,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
   void initState() {
     super.initState();
     _stream = QueueService.instance.watchHistory(widget.queueId);
+    _feedbackSub = QueueService.instance.watchFeedback(widget.queueId).listen((
+      list,
+    ) {
+      if (!mounted) return;
+      setState(() => _feedback = {for (final f in list) f.entryId: f});
+    }, onError: (_) {});
+  }
+
+  @override
+  void dispose() {
+    _feedbackSub?.cancel();
+    super.dispose();
   }
 
   @override
@@ -156,7 +172,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
             children: [
               _buildFilters(),
               const SizedBox(height: 16),
-              _MetricsCard(metrics: metrics),
+              _MetricsCard(
+                metrics: metrics,
+                feedback: summarizeFeedback(
+                  _feedback.values,
+                  onlyEntryIds: {for (final e in filtered) e.id},
+                ),
+              ),
               const SizedBox(height: 16),
               if (filtered.isEmpty)
                 Padding(
@@ -169,7 +191,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                 )
               else
-                for (final e in filtered) _HistoryTile(entry: e),
+                for (final e in filtered)
+                  _HistoryTile(entry: e, rating: _feedback[e.id]?.rating),
             ],
           );
         },
@@ -228,9 +251,10 @@ String _formatDateTime(DateTime d) {
 }
 
 class _MetricsCard extends StatelessWidget {
-  const _MetricsCard({required this.metrics});
+  const _MetricsCard({required this.metrics, required this.feedback});
 
   final HistoryMetrics metrics;
+  final FeedbackSummary feedback;
 
   @override
   Widget build(BuildContext context) {
@@ -262,6 +286,18 @@ class _MetricsCard extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              _Metric(
+                label: l10n.avgRating,
+                value: feedback.average == null
+                    ? '—'
+                    : '${feedback.average!.toStringAsFixed(1)} ★ (${feedback.count})',
+              ),
+              const Expanded(child: SizedBox.shrink()),
+            ],
+          ),
         ],
       ),
     );
@@ -290,9 +326,10 @@ class _Metric extends StatelessWidget {
 }
 
 class _HistoryTile extends StatelessWidget {
-  const _HistoryTile({required this.entry});
+  const _HistoryTile({required this.entry, this.rating});
 
   final HistoryEntry entry;
+  final int? rating;
 
   @override
   Widget build(BuildContext context) {
@@ -312,6 +349,7 @@ class _HistoryTile extends StatelessWidget {
       _formatDateTime(entry.referenceTime),
       if (wait != null)
         l10n.waitSubtitle(_formatMinutes(l10n, wait.inMilliseconds / 60000)),
+      if (rating != null) '★ $rating',
     ].join(' · ');
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),

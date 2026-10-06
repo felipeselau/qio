@@ -44,7 +44,15 @@
     "phoneLabel": "Telefone",
     "joining": "Entrando...",
     "join": "Entrar na fila",
-    "defaultName": "Fila"
+    "defaultName": "Fila",
+    "feedbackTitle": "Como foi seu atendimento?",
+    "feedbackStar": "{{count}} de 5 estrelas",
+    "feedbackComment": "Comentário (opcional)",
+    "feedbackSend": "Enviar avaliação",
+    "feedbackSending": "Enviando...",
+    "feedbackSkip": "Agora não",
+    "feedbackThanks": "Obrigado pela avaliação!",
+    "feedbackThanksHint": "Sua opinião ajuda a melhorar o atendimento."
   },
   "errors": {
     "nameRequired": "Informe seu nome",
@@ -56,7 +64,8 @@
     "resourceExhausted": "Muitas tentativas. Aguarde alguns minutos.",
     "failedPrecondition": "Fila fechada ou pausada.",
     "invalidArgument": "Dados inválidos. Confira nome e telefone.",
-    "notFound": "Fila não encontrada."
+    "notFound": "Fila não encontrada.",
+    "feedbackFailed": "Não foi possível enviar a avaliação. Tente novamente."
   },
   "push": {
     "called": "Sua senha foi chamada — dirija-se ao atendimento."

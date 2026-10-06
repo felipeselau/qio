@@ -1186,6 +1186,12 @@ abstract class AppLocalizations {
   /// **'Atendimento médio'**
   String get avgService;
 
+  /// No description provided for @avgRating.
+  ///
+  /// In pt, this message translates to:
+  /// **'Avaliação média'**
+  String get avgRating;
+
   /// No description provided for @resultLeft.
   ///
   /// In pt, this message translates to:

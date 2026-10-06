@@ -44,7 +44,15 @@
     "phoneLabel": "Phone",
     "joining": "Joining...",
     "join": "Join queue",
-    "defaultName": "Queue"
+    "defaultName": "Queue",
+    "feedbackTitle": "How was your service?",
+    "feedbackStar": "{{count}} of 5 stars",
+    "feedbackComment": "Comment (optional)",
+    "feedbackSend": "Send rating",
+    "feedbackSending": "Sending...",
+    "feedbackSkip": "Not now",
+    "feedbackThanks": "Thanks for your feedback!",
+    "feedbackThanksHint": "Your opinion helps improve the service."
   },
   "errors": {
     "nameRequired": "Enter your name",
@@ -56,7 +64,8 @@
     "resourceExhausted": "Too many attempts. Please wait a few minutes.",
     "failedPrecondition": "Queue is closed or paused.",
     "invalidArgument": "Invalid data. Check your name and phone.",
-    "notFound": "Queue not found."
+    "notFound": "Queue not found.",
+    "feedbackFailed": "Could not send your rating. Please try again."
   },
   "push": {
     "called": "Your ticket was called — please go to the service desk."
