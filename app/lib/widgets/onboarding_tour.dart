@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+import '../l10n/app_localizations.dart';
 import '../services/auth_service.dart';
 import '../services/onboarding_service.dart';
 import '../theme/qio_text_styles.dart';
@@ -57,7 +58,7 @@ Future<void> showOnboardingTour(
     ],
     colorShadow: Colors.black,
     opacityShadow: 0.85,
-    textSkip: 'PULAR',
+    textSkip: AppLocalizations.of(context).skip,
     paddingFocus: 6,
     onFinish: () {
       done();
@@ -87,7 +88,7 @@ class _StepText extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          '$index de $total',
+          AppLocalizations.of(context).stepOf(index, total),
           style: QioTextStyles.caption.copyWith(color: Colors.white70),
         ),
         const SizedBox(height: 4),
@@ -102,7 +103,7 @@ class _StepText extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          'Toque para continuar',
+          AppLocalizations.of(context).tapToContinue,
           style: QioTextStyles.caption.copyWith(color: Colors.white70),
         ),
       ],

@@ -9,6 +9,7 @@ import 'package:printing/printing.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../l10n/app_localizations.dart';
 import '../services/qr_style.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
@@ -81,68 +82,72 @@ class _QrPosterScreenState extends State<QrPosterScreen> {
         fileNameOverrides: [fileName],
       ),
     );
-  }, 'Não foi possível compartilhar a imagem.');
+  }, AppLocalizations.of(context).shareImageError);
 
-  Future<void> _print() => _run(() async {
-    final color = _preset.color;
-    final pdfColor = PdfColor(color.r, color.g, color.b);
-    final name = widget.queueName;
-    final url = widget.joinUrl;
-    final display = _displayUrl;
-    await Printing.layoutPdf(
-      name: _baseName,
-      onLayout: (format) async {
-        final doc = pw.Document();
-        doc.addPage(
-          pw.Page(
-            pageFormat: PdfPageFormat.a4,
-            margin: const pw.EdgeInsets.all(48),
-            build: (_) => pw.Center(
-              child: pw.Column(
-                mainAxisAlignment: pw.MainAxisAlignment.center,
-                children: [
-                  pw.Text(
-                    name,
-                    textAlign: pw.TextAlign.center,
-                    style: pw.TextStyle(
-                      fontSize: 40,
-                      fontWeight: pw.FontWeight.bold,
+  Future<void> _print() {
+    final l10n = AppLocalizations.of(context);
+    return _run(() async {
+      final color = _preset.color;
+      final pdfColor = PdfColor(color.r, color.g, color.b);
+      final name = widget.queueName;
+      final url = widget.joinUrl;
+      final display = _displayUrl;
+      await Printing.layoutPdf(
+        name: _baseName,
+        onLayout: (format) async {
+          final doc = pw.Document();
+          doc.addPage(
+            pw.Page(
+              pageFormat: PdfPageFormat.a4,
+              margin: const pw.EdgeInsets.all(48),
+              build: (_) => pw.Center(
+                child: pw.Column(
+                  mainAxisAlignment: pw.MainAxisAlignment.center,
+                  children: [
+                    pw.Text(
+                      name,
+                      textAlign: pw.TextAlign.center,
+                      style: pw.TextStyle(
+                        fontSize: 40,
+                        fontWeight: pw.FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  pw.SizedBox(height: 32),
-                  pw.BarcodeWidget(
-                    barcode: pw.Barcode.qrCode(),
-                    data: url,
-                    width: 360,
-                    height: 360,
-                    color: pdfColor,
-                    drawText: false,
-                  ),
-                  pw.SizedBox(height: 32),
-                  pw.Text(
-                    'Escaneie para entrar na fila',
-                    style: const pw.TextStyle(fontSize: 22),
-                  ),
-                  pw.SizedBox(height: 12),
-                  pw.Text(display, style: const pw.TextStyle(fontSize: 18)),
-                ],
+                    pw.SizedBox(height: 32),
+                    pw.BarcodeWidget(
+                      barcode: pw.Barcode.qrCode(),
+                      data: url,
+                      width: 360,
+                      height: 360,
+                      color: pdfColor,
+                      drawText: false,
+                    ),
+                    pw.SizedBox(height: 32),
+                    pw.Text(
+                      l10n.scanToJoin,
+                      style: const pw.TextStyle(fontSize: 22),
+                    ),
+                    pw.SizedBox(height: 12),
+                    pw.Text(display, style: const pw.TextStyle(fontSize: 18)),
+                  ],
+                ),
               ),
             ),
-          ),
-        );
-        return doc.save();
-      },
-    );
-  }, 'Não foi possível imprimir o cartaz.');
+          );
+          return doc.save();
+        },
+      );
+    }, l10n.printPosterError);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: QioColors.gray100,
       appBar: AppBar(
         backgroundColor: QioColors.surface,
         title: Text(
-          'Cartaz do QR',
+          l10n.posterTitle,
           style: QioTextStyles.heading2.copyWith(
             fontWeight: FontWeight.w700,
             color: QioColors.textPrimary,
@@ -184,7 +189,7 @@ class _QrPosterScreenState extends State<QrPosterScreen> {
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    'Escaneie para entrar na fila',
+                    l10n.scanToJoin,
                     style: QioTextStyles.body.copyWith(
                       fontSize: 18,
                       color: Colors.black,
@@ -204,7 +209,7 @@ class _QrPosterScreenState extends State<QrPosterScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            'COR DO QR',
+            l10n.qrColor,
             style: QioTextStyles.label.copyWith(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -218,7 +223,7 @@ class _QrPosterScreenState extends State<QrPosterScreen> {
               for (final p in QrColorPreset.values)
                 ChoiceChip(
                   avatar: CircleAvatar(backgroundColor: p.color, radius: 8),
-                  label: Text(p.label),
+                  label: Text(p.label(l10n)),
                   selected: _preset == p,
                   onSelected: (_) => setState(() => _preset = p),
                 ),
@@ -226,7 +231,7 @@ class _QrPosterScreenState extends State<QrPosterScreen> {
           ),
           const SizedBox(height: 24),
           QioButton(
-            label: 'Compartilhar imagem',
+            label: l10n.shareImage,
             icon: Icons.share_outlined,
             isFullWidth: true,
             isLoading: _busy,
@@ -234,7 +239,7 @@ class _QrPosterScreenState extends State<QrPosterScreen> {
           ),
           const SizedBox(height: 12),
           QioButton(
-            label: 'Imprimir',
+            label: l10n.print,
             variant: QioButtonVariant.secondary,
             icon: Icons.print,
             isFullWidth: true,

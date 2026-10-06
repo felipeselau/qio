@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/operator.dart';
 import '../models/queue.dart';
 import '../services/auth_service.dart';
@@ -44,25 +45,25 @@ class _HomeScreenState extends State<HomeScreen> {
     _tourScheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      final l10n = AppLocalizations.of(context);
       showOnboardingTour(context, OnboardingTour.home, [
         OnboardingStep(
           key: _fabKey,
-          title: 'Crie sua primeira fila',
-          body: 'Toque no + para criar uma fila e gerar o QR code.',
+          title: l10n.tourHomeFabTitle,
+          body: l10n.tourHomeFabBody,
           shape: ShapeLightFocus.Circle,
           above: true,
         ),
         if (hasOwned)
           OnboardingStep(
             key: _firstQueueKey,
-            title: 'Abra sua fila',
-            body: 'Toque no cartão para ver o QR code e chamar as pessoas.',
+            title: l10n.tourHomeQueueTitle,
+            body: l10n.tourHomeQueueBody,
           ),
         OnboardingStep(
           key: _operatorKey,
-          title: 'Entrar como operador',
-          body:
-              'Recebeu um código de convite? Use aqui para ajudar em uma fila.',
+          title: l10n.tourHomeOperatorTitle,
+          body: l10n.tourHomeOperatorBody,
           shape: ShapeLightFocus.Circle,
         ),
       ]);
@@ -71,13 +72,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final user = AuthService.instance.currentUser;
     return Scaffold(
       backgroundColor: QioColors.gray100,
       appBar: AppBar(
         backgroundColor: QioColors.surface,
         title: Text(
-          'Minhas filas',
+          l10n.myQueues,
           style: QioTextStyles.heading2.copyWith(
             fontWeight: FontWeight.w700,
             color: QioColors.textPrimary,
@@ -86,7 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             key: _operatorKey,
-            tooltip: 'Entrar como operador',
+            tooltip: l10n.joinAsOperator,
             icon: const Icon(Icons.badge_outlined, color: QioColors.primary),
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const JoinOperatorScreen()),
@@ -96,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.only(right: 12),
             child: Semantics(
               button: true,
-              label: 'Minha conta',
+              label: l10n.accountTitle,
               child: GestureDetector(
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(builder: (_) => const AccountScreen()),
@@ -136,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         key: _fabKey,
-        tooltip: 'Criar fila',
+        tooltip: l10n.createQueue,
         onPressed: () => Navigator.of(
           context,
         ).push(MaterialPageRoute(builder: (_) => const CreateQueueScreen())),
@@ -150,6 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
     List<QueueOperator> operating,
     List<OperatorRequest> requests,
   ) {
+    final l10n = AppLocalizations.of(context);
     if (owned.isEmpty && operating.isEmpty && requests.isEmpty) {
       return Center(
         child: Padding(
@@ -159,10 +162,10 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Icon(Icons.qr_code_2, size: 64, color: QioColors.gray300),
               const SizedBox(height: 16),
-              Text('Nenhuma fila ainda', style: QioTextStyles.heading2),
+              Text(l10n.emptyQueuesTitle, style: QioTextStyles.heading2),
               const SizedBox(height: 8),
               Text(
-                'Crie sua primeira fila ou entre como operador com um código de convite',
+                l10n.emptyQueuesBody,
                 style: QioTextStyles.body.copyWith(
                   color: QioColors.textSecondary,
                 ),
@@ -177,7 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        if (showHeaders && owned.isNotEmpty) _sectionTitle('SOU DONO'),
+        if (showHeaders && owned.isNotEmpty) _sectionTitle(l10n.sectionOwner),
         for (final q in owned) ...[
           _QueueCard(
             key: q == owned.first ? _firstQueueKey : null,
@@ -186,12 +189,12 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 16),
         ],
-        if (operating.isNotEmpty) _sectionTitle('SOU OPERADOR'),
+        if (operating.isNotEmpty) _sectionTitle(l10n.sectionOperator),
         for (final op in operating) ...[
           _OperatorQueueCard(operator: op),
           const SizedBox(height: 16),
         ],
-        if (requests.isNotEmpty) _sectionTitle('PEDIDOS DE OPERADOR'),
+        if (requests.isNotEmpty) _sectionTitle(l10n.sectionRequests),
         for (final r in requests) ...[
           _RequestCard(request: r),
           const SizedBox(height: 16),
@@ -223,6 +226,7 @@ class _QueueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final q = queue;
     return QioCard(
       padding: const EdgeInsets.all(20),
@@ -250,7 +254,7 @@ class _QueueCard extends StatelessWidget {
                 ),
               ),
               QioBadge(
-                label: q.status.label,
+                label: q.status.label(l10n),
                 status: switch (q.status) {
                   QueueStatus.open => QioBadgeStatus.open,
                   QueueStatus.paused => QioBadgeStatus.paused,
@@ -265,7 +269,7 @@ class _QueueCard extends StatelessWidget {
             builder: (context, snap) {
               final count = snap.data ?? 0;
               return Text(
-                '$count ${count == 1 ? "pessoa" : "pessoas"} esperando',
+                l10n.waitingCount(count),
                 style: QioTextStyles.body.copyWith(
                   fontSize: 14,
                   color: QioColors.gray700,
@@ -275,9 +279,7 @@ class _QueueCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            isOwner
-                ? 'Criada em ${q.createdAt.day.toString().padLeft(2, '0')}/${q.createdAt.month.toString().padLeft(2, '0')}/${q.createdAt.year}'
-                : 'Você é operador desta fila',
+            isOwner ? l10n.createdOn(q.createdAt) : l10n.youAreOperator,
             style: QioTextStyles.caption.copyWith(
               fontSize: 12,
               color: QioColors.gray400,
@@ -331,6 +333,7 @@ class _RequestCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final pending = request.status == OperatorRequestStatus.pending;
     return QioCard(
       padding: const EdgeInsets.all(20),
@@ -360,17 +363,16 @@ class _RequestCard extends StatelessWidget {
                   ),
                 ),
                 Text(switch (request.status) {
-                  OperatorRequestStatus.removed =>
-                    'Você foi removido desta fila',
-                  OperatorRequestStatus.rejected => 'Pedido recusado',
-                  _ => 'Aguardando aprovação',
+                  OperatorRequestStatus.removed => l10n.requestRemovedStatus,
+                  OperatorRequestStatus.rejected => l10n.requestRejectedStatus,
+                  _ => l10n.awaitingApproval,
                 }, style: QioTextStyles.caption.copyWith(fontSize: 12)),
               ],
             ),
           ),
           if (!pending)
             IconButton(
-              tooltip: 'Dispensar',
+              tooltip: l10n.dismiss,
               icon: Icon(Icons.close, color: QioColors.gray400),
               onPressed: () =>
                   OperatorService.instance.cancelMyRequest(request.queueId),

@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/queue.dart';
 import '../models/queue_entry.dart';
 import '../services/entry_diff.dart';
@@ -56,17 +57,17 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         await Future<void>.delayed(const Duration(milliseconds: 600));
         if (!mounted) return;
+        final l10n = AppLocalizations.of(context);
         showOnboardingTour(context, OnboardingTour.panel, [
           OnboardingStep(
             key: _qrKey,
-            title: 'Compartilhe o QR code',
-            body:
-                'Seus clientes escaneiam para entrar na fila, sem instalar nada.',
+            title: l10n.tourPanelQrTitle,
+            body: l10n.tourPanelQrBody,
           ),
           OnboardingStep(
             key: _callNextKey,
-            title: 'Chame o próximo',
-            body: 'Toque aqui para chamar a próxima pessoa da fila.',
+            title: l10n.tourPanelCallTitle,
+            body: l10n.tourPanelCallBody,
             above: true,
           ),
         ]);
@@ -92,9 +93,12 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
     if (added.isEmpty || !mounted) return;
     HapticFeedback.mediumImpact();
     SystemSound.play(SystemSoundType.alert);
+    final l10n = AppLocalizations.of(context);
     final message = added.length == 1
-        ? 'Nova pessoa na fila: ${entries.firstWhere((e) => e.id == added.first).name}'
-        : '${added.length} novas pessoas na fila';
+        ? l10n.newPersonInQueue(
+            entries.firstWhere((e) => e.id == added.first).name,
+          )
+        : l10n.newPeopleInQueue(added.length);
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -110,10 +114,8 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'Não foi possível sincronizar a fila. Tente reabrir.',
-            ),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).syncError),
             backgroundColor: QioColors.error,
           ),
         );
@@ -133,18 +135,17 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
     _accessLost = true;
     await _accessSub?.cancel();
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
     await showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text('Acesso encerrado'),
-        content: const Text(
-          'Você não é mais operador desta fila. O dono removeu seu acesso ou a fila foi excluída.',
-        ),
+        title: Text(l10n.accessEndedTitle),
+        content: Text(l10n.accessEndedBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+            child: Text(l10n.ok),
           ),
         ],
       ),
@@ -161,6 +162,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final joinUrl = QueueService.instance.queueJoinUrl(widget.queueId);
     return Scaffold(
       backgroundColor: QioColors.gray100,
@@ -190,7 +192,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                 ),
                 const SizedBox(height: 4),
                 QioBadge(
-                  label: status.label,
+                  label: status.label(l10n),
                   status: switch (status) {
                     QueueStatus.open => QioBadgeStatus.open,
                     QueueStatus.paused => QioBadgeStatus.paused,
@@ -206,7 +208,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
           if (widget.isOwner)
             IconButton(
               icon: Icon(Icons.history, color: QioColors.gray700),
-              tooltip: 'Histórico',
+              tooltip: l10n.historyTitle,
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute(
                   builder: (_) => HistoryScreen(
@@ -226,7 +228,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                   return Padding(
                     padding: const EdgeInsets.only(right: 12),
                     child: _StatusButton(
-                      label: 'Reabrir',
+                      label: l10n.reopen,
                       color: QioColors.primary,
                       onPressed: () => _updateStatus(QueueStatus.open),
                     ),
@@ -237,8 +239,8 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                   children: [
                     _StatusButton(
                       label: status == QueueStatus.paused
-                          ? 'Reabrir'
-                          : 'Pausar',
+                          ? l10n.reopen
+                          : l10n.pause,
                       color: QioColors.warning,
                       onPressed: () => _updateStatus(
                         status == QueueStatus.paused
@@ -248,7 +250,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                     ),
                     const SizedBox(width: 8),
                     _StatusButton(
-                      label: 'Fechar',
+                      label: l10n.close,
                       color: QioColors.error,
                       onPressed: () => _updateStatus(QueueStatus.closed),
                     ),
@@ -279,7 +281,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                     child: Column(
                       children: [
                         Text(
-                          'Fila fechada',
+                          l10n.queueClosedTitle,
                           style: QioTextStyles.heading3.copyWith(
                             fontWeight: FontWeight.w600,
                             color: QioColors.gray700,
@@ -287,7 +289,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Nenhum atendimento em andamento',
+                          l10n.noServiceInProgress,
                           style: QioTextStyles.caption,
                         ),
                       ],
@@ -299,8 +301,8 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 24),
                   child: Text(
                     widget.isOwner
-                        ? 'A fila está fechada. Você pode reabri-la ou excluí-la.'
-                        : 'A fila está fechada. Aguarde o dono reabrir.',
+                        ? l10n.closedOwnerHint
+                        : l10n.closedOperatorHint,
                     style: QioTextStyles.body.copyWith(
                       fontSize: 14,
                       color: QioColors.gray400,
@@ -338,7 +340,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                   const SizedBox(height: 16),
                   if (others.isNotEmpty) ...[
                     Text(
-                      'EM ATENDIMENTO POR OUTROS',
+                      l10n.servingByOthers,
                       style: QioTextStyles.label.copyWith(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -351,19 +353,19 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                         entry: e,
                         trailing: widget.isOwner
                             ? PopupMenuButton<EntryStatus>(
-                                tooltip: 'Finalizar atendimento',
+                                tooltip: l10n.finishService,
                                 onSelected: (result) =>
                                     result == EntryStatus.served
                                     ? _markServed(e)
                                     : _markNoShow(e),
-                                itemBuilder: (_) => const [
+                                itemBuilder: (_) => [
                                   PopupMenuItem(
                                     value: EntryStatus.served,
-                                    child: Text('Atendido'),
+                                    child: Text(l10n.served),
                                   ),
                                   PopupMenuItem(
                                     value: EntryStatus.noShow,
-                                    child: Text('Não compareceu'),
+                                    child: Text(l10n.noShow),
                                   ),
                                 ],
                               )
@@ -374,7 +376,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                   ],
                   if (waiting.isNotEmpty) ...[
                     Text(
-                      'PRÓXIMOS NA FILA',
+                      l10n.upNext,
                       style: QioTextStyles.label.copyWith(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -396,7 +398,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                             ),
                             const SizedBox(height: 12),
                             Text(
-                              'Ninguém na fila',
+                              l10n.nobodyInQueue,
                               style: QioTextStyles.bodyMedium,
                             ),
                           ],
@@ -433,7 +435,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       QioButton(
-                        label: 'Excluir fila',
+                        label: l10n.deleteQueue,
                         variant: QioButtonVariant.danger,
                         icon: Icons.delete_outline,
                         isFullWidth: true,
@@ -458,7 +460,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                       children: [
                         QioButton(
                           key: _callNextKey,
-                          label: 'Chamar próximo',
+                          label: l10n.callNext,
                           onPressed: (_actionLoading || current != null)
                               ? null
                               : _callNext,
@@ -470,7 +472,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                           children: [
                             Expanded(
                               child: QioButton(
-                                label: 'Atendido',
+                                label: l10n.served,
                                 variant: QioButtonVariant.successSoft,
                                 isFullWidth: true,
                                 fontSize: 14,
@@ -487,7 +489,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                             const SizedBox(width: 12),
                             Expanded(
                               child: QioButton(
-                                label: 'Não compareceu',
+                                label: l10n.noShow,
                                 variant: QioButtonVariant.dangerSoft,
                                 isFullWidth: true,
                                 fontSize: 14,
@@ -521,8 +523,8 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
       final next = await QueueService.instance.callNext(widget.queueId);
       if (next == null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Ninguém na fila'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).nobodyInQueue),
             backgroundColor: QioColors.warning,
           ),
         );
@@ -567,14 +569,15 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
   void _showError(Object e) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Não foi possível concluir a ação. Tente novamente.'),
+      SnackBar(
+        content: Text(AppLocalizations.of(context).genericActionError),
         backgroundColor: QioColors.error,
       ),
     );
   }
 
   Widget _buildOperatorsTile() {
+    final l10n = AppLocalizations.of(context);
     return QioCard(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute(
@@ -587,7 +590,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Operadores e convites',
+              l10n.operatorsAndInvites,
               style: QioTextStyles.bodyMedium.copyWith(
                 color: QioColors.textPrimary,
               ),
@@ -600,6 +603,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
   }
 
   Widget _buildQrCard(String joinUrl) {
+    final l10n = AppLocalizations.of(context);
     return QioCard(
       key: _qrKey,
       padding: const EdgeInsets.all(24),
@@ -614,7 +618,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
             ),
             child: Semantics(
               image: true,
-              label: 'QR code para entrar na fila',
+              label: l10n.qrSemantics,
               child: QrImageView(
                 data: joinUrl,
                 version: QrVersions.auto,
@@ -625,7 +629,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Escaneie para entrar na fila',
+            l10n.scanToJoin,
             style: QioTextStyles.body.copyWith(
               fontSize: 14,
               color: QioColors.gray700,
@@ -634,7 +638,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
           const SizedBox(height: 16),
           Semantics(
             button: true,
-            label: 'Copiar link da fila',
+            label: l10n.copyLinkSemantics,
             child: GestureDetector(
               onTap: () => _copyLink(joinUrl),
               child: Container(
@@ -671,7 +675,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
             children: [
               Expanded(
                 child: QioButton(
-                  label: 'Copiar link',
+                  label: l10n.copyLink,
                   icon: Icons.copy,
                   fontSize: 14,
                   padding: const EdgeInsets.symmetric(
@@ -685,7 +689,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: QioButton(
-                  label: 'Compartilhar',
+                  label: l10n.share,
                   variant: QioButtonVariant.secondary,
                   icon: Icons.share_outlined,
                   fontSize: 14,
@@ -701,7 +705,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
           ),
           const SizedBox(height: 12),
           QioButton(
-            label: 'Cartaz para impressão',
+            label: l10n.printablePoster,
             variant: QioButtonVariant.ghost,
             icon: Icons.print,
             fontSize: 14,
@@ -725,8 +729,8 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
     await Clipboard.setData(ClipboardData(text: url));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Link copiado!'),
+      SnackBar(
+        content: Text(AppLocalizations.of(context).linkCopied),
         backgroundColor: QioColors.secondary,
       ),
     );
@@ -741,6 +745,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
   }
 
   Future<void> _confirmDelete() async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -764,7 +769,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
             ),
             const SizedBox(height: 16),
             Text(
-              'Excluir fila?',
+              l10n.deleteQueueTitle,
               style: QioTextStyles.heading2.copyWith(
                 fontWeight: FontWeight.w700,
                 color: QioColors.textPrimary,
@@ -773,7 +778,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Essa ação é permanente. A fila e todo o histórico de atendimentos serão apagados.',
+              l10n.deleteQueueBody,
               style: QioTextStyles.body.copyWith(
                 fontSize: 14,
                 color: QioColors.gray500,
@@ -785,7 +790,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
               children: [
                 Expanded(
                   child: QioButton(
-                    label: 'Cancelar',
+                    label: l10n.cancel,
                     variant: QioButtonVariant.secondary,
                     isFullWidth: true,
                     fontSize: 14,
@@ -799,7 +804,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: QioButton(
-                    label: 'Excluir',
+                    label: l10n.delete,
                     variant: QioButtonVariant.danger,
                     isFullWidth: true,
                     fontSize: 14,
@@ -821,11 +826,11 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
     try {
       await QueueService.instance.deleteQueue(widget.queueId);
       if (mounted) Navigator.of(context).pop();
-    } on Exception catch (e) {
+    } on Exception {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(AppLocalizations.of(context).genericActionError),
             backgroundColor: QioColors.error,
           ),
         );
@@ -874,6 +879,7 @@ class _CurrentCalledCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     if (entry == null) {
       return QioCard(
         child: Padding(
@@ -882,12 +888,9 @@ class _CurrentCalledCard extends StatelessWidget {
             children: [
               Icon(Icons.person_search, size: 40, color: QioColors.gray300),
               const SizedBox(height: 12),
-              Text('Ninguém chamado', style: QioTextStyles.bodyMedium),
+              Text(l10n.nobodyCalled, style: QioTextStyles.bodyMedium),
               const SizedBox(height: 4),
-              Text(
-                'Toque "Chamar próximo" para começar',
-                style: QioTextStyles.caption,
-              ),
+              Text(l10n.callNextHint, style: QioTextStyles.caption),
             ],
           ),
         ),
@@ -910,7 +913,7 @@ class _CurrentCalledCard extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'CHAMANDO AGORA',
+            l10n.callingNow,
             style: QioTextStyles.label.copyWith(
               fontSize: 12,
               fontWeight: FontWeight.w500,
@@ -950,6 +953,7 @@ class _WaitingTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final waitMin = DateTime.now().difference(entry.joinedAt).inMinutes;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -983,7 +987,7 @@ class _WaitingTile extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '#${entry.ticket} · $waitMin min',
+                    l10n.waitTileSubtitle(entry.ticket, waitMin),
                     style: QioTextStyles.caption.copyWith(
                       fontSize: 12,
                       color: QioColors.gray400,

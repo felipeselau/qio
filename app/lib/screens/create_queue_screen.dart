@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
@@ -48,11 +49,11 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
           ),
         );
       }
-    } on Exception catch (e) {
+    } on Exception {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: Text(AppLocalizations.of(context).genericActionError),
             backgroundColor: QioColors.error,
           ),
         );
@@ -64,13 +65,14 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: QioColors.surface,
         leading: TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text(
-            '← Voltar',
+            l10n.backWithArrow,
             style: QioTextStyles.body.copyWith(
               fontSize: 16,
               color: QioColors.primary,
@@ -79,7 +81,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
         ),
         leadingWidth: 100,
         title: Text(
-          'Nova fila',
+          l10n.newQueue,
           style: QioTextStyles.heading2.copyWith(
             fontWeight: FontWeight.w700,
             color: QioColors.textPrimary,
@@ -90,7 +92,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: QioButton(
-              label: 'Criar',
+              label: l10n.create,
               onPressed: _isLoading ? null : _create,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             ),
@@ -106,34 +108,35 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 QioInput(
-                  label: 'Nome da fila *',
-                  hint: 'Ex: Atendimento balcão',
+                  label: l10n.queueNameLabel,
+                  hint: l10n.queueNameHint,
                   controller: _nameCtrl,
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Informe o nome' : null,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? l10n.queueNameRequired
+                      : null,
                 ),
                 const SizedBox(height: 24),
                 QioInput(
-                  label: 'Descrição (opcional)',
-                  hint: 'Descreva o propósito da fila...',
+                  label: l10n.descriptionLabel,
+                  hint: l10n.descriptionHint,
                   controller: _descCtrl,
                   maxLines: 4,
                 ),
                 const SizedBox(height: 24),
                 QioInput(
-                  label: 'Tempo médio de atendimento (minutos)',
+                  label: l10n.avgServiceLabel,
                   hint: '15',
                   controller: _timeCtrl,
                   keyboardType: TextInputType.number,
                   validator: (v) {
                     final n = int.tryParse(v ?? '');
-                    if (n == null || n <= 0) return 'Informe um número válido';
+                    if (n == null || n <= 0) return l10n.invalidNumber;
                     return null;
                   },
                 ),
                 const SizedBox(height: 32),
                 QioButton(
-                  label: 'Criar fila',
+                  label: l10n.createQueue,
                   onPressed: _create,
                   isLoading: _isLoading,
                   isFullWidth: true,

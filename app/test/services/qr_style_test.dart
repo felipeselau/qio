@@ -13,7 +13,7 @@ void main() {
 
   test('todos os presets passam no contraste', () {
     for (final p in QrColorPreset.values) {
-      expect(isContrastOk(p.color), isTrue, reason: p.label);
+      expect(isContrastOk(p.color), isTrue, reason: p.name);
     }
   });
 

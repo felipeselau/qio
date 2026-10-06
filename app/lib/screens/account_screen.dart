@@ -1,8 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../services/account_format.dart';
 import '../services/auth_service.dart';
+import '../services/locale_controller.dart';
 import '../services/theme_controller.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
@@ -66,7 +68,7 @@ class _AccountScreenState extends State<AccountScreen> {
       if (!mounted) return;
       setState(() => _signingOut = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Não foi possível sair da conta.')),
+        SnackBar(content: Text(AppLocalizations.of(context).signOutError)),
       );
     }
   }
@@ -87,12 +89,13 @@ class _AccountScreenState extends State<AccountScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: QioColors.gray100,
       appBar: AppBar(
         backgroundColor: QioColors.surface,
         title: Text(
-          'Minha conta',
+          l10n.accountTitle,
           style: QioTextStyles.heading2.copyWith(
             fontWeight: FontWeight.w700,
             color: QioColors.textPrimary,
@@ -112,6 +115,7 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget _buildContent(Map<String, dynamic>? owner) {
+    final l10n = AppLocalizations.of(context);
     final name = _displayName(owner);
     final business = (owner?['businessName'] as String?)?.trim() ?? '';
     final since = _memberSince(owner);
@@ -134,7 +138,7 @@ class _AccountScreenState extends State<AccountScreen> {
               if (business.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 Text(
-                  'Negócio: $business',
+                  l10n.businessLine(business),
                   textAlign: TextAlign.center,
                   style: QioTextStyles.body.copyWith(
                     color: QioColors.textSecondary,
@@ -165,12 +169,12 @@ class _AccountScreenState extends State<AccountScreen> {
                   } else {
                     value = snap.data?.toString() ?? '—';
                   }
-                  return _statRow('Filas criadas', value);
+                  return _statRow(l10n.queuesCreated, value);
                 },
               ),
               const Divider(height: 24),
               _statRow(
-                'Membro desde',
+                l10n.memberSince,
                 since == null ? '—' : formatMemberSince(since),
               ),
             ],
@@ -178,9 +182,11 @@ class _AccountScreenState extends State<AccountScreen> {
         ),
         const SizedBox(height: 12),
         const _ThemeCard(),
+        const SizedBox(height: 12),
+        const _LanguageCard(),
         const SizedBox(height: 24),
         QioButton(
-          label: 'Sair da conta',
+          label: l10n.signOut,
           variant: QioButtonVariant.danger,
           isFullWidth: true,
           isLoading: _signingOut,
@@ -214,6 +220,7 @@ class _ThemeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final controller = ThemeController.instance;
     return QioCard(
       child: ListenableBuilder(
@@ -221,23 +228,71 @@ class _ThemeCard extends StatelessWidget {
         builder: (context, _) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Aparência', style: QioTextStyles.bodyMedium),
+            Text(l10n.appearance, style: QioTextStyles.bodyMedium),
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
               child: SegmentedButton<ThemeMode>(
                 showSelectedIcon: false,
-                segments: const [
+                segments: [
                   ButtonSegment(
                     value: ThemeMode.system,
-                    label: Text('Sistema'),
+                    label: Text(l10n.systemOption),
                   ),
-                  ButtonSegment(value: ThemeMode.light, label: Text('Claro')),
-                  ButtonSegment(value: ThemeMode.dark, label: Text('Escuro')),
+                  ButtonSegment(
+                    value: ThemeMode.light,
+                    label: Text(l10n.themeLight),
+                  ),
+                  ButtonSegment(
+                    value: ThemeMode.dark,
+                    label: Text(l10n.themeDark),
+                  ),
                 ],
                 selected: {controller.mode},
                 onSelectionChanged: (s) => controller.setMode(s.first),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LanguageCard extends StatelessWidget {
+  const _LanguageCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final controller = LocaleController.instance;
+    final options = <(String?, String)>[
+      (null, l10n.systemOption),
+      ('pt', l10n.languagePortuguese),
+      ('en', l10n.languageEnglish),
+      ('es', l10n.languageSpanish),
+    ];
+    return QioCard(
+      child: ListenableBuilder(
+        listenable: controller,
+        builder: (context, _) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(l10n.languageTitle, style: QioTextStyles.bodyMedium),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final (code, label) in options)
+                  ChoiceChip(
+                    label: Text(label),
+                    selected: controller.locale?.languageCode == code,
+                    onSelected: (_) => controller.setLocale(
+                      code == null ? null : Locale(code),
+                    ),
+                  ),
+              ],
             ),
           ],
         ),

@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:qio_app/l10n/app_localizations.dart';
 import 'package:qio_app/models/history_entry.dart';
 import 'package:qio_app/services/history_export.dart';
 
@@ -18,8 +21,11 @@ HistoryEntry entry({
 );
 
 void main() {
+  final pt = lookupAppLocalizations(const Locale('pt'));
+  final en = lookupAppLocalizations(const Locale('en'));
+
   test('csv has BOM, header and row', () {
-    final csv = buildHistoryCsv([entry()]);
+    final csv = buildHistoryCsv(pt, [entry()]);
     expect(csv.startsWith('﻿'), isTrue);
     final lines = csv.substring(1).trim().split('\r\n');
     expect(
@@ -31,6 +37,14 @@ void main() {
       '7,Ana,(11) 91234-5678,Atendido,2026-10-01 09:00:00,'
       '2026-10-01 09:10:00,2026-10-01 09:20:00',
     );
+  });
+
+  test('csv header and result follow the locale', () {
+    final lines = buildHistoryCsv(en, [
+      entry(),
+    ]).substring(1).trim().split('\r\n');
+    expect(lines[0], 'ticket,name,phone,result,joined,called,finished');
+    expect(lines[1].split(',')[3], 'Served');
   });
 
   test('csv escapes commas, quotes and formula prefixes', () {
@@ -47,17 +61,28 @@ void main() {
       result: 'left',
       joinedAt: DateTime(2026, 10, 1),
     );
-    final row = buildHistoryCsv([e]).substring(1).trim().split('\r\n')[1];
+    final row = buildHistoryCsv(pt, [e]).substring(1).trim().split('\r\n')[1];
     expect(row, '1,Bia,,Desistiu,2026-10-01 00:00:00,,');
   });
 
   test('pdf builds a valid document', () async {
     final bytes = await buildHistoryPdf(
+      l10n: pt,
       queueName: 'Fila',
       entries: [
         entry(),
         entry(result: 'no_show'),
       ],
+      generatedAt: DateTime(2026, 10, 6),
+    );
+    expect(String.fromCharCodes(bytes.take(4)), '%PDF');
+  });
+
+  test('pdf builds for another locale', () async {
+    final bytes = await buildHistoryPdf(
+      l10n: en,
+      queueName: 'Queue',
+      entries: const [],
       generatedAt: DateTime(2026, 10, 6),
     );
     expect(String.fromCharCodes(bytes.take(4)), '%PDF');

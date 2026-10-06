@@ -1,3 +1,4 @@
+import i18n from '../i18n';
 import { getToken, isSupported, onMessage } from 'firebase/messaging';
 import { getMessagingSafe } from '../firebase';
 
@@ -25,8 +26,8 @@ export function listenForMessages(onTurn: () => void): () => void {
     if (!messaging) return;
     unsub = onMessage(messaging, () => {
       if (document.hidden) {
-        new Notification('É a sua vez!', {
-          body: 'Sua senha foi chamada — dirija-se ao atendimento.',
+        new Notification(i18n.t('queue.yourTurn'), {
+          body: i18n.t('push.called'),
           icon: '/favicon.svg',
         });
         onTurn();

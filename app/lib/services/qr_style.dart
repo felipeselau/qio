@@ -2,15 +2,22 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
+
 enum QrColorPreset {
-  azul('Azul', Color(0xFF1D4ED8)),
-  preto('Preto', Color(0xFF111827)),
-  verdeEscuro('Verde escuro', Color(0xFF047857));
+  azul(Color(0xFF1D4ED8)),
+  preto(Color(0xFF111827)),
+  verdeEscuro(Color(0xFF047857));
 
-  const QrColorPreset(this.label, this.color);
+  const QrColorPreset(this.color);
 
-  final String label;
   final Color color;
+
+  String label(AppLocalizations l10n) => switch (this) {
+    QrColorPreset.azul => l10n.qrColorBlue,
+    QrColorPreset.preto => l10n.qrColorBlack,
+    QrColorPreset.verdeEscuro => l10n.qrColorDarkGreen,
+  };
 }
 
 double contrastRatio(Color fg, Color bg) {
