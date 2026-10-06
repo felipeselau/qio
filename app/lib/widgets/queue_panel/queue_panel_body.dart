@@ -11,6 +11,7 @@ import '../../widgets/qio_responsive_body.dart';
 import '../../widgets/queue_panel/current_called_card.dart';
 import '../../widgets/queue_panel/waiting_tile.dart';
 import '../../widgets/queue_panel/queue_limit_tile.dart';
+import '../../widgets/queue_panel/queue_schedule_tile.dart';
 import '../../widgets/queue_panel/queue_qr_card.dart';
 import '../../widgets/queue_panel/operators_tile.dart';
 import 'animated_entry_list.dart';
@@ -52,6 +53,7 @@ class QueuePanelBody extends StatelessWidget {
         builder: (context, queueSnap) {
           final status = queueSnap.data?.status ?? QueueStatus.open;
           final maxWaiting = queueSnap.data?.maxWaiting ?? 0;
+          final schedule = queueSnap.data?.schedule;
           if (status == QueueStatus.closed) {
             return ListView(
               padding: const EdgeInsets.all(16),
@@ -62,6 +64,8 @@ class QueuePanelBody extends StatelessWidget {
                   OperatorsTile(queueId: queueId),
                   const SizedBox(height: 16),
                   QueueLimitTile(queueId: queueId, maxWaiting: maxWaiting),
+                  const SizedBox(height: 16),
+                  QueueScheduleTile(queueId: queueId, schedule: schedule),
                   const SizedBox(height: 16),
                 ],
                 QioCard(
@@ -121,6 +125,8 @@ class QueuePanelBody extends StatelessWidget {
                   OperatorsTile(queueId: queueId),
                   const SizedBox(height: 16),
                   QueueLimitTile(queueId: queueId, maxWaiting: maxWaiting),
+                  const SizedBox(height: 16),
+                  QueueScheduleTile(queueId: queueId, schedule: schedule),
                   const SizedBox(height: 16),
                 ],
               ];

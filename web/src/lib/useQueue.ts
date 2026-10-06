@@ -13,6 +13,7 @@ export type QueueMeta = {
   maxWaiting: number;
   statusMessage: string | null;
   resumeAt: number | null;
+  opensAt: number | null;
 };
 
 type PublicTicket = { ticket: number; status: string; order?: number };
@@ -98,6 +99,7 @@ export function useQueue(
             maxWaiting: typeof val.maxWaiting === 'number' ? val.maxWaiting : 0,
             statusMessage: val.statusMessage ?? null,
             resumeAt: typeof val.resumeAt === 'number' ? val.resumeAt : null,
+            opensAt: typeof val.opensAt === 'number' ? val.opensAt : null,
           });
         }
         setFailed(false);

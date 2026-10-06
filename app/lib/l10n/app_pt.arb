@@ -291,5 +291,16 @@
   "callResent": "Chamada reenviada",
   "movedToEnd": "{name} foi para o fim da fila",
   "@movedToEnd": {"placeholders": {"name": {"type": "String"}}},
-  "entryUnavailable": "Esta pessoa já não está aguardando"
+  "entryUnavailable": "Esta pessoa já não está aguardando",
+  "scheduleTitle": "Horário de funcionamento",
+  "scheduleOff": "Desligado",
+  "scheduleHours": "{days} · {open}–{close}",
+  "@scheduleHours": {"placeholders": {"days": {"type": "String"}, "open": {"type": "String"}, "close": {"type": "String"}}},
+  "scheduleEnabled": "Abrir e fechar automaticamente",
+  "scheduleDays": "Dias",
+  "scheduleOpens": "Abre",
+  "scheduleCloses": "Fecha",
+  "scheduleInvalidDays": "Escolha ao menos um dia",
+  "scheduleInvalidTime": "Abertura e fechamento devem ser diferentes",
+  "scheduleNote": "Horário de Brasília. Se você abrir, pausar ou fechar na mão, vale até a próxima abertura ou fechamento do horário."
 }

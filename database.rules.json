@@ -19,6 +19,9 @@
           },
           "resumeAt": {
             ".validate": "newData.isNumber()"
+          },
+          "opensAt": {
+            ".validate": "newData.isNumber()"
           }
         },
         "entries": {

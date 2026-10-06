@@ -276,5 +276,16 @@
   "callResent": "Llamada reenviada",
   "movedToEnd": "{name} pasó al final de la fila",
   "@movedToEnd": {"placeholders": {"name": {"type": "String"}}},
-  "entryUnavailable": "Esta persona ya no está esperando"
+  "entryUnavailable": "Esta persona ya no está esperando",
+  "scheduleTitle": "Horario de atención",
+  "scheduleOff": "Desactivado",
+  "scheduleHours": "{days} · {open}–{close}",
+  "@scheduleHours": {"placeholders": {"days": {"type": "String"}, "open": {"type": "String"}, "close": {"type": "String"}}},
+  "scheduleEnabled": "Abrir y cerrar automáticamente",
+  "scheduleDays": "Días",
+  "scheduleOpens": "Abre",
+  "scheduleCloses": "Cierra",
+  "scheduleInvalidDays": "Elige al menos un día",
+  "scheduleInvalidTime": "La apertura y el cierre deben ser distintos",
+  "scheduleNote": "Hora de Brasilia. Si abres, pausas o cierras a mano, se mantiene hasta la próxima apertura o cierre del horario."
 }

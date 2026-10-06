@@ -16,6 +16,17 @@ import { useQueue, type QueueMeta } from '../lib/useQueue';
 import { formatPhone, isValidPhone } from '../lib/format';
 import { useInstallPrompt } from '../lib/useInstallPrompt';
 
+function formatOpening(ms: number, language: string): string {
+  const date = new Date(ms);
+  const sameDay = date.toDateString() === new Date().toDateString();
+  return date.toLocaleString(
+    language,
+    sameDay
+      ? { hour: '2-digit', minute: '2-digit' }
+      : { weekday: 'short', hour: '2-digit', minute: '2-digit' },
+  );
+}
+
 function StatusNotice({ meta }: { meta: QueueMeta | null }) {
   const { t, i18n } = useTranslation();
   if (!meta || meta.status === 'open') return null;
@@ -35,6 +46,9 @@ function StatusNotice({ meta }: { meta: QueueMeta | null }) {
       </strong>
       {meta.statusMessage && <span>{meta.statusMessage}</span>}
       {time && <span>{t('queue.returnAt', { time })}</span>}
+      {meta.status === 'closed' && meta.opensAt && meta.opensAt > Date.now() && (
+        <span>{t('queue.opensAt', { when: formatOpening(meta.opensAt, i18n.language) })}</span>
+      )}
     </div>
   );
 }
