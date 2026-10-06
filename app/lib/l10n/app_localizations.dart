@@ -1785,6 +1785,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Horário de Brasília. Se você abrir, pausar ou fechar na mão, vale até a próxima abertura ou fechamento do horário.'**
   String get scheduleNote;
+
+  /// No description provided for @linkForCustomers.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este link é para clientes. Abrindo no navegador.'**
+  String get linkForCustomers;
 }
 
 class _AppLocalizationsDelegate

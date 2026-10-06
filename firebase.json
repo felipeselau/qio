@@ -11,8 +11,8 @@
     "public": "web/dist",
     "ignore": [
       "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "**/.DS_Store"
     ],
     "headers": [
       {
@@ -21,6 +21,15 @@
           {
             "key": "Content-Type",
             "value": "application/manifest+json"
+          }
+        ]
+      },
+      {
+        "source": "/.well-known/assetlinks.json",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
           }
         ]
       }

@@ -287,5 +287,6 @@
   "scheduleCloses": "Closes",
   "scheduleInvalidDays": "Choose at least one day",
   "scheduleInvalidTime": "Opening and closing times must differ",
-  "scheduleNote": "Brasília time. If you open, pause or close manually, it holds until the next scheduled opening or closing."
+  "scheduleNote": "Brasília time. If you open, pause or close manually, it holds until the next scheduled opening or closing.",
+  "linkForCustomers": "This link is for customers. Opening in the browser."
 }

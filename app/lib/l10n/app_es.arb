@@ -287,5 +287,6 @@
   "scheduleCloses": "Cierra",
   "scheduleInvalidDays": "Elige al menos un día",
   "scheduleInvalidTime": "La apertura y el cierre deben ser distintos",
-  "scheduleNote": "Hora de Brasilia. Si abres, pausas o cierras a mano, se mantiene hasta la próxima apertura o cierre del horario."
+  "scheduleNote": "Hora de Brasilia. Si abres, pausas o cierras a mano, se mantiene hasta la próxima apertura o cierre del horario.",
+  "linkForCustomers": "Este enlace es para clientes. Abriendo en el navegador."
 }

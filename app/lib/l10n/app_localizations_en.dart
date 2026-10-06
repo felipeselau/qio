@@ -928,4 +928,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get scheduleNote =>
       'Brasília time. If you open, pause or close manually, it holds until the next scheduled opening or closing.';
+
+  @override
+  String get linkForCustomers =>
+      'This link is for customers. Opening in the browser.';
 }

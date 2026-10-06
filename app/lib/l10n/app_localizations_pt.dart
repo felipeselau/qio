@@ -931,4 +931,8 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get scheduleNote =>
       'Horário de Brasília. Se você abrir, pausar ou fechar na mão, vale até a próxima abertura ou fechamento do horário.';
+
+  @override
+  String get linkForCustomers =>
+      'Este link é para clientes. Abrindo no navegador.';
 }

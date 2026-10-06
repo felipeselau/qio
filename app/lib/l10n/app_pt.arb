@@ -302,5 +302,6 @@
   "scheduleCloses": "Fecha",
   "scheduleInvalidDays": "Escolha ao menos um dia",
   "scheduleInvalidTime": "Abertura e fechamento devem ser diferentes",
-  "scheduleNote": "Horário de Brasília. Se você abrir, pausar ou fechar na mão, vale até a próxima abertura ou fechamento do horário."
+  "scheduleNote": "Horário de Brasília. Se você abrir, pausar ou fechar na mão, vale até a próxima abertura ou fechamento do horário.",
+  "linkForCustomers": "Este link é para clientes. Abrindo no navegador."
 }

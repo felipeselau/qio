@@ -933,4 +933,8 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get scheduleNote =>
       'Hora de Brasilia. Si abres, pausas o cierras a mano, se mantiene hasta la próxima apertura o cierre del horario.';
+
+  @override
+  String get linkForCustomers =>
+      'Este enlace es para clientes. Abriendo en el navegador.';
 }
