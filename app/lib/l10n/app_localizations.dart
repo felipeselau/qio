@@ -1726,6 +1726,66 @@ abstract class AppLocalizations {
   /// **'Esta pessoa já não está aguardando'**
   String get entryUnavailable;
 
+  /// No description provided for @scheduleTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Horário de funcionamento'**
+  String get scheduleTitle;
+
+  /// No description provided for @scheduleOff.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desligado'**
+  String get scheduleOff;
+
+  /// No description provided for @scheduleHours.
+  ///
+  /// In pt, this message translates to:
+  /// **'{days} · {open}–{close}'**
+  String scheduleHours(String days, String open, String close);
+
+  /// No description provided for @scheduleEnabled.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir e fechar automaticamente'**
+  String get scheduleEnabled;
+
+  /// No description provided for @scheduleDays.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dias'**
+  String get scheduleDays;
+
+  /// No description provided for @scheduleOpens.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abre'**
+  String get scheduleOpens;
+
+  /// No description provided for @scheduleCloses.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fecha'**
+  String get scheduleCloses;
+
+  /// No description provided for @scheduleInvalidDays.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolha ao menos um dia'**
+  String get scheduleInvalidDays;
+
+  /// No description provided for @scheduleInvalidTime.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abertura e fechamento devem ser diferentes'**
+  String get scheduleInvalidTime;
+
+  /// No description provided for @scheduleNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Horário de Brasília. Se você abrir, pausar ou fechar na mão, vale até a próxima abertura ou fechamento do horário.'**
+  String get scheduleNote;
+
   /// No description provided for @linkForCustomers.
   ///
   /// In pt, this message translates to:

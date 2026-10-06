@@ -897,6 +897,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get entryUnavailable => 'This person is no longer waiting';
 
   @override
+  String get scheduleTitle => 'Business hours';
+
+  @override
+  String get scheduleOff => 'Off';
+
+  @override
+  String scheduleHours(String days, String open, String close) {
+    return '$days · $open–$close';
+  }
+
+  @override
+  String get scheduleEnabled => 'Open and close automatically';
+
+  @override
+  String get scheduleDays => 'Days';
+
+  @override
+  String get scheduleOpens => 'Opens';
+
+  @override
+  String get scheduleCloses => 'Closes';
+
+  @override
+  String get scheduleInvalidDays => 'Choose at least one day';
+
+  @override
+  String get scheduleInvalidTime => 'Opening and closing times must differ';
+
+  @override
+  String get scheduleNote =>
+      'Brasília time. If you open, pause or close manually, it holds until the next scheduled opening or closing.';
+
+  @override
   String get linkForCustomers =>
       'This link is for customers. Opening in the browser.';
 }

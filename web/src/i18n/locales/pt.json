@@ -58,7 +58,8 @@
     "fullHint": "Tente novamente em alguns minutos.",
     "pausedTitle": "Fila em pausa",
     "closedTitle": "Fila fechada",
-    "returnAt": "Previsão de retorno: {{time}}"
+    "returnAt": "Previsão de retorno: {{time}}",
+    "opensAt": "Abre {{when}}"
   },
   "errors": {
     "nameRequired": "Informe seu nome",

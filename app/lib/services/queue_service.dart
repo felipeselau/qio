@@ -7,6 +7,7 @@ import '../models/history_entry.dart';
 import '../models/queue.dart';
 import '../models/queue_entry.dart';
 import '../models/queue_feedback.dart';
+import '../models/queue_schedule.dart';
 import 'mirror.dart';
 import 'operator_service.dart';
 
@@ -152,6 +153,15 @@ class QueueService {
       'statusMessage': text,
       'resumeAt': until?.millisecondsSinceEpoch,
       'updatedAt': ServerValue.timestamp,
+    });
+  }
+
+  Future<void> updateSchedule(String queueId, QueueSchedule? schedule) async {
+    await _firestore.collection('queues').doc(queueId).update({
+      'schedule': schedule != null && schedule.enabled
+          ? schedule.toMap()
+          : FieldValue.delete(),
+      'scheduleLastDesired': FieldValue.delete(),
     });
   }
 

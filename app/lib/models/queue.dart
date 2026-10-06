@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../l10n/app_localizations.dart';
+import 'queue_schedule.dart';
 
 enum QueueStatus { open, paused, closed }
 
@@ -53,6 +54,7 @@ class Queue {
     this.maxWaiting = 0,
     this.statusMessage,
     this.resumeAt,
+    this.schedule,
   });
 
   final String id;
@@ -67,6 +69,7 @@ class Queue {
   final int maxWaiting;
   final String? statusMessage;
   final DateTime? resumeAt;
+  final QueueSchedule? schedule;
 
   bool get hasLimit => maxWaiting > 0;
 
@@ -88,6 +91,7 @@ class Queue {
       resumeAt: data['resumeAt'] is Timestamp
           ? (data['resumeAt'] as Timestamp).toDate()
           : null,
+      schedule: QueueSchedule.fromMap(data['schedule']),
     );
   }
 

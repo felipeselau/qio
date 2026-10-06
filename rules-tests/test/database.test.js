@@ -53,6 +53,14 @@ describe('RTDB rules', () => {
       await assertSucceeds(set(ref(rtdb(OWNER), path('meta/resumeAt')), 1790000000000));
     });
 
+    it('dono grava opensAt numérico; os demais não', async () => {
+      await assertSucceeds(set(ref(rtdb(OWNER), path('meta/opensAt')), 1790000000000));
+      await assertFails(set(ref(rtdb(OWNER), path('meta/opensAt')), 'amanhã'));
+      for (const uid of [OPERATOR, 'client1', STRANGER]) {
+        await assertFails(set(ref(rtdb(uid), path('meta/opensAt')), 1));
+      }
+    });
+
     it('rejeita limite negativo, fracionário ou acima de 1000', async () => {
       for (const v of [-1, 2.5, 1001, 'x']) {
         await assertFails(set(ref(rtdb(OWNER), path('meta/maxWaiting')), v));

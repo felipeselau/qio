@@ -58,7 +58,8 @@
     "fullHint": "Please try again in a few minutes.",
     "pausedTitle": "Queue paused",
     "closedTitle": "Queue closed",
-    "returnAt": "Expected back at {{time}}"
+    "returnAt": "Expected back at {{time}}",
+    "opensAt": "Opens {{when}}"
   },
   "errors": {
     "nameRequired": "Enter your name",

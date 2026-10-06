@@ -899,6 +899,40 @@ class AppLocalizationsPt extends AppLocalizations {
   String get entryUnavailable => 'Esta pessoa já não está aguardando';
 
   @override
+  String get scheduleTitle => 'Horário de funcionamento';
+
+  @override
+  String get scheduleOff => 'Desligado';
+
+  @override
+  String scheduleHours(String days, String open, String close) {
+    return '$days · $open–$close';
+  }
+
+  @override
+  String get scheduleEnabled => 'Abrir e fechar automaticamente';
+
+  @override
+  String get scheduleDays => 'Dias';
+
+  @override
+  String get scheduleOpens => 'Abre';
+
+  @override
+  String get scheduleCloses => 'Fecha';
+
+  @override
+  String get scheduleInvalidDays => 'Escolha ao menos um dia';
+
+  @override
+  String get scheduleInvalidTime =>
+      'Abertura e fechamento devem ser diferentes';
+
+  @override
+  String get scheduleNote =>
+      'Horário de Brasília. Se você abrir, pausar ou fechar na mão, vale até a próxima abertura ou fechamento do horário.';
+
+  @override
   String get linkForCustomers =>
       'Este link é para clientes. Abrindo no navegador.';
 }

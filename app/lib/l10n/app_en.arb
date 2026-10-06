@@ -277,5 +277,16 @@
   "movedToEnd": "{name} moved to the end of the queue",
   "@movedToEnd": {"placeholders": {"name": {"type": "String"}}},
   "entryUnavailable": "This person is no longer waiting",
+  "scheduleTitle": "Business hours",
+  "scheduleOff": "Off",
+  "scheduleHours": "{days} · {open}–{close}",
+  "@scheduleHours": {"placeholders": {"days": {"type": "String"}, "open": {"type": "String"}, "close": {"type": "String"}}},
+  "scheduleEnabled": "Open and close automatically",
+  "scheduleDays": "Days",
+  "scheduleOpens": "Opens",
+  "scheduleCloses": "Closes",
+  "scheduleInvalidDays": "Choose at least one day",
+  "scheduleInvalidTime": "Opening and closing times must differ",
+  "scheduleNote": "Brasília time. If you open, pause or close manually, it holds until the next scheduled opening or closing.",
   "linkForCustomers": "This link is for customers. Opening in the browser."
 }
