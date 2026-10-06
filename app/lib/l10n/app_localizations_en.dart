@@ -709,4 +709,47 @@ class AppLocalizationsEn extends AppLocalizations {
   String avatarLabel(String name) {
     return 'Avatar: $name';
   }
+
+  @override
+  String get metricsTitle => 'Metrics';
+
+  @override
+  String get metricsTooltip => 'Queue metrics';
+
+  @override
+  String get metricsTotal => 'Services';
+
+  @override
+  String get peakHoursTitle => 'Demand peaks';
+
+  @override
+  String get peakHoursSubtitle => 'People who joined by hour';
+
+  @override
+  String peakHoursTop(String hours) {
+    return 'Busiest hours: $hours';
+  }
+
+  @override
+  String get noPeakData => 'No data in this period';
+
+  @override
+  String get mostActiveQueues => 'Most active queues';
+
+  @override
+  String queueActivityLine(int total, int rate) {
+    return '$total services · $rate% no-show';
+  }
+
+  @override
+  String get noMetricsData => 'No services in this period';
+
+  @override
+  String get loadMetricsError => 'Could not load metrics. Please try again.';
+
+  @override
+  String get noQueuesYet => 'You don\'t have any queues yet';
+
+  @override
+  String get retry => 'Try again';
 }

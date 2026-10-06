@@ -1389,6 +1389,84 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Avatar: {name}'**
   String avatarLabel(String name);
+
+  /// No description provided for @metricsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Métricas'**
+  String get metricsTitle;
+
+  /// No description provided for @metricsTooltip.
+  ///
+  /// In pt, this message translates to:
+  /// **'Métricas das filas'**
+  String get metricsTooltip;
+
+  /// No description provided for @metricsTotal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atendimentos'**
+  String get metricsTotal;
+
+  /// No description provided for @peakHoursTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Picos de demanda'**
+  String get peakHoursTitle;
+
+  /// No description provided for @peakHoursSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pessoas que entraram por horário'**
+  String get peakHoursSubtitle;
+
+  /// No description provided for @peakHoursTop.
+  ///
+  /// In pt, this message translates to:
+  /// **'Horários mais cheios: {hours}'**
+  String peakHoursTop(String hours);
+
+  /// No description provided for @noPeakData.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem dados no período'**
+  String get noPeakData;
+
+  /// No description provided for @mostActiveQueues.
+  ///
+  /// In pt, this message translates to:
+  /// **'Filas mais ativas'**
+  String get mostActiveQueues;
+
+  /// No description provided for @queueActivityLine.
+  ///
+  /// In pt, this message translates to:
+  /// **'{total} atendimentos · {rate}% não compareceram'**
+  String queueActivityLine(int total, int rate);
+
+  /// No description provided for @noMetricsData.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum atendimento no período'**
+  String get noMetricsData;
+
+  /// No description provided for @loadMetricsError.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível carregar as métricas. Tente novamente.'**
+  String get loadMetricsError;
+
+  /// No description provided for @noQueuesYet.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você ainda não tem filas'**
+  String get noQueuesYet;
+
+  /// No description provided for @retry.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tentar novamente'**
+  String get retry;
 }
 
 class _AppLocalizationsDelegate

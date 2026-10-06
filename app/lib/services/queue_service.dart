@@ -203,6 +203,20 @@ class QueueService {
         );
   }
 
+  Future<List<HistoryEntry>> fetchHistory(
+    String queueId, {
+    int limit = 500,
+  }) async {
+    final snap = await _firestore
+        .collection('queues')
+        .doc(queueId)
+        .collection('history')
+        .orderBy('finishedAt', descending: true)
+        .limit(limit)
+        .get();
+    return snap.docs.map((d) => HistoryEntry.fromDoc(d.id, d.data())).toList();
+  }
+
   Stream<int> watchWaitingCount(String queueId) {
     return _rtdb.ref('queues/$queueId/public').onValue.map((event) {
       final map = event.snapshot.value as Map<dynamic, dynamic>?;

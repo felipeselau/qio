@@ -710,4 +710,48 @@ class AppLocalizationsEs extends AppLocalizations {
   String avatarLabel(String name) {
     return 'Avatar: $name';
   }
+
+  @override
+  String get metricsTitle => 'Métricas';
+
+  @override
+  String get metricsTooltip => 'Métricas de las filas';
+
+  @override
+  String get metricsTotal => 'Atenciones';
+
+  @override
+  String get peakHoursTitle => 'Picos de demanda';
+
+  @override
+  String get peakHoursSubtitle => 'Personas que entraron por hora';
+
+  @override
+  String peakHoursTop(String hours) {
+    return 'Horas más llenas: $hours';
+  }
+
+  @override
+  String get noPeakData => 'Sin datos en el período';
+
+  @override
+  String get mostActiveQueues => 'Filas más activas';
+
+  @override
+  String queueActivityLine(int total, int rate) {
+    return '$total atenciones · $rate% no se presentaron';
+  }
+
+  @override
+  String get noMetricsData => 'Sin atenciones en el período';
+
+  @override
+  String get loadMetricsError =>
+      'No se pudieron cargar las métricas. Inténtalo de nuevo.';
+
+  @override
+  String get noQueuesYet => 'Aún no tienes filas';
+
+  @override
+  String get retry => 'Reintentar';
 }

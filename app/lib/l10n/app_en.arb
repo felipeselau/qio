@@ -214,5 +214,20 @@
   "skip": "SKIP",
   "stepOf": "{index} of {total}",
   "tapToContinue": "Tap to continue",
-  "avatarLabel": "Avatar: {name}"
+  "avatarLabel": "Avatar: {name}",
+  "metricsTitle": "Metrics",
+  "metricsTooltip": "Queue metrics",
+  "metricsTotal": "Services",
+  "peakHoursTitle": "Demand peaks",
+  "peakHoursSubtitle": "People who joined by hour",
+  "peakHoursTop": "Busiest hours: {hours}",
+  "@peakHoursTop": {"placeholders": {"hours": {"type": "String"}}},
+  "noPeakData": "No data in this period",
+  "mostActiveQueues": "Most active queues",
+  "queueActivityLine": "{total} services · {rate}% no-show",
+  "@queueActivityLine": {"placeholders": {"total": {"type": "int"}, "rate": {"type": "int"}}},
+  "noMetricsData": "No services in this period",
+  "loadMetricsError": "Could not load metrics. Please try again.",
+  "noQueuesYet": "You don't have any queues yet",
+  "retry": "Try again"
 }

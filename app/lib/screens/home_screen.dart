@@ -17,6 +17,7 @@ import '../widgets/qio_card.dart';
 import 'account_screen.dart';
 import 'create_queue_screen.dart';
 import 'join_operator_screen.dart';
+import 'metrics_screen.dart';
 import 'queue_panel_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -86,6 +87,13 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         actions: [
+          IconButton(
+            tooltip: l10n.metricsTooltip,
+            icon: const Icon(Icons.bar_chart, color: QioColors.primary),
+            onPressed: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const MetricsScreen())),
+          ),
           IconButton(
             key: _operatorKey,
             tooltip: l10n.joinAsOperator,
