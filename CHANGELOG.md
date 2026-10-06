@@ -2,6 +2,40 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [1.3.0] - 2026-10-06 (teste)
+
+### Adicionado
+- Tour de onboarding para novos donos (botão de criar fila, QR code e "Chamar
+  próximo"), com opção de pular.
+- Exportação do histórico em CSV e PDF, respeitando os filtros ativos.
+- Modo escuro no app (Sistema/Claro/Escuro em Minha conta) e na página do
+  cliente.
+- Internacionalização em português, inglês e espanhol no app e na web, com
+  seletor de idioma.
+- Avaliação pós-atendimento: o cliente dá de 1 a 5 estrelas (callable
+  `submitFeedback`); o dono vê a média e a nota por atendimento no histórico.
+- Tela de Métricas: espera e atendimento médios, taxa de não comparecimento,
+  gráfico de demanda por horário e filas mais ativas.
+
+### Corrigido
+- Tour de onboarding só avançava tocando no destaque; agora avança tocando em
+  qualquer ponto da tela.
+- Web: seletor de idioma e botão de tema cobriam o título da fila no celular;
+  a tela do cliente ficava presa em "É a sua vez!" depois do atendimento
+  porque o RTDB cancela o listener da entry removida (tratado no `useQueue`).
+- Login com Google na release: SHA-1/SHA-256 da chave de release registrados no
+  Firebase e `google-services.json` atualizado com os clientes OAuth.
+
+### Requer deploy
+- `firebase deploy --only functions:submitFeedback` e depois
+  `--only firestore:rules` (a avaliação não funciona antes disso).
+- A web nova sobe pelo CI no push para `main` (se `FIREBASE_TOKEN` existir).
+
+### Limitações conhecidas
+- Notificação push enviada pela function continua em português.
+- Telas novas do app (modo escuro, idiomas, métricas) sem teste visual em
+  dispositivo.
+
 ## [1.2.0] - 2026-10-01 (teste)
 
 ### Adicionado
