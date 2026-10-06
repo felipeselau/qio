@@ -11,6 +11,7 @@ import '../theme/qio_text_styles.dart';
 import '../widgets/qio_card.dart';
 import '../widgets/qio_empty_state.dart';
 import '../widgets/qio_skeleton.dart';
+import '../widgets/qio_responsive_body.dart';
 
 class _QueueHistory {
   const _QueueHistory(this.queue, this.entries);
@@ -55,20 +56,22 @@ class _MetricsScreenState extends State<MetricsScreen> {
           ),
         ),
       ),
-      body: FutureBuilder<List<_QueueHistory>>(
-        future: _future,
-        builder: (context, snap) {
-          if (snap.hasError) {
-            return QioErrorState(
-              message: l10n.loadMetricsError,
-              onRetry: () => setState(() => _future = _load()),
-            );
-          }
-          if (!snap.hasData) {
-            return const QioSkeletonList(count: 3);
-          }
-          return _buildContent(l10n, snap.data!);
-        },
+      body: QioResponsiveBody(
+        child: FutureBuilder<List<_QueueHistory>>(
+          future: _future,
+          builder: (context, snap) {
+            if (snap.hasError) {
+              return QioErrorState(
+                message: l10n.loadMetricsError,
+                onRetry: () => setState(() => _future = _load()),
+              );
+            }
+            if (!snap.hasData) {
+              return const QioSkeletonList(count: 3);
+            }
+            return _buildContent(l10n, snap.data!);
+          },
+        ),
       ),
     );
   }
@@ -161,7 +164,16 @@ class _MetricsScreenState extends State<MetricsScreen> {
                 const SizedBox(height: 4),
                 Text(l10n.peakHoursSubtitle, style: QioTextStyles.caption),
                 const SizedBox(height: 16),
-                _HourlyChart(distribution: distribution),
+                _HourlyChart(
+                  distribution: distribution,
+                  summary: peaks.isEmpty
+                      ? l10n.noPeakData
+                      : l10n.peakHoursTop(
+                          peaks
+                              .map((h) => '${h.toString().padLeft(2, '0')}h')
+                              .join(', '),
+                        ),
+                ),
                 const SizedBox(height: 12),
                 Text(
                   peaks.isEmpty
@@ -233,51 +245,53 @@ class _Stat extends StatelessWidget {
 }
 
 class _HourlyChart extends StatelessWidget {
-  const _HourlyChart({required this.distribution});
+  const _HourlyChart({required this.distribution, required this.summary});
 
   final List<int> distribution;
+  final String summary;
 
   @override
   Widget build(BuildContext context) {
     final max = distribution.fold<int>(0, (m, v) => v > m ? v : m);
-    return Column(
-      children: [
-        SizedBox(
-          height: 100,
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              for (var h = 0; h < 24; h++)
-                Expanded(
-                  child: Semantics(
-                    label:
-                        '${h.toString().padLeft(2, '0')}h: ${distribution[h]}',
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 1),
-                      child: Container(
-                        height: max == 0 ? 2 : 2 + 98 * distribution[h] / max,
-                        decoration: BoxDecoration(
-                          color: distribution[h] == 0
-                              ? QioColors.gray200
-                              : QioColors.primary,
-                          borderRadius: BorderRadius.circular(2),
+    return Semantics(
+      label: summary,
+      child: ExcludeSemantics(
+        child: Column(
+          children: [
+            SizedBox(
+              height: 100,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  for (var h = 0; h < 24; h++)
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 1),
+                        child: Container(
+                          height: max == 0 ? 2 : 2 + 98 * distribution[h] / max,
+                          decoration: BoxDecoration(
+                            color: distribution[h] == 0
+                                ? QioColors.gray200
+                                : QioColors.primary,
+                            borderRadius: BorderRadius.circular(2),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 4),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            for (final h in const [0, 6, 12, 18, 23])
-              Text('${h}h', style: QioTextStyles.caption),
+                ],
+              ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                for (final h in const [0, 6, 12, 18, 23])
+                  Text('${h}h', style: QioTextStyles.caption),
+              ],
+            ),
           ],
         ),
-      ],
+      ),
     );
   }
 }

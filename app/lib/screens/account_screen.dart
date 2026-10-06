@@ -14,6 +14,7 @@ import '../widgets/qio_avatar.dart';
 import '../widgets/qio_button.dart';
 import '../widgets/qio_card.dart';
 import '../widgets/qio_skeleton.dart';
+import '../widgets/qio_responsive_body.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -101,14 +102,16 @@ class _AccountScreenState extends State<AccountScreen> {
           ),
         ),
       ),
-      body: FutureBuilder<Map<String, dynamic>?>(
-        future: _ownerFuture,
-        builder: (context, snap) {
-          if (snap.connectionState != ConnectionState.done) {
-            return const QioSkeletonList(count: 3);
-          }
-          return _buildContent(snap.data);
-        },
+      body: QioResponsiveBody(
+        child: FutureBuilder<Map<String, dynamic>?>(
+          future: _ownerFuture,
+          builder: (context, snap) {
+            if (snap.connectionState != ConnectionState.done) {
+              return const QioSkeletonList(count: 3);
+            }
+            return _buildContent(snap.data);
+          },
+        ),
       ),
     );
   }

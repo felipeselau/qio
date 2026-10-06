@@ -4,6 +4,7 @@ plugins {
     id("com.android.application")
     // START: FlutterFire Configuration
     id("com.google.gms.google-services")
+    id("com.google.firebase.crashlytics")
     // END: FlutterFire Configuration
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
@@ -46,11 +47,32 @@ android {
 
     buildTypes {
         release {
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
             signingConfig = if (keystorePropertiesFile.exists()) {
                 signingConfigs.getByName("release")
             } else {
                 signingConfigs.getByName("debug")
             }
+        }
+    }
+}
+
+if (!keystorePropertiesFile.exists() && System.getenv("QIO_ALLOW_DEBUG_SIGNING") != "true") {
+    gradle.taskGraph.whenReady {
+        val releaseBuild = allTasks.any {
+            it.project.path == ":app" &&
+                Regex("^(assemble|bundle|package)\\w*Release$").matches(it.name)
+        }
+        if (releaseBuild) {
+            throw GradleException(
+                "key.properties ausente: o build de release seria assinado com a chave de debug. " +
+                    "Crie android/key.properties ou defina QIO_ALLOW_DEBUG_SIGNING=true para um build local."
+            )
         }
     }
 }

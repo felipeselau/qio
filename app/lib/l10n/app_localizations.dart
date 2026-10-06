@@ -1551,6 +1551,30 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Escolha outro período ou aguarde os primeiros atendimentos.'**
   String get emptyMetricsHint;
+
+  /// No description provided for @discardTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Descartar alterações?'**
+  String get discardTitle;
+
+  /// No description provided for @discardBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você já preencheu campos. Se sair agora, vai perder o que digitou.'**
+  String get discardBody;
+
+  /// No description provided for @keepEditing.
+  ///
+  /// In pt, this message translates to:
+  /// **'Continuar editando'**
+  String get keepEditing;
+
+  /// No description provided for @discard.
+  ///
+  /// In pt, this message translates to:
+  /// **'Descartar'**
+  String get discard;
 }
 
 class _AppLocalizationsDelegate

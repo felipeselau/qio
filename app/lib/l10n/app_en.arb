@@ -243,5 +243,9 @@
   "hapticsSubtitle": "Vibrate when calling, finishing and confirming actions",
   "nobodyInQueueHint": "When someone joins through the QR code, they show up here.",
   "emptyHistoryHint": "Finished services show up here.",
-  "emptyMetricsHint": "Pick another period or wait for the first services."
+  "emptyMetricsHint": "Pick another period or wait for the first services.",
+  "discardTitle": "Discard changes?",
+  "discardBody": "You already filled in some fields. If you leave now, you will lose what you typed.",
+  "keepEditing": "Keep editing",
+  "discard": "Discard"
 }

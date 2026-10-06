@@ -799,4 +799,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get emptyMetricsHint =>
       'Pick another period or wait for the first services.';
+
+  @override
+  String get discardTitle => 'Discard changes?';
+
+  @override
+  String get discardBody =>
+      'You already filled in some fields. If you leave now, you will lose what you typed.';
+
+  @override
+  String get keepEditing => 'Keep editing';
+
+  @override
+  String get discard => 'Discard';
 }

@@ -21,6 +21,7 @@ import '../widgets/qio_badge.dart';
 import '../widgets/qio_button.dart';
 import '../widgets/qio_card.dart';
 import '../widgets/qio_empty_state.dart';
+import '../widgets/qio_responsive_body.dart';
 import 'history_screen.dart';
 import 'operators_screen.dart';
 import 'qr_poster_screen.dart';
@@ -166,343 +167,381 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final joinUrl = QueueService.instance.queueJoinUrl(widget.queueId);
-    return Scaffold(
-      backgroundColor: QioColors.gray100,
-      appBar: AppBar(
-        backgroundColor: QioColors.surface,
-        leading: TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: Text(
-            '←',
-            style: QioTextStyles.heading3.copyWith(
-              color: QioColors.primaryText,
-            ),
-          ),
-        ),
-        title: StreamBuilder<Queue>(
-          stream: QueueService.instance.watchQueue(widget.queueId),
-          builder: (context, snap) {
-            final q = snap.data;
-            final status = q?.status ?? QueueStatus.open;
-            return Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  widget.queueName,
-                  style: QioTextStyles.heading3.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: QioColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                QioBadge(
-                  label: status.label(l10n),
-                  status: switch (status) {
-                    QueueStatus.open => QioBadgeStatus.open,
-                    QueueStatus.paused => QioBadgeStatus.paused,
-                    QueueStatus.closed => QioBadgeStatus.closed,
-                  },
-                ),
-              ],
-            );
-          },
-        ),
-        centerTitle: true,
-        actions: [
-          if (widget.isOwner)
-            IconButton(
-              icon: Icon(Icons.history, color: QioColors.gray700),
-              tooltip: l10n.historyTitle,
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => HistoryScreen(
-                    queueId: widget.queueId,
-                    queueName: widget.queueName,
-                  ),
-                ),
+    return PopScope(
+      canPop: !(_actionLoading || _finishLoading || _deleteLoading),
+      child: Scaffold(
+        backgroundColor: QioColors.gray100,
+        appBar: AppBar(
+          backgroundColor: QioColors.surface,
+          leading: TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(
+              '←',
+              style: QioTextStyles.heading3.copyWith(
+                color: QioColors.primaryText,
               ),
             ),
-          if (widget.isOwner)
-            StreamBuilder<Queue>(
-              stream: QueueService.instance.watchQueue(widget.queueId),
-              builder: (context, snap) {
-                final q = snap.data;
-                final status = q?.status ?? QueueStatus.open;
-                if (status == QueueStatus.closed) {
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 12),
-                    child: _StatusButton(
-                      label: l10n.reopen,
-                      color: QioColors.primaryText,
-                      onPressed: () => _updateStatus(QueueStatus.open),
-                    ),
-                  );
-                }
-                return Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    _StatusButton(
-                      label: status == QueueStatus.paused
-                          ? l10n.reopen
-                          : l10n.pause,
-                      color: QioColors.statusPausedText,
-                      onPressed: () => _updateStatus(
-                        status == QueueStatus.paused
-                            ? QueueStatus.open
-                            : QueueStatus.paused,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    _StatusButton(
-                      label: l10n.close,
-                      color: QioColors.statusClosedText,
-                      onPressed: () => _updateStatus(QueueStatus.closed),
-                    ),
-                    const SizedBox(width: 12),
-                  ],
-                );
-              },
-            ),
-        ],
-      ),
-      body: StreamBuilder<Queue>(
-        stream: QueueService.instance.watchQueue(widget.queueId),
-        builder: (context, queueSnap) {
-          final status = queueSnap.data?.status ?? QueueStatus.open;
-          if (status == QueueStatus.closed) {
-            return ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                _buildQrCard(joinUrl),
-                const SizedBox(height: 16),
-                if (widget.isOwner) ...[
-                  _buildOperatorsTile(),
-                  const SizedBox(height: 16),
-                ],
-                QioCard(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
-                    child: Column(
-                      children: [
-                        Text(
-                          l10n.queueClosedTitle,
-                          style: QioTextStyles.heading3.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: QioColors.gray700,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          l10n.noServiceInProgress,
-                          style: QioTextStyles.caption,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Text(
-                    widget.isOwner
-                        ? l10n.closedOwnerHint
-                        : l10n.closedOperatorHint,
-                    style: QioTextStyles.body.copyWith(
-                      fontSize: 14,
-                      color: QioColors.gray400,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
-            );
-          }
-          return StreamBuilder<List<QueueEntry>>(
-            stream: QueueService.instance.watchEntries(widget.queueId),
+          ),
+          title: StreamBuilder<Queue>(
+            stream: QueueService.instance.watchQueue(widget.queueId),
             builder: (context, snap) {
-              final entries = snap.data ?? [];
-              final waiting = entries
-                  .where((e) => e.status == EntryStatus.waiting)
-                  .toList();
-              final called = entries
-                  .where((e) => e.status == EntryStatus.called)
-                  .toList();
-              final mine = called.where(_isMine).toList();
-              final others = called.where((e) => !_isMine(e)).toList();
-              final current = mine.isNotEmpty ? mine.first : null;
-
-              return ListView(
-                padding: const EdgeInsets.all(16),
+              final q = snap.data;
+              final status = q?.status ?? QueueStatus.open;
+              return Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  _buildQrCard(joinUrl),
-                  const SizedBox(height: 16),
-                  if (widget.isOwner) ...[
-                    _buildOperatorsTile(),
-                    const SizedBox(height: 16),
-                  ],
-                  _CurrentCalledCard(entry: current, queueId: widget.queueId),
-                  const SizedBox(height: 16),
-                  if (others.isNotEmpty) ...[
-                    Text(
-                      l10n.servingByOthers,
-                      style: QioTextStyles.label.copyWith(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: QioColors.gray700,
-                      ),
+                  Text(
+                    widget.queueName,
+                    style: QioTextStyles.heading3.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: QioColors.textPrimary,
                     ),
-                    const SizedBox(height: 12),
-                    ...others.map(
-                      (e) => _WaitingTile(
-                        entry: e,
-                        trailing: widget.isOwner
-                            ? PopupMenuButton<EntryStatus>(
-                                tooltip: l10n.finishService,
-                                onSelected: (result) =>
-                                    result == EntryStatus.served
-                                    ? _markServed(e)
-                                    : _markNoShow(e),
-                                itemBuilder: (_) => [
-                                  PopupMenuItem(
-                                    value: EntryStatus.served,
-                                    child: Text(l10n.served),
-                                  ),
-                                  PopupMenuItem(
-                                    value: EntryStatus.noShow,
-                                    child: Text(l10n.noShow),
-                                  ),
-                                ],
-                              )
-                            : null,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  if (waiting.isNotEmpty) ...[
-                    Text(
-                      l10n.upNext,
-                      style: QioTextStyles.label.copyWith(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: QioColors.gray700,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    ...waiting.map((e) => _WaitingTile(entry: e)),
-                  ] else
-                    QioCard(
-                      child: QioEmptyState(
-                        icon: Icons.hourglass_empty,
-                        title: l10n.nobodyInQueue,
-                        message: l10n.nobodyInQueueHint,
-                        compact: true,
-                      ),
-                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  QioBadge(
+                    label: status.label(l10n),
+                    status: switch (status) {
+                      QueueStatus.open => QioBadgeStatus.open,
+                      QueueStatus.paused => QioBadgeStatus.paused,
+                      QueueStatus.closed => QioBadgeStatus.closed,
+                    },
+                  ),
                 ],
               );
             },
-          );
-        },
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: QioColors.surface,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              offset: const Offset(0, -2),
-              blurRadius: 8,
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: StreamBuilder<Queue>(
-              stream: QueueService.instance.watchQueue(widget.queueId),
-              builder: (context, qSnap) {
-                final status = qSnap.data?.status ?? QueueStatus.open;
-                if (status == QueueStatus.closed) {
-                  if (!widget.isOwner) return const SizedBox.shrink();
-                  return Column(
+          ),
+          centerTitle: true,
+          actions: [
+            if (widget.isOwner)
+              IconButton(
+                icon: Icon(Icons.history, color: QioColors.gray700),
+                tooltip: l10n.historyTitle,
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => HistoryScreen(
+                      queueId: widget.queueId,
+                      queueName: widget.queueName,
+                    ),
+                  ),
+                ),
+              ),
+            if (widget.isOwner)
+              StreamBuilder<Queue>(
+                stream: QueueService.instance.watchQueue(widget.queueId),
+                builder: (context, snap) {
+                  final q = snap.data;
+                  final status = q?.status ?? QueueStatus.open;
+                  if (status == QueueStatus.closed) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: _StatusButton(
+                        label: l10n.reopen,
+                        color: QioColors.primaryText,
+                        onPressed: () => _updateStatus(QueueStatus.open),
+                      ),
+                    );
+                  }
+                  return Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      QioButton(
-                        label: l10n.deleteQueue,
-                        variant: QioButtonVariant.danger,
-                        icon: Icons.delete_outline,
-                        isFullWidth: true,
-                        onPressed: _deleteLoading ? null : _confirmDelete,
-                        isLoading: _deleteLoading,
+                      _StatusButton(
+                        label: status == QueueStatus.paused
+                            ? l10n.reopen
+                            : l10n.pause,
+                        color: QioColors.statusPausedText,
+                        onPressed: () => _updateStatus(
+                          status == QueueStatus.paused
+                              ? QueueStatus.open
+                              : QueueStatus.paused,
+                        ),
                       ),
+                      const SizedBox(width: 8),
+                      _StatusButton(
+                        label: l10n.close,
+                        color: QioColors.statusClosedText,
+                        onPressed: () => _updateStatus(QueueStatus.closed),
+                      ),
+                      const SizedBox(width: 12),
                     ],
                   );
-                }
-                return StreamBuilder<List<QueueEntry>>(
-                  stream: QueueService.instance.watchEntries(widget.queueId),
-                  builder: (context, snap) {
-                    final entries = snap.data ?? [];
-                    final mine = entries
-                        .where(
-                          (e) => e.status == EntryStatus.called && _isMine(e),
-                        )
-                        .toList();
-                    final current = mine.isNotEmpty ? mine.first : null;
+                },
+              ),
+          ],
+        ),
+        body: QioResponsiveBody(
+          maxWidth: 1100,
+          child: StreamBuilder<Queue>(
+            stream: QueueService.instance.watchQueue(widget.queueId),
+            builder: (context, queueSnap) {
+              final status = queueSnap.data?.status ?? QueueStatus.open;
+              if (status == QueueStatus.closed) {
+                return ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [
+                    _buildQrCard(joinUrl),
+                    const SizedBox(height: 16),
+                    if (widget.isOwner) ...[
+                      _buildOperatorsTile(),
+                      const SizedBox(height: 16),
+                    ],
+                    QioCard(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 24),
+                        child: Column(
+                          children: [
+                            Text(
+                              l10n.queueClosedTitle,
+                              style: QioTextStyles.heading3.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: QioColors.gray700,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              l10n.noServiceInProgress,
+                              style: QioTextStyles.caption,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 24),
+                      child: Text(
+                        widget.isOwner
+                            ? l10n.closedOwnerHint
+                            : l10n.closedOperatorHint,
+                        style: QioTextStyles.body.copyWith(
+                          fontSize: 14,
+                          color: QioColors.gray400,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                );
+              }
+              return StreamBuilder<List<QueueEntry>>(
+                stream: QueueService.instance.watchEntries(widget.queueId),
+                builder: (context, snap) {
+                  final entries = snap.data ?? [];
+                  final waiting = entries
+                      .where((e) => e.status == EntryStatus.waiting)
+                      .toList();
+                  final called = entries
+                      .where((e) => e.status == EntryStatus.called)
+                      .toList();
+                  final mine = called.where(_isMine).toList();
+                  final others = called.where((e) => !_isMine(e)).toList();
+                  final current = mine.isNotEmpty ? mine.first : null;
+
+                  final qrSection = <Widget>[
+                    _buildQrCard(joinUrl),
+                    const SizedBox(height: 16),
+                    if (widget.isOwner) ...[
+                      _buildOperatorsTile(),
+                      const SizedBox(height: 16),
+                    ],
+                  ];
+                  final queueSection = <Widget>[
+                    _CurrentCalledCard(entry: current, queueId: widget.queueId),
+                    const SizedBox(height: 16),
+                    if (others.isNotEmpty) ...[
+                      Text(
+                        l10n.servingByOthers,
+                        style: QioTextStyles.label.copyWith(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: QioColors.gray700,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ...others.map(
+                        (e) => _WaitingTile(
+                          entry: e,
+                          trailing: widget.isOwner
+                              ? PopupMenuButton<EntryStatus>(
+                                  tooltip: l10n.finishService,
+                                  onSelected: (result) =>
+                                      result == EntryStatus.served
+                                      ? _markServed(e)
+                                      : _markNoShow(e),
+                                  itemBuilder: (_) => [
+                                    PopupMenuItem(
+                                      value: EntryStatus.served,
+                                      child: Text(l10n.served),
+                                    ),
+                                    PopupMenuItem(
+                                      value: EntryStatus.noShow,
+                                      child: Text(l10n.noShow),
+                                    ),
+                                  ],
+                                )
+                              : null,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                    if (waiting.isNotEmpty) ...[
+                      Text(
+                        l10n.upNext,
+                        style: QioTextStyles.label.copyWith(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: QioColors.gray700,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      ...waiting.map((e) => _WaitingTile(entry: e)),
+                    ] else
+                      QioCard(
+                        child: QioEmptyState(
+                          icon: Icons.hourglass_empty,
+                          title: l10n.nobodyInQueue,
+                          message: l10n.nobodyInQueueHint,
+                          compact: true,
+                        ),
+                      ),
+                  ];
+                  return LayoutBuilder(
+                    builder: (context, constraints) {
+                      if (constraints.maxWidth >= 900) {
+                        return Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              width: 400,
+                              child: ListView(
+                                padding: const EdgeInsets.all(16),
+                                children: qrSection,
+                              ),
+                            ),
+                            Expanded(
+                              child: ListView(
+                                padding: const EdgeInsets.fromLTRB(
+                                  0,
+                                  16,
+                                  16,
+                                  16,
+                                ),
+                                children: queueSection,
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+                      return ListView(
+                        padding: const EdgeInsets.all(16),
+                        children: [...qrSection, ...queueSection],
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: QioColors.surface,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                offset: const Offset(0, -2),
+                blurRadius: 8,
+              ),
+            ],
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: StreamBuilder<Queue>(
+                stream: QueueService.instance.watchQueue(widget.queueId),
+                builder: (context, qSnap) {
+                  final status = qSnap.data?.status ?? QueueStatus.open;
+                  if (status == QueueStatus.closed) {
+                    if (!widget.isOwner) return const SizedBox.shrink();
                     return Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         QioButton(
-                          key: _callNextKey,
-                          label: l10n.callNext,
-                          onPressed: (_actionLoading || current != null)
-                              ? null
-                              : _callNext,
-                          isLoading: _actionLoading,
+                          label: l10n.deleteQueue,
+                          variant: QioButtonVariant.danger,
+                          icon: Icons.delete_outline,
                           isFullWidth: true,
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: QioButton(
-                                label: l10n.served,
-                                variant: QioButtonVariant.successSoft,
-                                isFullWidth: true,
-                                fontSize: 14,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                onPressed: current == null || _finishLoading
-                                    ? null
-                                    : () => _markServed(current),
-                                isLoading: _finishLoading,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: QioButton(
-                                label: l10n.noShow,
-                                variant: QioButtonVariant.dangerSoft,
-                                isFullWidth: true,
-                                fontSize: 14,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                onPressed: current == null || _finishLoading
-                                    ? null
-                                    : () => _markNoShow(current),
-                                isLoading: _finishLoading,
-                              ),
-                            ),
-                          ],
+                          onPressed: _deleteLoading ? null : _confirmDelete,
+                          isLoading: _deleteLoading,
                         ),
                       ],
                     );
-                  },
-                );
-              },
+                  }
+                  return StreamBuilder<List<QueueEntry>>(
+                    stream: QueueService.instance.watchEntries(widget.queueId),
+                    builder: (context, snap) {
+                      final entries = snap.data ?? [];
+                      final mine = entries
+                          .where(
+                            (e) => e.status == EntryStatus.called && _isMine(e),
+                          )
+                          .toList();
+                      final current = mine.isNotEmpty ? mine.first : null;
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          QioButton(
+                            key: _callNextKey,
+                            label: l10n.callNext,
+                            onPressed: (_actionLoading || current != null)
+                                ? null
+                                : _callNext,
+                            isLoading: _actionLoading,
+                            isFullWidth: true,
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: QioButton(
+                                  label: l10n.served,
+                                  variant: QioButtonVariant.successSoft,
+                                  isFullWidth: true,
+                                  fontSize: 14,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  onPressed: current == null || _finishLoading
+                                      ? null
+                                      : () => _markServed(current),
+                                  isLoading: _finishLoading,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: QioButton(
+                                  label: l10n.noShow,
+                                  variant: QioButtonVariant.dangerSoft,
+                                  isFullWidth: true,
+                                  fontSize: 14,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  onPressed: current == null || _finishLoading
+                                      ? null
+                                      : () => _markNoShow(current),
+                                  isLoading: _finishLoading,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ),
         ),
@@ -951,49 +990,51 @@ class _WaitingTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final waitMin = DateTime.now().difference(entry.joinedAt).inMinutes;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: QioColors.surface,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              offset: const Offset(0, 1),
-              blurRadius: 4,
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            QioAvatar(name: entry.name, size: 40),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    entry.name,
-                    style: QioTextStyles.bodyMedium.copyWith(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: QioColors.textPrimary,
-                    ),
-                  ),
-                  Text(
-                    l10n.waitTileSubtitle(entry.ticket, waitMin),
-                    style: QioTextStyles.caption.copyWith(
-                      fontSize: 12,
-                      color: QioColors.gray400,
-                    ),
-                  ),
-                ],
+    return MergeSemantics(
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 8),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: QioColors.surface,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                offset: const Offset(0, 1),
+                blurRadius: 4,
               ),
-            ),
-            ?trailing,
-          ],
+            ],
+          ),
+          child: Row(
+            children: [
+              QioAvatar(name: entry.name, size: 40),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      entry.name,
+                      style: QioTextStyles.bodyMedium.copyWith(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: QioColors.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      l10n.waitTileSubtitle(entry.ticket, waitMin),
+                      style: QioTextStyles.caption.copyWith(
+                        fontSize: 12,
+                        color: QioColors.gray400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ?trailing,
+            ],
+          ),
         ),
       ),
     );

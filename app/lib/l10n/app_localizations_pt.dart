@@ -801,4 +801,17 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get emptyMetricsHint =>
       'Escolha outro período ou aguarde os primeiros atendimentos.';
+
+  @override
+  String get discardTitle => 'Descartar alterações?';
+
+  @override
+  String get discardBody =>
+      'Você já preencheu campos. Se sair agora, vai perder o que digitou.';
+
+  @override
+  String get keepEditing => 'Continuar editando';
+
+  @override
+  String get discard => 'Descartar';
 }

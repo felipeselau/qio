@@ -1,0 +1,4 @@
+-dontwarn com.google.android.play.core.**
+-dontwarn com.google.errorprone.annotations.**
+-keepattributes SourceFile,LineNumberTable
+-keep public class * extends java.lang.Exception

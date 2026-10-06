@@ -243,5 +243,9 @@
   "hapticsSubtitle": "Vibrar al llamar, finalizar y confirmar acciones",
   "nobodyInQueueHint": "Cuando alguien entre por el código QR, aparecerá aquí.",
   "emptyHistoryHint": "Las atenciones finalizadas aparecen aquí.",
-  "emptyMetricsHint": "Elige otro período o espera las primeras atenciones."
+  "emptyMetricsHint": "Elige otro período o espera las primeras atenciones.",
+  "discardTitle": "¿Descartar cambios?",
+  "discardBody": "Ya completaste algunos campos. Si sales ahora, perderás lo que escribiste.",
+  "keepEditing": "Seguir editando",
+  "discard": "Descartar"
 }
