@@ -195,6 +195,20 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   em segundo plano só funciona com `VITE_VAPID_KEY` no build da web (ainda não
   configurada).
 
+## Marca
+
+- Fonte da verdade em `design/brand/` (SVGs, PNGs, `generate.py`, regras de uso).
+  Símbolo = "Q" em anel + pontos de fila; `icon-small.svg` para 32 px ou menos.
+- App: ícones via `app/flutter_launcher_icons.yaml`, splash via
+  `app/flutter_native_splash.yaml` (`dart run flutter_launcher_icons` e
+  `dart run flutter_native_splash:create`). Depois de rodar, **reverta**
+  `ios/Runner/Info.plist` (reindenta tudo) e `ios/Runner.xcodeproj/project.pbxproj`
+  (o gerador troca `GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS` por `AppIcon`).
+- O foreground do ícone adaptativo já considera o inset de 16% do gerador; não
+  reduzir de novo.
+- Web: `web/public/` tem favicon, ícones PWA e `apple-touch-icon.png` gerados do
+  mesmo kit.
+
 ## Tooling (adaptado do OpenCode)
 
 O framework de agentes (product → builder → reviewer → advisor) e as regras de

@@ -28,7 +28,7 @@ export function listenForMessages(onTurn: () => void): () => void {
       if (document.hidden) {
         new Notification(i18n.t('queue.yourTurn'), {
           body: i18n.t('push.called'),
-          icon: '/favicon.svg',
+          icon: '/icon-192.png',
         });
         onTurn();
       }

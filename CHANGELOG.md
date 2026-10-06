@@ -2,6 +2,16 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Não lançado]
+
+### Alterado
+- Identidade visual: símbolo do Qio (Q com fila de pontos), ícone do app
+  (adaptativo e monocromático), splash nativa (Android 12+ e iOS), tela de
+  carregamento e logo no login, ícones/favicon/manifest da web, fonte Inter
+  embutida, nome do app "Qio".
+- Contraste AA nos dois temas e acessibilidade da web (zoom, aria-live, foco).
+- Transições de página e navegação de login/logout pelo estado de auth.
+
 ## [1.3.0] - 2026-10-06 (teste)
 
 ### Adicionado
