@@ -9,6 +9,7 @@ import '../widgets/qio_button.dart';
 import '../widgets/qio_card.dart';
 import '../widgets/qio_input.dart';
 import 'queue_panel_screen.dart';
+import '../widgets/qio_skeleton.dart';
 
 class JoinOperatorScreen extends StatefulWidget {
   const JoinOperatorScreen({super.key, this.initialCode});
@@ -193,7 +194,7 @@ class _OperatorPendingScreenState extends State<OperatorPendingScreen> {
         stream: _requestStream,
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return const QioSkeletonList(count: 2);
           }
           final request = snap.data;
           final (icon, color, title, subtitle) = switch (request?.status) {

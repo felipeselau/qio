@@ -58,6 +58,36 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _forgotPassword() async {
+    final l10n = AppLocalizations.of(context);
+    final email = _emailCtrl.text.trim();
+    if (email.isEmpty) {
+      _showError(l10n.resetEmailRequired);
+      return;
+    }
+    setState(() => _isLoading = true);
+    try {
+      await AuthService.instance.sendPasswordReset(email);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.resetEmailSent)));
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      if (e.code == 'user-not-found') {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.resetEmailSent)));
+      } else {
+        _showAuthError(e.code);
+      }
+    } on Exception {
+      if (mounted) _showAuthError('');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> _google() async {
     setState(() => _isLoading = true);
     try {
@@ -91,113 +121,133 @@ class _LoginScreenState extends State<LoginScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             child: Form(
               key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Semantics(
-                    label: 'Qio',
-                    child: SvgPicture.asset(
-                      QioColors.isDark
-                          ? 'assets/brand/logo-dark.svg'
-                          : 'assets/brand/logo.svg',
-                      height: 72,
-                      excludeFromSemantics: true,
+              child: AutofillGroup(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Semantics(
+                      label: 'Qio',
+                      child: SvgPicture.asset(
+                        QioColors.isDark
+                            ? 'assets/brand/logo-dark.svg'
+                            : 'assets/brand/logo.svg',
+                        height: 72,
+                        excludeFromSemantics: true,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    l10n.loginTagline,
-                    style: QioTextStyles.body.copyWith(
-                      fontSize: 16,
-                      color: QioColors.gray700,
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.loginTagline,
+                      style: QioTextStyles.body.copyWith(
+                        fontSize: 16,
+                        color: QioColors.gray700,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 32),
-                  if (_isSignUp)
+                    const SizedBox(height: 32),
+                    if (_isSignUp)
+                      QioInput(
+                        label: l10n.nameLabel,
+                        hint: l10n.nameHint,
+                        controller: _nameCtrl,
+                        textInputAction: TextInputAction.next,
+                        autofillHints: const [AutofillHints.name],
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? l10n.nameRequired
+                            : null,
+                      ),
+                    if (_isSignUp) const SizedBox(height: 16),
                     QioInput(
-                      label: l10n.nameLabel,
-                      hint: l10n.nameHint,
-                      controller: _nameCtrl,
+                      label: l10n.emailLabel,
+                      hint: l10n.emailHint,
+                      controller: _emailCtrl,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const [AutofillHints.email],
                       validator: (v) => (v == null || v.trim().isEmpty)
-                          ? l10n.nameRequired
+                          ? l10n.emailRequired
                           : null,
                     ),
-                  if (_isSignUp) const SizedBox(height: 16),
-                  QioInput(
-                    label: l10n.emailLabel,
-                    hint: l10n.emailHint,
-                    controller: _emailCtrl,
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (v) => (v == null || v.trim().isEmpty)
-                        ? l10n.emailRequired
-                        : null,
-                  ),
-                  const SizedBox(height: 16),
-                  QioInput(
-                    label: l10n.passwordLabel,
-                    hint: '••••••••',
-                    controller: _passwordCtrl,
-                    obscureText: true,
-                    validator: (v) =>
-                        (v == null || v.length < 6) ? l10n.passwordMin : null,
-                  ),
-                  const SizedBox(height: 24),
-                  QioButton(
-                    label: _isSignUp ? l10n.createAccount : l10n.signIn,
-                    onPressed: _submit,
-                    isLoading: _isLoading,
-                    isFullWidth: true,
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Divider(
-                          height: 1,
-                          thickness: 1,
-                          color: QioColors.gray100,
+                    const SizedBox(height: 16),
+                    QioPasswordInput(
+                      label: l10n.passwordLabel,
+                      hint: '••••••••',
+                      controller: _passwordCtrl,
+                      textInputAction: TextInputAction.done,
+                      autofillHints: [
+                        _isSignUp
+                            ? AutofillHints.newPassword
+                            : AutofillHints.password,
+                      ],
+                      onSubmitted: (_) => _submit(),
+                      validator: (v) =>
+                          (v == null || v.length < 6) ? l10n.passwordMin : null,
+                    ),
+                    if (!_isSignUp)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: _isLoading ? null : _forgotPassword,
+                          child: Text(l10n.forgotPassword),
                         ),
                       ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Text(
-                          l10n.orSeparator,
-                          style: QioTextStyles.caption.copyWith(
-                            color: QioColors.gray400,
+                    const SizedBox(height: 12),
+                    QioButton(
+                      label: _isSignUp ? l10n.createAccount : l10n.signIn,
+                      onPressed: _submit,
+                      isLoading: _isLoading,
+                      isFullWidth: true,
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: QioColors.gray100,
                           ),
                         ),
-                      ),
-                      Expanded(
-                        child: Divider(
-                          height: 1,
-                          thickness: 1,
-                          color: QioColors.gray100,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            l10n.orSeparator,
+                            style: QioTextStyles.caption.copyWith(
+                              color: QioColors.gray400,
+                            ),
+                          ),
+                        ),
+                        Expanded(
+                          child: Divider(
+                            height: 1,
+                            thickness: 1,
+                            color: QioColors.gray100,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    QioButton(
+                      label: l10n.continueWithGoogle,
+                      variant: QioButtonVariant.secondary,
+                      icon: Icons.g_mobiledata,
+                      onPressed: _google,
+                      isFullWidth: true,
+                    ),
+                    const SizedBox(height: 16),
+                    TextButton(
+                      onPressed: () => setState(() => _isSignUp = !_isSignUp),
+                      child: Text(
+                        _isSignUp ? l10n.haveAccountSignIn : l10n.createAccount,
+                        style: QioTextStyles.body.copyWith(
+                          fontSize: 14,
+                          color: QioColors.primaryText,
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  QioButton(
-                    label: l10n.continueWithGoogle,
-                    variant: QioButtonVariant.secondary,
-                    icon: Icons.g_mobiledata,
-                    onPressed: _google,
-                    isFullWidth: true,
-                  ),
-                  const SizedBox(height: 16),
-                  TextButton(
-                    onPressed: () => setState(() => _isSignUp = !_isSignUp),
-                    child: Text(
-                      _isSignUp ? l10n.haveAccountSignIn : l10n.createAccount,
-                      style: QioTextStyles.body.copyWith(
-                        fontSize: 14,
-                        color: QioColors.primaryText,
-                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

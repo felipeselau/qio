@@ -217,22 +217,34 @@ export default function QueuePage() {
   if (phase === 'loading') {
     if (authFailed || failed) {
       return (
-        <div className="center-col">
+        <div className="center-col fade-in" key="error">
           <h1 style={{ fontSize: 20, fontWeight: 700 }}>{t('queue.connectFailed')}</h1>
           <p className="muted">{t('queue.connectFailedHint')}</p>
         </div>
       );
     }
     return (
-      <div className="center-col">
-        <div className="spinner" />
+      <div
+        className="page fade-in"
+        key="loading"
+        role="status"
+        aria-busy="true"
+        aria-label={t('app.loading')}
+      >
+        <div className="page-scroll">
+          <div className="skeleton skeleton-title" />
+          <div className="skeleton skeleton-badge" />
+          <div className="skeleton skeleton-field" />
+          <div className="skeleton skeleton-field" />
+          <div className="skeleton skeleton-btn" />
+        </div>
       </div>
     );
   }
 
   if (phase === 'gone') {
     return (
-      <div className="center-col">
+      <div className="center-col fade-in" key="gone">
         <h1 style={{ fontSize: 20, fontWeight: 700 }}>{t('queue.notFound')}</h1>
         <p className="muted">{t('queue.notFoundHint')}</p>
       </div>
@@ -241,7 +253,7 @@ export default function QueuePage() {
 
   if (phase === 'closed') {
     return (
-      <div className="center-col">
+      <div className="center-col fade-in" key="closed">
         <h1 style={{ fontSize: 20, fontWeight: 700 }}>{meta?.name}</h1>
         <span className="badge badge-closed">{t('queue.closedBadge')}</span>
         <p className="muted">{t('queue.closedHint')}</p>
@@ -252,7 +264,7 @@ export default function QueuePage() {
   if (phase === 'called' && myEntry) {
     return (
       <div
-        role="alert"
+        className="fade-in" key="called" role="alert"
         style={{
           background: 'var(--success-strong)',
           flex: 1,
@@ -281,7 +293,7 @@ export default function QueuePage() {
 
   if (phase === 'thanks') {
     return (
-      <div className="center-col">
+      <div className="center-col fade-in" key="thanks">
         <div style={{ fontSize: 48 }}>🙏</div>
         <h1 style={{ fontSize: 20, fontWeight: 700 }}>{t('queue.feedbackThanks')}</h1>
         <p className="muted">{t('queue.feedbackThanksHint')}</p>
@@ -291,7 +303,7 @@ export default function QueuePage() {
 
   if (phase === 'feedback') {
     return (
-      <div className="page">
+      <div className="page fade-in" key="feedback">
         <div className="page-scroll">
           <div className="card" style={{ textAlign: 'center' }}>
             <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>
@@ -347,7 +359,7 @@ export default function QueuePage() {
 
   if (phase === 'left') {
     return (
-      <div className="center-col">
+      <div className="center-col fade-in" key="left">
         <h1 style={{ fontSize: 20, fontWeight: 700 }}>{t('queue.left')}</h1>
         <p className="muted">{t('queue.leftHint')}</p>
       </div>
@@ -356,7 +368,7 @@ export default function QueuePage() {
 
   if (phase === 'ticket' && myEntry) {
     return (
-      <div className="page">
+      <div className="page fade-in" key="ticket">
         <div className="page-scroll">
           <div className="card" style={{ textAlign: 'center', padding: 24 }}>
             <p
@@ -389,7 +401,13 @@ export default function QueuePage() {
                 {t('queue.position')}
               </span>
               <span style={{ fontSize: 14, fontWeight: 600 }}>
-                {position != null ? t('queue.positionValue', { position }) : '—'}
+                {position != null ? (
+                  <span key={position} className="pop">
+                    {t('queue.positionValue', { position })}
+                  </span>
+                ) : (
+                  '—'
+                )}
               </span>
             </div>
             <div
@@ -513,7 +531,7 @@ export default function QueuePage() {
 
   // phase === 'join'
   return (
-    <div className="page">
+    <div className="page fade-in" key="join">
       <div className="page-scroll">
         <div style={{ textAlign: 'center', marginBottom: 8 }}>
           <h1 style={{ fontSize: 24, fontWeight: 700 }}>{meta?.name}</h1>

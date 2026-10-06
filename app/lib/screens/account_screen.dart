@@ -1,9 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../services/account_format.dart';
 import '../services/auth_service.dart';
+import '../services/haptics.dart';
 import '../services/locale_controller.dart';
 import '../services/theme_controller.dart';
 import '../theme/qio_colors.dart';
@@ -11,6 +13,7 @@ import '../theme/qio_text_styles.dart';
 import '../widgets/qio_avatar.dart';
 import '../widgets/qio_button.dart';
 import '../widgets/qio_card.dart';
+import '../widgets/qio_skeleton.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -102,7 +105,7 @@ class _AccountScreenState extends State<AccountScreen> {
         future: _ownerFuture,
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
+            return const QioSkeletonList(count: 3);
           }
           return _buildContent(snap.data);
         },
@@ -180,6 +183,7 @@ class _AccountScreenState extends State<AccountScreen> {
         const _ThemeCard(),
         const SizedBox(height: 12),
         const _LanguageCard(),
+        if (!kIsWeb) ...[const SizedBox(height: 12), const _HapticsCard()],
         const SizedBox(height: 24),
         QioButton(
           label: l10n.signOut,
@@ -291,6 +295,28 @@ class _LanguageCard extends StatelessWidget {
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HapticsCard extends StatelessWidget {
+  const _HapticsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return QioCard(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: ListenableBuilder(
+        listenable: Haptics.instance,
+        builder: (context, _) => SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+          title: Text(l10n.hapticsTitle, style: QioTextStyles.bodyMedium),
+          subtitle: Text(l10n.hapticsSubtitle, style: QioTextStyles.caption),
+          value: Haptics.instance.enabled,
+          onChanged: Haptics.instance.setEnabled,
         ),
       ),
     );

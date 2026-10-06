@@ -9,9 +9,12 @@ import 'l10n/app_localizations.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/auth_service.dart';
+import 'services/haptics.dart';
 import 'services/locale_controller.dart';
+import 'services/queue_service.dart';
 import 'services/theme_controller.dart';
 import 'theme/qio_theme.dart';
+import 'widgets/connection_banner.dart';
 import 'widgets/qio_loading_view.dart';
 
 void main() async {
@@ -27,6 +30,7 @@ void main() async {
     FirebaseDatabase.instance.useDatabaseEmulator(host, 9000);
   }
   await ThemeController.instance.load();
+  await Haptics.instance.load();
   await LocaleController.instance.load();
   runApp(const QioApp());
 }
@@ -40,6 +44,9 @@ class QioApp extends StatefulWidget {
 
 class _QioAppState extends State<QioApp> with WidgetsBindingObserver {
   final _theme = ThemeController.instance;
+  late final Stream<bool> _connection = QueueService.instance
+      .watchConnection()
+      .asBroadcastStream();
   final _locale = LocaleController.instance;
 
   @override
@@ -88,6 +95,10 @@ class _QioAppState extends State<QioApp> with WidgetsBindingObserver {
         return const Locale('pt');
       },
       debugShowCheckedModeBanner: false,
+      builder: (context, child) => ConnectionBanner(
+        connected: _connection,
+        child: child ?? const SizedBox.shrink(),
+      ),
       theme: QioTheme.forBrightness(brightness),
       home: StreamBuilder(
         stream: AuthService.instance.authStateChanges,

@@ -4,6 +4,16 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Não lançado]
 
+### Adicionado
+- Login: autofill, teclado (próximo/enviar), botão de mostrar senha e
+  "esqueci a senha" por e-mail.
+- Vibração (haptics) nos botões e em chamar/atendido/não compareceu, com opção
+  em Minha conta.
+- Aviso de falta de conexão no topo do app.
+- Estados vazios e de erro ilustrados, com botão de tentar de novo.
+- Skeletons no lugar dos spinners nas listas; web com transições entre fases e
+  esqueleto no primeiro carregamento.
+
 ### Alterado
 - Identidade visual: símbolo do Qio (Q com fila de pontos), ícone do app
   (adaptativo e monocromático), splash nativa (Android 12+ e iOS), tela de

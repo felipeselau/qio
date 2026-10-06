@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/haptics.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
 
@@ -121,7 +122,12 @@ class QioButton extends StatelessWidget {
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            onTap: isLoading ? null : onPressed,
+            onTap: (isLoading || onPressed == null)
+                ? null
+                : () {
+                    Haptics.instance.selection();
+                    onPressed!();
+                  },
             borderRadius: BorderRadius.circular(10),
             child: Padding(
               padding:
