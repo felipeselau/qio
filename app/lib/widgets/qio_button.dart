@@ -96,13 +96,16 @@ class QioButton extends StatelessWidget {
                 const SizedBox(width: 8),
               ],
               Flexible(
-                child: Text(
-                  label,
-                  style: QioTextStyles.button.copyWith(
-                    color: foregroundColor,
-                    fontSize: fontSize,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    style: QioTextStyles.button.copyWith(
+                      color: foregroundColor,
+                      fontSize: fontSize,
+                    ),
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],
