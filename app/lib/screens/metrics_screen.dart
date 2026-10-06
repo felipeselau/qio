@@ -67,7 +67,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
                       l10n.loadMetricsError,
                       textAlign: TextAlign.center,
                       style: QioTextStyles.body.copyWith(
-                        color: QioColors.error,
+                        color: QioColors.statusClosedText,
                       ),
                     ),
                     const SizedBox(height: 12),

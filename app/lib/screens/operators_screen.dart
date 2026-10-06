@@ -412,7 +412,7 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(
               l10n.remove,
-              style: const TextStyle(color: QioColors.error),
+              style: TextStyle(color: QioColors.statusClosedText),
             ),
           ),
         ],
@@ -443,7 +443,7 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(AppLocalizations.of(context).codeCopied),
-        backgroundColor: QioColors.secondary,
+        backgroundColor: QioColors.successStrong,
       ),
     );
   }

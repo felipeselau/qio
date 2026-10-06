@@ -252,8 +252,9 @@ export default function QueuePage() {
   if (phase === 'called' && myEntry) {
     return (
       <div
+        role="alert"
         style={{
-          background: 'var(--secondary)',
+          background: 'var(--success-strong)',
           flex: 1,
           minHeight: '100%',
           display: 'flex',
@@ -322,7 +323,7 @@ export default function QueuePage() {
               />
             </div>
           </div>
-          {error && <p className="error-text">{error}</p>}
+          {error && <p className="error-text" role="alert">{error}</p>}
           <button
             type="button"
             className="btn btn-primary"
@@ -362,7 +363,7 @@ export default function QueuePage() {
               style={{
                 fontSize: 12,
                 fontWeight: 500,
-                color: 'var(--gray-medium)',
+                color: 'var(--muted)',
                 letterSpacing: 1,
               }}
             >
@@ -376,7 +377,7 @@ export default function QueuePage() {
             </p>
           </div>
 
-          <div className="card">
+          <div className="card" role="status" aria-live="polite">
             <div
               style={{
                 display: 'flex',
@@ -504,7 +505,7 @@ export default function QueuePage() {
               {t('queue.leave')}
             </button>
           )}
-          {error && <p className="error-text">{error}</p>}
+          {error && <p className="error-text" role="alert">{error}</p>}
         </div>
       </div>
     );
@@ -561,7 +562,7 @@ export default function QueuePage() {
               autoComplete="tel"
             />
           </div>
-          {error && <p className="error-text">{error}</p>}
+          {error && <p className="error-text" role="alert">{error}</p>}
           <button
             type="submit"
             className="btn btn-primary"

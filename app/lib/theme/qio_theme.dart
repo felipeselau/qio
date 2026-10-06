@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'qio_colors.dart';
 import 'qio_text_styles.dart';
@@ -17,6 +18,13 @@ class QioTheme {
 
     return base.copyWith(
       scaffoldBackgroundColor: QioColors.background,
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+        },
+      ),
       colorScheme: ColorScheme(
         brightness: brightness,
         primary: QioColors.primary,
@@ -88,7 +96,7 @@ class QioTheme {
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: QioColors.primary,
+          foregroundColor: QioColors.primaryText,
           side: BorderSide(color: QioColors.gray300),
           padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
@@ -99,7 +107,7 @@ class QioTheme {
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: QioColors.primary,
+          foregroundColor: QioColors.primaryText,
           textStyle: QioTextStyles.bodyMedium,
         ),
       ),

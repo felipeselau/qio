@@ -11,7 +11,6 @@ import '../theme/qio_text_styles.dart';
 import '../widgets/qio_avatar.dart';
 import '../widgets/qio_button.dart';
 import '../widgets/qio_card.dart';
-import 'login_screen.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -60,10 +59,7 @@ class _AccountScreenState extends State<AccountScreen> {
     try {
       await AuthService.instance.signOut();
       if (!mounted) return;
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-        (_) => false,
-      );
+      Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (_) {
       if (!mounted) return;
       setState(() => _signingOut = false);
