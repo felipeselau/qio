@@ -29,7 +29,12 @@ describe('callable joinQueue (emulador)', () => {
     const functions = getFunctions(app);
     connectFunctionsEmulator(functions, FUNCTIONS_HOST, Number(FUNCTIONS_PORT));
     const call = httpsCallable(functions, 'joinQueue');
-    return { uid: cred.user.uid, join: async (data) => (await call(data)).data };
+    const feedbackCall = httpsCallable(functions, 'submitFeedback');
+    return {
+      uid: cred.user.uid,
+      join: async (data) => (await call(data)).data,
+      feedback: async (data) => (await feedbackCall(data)).data,
+    };
   }
 
   async function rejects(promise, code) {
@@ -184,5 +189,94 @@ describe('callable joinQueue (emulador)', () => {
       await adminDb((db) => update(ref(db, `queues/${QUEUE}/entries/${res.entryId}`), { status: 'left' }));
     }
     await rejects(c.join({ queueId: QUEUE, name: 'Gui', phone: '' }), 'resource-exhausted');
+  });
+});
+
+
+describe('callable submitFeedback (emulador)', () => {
+  let env;
+  let apps = [];
+
+  async function newClient() {
+    const app = initializeApp({ projectId: 'demo-qio', apiKey: 'fake-key' }, `fb-${apps.length}`);
+    apps.push(app);
+    const auth = getAuth(app);
+    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+    await signInAnonymously(auth);
+    const functions = getFunctions(app);
+    connectFunctionsEmulator(functions, FUNCTIONS_HOST, Number(FUNCTIONS_PORT));
+    const call = httpsCallable(functions, 'submitFeedback');
+    return async (data) => (await call(data)).data;
+  }
+
+  async function rejects(promise, code) {
+    await assert.rejects(promise, (err) => {
+      assert.equal(err.code, `functions/${code}`);
+      return true;
+    });
+  }
+
+  const readFeedback = (id) =>
+    new Promise((resolve) =>
+      env.withSecurityRulesDisabled(async (ctx) => {
+        const snap = await getDoc(doc(ctx.firestore(), 'queues', QUEUE, 'feedback', id));
+        resolve(snap.exists() ? snap.data() : null);
+      }),
+    );
+
+  before(async () => {
+    env = await setupEnv();
+  });
+
+  after(async () => {
+    await Promise.all(apps.map((a) => deleteApp(a)));
+    await env.cleanup();
+  });
+
+  beforeEach(async () => {
+    await env.clearFirestore();
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      const fs = ctx.firestore();
+      await setDoc(doc(fs, 'queues', QUEUE), { ownerId: 'owner', name: 'Balcão', status: 'open' });
+      await setDoc(doc(fs, 'queues', QUEUE, 'history', 'served1'), { ticket: 1, name: 'Ana', result: 'served' });
+      await setDoc(doc(fs, 'queues', QUEUE, 'history', 'noshow1'), { ticket: 2, name: 'Bia', result: 'no_show' });
+    });
+  });
+
+  it('grava a avaliação de um atendimento concluído', async () => {
+    const send = await newClient();
+    const res = await send({ queueId: QUEUE, entryId: 'served1', rating: 4, comment: ' ótimo ' });
+    assert.equal(res.existing, false);
+    const saved = await readFeedback('served1');
+    assert.equal(saved.rating, 4);
+    assert.equal(saved.comment, 'ótimo');
+  });
+
+  it('segunda avaliação não sobrescreve a primeira', async () => {
+    const send = await newClient();
+    await send({ queueId: QUEUE, entryId: 'served1', rating: 5 });
+    const res = await send({ queueId: QUEUE, entryId: 'served1', rating: 1 });
+    assert.equal(res.existing, true);
+    assert.equal((await readFeedback('served1')).rating, 5);
+  });
+
+  it('recusa nota fora de 1-5', async () => {
+    const send = await newClient();
+    await rejects(send({ queueId: QUEUE, entryId: 'served1', rating: 6 }), 'invalid-argument');
+    await rejects(send({ queueId: QUEUE, entryId: 'served1', rating: 0 }), 'invalid-argument');
+  });
+
+  it('recusa comentário longo demais', async () => {
+    const send = await newClient();
+    await rejects(
+      send({ queueId: QUEUE, entryId: 'served1', rating: 3, comment: 'a'.repeat(301) }),
+      'invalid-argument',
+    );
+  });
+
+  it('recusa atendimento inexistente ou não concluído', async () => {
+    const send = await newClient();
+    await rejects(send({ queueId: QUEUE, entryId: 'nope', rating: 3 }), 'failed-precondition');
+    await rejects(send({ queueId: QUEUE, entryId: 'noshow1', rating: 3 }), 'failed-precondition');
   });
 });
