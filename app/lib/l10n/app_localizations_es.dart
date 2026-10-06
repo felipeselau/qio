@@ -600,6 +600,9 @@ class AppLocalizationsEs extends AppLocalizations {
   String get avgService => 'Atención promedio';
 
   @override
+  String get avgRating => 'Calificación promedio';
+
+  @override
   String get resultLeft => 'Abandonó';
 
   @override

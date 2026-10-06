@@ -181,6 +181,7 @@
   "leftPlural": "Left the queue",
   "avgWait": "Average wait",
   "avgService": "Average service",
+  "avgRating": "Average rating",
   "resultLeft": "Left",
   "waitSubtitle": "wait {duration}",
   "durationMinutes": "{minutes} min",

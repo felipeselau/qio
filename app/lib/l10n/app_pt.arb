@@ -191,6 +191,7 @@
   "leftPlural": "Desistiram",
   "avgWait": "Espera média",
   "avgService": "Atendimento médio",
+  "avgRating": "Avaliação média",
   "resultLeft": "Desistiu",
   "waitSubtitle": "espera {duration}",
   "@waitSubtitle": {"placeholders": {"duration": {"type": "String"}}},

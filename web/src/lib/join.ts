@@ -55,3 +55,19 @@ export async function saveFcmToken(
     fcmToken: token,
   });
 }
+
+export async function submitFeedback(
+  queueId: string,
+  entryId: string,
+  rating: number,
+  comment: string,
+): Promise<void> {
+  try {
+    const call = httpsCallable(functions, 'submitFeedback');
+    await call({ queueId, entryId, rating, comment });
+  } catch (err) {
+    const code = (err as { code?: string } | null)?.code ?? '';
+    if (code === 'functions/failed-precondition') return;
+    throw new Error(i18n.t('errors.feedbackFailed'));
+  }
+}

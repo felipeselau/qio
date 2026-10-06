@@ -599,6 +599,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get avgService => 'Average service';
 
   @override
+  String get avgRating => 'Average rating';
+
+  @override
   String get resultLeft => 'Left';
 
   @override

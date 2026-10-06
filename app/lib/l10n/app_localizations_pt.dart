@@ -600,6 +600,9 @@ class AppLocalizationsPt extends AppLocalizations {
   String get avgService => 'Atendimento médio';
 
   @override
+  String get avgRating => 'Avaliação média';
+
+  @override
   String get resultLeft => 'Desistiu';
 
   @override
