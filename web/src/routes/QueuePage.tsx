@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
@@ -181,6 +181,19 @@ export default function QueuePage() {
     if (myEntry.status === 'left') return 'left';
     return 'ticket';
   })();
+
+  const recalledAt = myEntry?.recalledAt ?? null;
+  const lastRecall = useRef<number | null>(null);
+  useEffect(() => {
+    if (phase !== 'called') {
+      lastRecall.current = recalledAt;
+      return;
+    }
+    if (recalledAt && lastRecall.current !== recalledAt) {
+      playAlert();
+    }
+    lastRecall.current = recalledAt;
+  }, [phase, recalledAt]);
 
   // dispara som/vibração quando entra em 'called'
   const [alerted, setAlerted] = useState(false);

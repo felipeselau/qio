@@ -281,5 +281,15 @@
   "resumeAtNone": "Sem previsão",
   "clear": "Limpar",
   "waitingCounter": "{count}/{max} esperando",
-  "@waitingCounter": {"placeholders": {"count": {"type": "int"}, "max": {"type": "int"}}}
+  "@waitingCounter": {"placeholders": {"count": {"type": "int"}, "max": {"type": "int"}}},
+  "callAgain": "Chamar de novo",
+  "callNow": "Chamar agora",
+  "moveToEnd": "Mover para o fim",
+  "moreActions": "Mais ações",
+  "calledTimes": "Chamado {count}x",
+  "@calledTimes": {"placeholders": {"count": {"type": "int"}}},
+  "callResent": "Chamada reenviada",
+  "movedToEnd": "{name} foi para o fim da fila",
+  "@movedToEnd": {"placeholders": {"name": {"type": "String"}}},
+  "entryUnavailable": "Esta pessoa já não está aguardando"
 }

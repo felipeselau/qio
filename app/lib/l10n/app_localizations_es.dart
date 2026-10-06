@@ -871,4 +871,32 @@ class AppLocalizationsEs extends AppLocalizations {
   String waitingCounter(int count, int max) {
     return '$count/$max esperando';
   }
+
+  @override
+  String get callAgain => 'Llamar de nuevo';
+
+  @override
+  String get callNow => 'Llamar ahora';
+
+  @override
+  String get moveToEnd => 'Mover al final';
+
+  @override
+  String get moreActions => 'Más acciones';
+
+  @override
+  String calledTimes(int count) {
+    return 'Llamado ${count}x';
+  }
+
+  @override
+  String get callResent => 'Llamada reenviada';
+
+  @override
+  String movedToEnd(String name) {
+    return '$name pasó al final de la fila';
+  }
+
+  @override
+  String get entryUnavailable => 'Esta persona ya no está esperando';
 }

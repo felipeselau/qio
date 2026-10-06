@@ -44,6 +44,10 @@ class QueueEntry {
     required this.joinedAt,
     this.calledAt,
     this.operatorId,
+    this.order,
+    this.recalls = 0,
+    this.skips = 0,
+    this.recalledAt,
   });
 
   final String id;
@@ -56,6 +60,17 @@ class QueueEntry {
   final DateTime joinedAt;
   final DateTime? calledAt;
   final String? operatorId;
+  final int? order;
+  final int recalls;
+  final int skips;
+  final DateTime? recalledAt;
+
+  int get sortOrder => order ?? joinedAt.millisecondsSinceEpoch;
+
+  static int compareInQueue(QueueEntry a, QueueEntry b) {
+    final byOrder = a.sortOrder.compareTo(b.sortOrder);
+    return byOrder != 0 ? byOrder : a.ticket.compareTo(b.ticket);
+  }
 
   factory QueueEntry.fromSnapshot(String id, Map<dynamic, dynamic> data) {
     return QueueEntry(
@@ -76,6 +91,14 @@ class QueueEntry {
             )
           : null,
       operatorId: data['operatorId'] as String?,
+      order: (data['order'] as num?)?.toInt(),
+      recalls: (data['recalls'] as num?)?.toInt() ?? 0,
+      skips: (data['skips'] as num?)?.toInt() ?? 0,
+      recalledAt: data['recalledAt'] != null
+          ? DateTime.fromMillisecondsSinceEpoch(
+              (data['recalledAt'] as num).toInt(),
+            )
+          : null,
     );
   }
 

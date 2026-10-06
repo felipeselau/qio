@@ -5,6 +5,9 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 ## [Não lançado]
 
 ### Adicionado
+- Operação da fila: "Chamar de novo" (reenvia o aviso ao cliente e conta as
+  chamadas), "Chamar agora" uma pessoa específica e "Mover para o fim" (mantém
+  a senha, muda só a ordem). O histórico guarda `recalls` e `skips`.
 - Limite de pessoas esperando por fila (`maxWaiting`, validado no servidor pela
   `joinQueue` e nas rules do RTDB); a web mostra "fila lotada" e bloqueia a
   entrada, o painel mostra o contador `n/limite` e permite editar o limite.

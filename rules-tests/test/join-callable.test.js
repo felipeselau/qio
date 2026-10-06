@@ -93,7 +93,11 @@ describe('callable joinQueue (emulador)', () => {
     const pub = await waitFor(() =>
       adminDb(async (db) => (await get(ref(db, `queues/${QUEUE}/public/${res.entryId}`))).val()),
     );
-    assert.deepEqual(pub, { ticket: 1, status: 'waiting' });
+    assert.deepEqual(Object.keys(pub).sort(), ['order', 'status', 'ticket']);
+    assert.equal(pub.ticket, 1);
+    assert.equal(pub.status, 'waiting');
+    assert.equal(typeof pub.order, 'number');
+    assert.equal(pub.order, entry.joinedAt);
   });
 
   it('segundo join do mesmo uid devolve a mesma entry', async () => {

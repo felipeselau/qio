@@ -1677,6 +1677,54 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'{count}/{max} esperando'**
   String waitingCounter(int count, int max);
+
+  /// No description provided for @callAgain.
+  ///
+  /// In pt, this message translates to:
+  /// **'Chamar de novo'**
+  String get callAgain;
+
+  /// No description provided for @callNow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Chamar agora'**
+  String get callNow;
+
+  /// No description provided for @moveToEnd.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mover para o fim'**
+  String get moveToEnd;
+
+  /// No description provided for @moreActions.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mais ações'**
+  String get moreActions;
+
+  /// No description provided for @calledTimes.
+  ///
+  /// In pt, this message translates to:
+  /// **'Chamado {count}x'**
+  String calledTimes(int count);
+
+  /// No description provided for @callResent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Chamada reenviada'**
+  String get callResent;
+
+  /// No description provided for @movedToEnd.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name} foi para o fim da fila'**
+  String movedToEnd(String name);
+
+  /// No description provided for @entryUnavailable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esta pessoa já não está aguardando'**
+  String get entryUnavailable;
 }
 
 class _AppLocalizationsDelegate

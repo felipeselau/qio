@@ -15,6 +15,21 @@ export type QueueMeta = {
   resumeAt: number | null;
 };
 
+type PublicTicket = { ticket: number; status: string; order?: number };
+
+export function positionInQueue(
+  publicTickets: Record<string, PublicTicket>,
+  mine: { ticket: number; order?: number | null; joinedAt: number },
+): number {
+  const myOrder = mine.order ?? mine.joinedAt;
+  const ahead = Object.values(publicTickets).filter((e) => {
+    if (e.status !== 'waiting') return false;
+    if (typeof e.order !== 'number') return e.ticket < mine.ticket;
+    return e.order < myOrder || (e.order === myOrder && e.ticket < mine.ticket);
+  }).length;
+  return ahead + 1;
+}
+
 export function isQueueFull(maxWaiting: number, waitingCount: number): boolean {
   return maxWaiting > 0 && waitingCount >= maxWaiting;
 }
@@ -26,7 +41,9 @@ export type MyEntry = {
   name: string;
   status: EntryStatus;
   joinedAt: number;
+  order?: number | null;
   calledAt: number | null;
+  recalledAt: number | null;
 };
 
 export type QueueState = {
@@ -124,6 +141,8 @@ export function useQueue(
           status: val.status as EntryStatus,
           joinedAt: val.joinedAt,
           calledAt: val.calledAt,
+          recalledAt: typeof val.recalledAt === 'number' ? val.recalledAt : null,
+          order: typeof val.order === 'number' ? val.order : null,
         });
       }
     }, () => {
@@ -137,10 +156,7 @@ export function useQueue(
   let estimatedWaitMin: number | null = null;
   if (myEntry && publicTickets) {
     if (myEntry.status === 'waiting') {
-      const ahead = Object.values(publicTickets).filter(
-        (e: any) => e.status === 'waiting' && e.ticket < myEntry.ticket,
-      ).length;
-      position = ahead + 1;
+      position = positionInQueue(publicTickets, myEntry);
     }
     const avg = meta?.avgServiceMinAuto ?? meta?.avgServiceMin ?? 10;
     if (position != null) estimatedWaitMin = position * avg;
