@@ -205,7 +205,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
         actions: [
           if (widget.isOwner)
             IconButton(
-              icon: const Icon(Icons.history, color: QioColors.gray700),
+              icon: Icon(Icons.history, color: QioColors.gray700),
               tooltip: 'Histórico',
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute(
@@ -593,7 +593,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
               ),
             ),
           ),
-          const Icon(Icons.chevron_right, color: QioColors.gray400),
+          Icon(Icons.chevron_right, color: QioColors.gray400),
         ],
       ),
     );

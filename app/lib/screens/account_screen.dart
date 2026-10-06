@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../services/account_format.dart';
 import '../services/auth_service.dart';
+import '../services/theme_controller.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
 import '../widgets/qio_avatar.dart';
@@ -175,6 +176,8 @@ class _AccountScreenState extends State<AccountScreen> {
             ],
           ),
         ),
+        const SizedBox(height: 12),
+        const _ThemeCard(),
         const SizedBox(height: 24),
         QioButton(
           label: 'Sair da conta',
@@ -202,6 +205,43 @@ class _AccountScreenState extends State<AccountScreen> {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ThemeCard extends StatelessWidget {
+  const _ThemeCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = ThemeController.instance;
+    return QioCard(
+      child: ListenableBuilder(
+        listenable: controller,
+        builder: (context, _) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Aparência', style: QioTextStyles.bodyMedium),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: SegmentedButton<ThemeMode>(
+                showSelectedIcon: false,
+                segments: const [
+                  ButtonSegment(
+                    value: ThemeMode.system,
+                    label: Text('Sistema'),
+                  ),
+                  ButtonSegment(value: ThemeMode.light, label: Text('Claro')),
+                  ButtonSegment(value: ThemeMode.dark, label: Text('Escuro')),
+                ],
+                selected: {controller.mode},
+                onSelectionChanged: (s) => controller.setMode(s.first),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

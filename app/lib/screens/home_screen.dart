@@ -371,7 +371,7 @@ class _RequestCard extends StatelessWidget {
           if (!pending)
             IconButton(
               tooltip: 'Dispensar',
-              icon: const Icon(Icons.close, color: QioColors.gray400),
+              icon: Icon(Icons.close, color: QioColors.gray400),
               onPressed: () =>
                   OperatorService.instance.cancelMyRequest(request.queueId),
             ),

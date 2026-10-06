@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import QueuePage from './routes/QueuePage';
+import { useTheme } from './lib/theme';
 
 function NotFound() {
   return (
@@ -11,8 +12,17 @@ function NotFound() {
 }
 
 export default function App() {
+  const { theme, toggle } = useTheme();
   return (
     <div className="app-shell">
+      <button
+        type="button"
+        className="theme-toggle"
+        onClick={toggle}
+        aria-label={theme === 'dark' ? 'Usar tema claro' : 'Usar tema escuro'}
+      >
+        {theme === 'dark' ? '☀️' : '🌙'}
+      </button>
       <BrowserRouter>
         <Routes>
           <Route path="/q/:queueId" element={<QueuePage />} />

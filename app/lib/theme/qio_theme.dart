@@ -5,12 +5,20 @@ import 'qio_text_styles.dart';
 class QioTheme {
   QioTheme._();
 
-  static ThemeData get light {
-    final base = ThemeData.light(useMaterial3: true);
+  static ThemeData get light => _build(Brightness.light);
+
+  static ThemeData get dark => _build(Brightness.dark);
+
+  static ThemeData forBrightness(Brightness b) => _build(b);
+
+  static ThemeData _build(Brightness brightness) {
+    QioColors.apply(brightness);
+    final base = ThemeData(brightness: brightness, useMaterial3: true);
 
     return base.copyWith(
       scaffoldBackgroundColor: QioColors.background,
-      colorScheme: const ColorScheme.light(
+      colorScheme: ColorScheme(
+        brightness: brightness,
         primary: QioColors.primary,
         onPrimary: QioColors.textOnPrimary,
         secondary: QioColors.secondary,
@@ -20,7 +28,7 @@ class QioTheme {
         error: QioColors.error,
         onError: Colors.white,
       ),
-      appBarTheme: const AppBarTheme(
+      appBarTheme: AppBarTheme(
         backgroundColor: QioColors.surface,
         foregroundColor: QioColors.textPrimary,
         elevation: 0,
@@ -37,34 +45,31 @@ class QioTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: QioColors.gray50,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: QioColors.gray200),
+          borderSide: BorderSide(color: QioColors.gray200),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: QioColors.gray200),
+          borderSide: BorderSide(color: QioColors.gray200),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: QioColors.primary, width: 2),
+          borderSide: BorderSide(color: QioColors.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: const BorderSide(color: QioColors.error),
+          borderSide: BorderSide(color: QioColors.error),
         ),
         labelStyle: QioTextStyles.label,
-        hintStyle: const TextStyle(
+        hintStyle: TextStyle(
           fontFamily: 'Inter',
           fontSize: 14,
           color: QioColors.textHint,
         ),
       ),
-      dividerTheme: const DividerThemeData(
+      dividerTheme: DividerThemeData(
         color: QioColors.gray200,
         thickness: 1,
         space: 1,
@@ -74,7 +79,7 @@ class QioTheme {
           backgroundColor: QioColors.primary,
           foregroundColor: QioColors.textOnPrimary,
           elevation: 0,
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -84,8 +89,8 @@ class QioTheme {
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: QioColors.primary,
-          side: const BorderSide(color: QioColors.gray300),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          side: BorderSide(color: QioColors.gray300),
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -98,7 +103,7 @@ class QioTheme {
           textStyle: QioTextStyles.bodyMedium,
         ),
       ),
-      floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: QioColors.primary,
         foregroundColor: QioColors.textOnPrimary,
         elevation: 2,

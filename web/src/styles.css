@@ -8,7 +8,33 @@
   --gray-dark: #374151;
   --red: #EF4444;
   --yellow: #F59E0B;
+  --surface: #FFFFFF;
+  --text: #000000;
+  --border: #F3F4F6;
   --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --gray-light: #0B1220;
+  --gray-medium: #9CA3AF;
+  --gray-dark: #D1D5DB;
+  --surface: #1F2937;
+  --text: #F9FAFB;
+  --border: #374151;
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --gray-light: #0B1220;
+    --gray-medium: #9CA3AF;
+    --gray-dark: #D1D5DB;
+    --surface: #1F2937;
+    --text: #F9FAFB;
+    --border: #374151;
+    color-scheme: dark;
+  }
 }
 
 * {
@@ -23,7 +49,7 @@ html, body, #root {
 
 body {
   font-family: var(--font-body);
-  color: var(--black);
+  color: var(--text);
   background: var(--gray-light);
   -webkit-font-smoothing: antialiased;
 }
@@ -80,7 +106,7 @@ a {
 }
 
 .card {
-  background: var(--white);
+  background: var(--surface);
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -103,8 +129,8 @@ a {
   border-radius: 8px;
   padding: 12px 16px;
   font-size: 14px;
-  color: var(--black);
-  background: var(--white);
+  color: var(--text);
+  background: var(--surface);
   outline: none;
 }
 
@@ -140,7 +166,7 @@ a {
 }
 
 .btn-secondary {
-  background: var(--white);
+  background: var(--surface);
   color: var(--primary);
   border: 1px solid var(--primary);
 }
@@ -196,7 +222,7 @@ a {
 .spinner {
   width: 28px;
   height: 28px;
-  border: 3px solid var(--gray-light);
+  border: 3px solid var(--border);
   border-top-color: var(--primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -206,8 +232,8 @@ a {
   to { transform: rotate(360deg); }
 }
 .install-banner {
-  background: var(--white);
-  border: 1px solid var(--gray-light);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 12px 16px;
   display: flex;
@@ -228,4 +254,19 @@ a {
 .install-banner .btn {
   padding: 10px 16px;
   font-size: 14px;
+}
+
+.theme-toggle {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  font-size: 18px;
+  line-height: 1;
 }
