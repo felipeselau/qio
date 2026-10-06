@@ -1,0 +1,35 @@
+Copyright (c) 2026 Luiz Felipe Scheffer Selau. Todos os direitos reservados.
+Copyright (c) 2026 Luiz Felipe Scheffer Selau. All rights reserved.
+
+PT-BR
+-----
+Este software e a documentação associada ("Qio") são propriedade exclusiva de
+Luiz Felipe Scheffer Selau. O código-fonte está visível publicamente apenas para
+consulta e avaliação acadêmica. Nenhuma licença, expressa ou implícita, é
+concedida: não é permitido copiar, modificar, distribuir, sublicenciar,
+publicar derivados, hospedar, usar comercialmente ou executar este software
+sem autorização prévia e por escrito do titular dos direitos.
+
+Componentes de terceiros incluídos ou utilizados (por exemplo a fonte Inter, sob
+a SIL Open Font License 1.1, e as bibliotecas de código aberto declaradas em
+pubspec.yaml e package.json) permanecem sob suas respectivas licenças, que não
+são alteradas por este aviso.
+
+O software é fornecido "no estado em que se encontra", sem garantias de
+qualquer tipo.
+
+EN
+--
+This software and its documentation ("Qio") are the exclusive property of
+Luiz Felipe Scheffer Selau. The source code is publicly visible for reference
+and academic evaluation only. No license, express or implied, is granted: you
+may not copy, modify, distribute, sublicense, publish derivative works of, host,
+use commercially or run this software without the prior written permission of
+the copyright holder.
+
+Third-party components that are included or used (for example the Inter font,
+under the SIL Open Font License 1.1, and the open-source libraries declared in
+pubspec.yaml and package.json) remain under their own licenses, which this
+notice does not change.
+
+The software is provided "as is", without warranty of any kind.

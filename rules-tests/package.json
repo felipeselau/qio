@@ -1,6 +1,7 @@
 {
   "name": "qio-rules-tests",
   "private": true,
+  "license": "UNLICENSED",
   "type": "module",
   "scripts": {
     "test": "firebase emulators:exec --config ../firebase.json --project demo-qio --only firestore,database,functions,auth \"node --test --test-concurrency=1\"",

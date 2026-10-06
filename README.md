@@ -86,3 +86,7 @@ flutter build apk --release
 
 Ver [`docs/RESUMO_TECNICO.md`](docs/RESUMO_TECNICO.md) para visão técnica completa.
 Ver [`docs/SPEC.md`](docs/SPEC.md) para especificação detalhada de personas, fluxos e escopo.
+
+## Licença
+
+© 2026 Luiz Felipe Scheffer Selau. **Todos os direitos reservados.** O código está público apenas para consulta e avaliação acadêmica; não há licença para copiar, modificar, distribuir ou usar comercialmente sem autorização por escrito. Veja [`LICENSE`](LICENSE). Componentes de terceiros (como a fonte Inter, SIL OFL 1.1) mantêm suas próprias licenças.
