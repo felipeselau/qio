@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import '../l10n/app_localizations.dart';
+import '../controllers/home_controller.dart';
 import '../models/operator.dart';
 import '../models/queue.dart';
 import '../services/auth_service.dart';
@@ -31,19 +32,16 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late Stream<List<Queue>> _ownedStream = QueueService.instance
-      .watchOwnerQueues();
-  late Stream<List<QueueOperator>> _operatingStream = OperatorService.instance
-      .watchMyOperatorQueues();
-  late Stream<List<OperatorRequest>> _requestsStream = OperatorService.instance
-      .watchMyRequests();
+  late final HomeController _controller = HomeController(
+    ownedSource: QueueService.instance.watchOwnerQueues,
+    operatingSource: OperatorService.instance.watchMyOperatorQueues,
+    requestsSource: OperatorService.instance.watchMyRequests,
+  );
 
-  void _retry() {
-    setState(() {
-      _ownedStream = QueueService.instance.watchOwnerQueues();
-      _operatingStream = OperatorService.instance.watchMyOperatorQueues();
-      _requestsStream = OperatorService.instance.watchMyRequests();
-    });
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 
   final _fabKey = GlobalKey();
@@ -131,32 +129,18 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       body: QioResponsiveBody(
-        child: StreamBuilder<List<Queue>>(
-          stream: _ownedStream,
-          builder: (context, ownedSnap) {
-            return StreamBuilder<List<QueueOperator>>(
-              stream: _operatingStream,
-              builder: (context, operatingSnap) {
-                return StreamBuilder<List<OperatorRequest>>(
-                  stream: _requestsStream,
-                  builder: (context, requestsSnap) {
-                    if (ownedSnap.hasError ||
-                        operatingSnap.hasError ||
-                        requestsSnap.hasError) {
-                      return QioErrorState(onRetry: _retry);
-                    }
-                    if (ownedSnap.connectionState == ConnectionState.waiting) {
-                      return const QioSkeletonList();
-                    }
-                    _scheduleTour((ownedSnap.data ?? []).isNotEmpty);
-                    return _buildBody(
-                      ownedSnap.data ?? [],
-                      operatingSnap.data ?? [],
-                      requestsSnap.data ?? [],
-                    );
-                  },
-                );
-              },
+        child: ListenableBuilder(
+          listenable: _controller,
+          builder: (context, _) {
+            if (_controller.hasError) {
+              return QioErrorState(onRetry: _controller.retry);
+            }
+            if (_controller.isLoading) return const QioSkeletonList();
+            _scheduleTour(_controller.ownedQueues.isNotEmpty);
+            return _buildBody(
+              _controller.ownedQueues,
+              _controller.operatingQueues,
+              _controller.pendingRequests,
             );
           },
         ),
