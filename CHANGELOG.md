@@ -18,6 +18,11 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
   gráfico de demanda por horário e filas mais ativas.
 
 ### Corrigido
+- Tour de onboarding só avançava tocando no destaque; agora avança tocando em
+  qualquer ponto da tela.
+- Web: seletor de idioma e botão de tema cobriam o título da fila no celular;
+  a tela do cliente ficava presa em "É a sua vez!" depois do atendimento
+  porque o RTDB cancela o listener da entry removida (tratado no `useQueue`).
 - Login com Google na release: SHA-1/SHA-256 da chave de release registrados no
   Firebase e `google-services.json` atualizado com os clientes OAuth.
 
