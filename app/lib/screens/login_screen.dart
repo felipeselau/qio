@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../services/auth_errors.dart';
 import '../services/auth_service.dart';
 import '../theme/qio_colors.dart';
@@ -50,9 +51,9 @@ class _LoginScreenState extends State<LoginScreen> {
       }
       if (mounted) _goHome();
     } on FirebaseAuthException catch (e) {
-      if (mounted) _showError(authErrorMessage(e.code));
+      if (mounted) _showAuthError(e.code);
     } on Exception {
-      if (mounted) _showError(authErrorMessage(''));
+      if (mounted) _showAuthError('');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -64,9 +65,9 @@ class _LoginScreenState extends State<LoginScreen> {
       await AuthService.instance.signInWithGoogle();
       if (mounted) _goHome();
     } on FirebaseAuthException catch (e) {
-      if (mounted) _showError(authErrorMessage(e.code));
+      if (mounted) _showAuthError(e.code);
     } on Exception {
-      if (mounted) _showError(authErrorMessage(''));
+      if (mounted) _showAuthError('');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -78,6 +79,10 @@ class _LoginScreenState extends State<LoginScreen> {
     ).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
   }
 
+  void _showAuthError(String code) {
+    _showError(authErrorMessage(AppLocalizations.of(context), code));
+  }
+
   void _showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(msg), backgroundColor: QioColors.error),
@@ -86,6 +91,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -108,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Sistema de filas inteligente',
+                    l10n.loginTagline,
                     style: QioTextStyles.body.copyWith(
                       fontSize: 16,
                       color: QioColors.gray700,
@@ -118,36 +124,35 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 32),
                   if (_isSignUp)
                     QioInput(
-                      label: 'Nome',
-                      hint: 'Seu nome',
+                      label: l10n.nameLabel,
+                      hint: l10n.nameHint,
                       controller: _nameCtrl,
                       validator: (v) => (v == null || v.trim().isEmpty)
-                          ? 'Informe seu nome'
+                          ? l10n.nameRequired
                           : null,
                     ),
                   if (_isSignUp) const SizedBox(height: 16),
                   QioInput(
-                    label: 'Email',
-                    hint: 'voce@email.com',
+                    label: l10n.emailLabel,
+                    hint: l10n.emailHint,
                     controller: _emailCtrl,
                     keyboardType: TextInputType.emailAddress,
                     validator: (v) => (v == null || v.trim().isEmpty)
-                        ? 'Informe o email'
+                        ? l10n.emailRequired
                         : null,
                   ),
                   const SizedBox(height: 16),
                   QioInput(
-                    label: 'Senha',
+                    label: l10n.passwordLabel,
                     hint: '••••••••',
                     controller: _passwordCtrl,
                     obscureText: true,
-                    validator: (v) => (v == null || v.length < 6)
-                        ? 'Mínimo 6 caracteres'
-                        : null,
+                    validator: (v) =>
+                        (v == null || v.length < 6) ? l10n.passwordMin : null,
                   ),
                   const SizedBox(height: 24),
                   QioButton(
-                    label: _isSignUp ? 'Criar conta' : 'Entrar',
+                    label: _isSignUp ? l10n.createAccount : l10n.signIn,
                     onPressed: _submit,
                     isLoading: _isLoading,
                     isFullWidth: true,
@@ -165,7 +170,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
                         child: Text(
-                          'ou',
+                          l10n.orSeparator,
                           style: QioTextStyles.caption.copyWith(
                             color: QioColors.gray400,
                           ),
@@ -182,7 +187,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 16),
                   QioButton(
-                    label: 'Continuar com Google',
+                    label: l10n.continueWithGoogle,
                     variant: QioButtonVariant.secondary,
                     icon: Icons.g_mobiledata,
                     onPressed: _google,
@@ -192,7 +197,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   TextButton(
                     onPressed: () => setState(() => _isSignUp = !_isSignUp),
                     child: Text(
-                      _isSignUp ? 'Já tem conta? Entrar' : 'Criar conta',
+                      _isSignUp ? l10n.haveAccountSignIn : l10n.createAccount,
                       style: QioTextStyles.body.copyWith(
                         fontSize: 14,
                         color: QioColors.primary,

@@ -1,3 +1,4 @@
+import i18n from '../i18n';
 import { useEffect, useState } from 'react';
 import { onValue, ref } from 'firebase/database';
 import { db } from '../firebase';
@@ -62,7 +63,7 @@ export function useQueue(
           setMeta(null);
         } else {
           setMeta({
-            name: val.name ?? 'Fila',
+            name: val.name ?? i18n.t('queue.defaultName'),
             status: val.status ?? 'open',
             serving: val.serving ?? 0,
             avgServiceMin: val.avgServiceMin ?? null,

@@ -3,23 +3,24 @@ import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../l10n/app_localizations.dart';
 import '../models/history_entry.dart';
 import 'history_metrics.dart';
 
-const _csvHeader = [
-  'ticket',
-  'nome',
-  'telefone',
-  'resultado',
-  'entrada',
-  'chamado',
-  'finalizado',
+List<String> _csvHeader(AppLocalizations l10n) => [
+  l10n.csvTicket,
+  l10n.csvName,
+  l10n.csvPhone,
+  l10n.csvResult,
+  l10n.csvEntered,
+  l10n.csvCalled,
+  l10n.csvFinished,
 ];
 
-String resultLabel(String result) => switch (result) {
-  'served' => 'Atendido',
-  'no_show' => 'Não compareceu',
-  'left' => 'Desistiu',
+String resultLabel(AppLocalizations l10n, String result) => switch (result) {
+  'served' => l10n.served,
+  'no_show' => l10n.noShow,
+  'left' => l10n.resultLeft,
   _ => result,
 };
 
@@ -40,15 +41,15 @@ String csvCell(String value) {
   return v;
 }
 
-String buildHistoryCsv(List<HistoryEntry> entries) {
+String buildHistoryCsv(AppLocalizations l10n, List<HistoryEntry> entries) {
   final rows = <List<String>>[
-    _csvHeader,
+    _csvHeader(l10n),
     for (final e in entries)
       [
         '${e.ticket}',
         e.name,
         e.phone ?? '',
-        resultLabel(e.result),
+        resultLabel(l10n, e.result),
         formatExportDateTime(e.joinedAt),
         formatExportDateTime(e.calledAt),
         formatExportDateTime(e.finishedAt),
@@ -57,13 +58,14 @@ String buildHistoryCsv(List<HistoryEntry> entries) {
   return '﻿${rows.map((r) => r.map(csvCell).join(',')).join('\r\n')}\r\n';
 }
 
-String _minutes(double? v) {
+String _minutes(AppLocalizations l10n, double? v) {
   if (v == null) return '-';
-  if (v < 1) return '<1 min';
-  return '${v.round()} min';
+  if (v < 1) return l10n.durationLessThanMinute;
+  return l10n.durationMinutes(v.round());
 }
 
 Future<Uint8List> buildHistoryPdf({
+  required AppLocalizations l10n,
   required String queueName,
   required List<HistoryEntry> entries,
   required DateTime generatedAt,
@@ -79,13 +81,13 @@ Future<Uint8List> buildHistoryPdf({
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text(
-            'Qio - Histórico de atendimentos',
+            l10n.pdfTitle,
             style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
           ),
           pw.SizedBox(height: 4),
           pw.Text(queueName, style: const pw.TextStyle(fontSize: 14)),
           pw.Text(
-            'Gerado em ${formatExportDateTime(generatedAt)}',
+            l10n.pdfGeneratedAt(formatExportDateTime(generatedAt)),
             style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
           ),
           pw.SizedBox(height: 16),
@@ -103,27 +105,27 @@ Future<Uint8List> buildHistoryPdf({
           spacing: 24,
           runSpacing: 8,
           children: [
-            _metric('Total', '${metrics.total}'),
-            _metric('Atendidos', '${metrics.served}'),
-            _metric('Não compareceram', '${metrics.noShow} ($pct%)'),
-            _metric('Desistiram', '${metrics.left}'),
-            _metric('Espera média', _minutes(metrics.avgWaitMin)),
-            _metric('Atendimento médio', _minutes(metrics.avgServiceMin)),
+            _metric(l10n.pdfTotal, '${metrics.total}'),
+            _metric(l10n.servedPlural, '${metrics.served}'),
+            _metric(l10n.noShowPlural, '${metrics.noShow} ($pct%)'),
+            _metric(l10n.leftPlural, '${metrics.left}'),
+            _metric(l10n.avgWait, _minutes(l10n, metrics.avgWaitMin)),
+            _metric(l10n.avgService, _minutes(l10n, metrics.avgServiceMin)),
           ],
         ),
         pw.SizedBox(height: 16),
         if (entries.isEmpty)
-          pw.Text('Nenhum atendimento no período.')
+          pw.Text(l10n.pdfNoRecords)
         else
           pw.TableHelper.fromTextArray(
-            headers: const [
-              'Ticket',
-              'Nome',
-              'Telefone',
-              'Resultado',
-              'Entrada',
-              'Chamado',
-              'Finalizado',
+            headers: [
+              l10n.colTicket,
+              l10n.colName,
+              l10n.colPhone,
+              l10n.colResult,
+              l10n.colEntered,
+              l10n.colCalled,
+              l10n.colFinished,
             ],
             data: [
               for (final e in entries)
@@ -131,7 +133,7 @@ Future<Uint8List> buildHistoryPdf({
                   '${e.ticket}',
                   e.name,
                   e.phone ?? '',
-                  resultLabel(e.result),
+                  resultLabel(l10n, e.result),
                   _short(e.joinedAt),
                   _short(e.calledAt),
                   _short(e.finishedAt),

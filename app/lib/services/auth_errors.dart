@@ -1,22 +1,24 @@
-String authErrorMessage(String code) {
+import '../l10n/app_localizations.dart';
+
+String authErrorMessage(AppLocalizations l10n, String code) {
   switch (code) {
     case 'invalid-credential':
     case 'wrong-password':
     case 'user-not-found':
-      return 'E-mail ou senha incorretos.';
+      return l10n.authInvalidCredentials;
     case 'invalid-email':
-      return 'E-mail inválido.';
+      return l10n.authInvalidEmail;
     case 'email-already-in-use':
-      return 'Já existe uma conta com este e-mail.';
+      return l10n.authEmailInUse;
     case 'weak-password':
-      return 'Senha fraca. Use pelo menos 6 caracteres.';
+      return l10n.authWeakPassword;
     case 'user-disabled':
-      return 'Esta conta foi desativada.';
+      return l10n.authUserDisabled;
     case 'too-many-requests':
-      return 'Muitas tentativas. Aguarde alguns minutos e tente de novo.';
+      return l10n.authTooManyRequests;
     case 'network-request-failed':
-      return 'Sem conexão. Verifique a internet e tente de novo.';
+      return l10n.authNetworkError;
     default:
-      return 'Não foi possível entrar. Tente novamente.';
+      return l10n.authGeneric;
   }
 }

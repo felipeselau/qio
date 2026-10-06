@@ -1,19 +1,18 @@
 import { ref, update } from 'firebase/database';
 import { httpsCallable } from 'firebase/functions';
 import { auth, db, functions } from '../firebase';
+import i18n from '../i18n';
 import { storeEntryId } from './storage';
 
 export type JoinResult = { entryId: string; ticket: number; existing: boolean };
 
-const JOIN_ERROR_MESSAGES: Record<string, string> = {
-  'functions/already-exists': 'Este telefone já está na fila.',
-  'functions/resource-exhausted': 'Muitas tentativas. Aguarde alguns minutos.',
-  'functions/failed-precondition': 'Fila fechada ou pausada.',
-  'functions/invalid-argument': 'Dados inválidos. Confira nome e telefone.',
-  'functions/not-found': 'Fila não encontrada.',
+const JOIN_ERROR_KEYS: Record<string, string> = {
+  'functions/already-exists': 'errors.alreadyExists',
+  'functions/resource-exhausted': 'errors.resourceExhausted',
+  'functions/failed-precondition': 'errors.failedPrecondition',
+  'functions/invalid-argument': 'errors.invalidArgument',
+  'functions/not-found': 'errors.notFound',
 };
-
-const JOIN_ERROR_FALLBACK = 'Não foi possível entrar na fila. Tente novamente.';
 
 export async function joinQueue(
   queueId: string,
@@ -21,7 +20,7 @@ export async function joinQueue(
   phone: string,
 ): Promise<JoinResult> {
   const uid = auth.currentUser?.uid;
-  if (!uid) throw new Error('Não autenticado');
+  if (!uid) throw new Error(i18n.t('errors.notAuthenticated'));
 
   let result: JoinResult;
   try {
@@ -32,7 +31,7 @@ export async function joinQueue(
     result = (await call({ queueId, name, phone })).data;
   } catch (err) {
     const code = (err as { code?: string } | null)?.code ?? '';
-    throw new Error(JOIN_ERROR_MESSAGES[code] ?? JOIN_ERROR_FALLBACK);
+    throw new Error(i18n.t(JOIN_ERROR_KEYS[code] ?? 'errors.joinFailed'));
   }
 
   storeEntryId(queueId, result.entryId);
@@ -41,7 +40,7 @@ export async function joinQueue(
 
 export async function leaveQueue(queueId: string, entryId: string): Promise<void> {
   const uid = auth.currentUser?.uid;
-  if (!uid) throw new Error('Não autenticado');
+  if (!uid) throw new Error(i18n.t('errors.notAuthenticated'));
   await update(ref(db, `queues/${queueId}/entries/${entryId}`), {
     status: 'left',
   });

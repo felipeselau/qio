@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/history_entry.dart';
 import '../services/history_export.dart';
 import '../services/history_metrics.dart';
@@ -24,13 +25,6 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  static const _resultOptions = <String, String?>{
-    'Todos': null,
-    'Atendidos': 'served',
-    'Não compareceram': 'no_show',
-    'Desistiram': 'left',
-  };
-
   late final Stream<List<HistoryEntry>> _stream;
   HistoryPeriod _period = HistoryPeriod.all;
   String? _result;
@@ -43,7 +37,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     if (_exporting) return;
     if (_filtered.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nada para exportar neste filtro.')),
+        SnackBar(content: Text(AppLocalizations.of(context).nothingToExport)),
       );
       return;
     }
@@ -53,8 +47,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
     } on Exception {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Não foi possível exportar o histórico.'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context).exportError),
           backgroundColor: QioColors.error,
         ),
       );
@@ -64,7 +58,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Future<void> _exportCsv() => _export(() async {
-    final bytes = Uint8List.fromList(utf8.encode(buildHistoryCsv(_filtered)));
+    final l10n = AppLocalizations.of(context);
+    final bytes = Uint8List.fromList(
+      utf8.encode(buildHistoryCsv(l10n, _filtered)),
+    );
     final fileName = '$_baseName.csv';
     await SharePlus.instance.share(
       ShareParams(
@@ -76,6 +73,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   Future<void> _exportPdf() => _export(() async {
     final bytes = await buildHistoryPdf(
+      l10n: AppLocalizations.of(context),
       queueName: widget.queueName,
       entries: _filtered,
       generatedAt: DateTime.now(),
@@ -91,12 +89,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: QioColors.gray100,
       appBar: AppBar(
         backgroundColor: QioColors.surface,
         title: Text(
-          'Histórico',
+          l10n.historyTitle,
           style: QioTextStyles.heading2.copyWith(
             fontWeight: FontWeight.w700,
             color: QioColors.textPrimary,
@@ -104,13 +103,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
         ),
         actions: [
           PopupMenuButton<String>(
-            tooltip: 'Exportar',
+            tooltip: l10n.exportTooltip,
             icon: const Icon(Icons.file_download_outlined),
             enabled: !_exporting,
             onSelected: (v) => v == 'csv' ? _exportCsv() : _exportPdf(),
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'csv', child: Text('Exportar CSV')),
-              PopupMenuItem(value: 'pdf', child: Text('Exportar PDF')),
+            itemBuilder: (_) => [
+              PopupMenuItem(value: 'csv', child: Text(l10n.exportCsv)),
+              PopupMenuItem(value: 'pdf', child: Text(l10n.exportPdf)),
             ],
           ),
         ],
@@ -123,7 +122,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  'Não foi possível carregar o histórico. Tente novamente.',
+                  l10n.loadHistoryError,
                   textAlign: TextAlign.center,
                   style: QioTextStyles.body.copyWith(color: QioColors.error),
                 ),
@@ -137,7 +136,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           if (all.isEmpty) {
             return Center(
               child: Text(
-                'Nenhum atendimento ainda',
+                l10n.noHistoryYet,
                 style: QioTextStyles.body.copyWith(
                   color: QioColors.textSecondary,
                 ),
@@ -164,7 +163,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 24),
                   child: Center(
                     child: Text(
-                      'Nenhum atendimento neste filtro',
+                      l10n.noHistoryInFilter,
                       style: QioTextStyles.caption,
                     ),
                   ),
@@ -179,6 +178,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Widget _buildFilters() {
+    final l10n = AppLocalizations.of(context);
+    final resultOptions = <String, String?>{
+      l10n.filterAll: null,
+      l10n.servedPlural: 'served',
+      l10n.noShowPlural: 'no_show',
+      l10n.leftPlural: 'left',
+    };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -187,7 +193,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           children: [
             for (final p in HistoryPeriod.values)
               ChoiceChip(
-                label: Text(p.label),
+                label: Text(p.label(l10n)),
                 selected: _period == p,
                 onSelected: (_) => setState(() => _period = p),
               ),
@@ -197,7 +203,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         Wrap(
           spacing: 8,
           children: [
-            for (final o in _resultOptions.entries)
+            for (final o in resultOptions.entries)
               ChoiceChip(
                 label: Text(o.key),
                 selected: _result == o.value,
@@ -210,10 +216,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 }
 
-String _formatMinutes(double? v) {
+String _formatMinutes(AppLocalizations l10n, double? v) {
   if (v == null) return '—';
-  if (v < 1) return '<1 min';
-  return '${v.round()} min';
+  if (v < 1) return l10n.durationLessThanMinute;
+  return l10n.durationMinutes(v.round());
 }
 
 String _formatDateTime(DateTime d) {
@@ -228,30 +234,31 @@ class _MetricsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final pct = (metrics.noShowRate * 100).round();
     return QioCard(
       child: Column(
         children: [
           Row(
             children: [
-              _Metric(label: 'Atendidos', value: '${metrics.served}'),
+              _Metric(label: l10n.servedPlural, value: '${metrics.served}'),
               _Metric(
-                label: 'Não compareceram',
+                label: l10n.noShowPlural,
                 value: '${metrics.noShow} ($pct%)',
               ),
-              _Metric(label: 'Desistiram', value: '${metrics.left}'),
+              _Metric(label: l10n.leftPlural, value: '${metrics.left}'),
             ],
           ),
           const SizedBox(height: 16),
           Row(
             children: [
               _Metric(
-                label: 'Espera média',
-                value: _formatMinutes(metrics.avgWaitMin),
+                label: l10n.avgWait,
+                value: _formatMinutes(l10n, metrics.avgWaitMin),
               ),
               _Metric(
-                label: 'Atendimento médio',
-                value: _formatMinutes(metrics.avgServiceMin),
+                label: l10n.avgService,
+                value: _formatMinutes(l10n, metrics.avgServiceMin),
               ),
             ],
           ),
@@ -289,20 +296,22 @@ class _HistoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final color = entry.isServed
         ? QioColors.success
         : entry.isLeft
         ? QioColors.textSecondary
         : QioColors.error;
     final label = entry.isServed
-        ? 'Atendido'
+        ? l10n.served
         : entry.isLeft
-        ? 'Desistiu'
-        : 'Não compareceu';
+        ? l10n.resultLeft
+        : l10n.noShow;
     final wait = entry.wait;
     final subtitle = [
       _formatDateTime(entry.referenceTime),
-      if (wait != null) 'espera ${_formatMinutes(wait.inMilliseconds / 60000)}',
+      if (wait != null)
+        l10n.waitSubtitle(_formatMinutes(l10n, wait.inMilliseconds / 60000)),
     ].join(' · ');
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -314,7 +323,7 @@ class _HistoryTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '#${entry.ticket} ${entry.name}',
+                    l10n.ticketAndName(entry.ticket, entry.name),
                     style: QioTextStyles.bodyMedium,
                   ),
                   const SizedBox(height: 2),

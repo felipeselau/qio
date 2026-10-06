@@ -1,0 +1,713 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Spanish Castilian (`es`).
+class AppLocalizationsEs extends AppLocalizations {
+  AppLocalizationsEs([String locale = 'es']) : super(locale);
+
+  @override
+  String get cancel => 'Cancelar';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get back => 'Volver';
+
+  @override
+  String get backWithArrow => '← Volver';
+
+  @override
+  String get create => 'Crear';
+
+  @override
+  String get remove => 'Quitar';
+
+  @override
+  String get delete => 'Eliminar';
+
+  @override
+  String get copy => 'Copiar';
+
+  @override
+  String get share => 'Compartir';
+
+  @override
+  String get print => 'Imprimir';
+
+  @override
+  String get genericActionError =>
+      'No se pudo completar la acción. Inténtalo de nuevo.';
+
+  @override
+  String get authInvalidCredentials => 'Correo o contraseña incorrectos.';
+
+  @override
+  String get authInvalidEmail => 'Correo electrónico no válido.';
+
+  @override
+  String get authEmailInUse => 'Ya existe una cuenta con este correo.';
+
+  @override
+  String get authWeakPassword => 'Contraseña débil. Usa al menos 6 caracteres.';
+
+  @override
+  String get authUserDisabled => 'Esta cuenta fue desactivada.';
+
+  @override
+  String get authTooManyRequests =>
+      'Demasiados intentos. Espera unos minutos e inténtalo de nuevo.';
+
+  @override
+  String get authNetworkError =>
+      'Sin conexión. Revisa tu internet e inténtalo de nuevo.';
+
+  @override
+  String get authGeneric => 'No se pudo iniciar sesión. Inténtalo de nuevo.';
+
+  @override
+  String get loginTagline => 'Sistema inteligente de filas';
+
+  @override
+  String get nameLabel => 'Nombre';
+
+  @override
+  String get nameHint => 'Tu nombre';
+
+  @override
+  String get nameRequired => 'Ingresa tu nombre';
+
+  @override
+  String get emailLabel => 'Correo';
+
+  @override
+  String get emailHint => 'tu@correo.com';
+
+  @override
+  String get emailRequired => 'Ingresa el correo';
+
+  @override
+  String get passwordLabel => 'Contraseña';
+
+  @override
+  String get passwordMin => 'Mínimo 6 caracteres';
+
+  @override
+  String get signIn => 'Iniciar sesión';
+
+  @override
+  String get createAccount => 'Crear cuenta';
+
+  @override
+  String get orSeparator => 'o';
+
+  @override
+  String get continueWithGoogle => 'Continuar con Google';
+
+  @override
+  String get haveAccountSignIn => '¿Ya tienes cuenta? Inicia sesión';
+
+  @override
+  String get accountTitle => 'Mi cuenta';
+
+  @override
+  String businessLine(String business) {
+    return 'Negocio: $business';
+  }
+
+  @override
+  String get queuesCreated => 'Filas creadas';
+
+  @override
+  String get memberSince => 'Miembro desde';
+
+  @override
+  String get signOut => 'Cerrar sesión';
+
+  @override
+  String get signOutError => 'No se pudo cerrar la sesión.';
+
+  @override
+  String get appearance => 'Apariencia';
+
+  @override
+  String get systemOption => 'Sistema';
+
+  @override
+  String get themeLight => 'Claro';
+
+  @override
+  String get themeDark => 'Oscuro';
+
+  @override
+  String get languageTitle => 'Idioma';
+
+  @override
+  String get languagePortuguese => 'Português';
+
+  @override
+  String get languageEnglish => 'English';
+
+  @override
+  String get languageSpanish => 'Español';
+
+  @override
+  String get newQueue => 'Nueva fila';
+
+  @override
+  String get queueNameLabel => 'Nombre de la fila *';
+
+  @override
+  String get queueNameHint => 'Ej: Atención en mostrador';
+
+  @override
+  String get queueNameRequired => 'Ingresa el nombre';
+
+  @override
+  String get descriptionLabel => 'Descripción (opcional)';
+
+  @override
+  String get descriptionHint => 'Describe el propósito de la fila...';
+
+  @override
+  String get avgServiceLabel => 'Tiempo promedio de atención (minutos)';
+
+  @override
+  String get invalidNumber => 'Ingresa un número válido';
+
+  @override
+  String get createQueue => 'Crear fila';
+
+  @override
+  String get myQueues => 'Mis filas';
+
+  @override
+  String get joinAsOperator => 'Entrar como operador';
+
+  @override
+  String get tourHomeFabTitle => 'Crea tu primera fila';
+
+  @override
+  String get tourHomeFabBody =>
+      'Toca el + para crear una fila y generar el código QR.';
+
+  @override
+  String get tourHomeQueueTitle => 'Abre tu fila';
+
+  @override
+  String get tourHomeQueueBody =>
+      'Toca la tarjeta para ver el código QR y llamar a las personas.';
+
+  @override
+  String get tourHomeOperatorTitle => 'Entrar como operador';
+
+  @override
+  String get tourHomeOperatorBody =>
+      '¿Recibiste un código de invitación? Úsalo aquí para ayudar en una fila.';
+
+  @override
+  String get emptyQueuesTitle => 'Aún no hay filas';
+
+  @override
+  String get emptyQueuesBody =>
+      'Crea tu primera fila o entra como operador con un código de invitación';
+
+  @override
+  String get sectionOwner => 'SOY EL DUEÑO';
+
+  @override
+  String get sectionOperator => 'SOY OPERADOR';
+
+  @override
+  String get sectionRequests => 'SOLICITUDES DE OPERADOR';
+
+  @override
+  String waitingCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count personas esperando',
+      one: '$count persona esperando',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String createdOn(DateTime date) {
+    final intl.DateFormat dateDateFormat = intl.DateFormat.yMd(localeName);
+    final String dateString = dateDateFormat.format(date);
+
+    return 'Creada el $dateString';
+  }
+
+  @override
+  String get youAreOperator => 'Eres operador de esta fila';
+
+  @override
+  String get requestRemovedStatus => 'Te quitaron de esta fila';
+
+  @override
+  String get requestRejectedStatus => 'Solicitud rechazada';
+
+  @override
+  String get awaitingApproval => 'Esperando aprobación';
+
+  @override
+  String get dismiss => 'Descartar';
+
+  @override
+  String get statusOpen => 'Abierta';
+
+  @override
+  String get statusPaused => 'Pausada';
+
+  @override
+  String get statusClosed => 'Cerrada';
+
+  @override
+  String get joinOperatorIntro =>
+      'Pídele el código de invitación al dueño de la fila. Después de enviarlo, el dueño debe aprobar tu acceso.';
+
+  @override
+  String get inviteCodeLabel => 'Código de invitación';
+
+  @override
+  String get inviteCodeHint => 'Ej: K7M2QX';
+
+  @override
+  String get inviteCodeLength => 'El código tiene 6 caracteres';
+
+  @override
+  String get sendRequest => 'Enviar solicitud';
+
+  @override
+  String get sendRequestError =>
+      'No se pudo enviar la solicitud. Inténtalo de nuevo.';
+
+  @override
+  String get cancelRequestError => 'No se pudo cancelar. Inténtalo de nuevo.';
+
+  @override
+  String get pendingBody =>
+      'El dueño de la fila debe aprobar tu solicitud. Esta pantalla se actualiza sola.';
+
+  @override
+  String get requestApproved => 'Solicitud aprobada';
+
+  @override
+  String get approvedBody => 'Ya puedes atender esta fila.';
+
+  @override
+  String get requestRejected => 'Solicitud rechazada';
+
+  @override
+  String get rejectedBody => 'El dueño de la fila rechazó tu solicitud.';
+
+  @override
+  String get removedTitle => 'Te quitaron';
+
+  @override
+  String get removedBody =>
+      'El dueño de la fila quitó tu acceso como operador.';
+
+  @override
+  String get requestNotFound => 'Solicitud no encontrada';
+
+  @override
+  String get requestNotFoundBody => 'La solicitud fue cancelada o eliminada.';
+
+  @override
+  String get openQueue => 'Abrir fila';
+
+  @override
+  String get cancelRequest => 'Cancelar solicitud';
+
+  @override
+  String get inviteGenerateFailed => 'No se pudo generar un código.';
+
+  @override
+  String get inviteInvalid => 'Código no válido.';
+
+  @override
+  String get inviteInvalidOrRevoked => 'Código no válido o revocado.';
+
+  @override
+  String get inviteExpired => 'Código vencido. Pídele uno nuevo al dueño.';
+
+  @override
+  String get inviteOwnQueue => 'Ya eres el dueño de esta fila.';
+
+  @override
+  String get operatorsTitle => 'Operadores';
+
+  @override
+  String get pendingRequestsSection => 'SOLICITUDES PENDIENTES';
+
+  @override
+  String get activeOperatorsSection => 'OPERADORES ACTIVOS';
+
+  @override
+  String get noPendingRequests => 'No hay solicitudes pendientes';
+
+  @override
+  String get noOperatorsYet => 'Aún no hay operadores';
+
+  @override
+  String get inviteExplain =>
+      'Quien reciba el código solicita acceso desde la app. Tú apruebas cada solicitud.';
+
+  @override
+  String get noExpiration => 'Sin vencimiento';
+
+  @override
+  String validUntil(String date) {
+    return 'Válido hasta $date';
+  }
+
+  @override
+  String get revokeCode => 'Revocar código';
+
+  @override
+  String get previousCodeExpired => 'El código anterior venció.';
+
+  @override
+  String get validity => 'Vigencia';
+
+  @override
+  String get validityHour => '1 hora';
+
+  @override
+  String get validityDay => '24 horas';
+
+  @override
+  String get validityWeek => '7 días';
+
+  @override
+  String get generateNewCode => 'Generar nuevo código';
+
+  @override
+  String get generateCode => 'Generar código';
+
+  @override
+  String get reject => 'Rechazar';
+
+  @override
+  String get approve => 'Aprobar';
+
+  @override
+  String get removeOperatorTooltip => 'Quitar operador';
+
+  @override
+  String get removeOperatorTitle => '¿Quitar operador?';
+
+  @override
+  String removeOperatorBody(String name) {
+    return '$name pierde el acceso a la fila. Las personas que ya llamó siguen en la fila.';
+  }
+
+  @override
+  String get codeCopied => '¡Código copiado!';
+
+  @override
+  String shareCodeText(String queue, String code) {
+    return 'Código para atender la fila \"$queue\" en Qio: $code\nAbre la app Qio > Entrar como operador.';
+  }
+
+  @override
+  String get tourPanelQrTitle => 'Comparte el código QR';
+
+  @override
+  String get tourPanelQrBody =>
+      'Tus clientes lo escanean para entrar a la fila, sin instalar nada.';
+
+  @override
+  String get tourPanelCallTitle => 'Llama al siguiente';
+
+  @override
+  String get tourPanelCallBody =>
+      'Toca aquí para llamar a la siguiente persona de la fila.';
+
+  @override
+  String newPersonInQueue(String name) {
+    return 'Nueva persona en la fila: $name';
+  }
+
+  @override
+  String newPeopleInQueue(int count) {
+    return '$count personas nuevas en la fila';
+  }
+
+  @override
+  String get syncError => 'No se pudo sincronizar la fila. Intenta reabrirla.';
+
+  @override
+  String get accessEndedTitle => 'Acceso finalizado';
+
+  @override
+  String get accessEndedBody =>
+      'Ya no eres operador de esta fila. El dueño quitó tu acceso o la fila fue eliminada.';
+
+  @override
+  String get historyTitle => 'Historial';
+
+  @override
+  String get reopen => 'Reabrir';
+
+  @override
+  String get pause => 'Pausar';
+
+  @override
+  String get close => 'Cerrar';
+
+  @override
+  String get queueClosedTitle => 'Fila cerrada';
+
+  @override
+  String get noServiceInProgress => 'No hay atención en curso';
+
+  @override
+  String get closedOwnerHint =>
+      'La fila está cerrada. Puedes reabrirla o eliminarla.';
+
+  @override
+  String get closedOperatorHint =>
+      'La fila está cerrada. Espera a que el dueño la reabra.';
+
+  @override
+  String get servingByOthers => 'EN ATENCIÓN POR OTROS';
+
+  @override
+  String get finishService => 'Finalizar atención';
+
+  @override
+  String get served => 'Atendido';
+
+  @override
+  String get noShow => 'No se presentó';
+
+  @override
+  String get upNext => 'PRÓXIMOS EN LA FILA';
+
+  @override
+  String get nobodyInQueue => 'Nadie en la fila';
+
+  @override
+  String get deleteQueue => 'Eliminar fila';
+
+  @override
+  String get callNext => 'Llamar al siguiente';
+
+  @override
+  String get operatorsAndInvites => 'Operadores e invitaciones';
+
+  @override
+  String get qrSemantics => 'Código QR para entrar a la fila';
+
+  @override
+  String get scanToJoin => 'Escanea para entrar a la fila';
+
+  @override
+  String get copyLinkSemantics => 'Copiar enlace de la fila';
+
+  @override
+  String get copyLink => 'Copiar enlace';
+
+  @override
+  String get printablePoster => 'Cartel para imprimir';
+
+  @override
+  String get linkCopied => '¡Enlace copiado!';
+
+  @override
+  String get deleteQueueTitle => '¿Eliminar fila?';
+
+  @override
+  String get deleteQueueBody =>
+      'Esta acción es permanente. La fila y todo el historial de atenciones se borrarán.';
+
+  @override
+  String get nobodyCalled => 'Nadie llamado';
+
+  @override
+  String get callNextHint => 'Toca \"Llamar al siguiente\" para comenzar';
+
+  @override
+  String get callingNow => 'LLAMANDO AHORA';
+
+  @override
+  String waitTileSubtitle(int ticket, int minutes) {
+    return '#$ticket · $minutes min';
+  }
+
+  @override
+  String ticketAndName(int ticket, String name) {
+    return '#$ticket $name';
+  }
+
+  @override
+  String get exportTooltip => 'Exportar';
+
+  @override
+  String get exportCsv => 'Exportar CSV';
+
+  @override
+  String get exportPdf => 'Exportar PDF';
+
+  @override
+  String get nothingToExport => 'No hay nada para exportar con este filtro.';
+
+  @override
+  String get exportError => 'No se pudo exportar el historial.';
+
+  @override
+  String get loadHistoryError =>
+      'No se pudo cargar el historial. Inténtalo de nuevo.';
+
+  @override
+  String get noHistoryYet => 'Aún no hay atenciones';
+
+  @override
+  String get noHistoryInFilter => 'No hay atenciones con este filtro';
+
+  @override
+  String get filterAll => 'Todos';
+
+  @override
+  String get periodToday => 'Hoy';
+
+  @override
+  String get period7Days => '7 días';
+
+  @override
+  String get periodAll => 'Todo';
+
+  @override
+  String get servedPlural => 'Atendidos';
+
+  @override
+  String get noShowPlural => 'No se presentaron';
+
+  @override
+  String get leftPlural => 'Abandonaron';
+
+  @override
+  String get avgWait => 'Espera promedio';
+
+  @override
+  String get avgService => 'Atención promedio';
+
+  @override
+  String get resultLeft => 'Abandonó';
+
+  @override
+  String waitSubtitle(String duration) {
+    return 'espera $duration';
+  }
+
+  @override
+  String durationMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String get durationLessThanMinute => '<1 min';
+
+  @override
+  String get csvTicket => 'ticket';
+
+  @override
+  String get csvName => 'nombre';
+
+  @override
+  String get csvPhone => 'teléfono';
+
+  @override
+  String get csvResult => 'resultado';
+
+  @override
+  String get csvEntered => 'ingreso';
+
+  @override
+  String get csvCalled => 'llamado';
+
+  @override
+  String get csvFinished => 'finalizado';
+
+  @override
+  String get pdfTitle => 'Qio - Historial de atenciones';
+
+  @override
+  String pdfGeneratedAt(String date) {
+    return 'Generado el $date';
+  }
+
+  @override
+  String get pdfTotal => 'Total';
+
+  @override
+  String get pdfNoRecords => 'No hay atenciones en el período.';
+
+  @override
+  String get colTicket => 'Ticket';
+
+  @override
+  String get colName => 'Nombre';
+
+  @override
+  String get colPhone => 'Teléfono';
+
+  @override
+  String get colResult => 'Resultado';
+
+  @override
+  String get colEntered => 'Ingreso';
+
+  @override
+  String get colCalled => 'Llamado';
+
+  @override
+  String get colFinished => 'Finalizado';
+
+  @override
+  String get posterTitle => 'Cartel del QR';
+
+  @override
+  String get qrColor => 'COLOR DEL QR';
+
+  @override
+  String get qrColorBlue => 'Azul';
+
+  @override
+  String get qrColorBlack => 'Negro';
+
+  @override
+  String get qrColorDarkGreen => 'Verde oscuro';
+
+  @override
+  String get shareImage => 'Compartir imagen';
+
+  @override
+  String get shareImageError => 'No se pudo compartir la imagen.';
+
+  @override
+  String get printPosterError => 'No se pudo imprimir el cartel.';
+
+  @override
+  String get skip => 'OMITIR';
+
+  @override
+  String stepOf(int index, int total) {
+    return '$index de $total';
+  }
+
+  @override
+  String get tapToContinue => 'Toca para continuar';
+
+  @override
+  String avatarLabel(String name) {
+    return 'Avatar: $name';
+  }
+}

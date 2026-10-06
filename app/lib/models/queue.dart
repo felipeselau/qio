@@ -1,16 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../l10n/app_localizations.dart';
+
 enum QueueStatus { open, paused, closed }
 
 extension QueueStatusX on QueueStatus {
-  String get label {
+  String label(AppLocalizations l10n) {
     switch (this) {
       case QueueStatus.open:
-        return 'Aberta';
+        return l10n.statusOpen;
       case QueueStatus.paused:
-        return 'Pausada';
+        return l10n.statusPaused;
       case QueueStatus.closed:
-        return 'Fechada';
+        return l10n.statusClosed;
     }
   }
 

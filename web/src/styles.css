@@ -270,3 +270,19 @@ a {
   font-size: 18px;
   line-height: 1;
 }
+
+.lang-select {
+  position: fixed;
+  top: 12px;
+  right: 60px;
+  z-index: 10;
+  height: 40px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  font-family: inherit;
+  font-size: 14px;
+}

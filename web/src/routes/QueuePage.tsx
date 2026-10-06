@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { auth } from '../firebase';
 import { getStoredEntryId, clearStoredEntryId } from '../lib/storage';
@@ -12,6 +13,7 @@ import { useInstallPrompt } from '../lib/useInstallPrompt';
 type Phase = 'loading' | 'join' | 'ticket' | 'called' | 'left' | 'closed' | 'gone';
 
 export default function QueuePage() {
+  const { t } = useTranslation();
   const { queueId = '' } = useParams();
   const [authed, setAuthed] = useState(false);
   const [entryId, setEntryId] = useState<string | null>(null);
@@ -67,11 +69,11 @@ export default function QueuePage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) {
-      setError('Informe seu nome');
+      setError(t('errors.nameRequired'));
       return;
     }
     if (phone.trim() && !isValidPhone(phone.trim())) {
-      setError('Telefone inválido. Use o formato (00) 00000-0000');
+      setError(t('errors.phoneInvalid'));
       return;
     }
     setSubmitting(true);
@@ -80,7 +82,7 @@ export default function QueuePage() {
       const result = await joinQueue(queueId, name.trim(), phone.trim());
       setEntryId(result.entryId);
     } catch (err: any) {
-      setError(err?.message ?? 'Não foi possível entrar na fila');
+      setError(err?.message ?? t('errors.joinFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -95,7 +97,7 @@ export default function QueuePage() {
       setHasLeft(true);
       setConfirmLeave(false);
     } catch (err: any) {
-      setError(err?.message ?? 'Não foi possível sair da fila');
+      setError(err?.message ?? t('errors.leaveFailed'));
       setLeaving(false);
     }
   }
@@ -163,8 +165,8 @@ export default function QueuePage() {
     if (authFailed || failed) {
       return (
         <div className="center-col">
-          <h1 style={{ fontSize: 20, fontWeight: 700 }}>Não foi possível conectar</h1>
-          <p className="muted">Verifique sua conexão e recarregue a página.</p>
+          <h1 style={{ fontSize: 20, fontWeight: 700 }}>{t('queue.connectFailed')}</h1>
+          <p className="muted">{t('queue.connectFailedHint')}</p>
         </div>
       );
     }
@@ -178,8 +180,8 @@ export default function QueuePage() {
   if (phase === 'gone') {
     return (
       <div className="center-col">
-        <h1 style={{ fontSize: 20, fontWeight: 700 }}>Fila não encontrada</h1>
-        <p className="muted">Verifique o link ou escaneie o QR code novamente.</p>
+        <h1 style={{ fontSize: 20, fontWeight: 700 }}>{t('queue.notFound')}</h1>
+        <p className="muted">{t('queue.notFoundHint')}</p>
       </div>
     );
   }
@@ -188,8 +190,8 @@ export default function QueuePage() {
     return (
       <div className="center-col">
         <h1 style={{ fontSize: 20, fontWeight: 700 }}>{meta?.name}</h1>
-        <span className="badge badge-closed">Fechada</span>
-        <p className="muted">Esta fila não está recebendo novos participantes.</p>
+        <span className="badge badge-closed">{t('queue.closedBadge')}</span>
+        <p className="muted">{t('queue.closedHint')}</p>
       </div>
     );
   }
@@ -211,12 +213,12 @@ export default function QueuePage() {
         }}
       >
         <div style={{ fontSize: 72 }}>✓</div>
-        <h1 style={{ fontSize: 24, fontWeight: 700 }}>É a sua vez!</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 700 }}>{t('queue.yourTurn')}</h1>
         <p style={{ fontSize: 18, fontWeight: 600 }}>
-          Senha #{myEntry.ticket}
+          {t('queue.ticketNumber', { ticket: myEntry.ticket })}
         </p>
         <p style={{ fontSize: 14, opacity: 0.9 }}>
-          Dirija-se ao atendimento.
+          {t('queue.goToService')}
         </p>
       </div>
     );
@@ -225,8 +227,8 @@ export default function QueuePage() {
   if (phase === 'left') {
     return (
       <div className="center-col">
-        <h1 style={{ fontSize: 20, fontWeight: 700 }}>Você saiu da fila</h1>
-        <p className="muted">Obrigado por avisar.</p>
+        <h1 style={{ fontSize: 20, fontWeight: 700 }}>{t('queue.left')}</h1>
+        <p className="muted">{t('queue.leftHint')}</p>
       </div>
     );
   }
@@ -244,7 +246,7 @@ export default function QueuePage() {
                 letterSpacing: 1,
               }}
             >
-              SUA SENHA
+              {t('queue.yourTicket')}
             </p>
             <p style={{ fontSize: 48, fontWeight: 800, color: 'var(--primary)' }}>
               #{myEntry.ticket}
@@ -263,10 +265,10 @@ export default function QueuePage() {
               }}
             >
               <span style={{ fontSize: 14, color: 'var(--gray-dark)' }}>
-                Posição
+                {t('queue.position')}
               </span>
               <span style={{ fontSize: 14, fontWeight: 600 }}>
-                {position != null ? `${position}º` : '—'}
+                {position != null ? t('queue.positionValue', { position }) : '—'}
               </span>
             </div>
             <div
@@ -276,10 +278,12 @@ export default function QueuePage() {
               }}
             >
               <span style={{ fontSize: 14, color: 'var(--gray-dark)' }}>
-                Espera estimada
+                {t('queue.estimatedWait')}
               </span>
               <span style={{ fontSize: 14, fontWeight: 600 }}>
-                {estimatedWaitMin != null ? `~${estimatedWaitMin} min` : '—'}
+                {estimatedWaitMin != null
+                  ? t('queue.estimatedWaitValue', { minutes: estimatedWaitMin })
+                  : '—'}
               </span>
             </div>
           </div>
@@ -296,29 +300,29 @@ export default function QueuePage() {
           >
             <span style={{ fontSize: 20 }}>ℹ️</span>
             <p style={{ fontSize: 14, color: 'var(--gray-dark)' }}>
-              Mantenha esta página aberta. Você será avisado quando chegar sua vez.
+              {t('queue.keepOpen')}
             </p>
           </div>
 
           {(installPrompt.canInstall || installPrompt.hint) && (
-            <section className="install-banner" role="region" aria-label="Instalar o Qio">
+            <section className="install-banner" role="region" aria-label={t('queue.installAria')}>
               {installPrompt.canInstall ? (
                 <>
-                  <p>Instale o Qio para acompanhar sua senha com um toque.</p>
+                  <p>{t('queue.installText')}</p>
                   <div className="install-banner-actions">
                     <button
                       type="button"
                       className="btn btn-primary"
                       onClick={installPrompt.install}
                     >
-                      Instalar
+                      {t('queue.install')}
                     </button>
                     <button
                       type="button"
                       className="btn btn-secondary"
                       onClick={installPrompt.dismiss}
                     >
-                      Agora não
+                      {t('queue.notNow')}
                     </button>
                   </div>
                 </>
@@ -326,8 +330,8 @@ export default function QueuePage() {
                 <>
                   <p>
                     {installPrompt.hint === 'ios'
-                      ? 'No Safari, toque em Compartilhar › Adicionar à Tela de Início.'
-                      : 'No Chrome, toque em ⋮ › Instalar app para acompanhar sua senha com um toque.'}
+                      ? t('queue.installIos')
+                      : t('queue.installAndroid')}
                   </p>
                   <div className="install-banner-actions">
                     <button
@@ -335,7 +339,7 @@ export default function QueuePage() {
                       className="btn btn-secondary"
                       onClick={installPrompt.dismiss}
                     >
-                      Entendi
+                      {t('queue.gotIt')}
                     </button>
                   </div>
                 </>
@@ -352,7 +356,7 @@ export default function QueuePage() {
                   textAlign: 'center',
                 }}
               >
-                Tem certeza? Você perderá sua posição na fila.
+                {t('queue.confirmLeaveText')}
               </p>
               <button
                 type="button"
@@ -360,7 +364,7 @@ export default function QueuePage() {
                 disabled={leaving}
                 onClick={handleLeave}
               >
-                {leaving ? 'Saindo...' : 'Confirmar saída'}
+                {leaving ? t('queue.leaving') : t('queue.confirmLeave')}
               </button>
               <button
                 type="button"
@@ -368,7 +372,7 @@ export default function QueuePage() {
                 disabled={leaving}
                 onClick={() => setConfirmLeave(false)}
               >
-                Cancelar
+                {t('queue.cancel')}
               </button>
             </div>
           ) : (
@@ -377,7 +381,7 @@ export default function QueuePage() {
               className="btn btn-danger-ghost"
               onClick={() => setConfirmLeave(true)}
             >
-              Sair da fila
+              {t('queue.leave')}
             </button>
           )}
           {error && <p className="error-text">{error}</p>}
@@ -397,10 +401,10 @@ export default function QueuePage() {
             style={{ marginTop: 8 }}
           >
             {meta?.status === 'paused'
-              ? 'Pausada'
+              ? t('queue.statusPaused')
               : meta?.status === 'closed'
-                ? 'Fechada'
-                : 'Aberta'}
+                ? t('queue.statusClosed')
+                : t('queue.statusOpen')}
           </span>
         </div>
 
@@ -415,19 +419,19 @@ export default function QueuePage() {
           style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
         >
           <div className="field">
-            <label htmlFor="name">Nome *</label>
+            <label htmlFor="name">{t('queue.nameLabel')}</label>
             <input
               id="name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Seu nome"
+              placeholder={t('queue.namePlaceholder')}
               autoComplete="name"
               maxLength={60}
             />
           </div>
           <div className="field">
-            <label htmlFor="phone">Telefone</label>
+            <label htmlFor="phone">{t('queue.phoneLabel')}</label>
             <input
               id="phone"
               type="tel"
@@ -443,7 +447,7 @@ export default function QueuePage() {
             className="btn btn-primary"
             disabled={submitting || meta?.status !== 'open'}
           >
-            {submitting ? 'Entrando...' : 'Entrar na fila'}
+            {submitting ? t('queue.joining') : t('queue.join')}
           </button>
         </form>
       </div>

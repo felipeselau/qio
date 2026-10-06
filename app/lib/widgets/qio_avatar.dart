@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../l10n/app_localizations.dart';
 import '../services/account_format.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
@@ -18,7 +20,7 @@ class QioAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: 'Avatar: $name',
+      label: AppLocalizations.of(context).avatarLabel(name),
       image: true,
       child: Container(
         width: size,
