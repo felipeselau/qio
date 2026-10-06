@@ -1,6 +1,12 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../models/history_entry.dart';
+import '../services/history_export.dart';
 import '../services/history_metrics.dart';
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
@@ -8,9 +14,10 @@ import '../theme/qio_text_styles.dart';
 import '../widgets/qio_card.dart';
 
 class HistoryScreen extends StatefulWidget {
-  const HistoryScreen({super.key, required this.queueId});
+  const HistoryScreen({super.key, required this.queueId, this.queueName = ''});
 
   final String queueId;
+  final String queueName;
 
   @override
   State<HistoryScreen> createState() => _HistoryScreenState();
@@ -27,6 +34,54 @@ class _HistoryScreenState extends State<HistoryScreen> {
   late final Stream<List<HistoryEntry>> _stream;
   HistoryPeriod _period = HistoryPeriod.all;
   String? _result;
+  List<HistoryEntry> _filtered = const [];
+  bool _exporting = false;
+
+  String get _baseName => 'historico-${widget.queueId}';
+
+  Future<void> _export(Future<void> Function() action) async {
+    if (_exporting) return;
+    if (_filtered.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nada para exportar neste filtro.')),
+      );
+      return;
+    }
+    setState(() => _exporting = true);
+    try {
+      await action();
+    } on Exception {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Não foi possível exportar o histórico.'),
+          backgroundColor: QioColors.error,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  Future<void> _exportCsv() => _export(() async {
+    final bytes = Uint8List.fromList(utf8.encode(buildHistoryCsv(_filtered)));
+    final fileName = '$_baseName.csv';
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile.fromData(bytes, mimeType: 'text/csv', name: fileName)],
+        fileNameOverrides: [fileName],
+      ),
+    );
+  });
+
+  Future<void> _exportPdf() => _export(() async {
+    final bytes = await buildHistoryPdf(
+      queueName: widget.queueName,
+      entries: _filtered,
+      generatedAt: DateTime.now(),
+    );
+    await Printing.sharePdf(bytes: bytes, filename: '$_baseName.pdf');
+  });
 
   @override
   void initState() {
@@ -47,6 +102,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
             color: QioColors.textPrimary,
           ),
         ),
+        actions: [
+          PopupMenuButton<String>(
+            tooltip: 'Exportar',
+            icon: const Icon(Icons.file_download_outlined),
+            enabled: !_exporting,
+            onSelected: (v) => v == 'csv' ? _exportCsv() : _exportPdf(),
+            itemBuilder: (_) => const [
+              PopupMenuItem(value: 'csv', child: Text('Exportar CSV')),
+              PopupMenuItem(value: 'pdf', child: Text('Exportar PDF')),
+            ],
+          ),
+        ],
       ),
       body: StreamBuilder<List<HistoryEntry>>(
         stream: _stream,
@@ -83,6 +150,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             period: _period,
             now: DateTime.now(),
           );
+          _filtered = filtered;
           final metrics = computeHistoryMetrics(filtered);
           return ListView(
             padding: const EdgeInsets.all(16),

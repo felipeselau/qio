@@ -185,7 +185,10 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
               tooltip: 'Histórico',
               onPressed: () => Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (_) => HistoryScreen(queueId: widget.queueId),
+                  builder: (_) => HistoryScreen(
+                    queueId: widget.queueId,
+                    queueName: widget.queueName,
+                  ),
                 ),
               ),
             ),
