@@ -51,6 +51,7 @@ describe('Firestore rules', () => {
       await setDoc(doc(fs, 'queues', QUEUE), { ownerId: OWNER, name: 'Balcão', status: 'open' });
       await setDoc(doc(fs, 'queues', QUEUE, 'operators', OPERATOR), { uid: OPERATOR, queueId: QUEUE });
       await setDoc(doc(fs, 'queues', QUEUE, 'history', 'h1'), historyEntry(OWNER));
+      await setDoc(doc(fs, 'queues', QUEUE, 'feedback', 'h1'), { rating: 5, comment: '', uid: 'client', createdAt: 1 });
       await setDoc(doc(fs, 'operatorInvites', 'VALID1'), { queueId: QUEUE, ownerId: OWNER, expiresAt: hoursFromNow(24) });
       await setDoc(doc(fs, 'operatorInvites', 'EXPIR1'), { queueId: QUEUE, ownerId: OWNER, expiresAt: hoursFromNow(-1) });
       await setDoc(doc(fs, 'operatorInvites', 'OTHER1'), { queueId: 'q2', ownerId: OWNER, expiresAt: hoursFromNow(24) });
@@ -60,6 +61,33 @@ describe('Firestore rules', () => {
         code: 'VALID1',
         status: 'pending',
       });
+    });
+  });
+
+  describe('feedback', () => {
+    it('dono lê a lista de avaliações', async () => {
+      await assertSucceeds(getDocs(collection(db(OWNER), 'queues', QUEUE, 'feedback')));
+      await assertSucceeds(getDoc(doc(db(OWNER), 'queues', QUEUE, 'feedback', 'h1')));
+    });
+
+    it('operador e estranho não leem', async () => {
+      await assertFails(getDoc(doc(db(OPERATOR), 'queues', QUEUE, 'feedback', 'h1')));
+      await assertFails(getDocs(collection(db(STRANGER), 'queues', QUEUE, 'feedback')));
+    });
+
+    it('nenhum cliente escreve, nem o dono', async () => {
+      const data = { rating: 5, comment: '', uid: STRANGER, createdAt: 1 };
+      await assertFails(setDoc(doc(db(STRANGER), 'queues', QUEUE, 'feedback', 'h9'), data));
+      await assertFails(setDoc(doc(db(OWNER), 'queues', QUEUE, 'feedback', 'h9'), data));
+      await assertFails(updateDoc(doc(db(OWNER), 'queues', QUEUE, 'feedback', 'h1'), { rating: 1 }));
+    });
+
+    it('dono apaga avaliações (deleteQueue)', async () => {
+      await assertSucceeds(deleteDoc(doc(db(OWNER), 'queues', QUEUE, 'feedback', 'h1')));
+    });
+
+    it('estranho não apaga', async () => {
+      await assertFails(deleteDoc(doc(db(STRANGER), 'queues', QUEUE, 'feedback', 'h1')));
     });
   });
 

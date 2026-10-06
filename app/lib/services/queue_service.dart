@@ -6,6 +6,7 @@ import 'package:firebase_database/firebase_database.dart';
 import '../models/history_entry.dart';
 import '../models/queue.dart';
 import '../models/queue_entry.dart';
+import '../models/queue_feedback.dart';
 import 'mirror.dart';
 import 'operator_service.dart';
 
@@ -154,8 +155,16 @@ class QueueService {
         .doc(queueId)
         .collection('history')
         .get();
+    final feedbackSnap = await _firestore
+        .collection('queues')
+        .doc(queueId)
+        .collection('feedback')
+        .get();
     final batch = _firestore.batch();
     for (final doc in historySnap.docs) {
+      batch.delete(doc.reference);
+    }
+    for (final doc in feedbackSnap.docs) {
       batch.delete(doc.reference);
     }
     batch.delete(_firestore.collection('queues').doc(queueId));
@@ -199,6 +208,19 @@ class QueueService {
         .map(
           (snap) => snap.docs
               .map((d) => HistoryEntry.fromDoc(d.id, d.data()))
+              .toList(),
+        );
+  }
+
+  Stream<List<QueueFeedback>> watchFeedback(String queueId) {
+    return _firestore
+        .collection('queues')
+        .doc(queueId)
+        .collection('feedback')
+        .snapshots()
+        .map(
+          (snap) => snap.docs
+              .map((d) => QueueFeedback.fromDoc(d.id, d.data()))
               .toList(),
         );
   }

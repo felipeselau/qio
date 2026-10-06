@@ -181,6 +181,7 @@
   "leftPlural": "Abandonaron",
   "avgWait": "Espera promedio",
   "avgService": "Atención promedio",
+  "avgRating": "Calificación promedio",
   "resultLeft": "Abandonó",
   "waitSubtitle": "espera {duration}",
   "durationMinutes": "{minutes} min",
