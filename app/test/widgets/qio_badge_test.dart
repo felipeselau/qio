@@ -15,30 +15,32 @@ void main() {
     expect(find.text('Aberta'), findsOneWidget);
   });
 
-  testWidgets('open badge uses success color', (tester) async {
+  testWidgets('open badge uses accessible success text color', (tester) async {
     await tester.pumpWidget(
       wrap(const QioBadge(label: 'Aberta', status: QioBadgeStatus.open)),
     );
 
     final text = tester.widget<Text>(find.text('Aberta'));
-    expect(text.style?.color, QioColors.statusOpen);
+    expect(text.style?.color, QioColors.statusOpenText);
   });
 
-  testWidgets('paused badge uses warning color', (tester) async {
+  testWidgets('paused badge uses accessible warning text color', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       wrap(const QioBadge(label: 'Pausada', status: QioBadgeStatus.paused)),
     );
 
     final text = tester.widget<Text>(find.text('Pausada'));
-    expect(text.style?.color, QioColors.statusPaused);
+    expect(text.style?.color, QioColors.statusPausedText);
   });
 
-  testWidgets('closed badge uses error color', (tester) async {
+  testWidgets('closed badge uses accessible error text color', (tester) async {
     await tester.pumpWidget(
       wrap(const QioBadge(label: 'Fechada', status: QioBadgeStatus.closed)),
     );
 
     final text = tester.widget<Text>(find.text('Fechada'));
-    expect(text.style?.color, QioColors.statusClosed);
+    expect(text.style?.color, QioColors.statusClosedText);
   });
 }

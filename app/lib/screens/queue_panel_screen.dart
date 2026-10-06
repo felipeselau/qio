@@ -172,7 +172,9 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
           onPressed: () => Navigator.of(context).pop(),
           child: Text(
             '←',
-            style: QioTextStyles.heading3.copyWith(color: QioColors.primary),
+            style: QioTextStyles.heading3.copyWith(
+              color: QioColors.primaryText,
+            ),
           ),
         ),
         title: StreamBuilder<Queue>(
@@ -229,7 +231,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                     padding: const EdgeInsets.only(right: 12),
                     child: _StatusButton(
                       label: l10n.reopen,
-                      color: QioColors.primary,
+                      color: QioColors.primaryText,
                       onPressed: () => _updateStatus(QueueStatus.open),
                     ),
                   );
@@ -241,7 +243,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                       label: status == QueueStatus.paused
                           ? l10n.reopen
                           : l10n.pause,
-                      color: QioColors.warning,
+                      color: QioColors.statusPausedText,
                       onPressed: () => _updateStatus(
                         status == QueueStatus.paused
                             ? QueueStatus.open
@@ -251,7 +253,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                     const SizedBox(width: 8),
                     _StatusButton(
                       label: l10n.close,
-                      color: QioColors.error,
+                      color: QioColors.statusClosedText,
                       onPressed: () => _updateStatus(QueueStatus.closed),
                     ),
                     const SizedBox(width: 12),

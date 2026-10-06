@@ -8,7 +8,6 @@ import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
 import '../widgets/qio_button.dart';
 import '../widgets/qio_input.dart';
-import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -49,7 +48,6 @@ class _LoginScreenState extends State<LoginScreen> {
           _passwordCtrl.text,
         );
       }
-      if (mounted) _goHome();
     } on FirebaseAuthException catch (e) {
       if (mounted) _showAuthError(e.code);
     } on Exception {
@@ -63,7 +61,6 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
     try {
       await AuthService.instance.signInWithGoogle();
-      if (mounted) _goHome();
     } on FirebaseAuthException catch (e) {
       if (mounted) _showAuthError(e.code);
     } on Exception {
@@ -71,12 +68,6 @@ class _LoginScreenState extends State<LoginScreen> {
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  void _goHome() {
-    Navigator.of(
-      context,
-    ).pushReplacement(MaterialPageRoute(builder: (_) => const HomeScreen()));
   }
 
   void _showAuthError(String code) {
@@ -200,7 +191,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       _isSignUp ? l10n.haveAccountSignIn : l10n.createAccount,
                       style: QioTextStyles.body.copyWith(
                         fontSize: 14,
-                        color: QioColors.primary,
+                        color: QioColors.primaryText,
                       ),
                     ),
                   ),
