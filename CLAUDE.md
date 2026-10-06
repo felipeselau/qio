@@ -91,6 +91,18 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
   APK v1.1.0 (dono/operador) continua compatível com as rules novas. Web antigo em
   cache falha ao entrar na fila até recarregar.
 
+## Limite de fila e mensagem de status
+
+- `queues/{id}/meta/maxWaiting` (0 = sem limite, 1–1000), `statusMessage` (≤120) e
+  `resumeAt` (ms) são escritos só pelo dono e espelham o doc do Firestore. A
+  `joinQueue` conta entries `waiting` e recusa com `resource-exhausted` +
+  `details.reason == 'queue-full'` (lógica em `functions/src/capacity.js`); quem
+  já tem entry ativa recebe a própria. Joins simultâneos podem passar do limite
+  em uma ou duas vagas (sem transação de contagem). O web também bloqueia o botão
+  usando `public/` (`useQueue.full`).
+- Pausar/fechar no app abre um diálogo com mensagem e horário de retorno; reabrir
+  limpa os dois. Deploy: functions (`joinQueue`) antes das rules do RTDB.
+
 ## Estimativa de espera automática
 
 - `queues/{id}/meta/avgServiceMinAuto` (RTDB) é escrito só pela function

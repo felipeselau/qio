@@ -816,4 +816,59 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get discard => 'Descartar';
+
+  @override
+  String get maxWaitingLabel => 'Máximo de personas esperando (opcional)';
+
+  @override
+  String get maxWaitingHint => 'Sin límite';
+
+  @override
+  String get maxWaitingInvalid => 'Usa un número de 1 a 1000';
+
+  @override
+  String get queueLimitTitle => 'Límite de la fila';
+
+  @override
+  String get queueLimitNone => 'Sin límite de espera';
+
+  @override
+  String queueLimitValue(int max) {
+    return 'Hasta $max personas esperando';
+  }
+
+  @override
+  String get save => 'Guardar';
+
+  @override
+  String get pauseQueueTitle => 'Pausar la fila';
+
+  @override
+  String get closeQueueTitle => 'Cerrar la fila';
+
+  @override
+  String get statusMessageLabel => 'Mensaje para los clientes (opcional)';
+
+  @override
+  String get statusSuggestionBack10 => 'Vuelvo en 10 minutos';
+
+  @override
+  String get statusSuggestionBreak => 'Descanso corto';
+
+  @override
+  String get statusSuggestionClosedToday => 'Fila cerrada por hoy';
+
+  @override
+  String get resumeAtLabel => 'Regreso previsto';
+
+  @override
+  String get resumeAtNone => 'Sin previsión';
+
+  @override
+  String get clear => 'Limpiar';
+
+  @override
+  String waitingCounter(int count, int max) {
+    return '$count/$max esperando';
+  }
 }

@@ -53,7 +53,12 @@
     "feedbackSending": "Enviando...",
     "feedbackSkip": "Ahora no",
     "feedbackThanks": "¡Gracias por tu opinión!",
-    "feedbackThanksHint": "Tu opinión ayuda a mejorar la atención."
+    "feedbackThanksHint": "Tu opinión ayuda a mejorar la atención.",
+    "fullTitle": "La fila está llena por ahora",
+    "fullHint": "Inténtalo de nuevo en unos minutos.",
+    "pausedTitle": "Fila en pausa",
+    "closedTitle": "Fila cerrada",
+    "returnAt": "Regreso previsto: {{time}}"
   },
   "errors": {
     "nameRequired": "Ingresa tu nombre",
@@ -66,7 +71,8 @@
     "failedPrecondition": "Fila cerrada o en pausa.",
     "invalidArgument": "Datos inválidos. Revisa nombre y teléfono.",
     "notFound": "Fila no encontrada.",
-    "feedbackFailed": "No se pudo enviar tu calificación. Inténtalo de nuevo."
+    "feedbackFailed": "No se pudo enviar tu calificación. Inténtalo de nuevo.",
+    "queueFull": "La fila está llena por ahora. Inténtalo de nuevo en unos minutos."
   },
   "push": {
     "called": "Tu turno fue llamado — dirígete a la atención."

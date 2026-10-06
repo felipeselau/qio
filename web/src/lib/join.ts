@@ -30,7 +30,11 @@ export async function joinQueue(
     >(functions, 'joinQueue');
     result = (await call({ queueId, name, phone })).data;
   } catch (err) {
-    const code = (err as { code?: string } | null)?.code ?? '';
+    const e = err as { code?: string; details?: { reason?: string } } | null;
+    const code = e?.code ?? '';
+    if (code === 'functions/resource-exhausted' && e?.details?.reason === 'queue-full') {
+      throw new Error(i18n.t('errors.queueFull'));
+    }
     throw new Error(i18n.t(JOIN_ERROR_KEYS[code] ?? 'errors.joinFailed'));
   }
 

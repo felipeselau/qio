@@ -53,7 +53,12 @@
     "feedbackSending": "Sending...",
     "feedbackSkip": "Not now",
     "feedbackThanks": "Thanks for your feedback!",
-    "feedbackThanksHint": "Your opinion helps improve the service."
+    "feedbackThanksHint": "Your opinion helps improve the service.",
+    "fullTitle": "The queue is full right now",
+    "fullHint": "Please try again in a few minutes.",
+    "pausedTitle": "Queue paused",
+    "closedTitle": "Queue closed",
+    "returnAt": "Expected back at {{time}}"
   },
   "errors": {
     "nameRequired": "Enter your name",
@@ -66,7 +71,8 @@
     "failedPrecondition": "Queue is closed or paused.",
     "invalidArgument": "Invalid data. Check your name and phone.",
     "notFound": "Queue not found.",
-    "feedbackFailed": "Could not send your rating. Please try again."
+    "feedbackFailed": "Could not send your rating. Please try again.",
+    "queueFull": "The queue is full right now. Please try again in a few minutes."
   },
   "push": {
     "called": "Your ticket was called — please go to the service desk."

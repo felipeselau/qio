@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'status_message_dialog.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/queue.dart';
 import '../../services/queue_service.dart';
@@ -16,7 +17,16 @@ class QueueStatusActions extends StatelessWidget {
 
   final String queueId;
   final String queueName;
-  final void Function(QueueStatus) onStatus;
+  final void Function(QueueStatus, StatusChange?) onStatus;
+
+  Future<void> _change(BuildContext context, QueueStatus target) async {
+    if (target == QueueStatus.open) {
+      onStatus(target, null);
+      return;
+    }
+    final change = await showStatusMessageDialog(context, target);
+    if (change != null) onStatus(target, change);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +55,7 @@ class QueueStatusActions extends StatelessWidget {
                 child: StatusButton(
                   label: l10n.reopen,
                   color: QioColors.primaryText,
-                  onPressed: () => onStatus(QueueStatus.open),
+                  onPressed: () => onStatus(QueueStatus.open, null),
                 ),
               );
             }
@@ -57,7 +67,8 @@ class QueueStatusActions extends StatelessWidget {
                       ? l10n.reopen
                       : l10n.pause,
                   color: QioColors.statusPausedText,
-                  onPressed: () => onStatus(
+                  onPressed: () => _change(
+                    context,
                     status == QueueStatus.paused
                         ? QueueStatus.open
                         : QueueStatus.paused,
@@ -67,7 +78,7 @@ class QueueStatusActions extends StatelessWidget {
                 StatusButton(
                   label: l10n.close,
                   color: QioColors.statusClosedText,
-                  onPressed: () => onStatus(QueueStatus.closed),
+                  onPressed: () => _change(context, QueueStatus.closed),
                 ),
                 const SizedBox(width: 12),
               ],

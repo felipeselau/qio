@@ -13,6 +13,7 @@ const {
   isRateLimited,
 } = require('./src/join');
 const { historyFromLeftEntry } = require('./src/history');
+const { isQueueFull } = require('./src/capacity');
 const {
   normalizeRating,
   normalizeComment,
@@ -154,6 +155,19 @@ exports.joinQueue = onCall(
       );
       if (samePhone.length > 0) {
         throw new HttpsError('already-exists', 'Este telefone já está na fila.');
+      }
+    }
+
+    const maxWaiting = metaSnap.child('maxWaiting').val();
+    if (maxWaiting) {
+      const waitingSnap = await entriesRef
+        .orderByChild('status')
+        .equalTo('waiting')
+        .once('value');
+      if (isQueueFull(maxWaiting, waitingSnap.numChildren())) {
+        throw new HttpsError('resource-exhausted', 'Fila lotada no momento.', {
+          reason: 'queue-full',
+        });
       }
     }
 

@@ -10,6 +10,7 @@ import '../../widgets/qio_empty_state.dart';
 import '../../widgets/qio_responsive_body.dart';
 import '../../widgets/queue_panel/current_called_card.dart';
 import '../../widgets/queue_panel/waiting_tile.dart';
+import '../../widgets/queue_panel/queue_limit_tile.dart';
 import '../../widgets/queue_panel/queue_qr_card.dart';
 import '../../widgets/queue_panel/operators_tile.dart';
 import 'animated_entry_list.dart';
@@ -44,6 +45,7 @@ class QueuePanelBody extends StatelessWidget {
         stream: QueueService.instance.watchQueue(queueId),
         builder: (context, queueSnap) {
           final status = queueSnap.data?.status ?? QueueStatus.open;
+          final maxWaiting = queueSnap.data?.maxWaiting ?? 0;
           if (status == QueueStatus.closed) {
             return ListView(
               padding: const EdgeInsets.all(16),
@@ -52,6 +54,8 @@ class QueuePanelBody extends StatelessWidget {
                 const SizedBox(height: 16),
                 if (isOwner) ...[
                   OperatorsTile(queueId: queueId),
+                  const SizedBox(height: 16),
+                  QueueLimitTile(queueId: queueId, maxWaiting: maxWaiting),
                   const SizedBox(height: 16),
                 ],
                 QioCard(
@@ -110,6 +114,8 @@ class QueuePanelBody extends StatelessWidget {
                 if (isOwner) ...[
                   OperatorsTile(queueId: queueId),
                   const SizedBox(height: 16),
+                  QueueLimitTile(queueId: queueId, maxWaiting: maxWaiting),
+                  const SizedBox(height: 16),
                 ],
               ];
               final queueSection = <Widget>[
@@ -165,13 +171,24 @@ class QueuePanelBody extends StatelessWidget {
                   const SizedBox(height: 16),
                 ],
                 if (waiting.isNotEmpty) ...[
-                  Text(
-                    l10n.upNext,
-                    style: QioTextStyles.label.copyWith(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: QioColors.gray700,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          l10n.upNext,
+                          style: QioTextStyles.label.copyWith(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: QioColors.gray700,
+                          ),
+                        ),
+                      ),
+                      if (maxWaiting > 0)
+                        Text(
+                          l10n.waitingCounter(waiting.length, maxWaiting),
+                          style: QioTextStyles.caption,
+                        ),
+                    ],
                   ),
                   const SizedBox(height: 12),
                   AnimatedEntryList(

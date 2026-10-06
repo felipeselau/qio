@@ -17,6 +17,7 @@ import '../widgets/onboarding_tour.dart';
 import '../widgets/qio_badge.dart';
 import '../widgets/queue_panel/queue_action_bar.dart';
 import '../widgets/queue_panel/queue_status_actions.dart';
+import '../widgets/queue_panel/status_message_dialog.dart';
 import '../widgets/queue_panel/delete_queue_dialog.dart';
 import '../widgets/queue_panel/queue_panel_body.dart';
 
@@ -263,9 +264,14 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
     }
   }
 
-  Future<void> _updateStatus(QueueStatus status) async {
+  Future<void> _updateStatus(QueueStatus status, StatusChange? change) async {
     try {
-      await QueueService.instance.updateQueueStatus(widget.queueId, status);
+      await QueueService.instance.updateQueueStatus(
+        widget.queueId,
+        status,
+        message: change?.message,
+        resumeAt: change?.resumeAt,
+      );
     } on Exception catch (e) {
       _showError(e);
     }

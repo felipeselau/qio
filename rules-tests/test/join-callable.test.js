@@ -193,6 +193,93 @@ describe('callable joinQueue (emulador)', () => {
 });
 
 
+describe('callable joinQueue com limite (emulador)', () => {
+  let env;
+  let apps = [];
+  const adminDb = async (fn) => {
+    let result;
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      result = await fn(ctx.database());
+    });
+    return result;
+  };
+
+  async function newClient() {
+    const app = initializeApp({ projectId: 'demo-qio', apiKey: 'fake-key' }, `cap-${apps.length}`);
+    apps.push(app);
+    const auth = getAuth(app);
+    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+    await signInAnonymously(auth);
+    const functions = getFunctions(app);
+    connectFunctionsEmulator(functions, FUNCTIONS_HOST, Number(FUNCTIONS_PORT));
+    const call = httpsCallable(functions, 'joinQueue');
+    return async (data) => (await call(data)).data;
+  }
+
+  before(async () => {
+    env = await setupEnv();
+  });
+
+  after(async () => {
+    await Promise.all(apps.map((a) => deleteApp(a)));
+    await env.cleanup();
+  });
+
+  beforeEach(async () => {
+    await env.clearDatabase();
+    await adminDb((db) =>
+      set(ref(db), {
+        owners: { [QUEUE]: { ownerUid: 'owner' } },
+        queues: {
+          [QUEUE]: { meta: { name: 'Balcão', status: 'open', serving: 0, updatedAt: 0, maxWaiting: 2 } },
+        },
+      }),
+    );
+  });
+
+  it('recusa com queue-full quando a fila atinge o limite', async () => {
+    const a = await newClient();
+    const b = await newClient();
+    const c = await newClient();
+    await a({ queueId: QUEUE, name: 'Ana', phone: '' });
+    await b({ queueId: QUEUE, name: 'Bia', phone: '' });
+    await assert.rejects(c({ queueId: QUEUE, name: 'Caio', phone: '' }), (err) => {
+      assert.equal(err.code, 'functions/resource-exhausted');
+      assert.equal(err.details?.reason, 'queue-full');
+      return true;
+    });
+  });
+
+  it('quem já está na fila continua recebendo a própria entrada', async () => {
+    const a = await newClient();
+    const b = await newClient();
+    await a({ queueId: QUEUE, name: 'Ana', phone: '' });
+    await b({ queueId: QUEUE, name: 'Bia', phone: '' });
+    const again = await a({ queueId: QUEUE, name: 'Ana', phone: '' });
+    assert.equal(again.existing, true);
+  });
+
+  it('libera vaga quando alguém sai', async () => {
+    const a = await newClient();
+    const b = await newClient();
+    const c = await newClient();
+    const first = await a({ queueId: QUEUE, name: 'Ana', phone: '' });
+    await b({ queueId: QUEUE, name: 'Bia', phone: '' });
+    await adminDb((db) => update(ref(db, `queues/${QUEUE}/entries/${first.entryId}`), { status: 'served' }));
+    const res = await c({ queueId: QUEUE, name: 'Caio', phone: '' });
+    assert.equal(res.existing, false);
+  });
+
+  it('sem limite configurado não recusa', async () => {
+    await adminDb((db) => set(ref(db, `queues/${QUEUE}/meta/maxWaiting`), 0));
+    const clients = await Promise.all([newClient(), newClient(), newClient()]);
+    for (const [i, c] of clients.entries()) {
+      await c({ queueId: QUEUE, name: `P${i}`, phone: '' });
+    }
+  });
+});
+
+
 describe('callable submitFeedback (emulador)', () => {
   let env;
   let apps = [];

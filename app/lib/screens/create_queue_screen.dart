@@ -6,6 +6,7 @@ import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
 import '../widgets/qio_button.dart';
 import '../widgets/qio_input.dart';
+import '../widgets/queue_panel/queue_limit_tile.dart';
 import '../widgets/qio_responsive_body.dart';
 import 'queue_panel_screen.dart';
 
@@ -21,17 +22,19 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
   final _nameCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
   final _timeCtrl = TextEditingController();
+  final _limitCtrl = TextEditingController();
   bool _isLoading = false;
 
   bool get _dirty =>
       _nameCtrl.text.trim().isNotEmpty ||
       _descCtrl.text.trim().isNotEmpty ||
-      _timeCtrl.text.trim().isNotEmpty;
+      _timeCtrl.text.trim().isNotEmpty ||
+      _limitCtrl.text.trim().isNotEmpty;
 
   @override
   void initState() {
     super.initState();
-    for (final c in [_nameCtrl, _descCtrl, _timeCtrl]) {
+    for (final c in [_nameCtrl, _descCtrl, _timeCtrl, _limitCtrl]) {
       c.addListener(() {
         if (mounted) setState(() {});
       });
@@ -65,6 +68,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
     _nameCtrl.dispose();
     _descCtrl.dispose();
     _timeCtrl.dispose();
+    _limitCtrl.dispose();
     super.dispose();
   }
 
@@ -78,6 +82,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
             ? null
             : _descCtrl.text.trim(),
         avgServiceMin: int.tryParse(_timeCtrl.text.trim()) ?? 15,
+        maxWaiting: int.tryParse(_limitCtrl.text.trim()) ?? 0,
       );
       if (mounted) {
         Navigator.of(context).pushReplacement(
@@ -180,6 +185,14 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
                         if (n == null || n <= 0) return l10n.invalidNumber;
                         return null;
                       },
+                    ),
+                    const SizedBox(height: 16),
+                    QioInput(
+                      label: l10n.maxWaitingLabel,
+                      hint: l10n.maxWaitingHint,
+                      controller: _limitCtrl,
+                      keyboardType: TextInputType.number,
+                      validator: (v) => validateMaxWaiting(v, l10n),
                     ),
                     const SizedBox(height: 32),
                     QioButton(
