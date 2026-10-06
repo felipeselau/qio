@@ -254,6 +254,7 @@ export default function QueuePage() {
       <div
         style={{
           background: 'var(--secondary)',
+          flex: 1,
           minHeight: '100%',
           display: 'flex',
           flexDirection: 'column',

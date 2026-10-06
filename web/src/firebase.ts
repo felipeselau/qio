@@ -37,7 +37,7 @@ export const functions = getFunctions(app);
 if (import.meta.env.VITE_USE_EMULATORS === 'true') {
   connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
   connectDatabaseEmulator(db, 'localhost', 9000);
-  connectFunctionsEmulator(functions, 'localhost', 5001);
+  connectFunctionsEmulator(functions, 'localhost', Number(import.meta.env.VITE_FUNCTIONS_EMULATOR_PORT ?? 5001));
 }
 
 // getMessaging() lança sincronamente em navegadores sem suporte a FCM

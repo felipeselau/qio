@@ -114,6 +114,9 @@ export function useQueue(
           calledAt: val.calledAt,
         });
       }
+    }, () => {
+      setMyEntryResolved(true);
+      setMyEntry(null);
     });
     return unsub;
   }, [queueId, entryId, ready]);

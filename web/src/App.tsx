@@ -22,26 +22,28 @@ export default function App() {
     : 'pt';
   return (
     <div className="app-shell">
-      <button
-        type="button"
-        className="theme-toggle"
-        onClick={toggle}
-        aria-label={theme === 'dark' ? t('app.themeLight') : t('app.themeDark')}
-      >
-        {theme === 'dark' ? '☀️' : '🌙'}
-      </button>
-      <select
-        className="lang-select"
-        value={current}
-        aria-label={t('app.language')}
-        onChange={(e) => setLanguage(e.target.value as Language)}
-      >
-        {LANGUAGES.map((l) => (
-          <option key={l} value={l}>
-            {LANGUAGE_LABELS[l]}
-          </option>
-        ))}
-      </select>
+      <div className="top-bar">
+        <button
+          type="button"
+          className="theme-toggle"
+          onClick={toggle}
+          aria-label={theme === 'dark' ? t('app.themeLight') : t('app.themeDark')}
+        >
+          {theme === 'dark' ? '☀️' : '🌙'}
+        </button>
+        <select
+          className="lang-select"
+          value={current}
+          aria-label={t('app.language')}
+          onChange={(e) => setLanguage(e.target.value as Language)}
+        >
+          {LANGUAGES.map((l) => (
+            <option key={l} value={l}>
+              {LANGUAGE_LABELS[l]}
+            </option>
+          ))}
+        </select>
+      </div>
       <BrowserRouter>
         <Routes>
           <Route path="/q/:queueId" element={<QueuePage />} />
