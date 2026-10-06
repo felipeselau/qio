@@ -14,6 +14,7 @@ const {
 } = require('./src/join');
 const { historyFromLeftEntry } = require('./src/history');
 const { isQueueFull } = require('./src/capacity');
+const { publicTicketFor, shouldRenotify } = require('./src/ticket');
 const {
   normalizeRating,
   normalizeComment,
@@ -35,9 +36,7 @@ exports.onEntryCalled = onValueWritten(
     const after = event.data.after.val();
     const before = event.data.before.val();
 
-    const wasCalled = before?.status === 'called';
-    const isCalled = after?.status === 'called';
-    if (wasCalled || !isCalled) {
+    if (!shouldRenotify(before, after)) {
       return null;
     }
 
@@ -270,7 +269,7 @@ exports.syncPublicTicket = onValueWritten(
         await publicRef.remove();
       }
     } else if (after && ACTIVE_STATUSES.includes(after.status)) {
-      await publicRef.set({ ticket: after.ticket, status: after.status });
+      await publicRef.set(publicTicketFor(after));
     } else {
       await publicRef.remove();
     }

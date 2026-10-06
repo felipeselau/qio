@@ -266,5 +266,15 @@
   "resumeAtNone": "No estimate",
   "clear": "Clear",
   "waitingCounter": "{count}/{max} waiting",
-  "@waitingCounter": {"placeholders": {"count": {"type": "int"}, "max": {"type": "int"}}}
+  "@waitingCounter": {"placeholders": {"count": {"type": "int"}, "max": {"type": "int"}}},
+  "callAgain": "Call again",
+  "callNow": "Call now",
+  "moveToEnd": "Move to the end",
+  "moreActions": "More actions",
+  "calledTimes": "Called {count}x",
+  "@calledTimes": {"placeholders": {"count": {"type": "int"}}},
+  "callResent": "Call sent again",
+  "movedToEnd": "{name} moved to the end of the queue",
+  "@movedToEnd": {"placeholders": {"name": {"type": "String"}}},
+  "entryUnavailable": "This person is no longer waiting"
 }

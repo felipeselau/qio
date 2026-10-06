@@ -164,6 +164,12 @@ describe('Firestore rules', () => {
       await assertFails(setDoc(doc(db(OPERATOR), 'queues', QUEUE, 'history', 'h1'), historyEntry(OPERATOR)));
     });
 
+    it('operador cria registro com recalls e skips', async () => {
+      await assertSucceeds(
+        setDoc(doc(db(OPERATOR), 'queues', QUEUE, 'history', 'h3'), { ...historyEntry(OPERATOR), recalls: 2, skips: 1 }),
+      );
+    });
+
     it('operador não lê o histórico', async () => {
       await assertFails(getDoc(doc(db(OPERATOR), 'queues', QUEUE, 'history', 'h1')));
       await assertFails(getDocs(collection(db(OPERATOR), 'queues', QUEUE, 'history')));

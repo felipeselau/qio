@@ -6,10 +6,16 @@ import '../../theme/qio_text_styles.dart';
 import '../../widgets/qio_card.dart';
 
 class CurrentCalledCard extends StatelessWidget {
-  const CurrentCalledCard({super.key, this.entry, required this.queueId});
+  const CurrentCalledCard({
+    super.key,
+    this.entry,
+    required this.queueId,
+    this.onRecall,
+  });
 
   final QueueEntry? entry;
   final String queueId;
+  final VoidCallback? onRecall;
 
   @override
   Widget build(BuildContext context) {
@@ -73,6 +79,27 @@ class CurrentCalledCard extends StatelessWidget {
               color: Colors.white,
             ),
           ),
+          if (e.recalls > 0) ...[
+            const SizedBox(height: 4),
+            Text(
+              l10n.calledTimes(e.recalls + 1),
+              style: QioTextStyles.caption.copyWith(
+                color: Colors.white.withValues(alpha: 0.85),
+              ),
+            ),
+          ],
+          if (onRecall != null) ...[
+            const SizedBox(height: 16),
+            OutlinedButton.icon(
+              onPressed: onRecall,
+              icon: const Icon(Icons.campaign_outlined),
+              label: Text(l10n.callAgain),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white,
+                side: const BorderSide(color: Colors.white70),
+              ),
+            ),
+          ],
         ],
       ),
     );

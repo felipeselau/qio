@@ -25,6 +25,9 @@ class QueuePanelBody extends StatelessWidget {
     required this.isMine,
     required this.onServed,
     required this.onNoShow,
+    required this.onCall,
+    required this.onMoveToEnd,
+    required this.onRecall,
   });
 
   final String queueId;
@@ -34,6 +37,9 @@ class QueuePanelBody extends StatelessWidget {
   final bool Function(QueueEntry) isMine;
   final void Function(QueueEntry) onServed;
   final void Function(QueueEntry) onNoShow;
+  final void Function(QueueEntry) onCall;
+  final void Function(QueueEntry) onMoveToEnd;
+  final void Function(QueueEntry) onRecall;
 
   @override
   Widget build(BuildContext context) {
@@ -131,6 +137,7 @@ class QueuePanelBody extends StatelessWidget {
                     key: ValueKey(current?.id ?? 'none'),
                     entry: current,
                     queueId: queueId,
+                    onRecall: current == null ? null : () => onRecall(current),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -193,7 +200,24 @@ class QueuePanelBody extends StatelessWidget {
                   const SizedBox(height: 12),
                   AnimatedEntryList(
                     entries: waiting,
-                    itemBuilder: (context, e) => WaitingTile(entry: e),
+                    itemBuilder: (context, e) => WaitingTile(
+                      entry: e,
+                      trailing: PopupMenuButton<String>(
+                        tooltip: l10n.moreActions,
+                        onSelected: (v) =>
+                            v == 'call' ? onCall(e) : onMoveToEnd(e),
+                        itemBuilder: (_) => [
+                          PopupMenuItem(
+                            value: 'call',
+                            child: Text(l10n.callNow),
+                          ),
+                          PopupMenuItem(
+                            value: 'move',
+                            child: Text(l10n.moveToEnd),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ] else
                   QioCard(

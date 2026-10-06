@@ -223,7 +223,7 @@ class QueueService {
               e.key,
               e.value as Map<dynamic, dynamic>,
             );
-          }).toList()..sort((a, b) => a.ticket.compareTo(b.ticket));
+          }).toList()..sort(QueueEntry.compareInQueue);
         });
   }
 
@@ -298,7 +298,7 @@ class QueueService {
 
     final candidates = map.entries.map((e) {
       return QueueEntry.fromSnapshot(e.key, e.value as Map<dynamic, dynamic>);
-    }).toList()..sort((a, b) => a.ticket.compareTo(b.ticket));
+    }).toList()..sort(QueueEntry.compareInQueue);
 
     for (final candidate in candidates) {
       final claimed = await _claimEntry(entriesRef.child(candidate.id));
@@ -307,6 +307,32 @@ class QueueService {
       return claimed;
     }
     return null;
+  }
+
+  Future<QueueEntry?> callEntry(String queueId, QueueEntry entry) async {
+    await _ensureOwnerMirrorIfOwner(queueId);
+    final claimed = await _claimEntry(
+      _rtdb.ref('queues/$queueId/entries/${entry.id}'),
+    );
+    if (claimed == null) return null;
+    await _advanceServing(_rtdb.ref('queues/$queueId/meta'), claimed.ticket);
+    return claimed;
+  }
+
+  Future<void> recallEntry(String queueId, QueueEntry entry) async {
+    await _ensureOwnerMirrorIfOwner(queueId);
+    await _rtdb.ref('queues/$queueId/entries/${entry.id}').update({
+      'recalledAt': ServerValue.timestamp,
+      'recalls': ServerValue.increment(1),
+    });
+  }
+
+  Future<void> moveEntryToEnd(String queueId, QueueEntry entry) async {
+    await _ensureOwnerMirrorIfOwner(queueId);
+    await _rtdb.ref('queues/$queueId/entries/${entry.id}').update({
+      'order': ServerValue.timestamp,
+      'skips': ServerValue.increment(1),
+    });
   }
 
   Future<void> _advanceServing(DatabaseReference metaRef, int ticket) async {
@@ -388,6 +414,8 @@ class QueueService {
             'calledBy': entry.operatorId,
             'operatorId': _uid,
             'finishedAt': FieldValue.serverTimestamp(),
+            if (entry.recalls > 0) 'recalls': entry.recalls,
+            if (entry.skips > 0) 'skips': entry.skips,
           });
     } on FirebaseException catch (e) {
       if (e.code != 'permission-denied') rethrow;

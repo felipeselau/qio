@@ -103,6 +103,20 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
 - Pausar/fechar no app abre um diálogo com mensagem e horário de retorno; reabrir
   limpa os dois. Deploy: functions (`joinQueue`) antes das rules do RTDB.
 
+## Ordem da fila, chamar de novo e mover
+
+- A ordem de espera é `(order ?? joinedAt, ticket)`. "Mover para o fim" grava
+  `entries/{id}/order = now` e `skips++` (a senha não muda). `public/{id}` agora é
+  `{ticket, status, order}` (`functions/src/ticket.js`); o web calcula a posição
+  com `positionInQueue` e cai para a comparação por senha se `order` faltar.
+- "Chamar de novo" grava `recalledAt = now` e `recalls++`; `onEntryCalled`
+  reenvia o push quando `recalledAt` muda (`shouldRenotify`) e o web repete
+  som/vibração. "Chamar agora" reaproveita `_claimEntry`.
+- Só dono/operador escrevem `order/recalls/skips/recalledAt` (o cliente tem esses
+  campos na lista de imutáveis das rules). `_archiveEntry` só envia `recalls` e
+  `skips` quando > 0 (permission-denied no history é engolido: faça o deploy das
+  rules do Firestore antes de distribuir o APK novo).
+
 ## Estimativa de espera automática
 
 - `queues/{id}/meta/avgServiceMinAuto` (RTDB) é escrito só pela function

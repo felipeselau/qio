@@ -113,6 +113,39 @@ describe('RTDB rules', () => {
   });
 
   describe('entries', () => {
+    it('operador e dono gravam order, recalls, skips e recalledAt', async () => {
+      for (const uid of [OPERATOR, OWNER]) {
+        await assertSucceeds(
+          update(ref(rtdb(uid), path('entries/e1')), {
+            order: 1790000000000,
+            skips: 1,
+            recalls: 2,
+            recalledAt: 1790000000500,
+          }),
+        );
+      }
+    });
+
+    it('rejeita recalls/skips negativos ou fracionários e order não numérico', async () => {
+      await assertFails(update(ref(rtdb(OPERATOR), path('entries/e1')), { recalls: -1 }));
+      await assertFails(update(ref(rtdb(OPERATOR), path('entries/e1')), { skips: 1.5 }));
+      await assertFails(update(ref(rtdb(OPERATOR), path('entries/e1')), { order: 'x' }));
+    });
+
+    it('cliente não altera a própria posição nem os contadores', async () => {
+      for (const patch of [{ order: 1 }, { skips: 0 }, { recalls: 0 }, { recalledAt: 5 }]) {
+        await assertFails(update(ref(rtdb('client1'), path('entries/e1')), patch));
+      }
+    });
+
+    it('cliente ainda pode sair da fila (status left)', async () => {
+      await assertSucceeds(update(ref(rtdb('client1'), path('entries/e1')), { status: 'left' }));
+    });
+
+    it('campo desconhecido continua rejeitado', async () => {
+      await assertFails(update(ref(rtdb(OPERATOR), path('entries/e1')), { vip: true }));
+    });
+
     it('operador chama a entry', async () => {
       await assertSucceeds(
         update(ref(rtdb(OPERATOR), path('entries/e1')), { status: 'called', operatorId: OPERATOR }),

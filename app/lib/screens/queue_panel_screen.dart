@@ -226,6 +226,9 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
           isMine: _isMine,
           onServed: _markServed,
           onNoShow: _markNoShow,
+          onCall: _callEntry,
+          onMoveToEnd: _moveToEnd,
+          onRecall: _recall,
         ),
         bottomNavigationBar: QueueActionBar(
           queueId: widget.queueId,
@@ -262,6 +265,49 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
     } finally {
       if (mounted) setState(() => _actionLoading = false);
     }
+  }
+
+  Future<void> _callEntry(QueueEntry entry) async {
+    try {
+      final called = await QueueService.instance.callEntry(
+        widget.queueId,
+        entry,
+      );
+      Haptics.instance.medium();
+      if (called == null && mounted) {
+        _notify(AppLocalizations.of(context).entryUnavailable);
+      }
+    } on Exception catch (e) {
+      _showError(e);
+    }
+  }
+
+  Future<void> _moveToEnd(QueueEntry entry) async {
+    try {
+      await QueueService.instance.moveEntryToEnd(widget.queueId, entry);
+      Haptics.instance.light();
+      if (mounted) {
+        _notify(AppLocalizations.of(context).movedToEnd(entry.name));
+      }
+    } on Exception catch (e) {
+      _showError(e);
+    }
+  }
+
+  Future<void> _recall(QueueEntry entry) async {
+    try {
+      await QueueService.instance.recallEntry(widget.queueId, entry);
+      Haptics.instance.medium();
+      if (mounted) _notify(AppLocalizations.of(context).callResent);
+    } on Exception catch (e) {
+      _showError(e);
+    }
+  }
+
+  void _notify(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _updateStatus(QueueStatus status, StatusChange? change) async {
