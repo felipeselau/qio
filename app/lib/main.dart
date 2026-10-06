@@ -12,6 +12,7 @@ import 'services/auth_service.dart';
 import 'services/locale_controller.dart';
 import 'services/theme_controller.dart';
 import 'theme/qio_theme.dart';
+import 'widgets/qio_loading_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -92,9 +93,7 @@ class _QioAppState extends State<QioApp> with WidgetsBindingObserver {
         stream: AuthService.instance.authStateChanges,
         builder: (context, snap) {
           if (snap.connectionState == ConnectionState.waiting) {
-            return const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            );
+            return const QioLoadingView();
           }
           if (snap.hasData) return const HomeScreen();
           return const LoginScreen();

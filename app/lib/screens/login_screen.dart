@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../l10n/app_localizations.dart';
 import '../services/auth_errors.dart';
@@ -94,14 +95,15 @@ class _LoginScreenState extends State<LoginScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    'Qio',
-                    style: QioTextStyles.display.copyWith(
-                      fontSize: 48,
-                      fontWeight: FontWeight.w800,
-                      color: QioColors.primary,
+                  Semantics(
+                    label: 'Qio',
+                    child: SvgPicture.asset(
+                      QioColors.isDark
+                          ? 'assets/brand/logo-dark.svg'
+                          : 'assets/brand/logo.svg',
+                      height: 72,
+                      excludeFromSemantics: true,
                     ),
-                    textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
                   Text(

@@ -17,8 +17,8 @@ messaging.onBackgroundMessage((payload) => {
   const title = payload.notification?.title ?? 'Qio';
   const options = {
     body: payload.notification?.body ?? '',
-    icon: '/favicon.svg',
-    badge: '/favicon.svg',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
     data: payload.data ?? {},
   };
   self.registration.showNotification(title, options);

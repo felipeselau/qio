@@ -1,0 +1,9 @@
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path_android: ../design/brand/png/icon-1024.png
+  image_path_ios: ../design/brand/png/icon-square-1024.png
+  remove_alpha_ios: true
+  adaptive_icon_background: "#2563EB"
+  adaptive_icon_foreground: ../design/brand/png/icon-foreground-1024.png
+  adaptive_icon_monochrome: ../design/brand/png/icon-monochrome-1024.png
