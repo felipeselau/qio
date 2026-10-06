@@ -757,4 +757,50 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get retry => 'Reintentar';
+
+  @override
+  String get forgotPassword => 'Olvidé mi contraseña';
+
+  @override
+  String get resetEmailRequired =>
+      'Ingresa tu correo para restablecer la contraseña';
+
+  @override
+  String get resetEmailSent =>
+      'Si existe una cuenta con ese correo, enviamos un enlace para restablecer la contraseña.';
+
+  @override
+  String get showPassword => 'Mostrar contraseña';
+
+  @override
+  String get hidePassword => 'Ocultar contraseña';
+
+  @override
+  String get offlineBanner =>
+      'Sin conexión. Los datos pueden estar desactualizados.';
+
+  @override
+  String get loadErrorTitle => 'Algo salió mal';
+
+  @override
+  String get loadErrorBody =>
+      'No pudimos cargar tus datos. Revisa la conexión e inténtalo de nuevo.';
+
+  @override
+  String get hapticsTitle => 'Vibración';
+
+  @override
+  String get hapticsSubtitle =>
+      'Vibrar al llamar, finalizar y confirmar acciones';
+
+  @override
+  String get nobodyInQueueHint =>
+      'Cuando alguien entre por el código QR, aparecerá aquí.';
+
+  @override
+  String get emptyHistoryHint => 'Las atenciones finalizadas aparecen aquí.';
+
+  @override
+  String get emptyMetricsHint =>
+      'Elige otro período o espera las primeras atenciones.';
 }

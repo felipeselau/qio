@@ -245,5 +245,18 @@
   "noMetricsData": "Nenhum atendimento no período",
   "loadMetricsError": "Não foi possível carregar as métricas. Tente novamente.",
   "noQueuesYet": "Você ainda não tem filas",
-  "retry": "Tentar novamente"
+  "retry": "Tentar novamente",
+  "forgotPassword": "Esqueci a senha",
+  "resetEmailRequired": "Informe seu e-mail para recuperar a senha",
+  "resetEmailSent": "Se houver uma conta com esse e-mail, enviamos um link para redefinir a senha.",
+  "showPassword": "Mostrar senha",
+  "hidePassword": "Ocultar senha",
+  "offlineBanner": "Sem conexão. Os dados podem estar desatualizados.",
+  "loadErrorTitle": "Algo deu errado",
+  "loadErrorBody": "Não foi possível carregar seus dados. Verifique a conexão e tente de novo.",
+  "hapticsTitle": "Vibração",
+  "hapticsSubtitle": "Vibrar ao chamar, finalizar e confirmar ações",
+  "nobodyInQueueHint": "Quando alguém entrar pelo QR code, aparece aqui.",
+  "emptyHistoryHint": "Os atendimentos finalizados aparecem aqui.",
+  "emptyMetricsHint": "Escolha outro período ou aguarde os primeiros atendimentos."
 }

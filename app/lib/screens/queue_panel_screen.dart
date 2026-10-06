@@ -9,6 +9,7 @@ import '../l10n/app_localizations.dart';
 import '../models/queue.dart';
 import '../models/queue_entry.dart';
 import '../services/entry_diff.dart';
+import '../services/haptics.dart';
 import '../services/onboarding_service.dart';
 import '../services/operator_service.dart';
 import '../services/queue_service.dart';
@@ -19,6 +20,7 @@ import '../widgets/qio_avatar.dart';
 import '../widgets/qio_badge.dart';
 import '../widgets/qio_button.dart';
 import '../widgets/qio_card.dart';
+import '../widgets/qio_empty_state.dart';
 import 'history_screen.dart';
 import 'operators_screen.dart';
 import 'qr_poster_screen.dart';
@@ -389,22 +391,11 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                     ...waiting.map((e) => _WaitingTile(entry: e)),
                   ] else
                     QioCard(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 24),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.hourglass_empty,
-                              size: 40,
-                              color: QioColors.gray300,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              l10n.nobodyInQueue,
-                              style: QioTextStyles.bodyMedium,
-                            ),
-                          ],
-                        ),
+                      child: QioEmptyState(
+                        icon: Icons.hourglass_empty,
+                        title: l10n.nobodyInQueue,
+                        message: l10n.nobodyInQueueHint,
+                        compact: true,
                       ),
                     ),
                 ],
@@ -523,6 +514,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
     setState(() => _actionLoading = true);
     try {
       final next = await QueueService.instance.callNext(widget.queueId);
+      Haptics.instance.medium();
       if (next == null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -550,6 +542,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
     setState(() => _finishLoading = true);
     try {
       await QueueService.instance.markServed(widget.queueId, entry);
+      Haptics.instance.light();
     } on Exception catch (e) {
       _showError(e);
     } finally {
@@ -561,6 +554,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
     setState(() => _finishLoading = true);
     try {
       await QueueService.instance.markNoShow(widget.queueId, entry);
+      Haptics.instance.heavy();
     } on Exception catch (e) {
       _showError(e);
     } finally {

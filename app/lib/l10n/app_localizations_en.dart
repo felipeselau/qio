@@ -755,4 +755,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get retry => 'Try again';
+
+  @override
+  String get forgotPassword => 'Forgot password';
+
+  @override
+  String get resetEmailRequired => 'Enter your email to reset the password';
+
+  @override
+  String get resetEmailSent =>
+      'If an account exists for that email, we sent a link to reset the password.';
+
+  @override
+  String get showPassword => 'Show password';
+
+  @override
+  String get hidePassword => 'Hide password';
+
+  @override
+  String get offlineBanner => 'No connection. Data may be out of date.';
+
+  @override
+  String get loadErrorTitle => 'Something went wrong';
+
+  @override
+  String get loadErrorBody =>
+      'We could not load your data. Check your connection and try again.';
+
+  @override
+  String get hapticsTitle => 'Vibration';
+
+  @override
+  String get hapticsSubtitle =>
+      'Vibrate when calling, finishing and confirming actions';
+
+  @override
+  String get nobodyInQueueHint =>
+      'When someone joins through the QR code, they show up here.';
+
+  @override
+  String get emptyHistoryHint => 'Finished services show up here.';
+
+  @override
+  String get emptyMetricsHint =>
+      'Pick another period or wait for the first services.';
 }

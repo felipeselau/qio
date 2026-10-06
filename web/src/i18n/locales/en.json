@@ -4,7 +4,8 @@
     "invalidLinkHint": "Scan the queue's QR code to join.",
     "themeLight": "Use light theme",
     "themeDark": "Use dark theme",
-    "language": "Language"
+    "language": "Language",
+    "loading": "Loading the queue"
   },
   "queue": {
     "connectFailed": "Could not connect",

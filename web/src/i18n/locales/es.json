@@ -4,7 +4,8 @@
     "invalidLinkHint": "Escanea el código QR de la fila para entrar.",
     "themeLight": "Usar tema claro",
     "themeDark": "Usar tema oscuro",
-    "language": "Idioma"
+    "language": "Idioma",
+    "loading": "Cargando la fila"
   },
   "queue": {
     "connectFailed": "No se pudo conectar",

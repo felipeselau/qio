@@ -9,6 +9,8 @@ import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
 import '../widgets/qio_card.dart';
+import '../widgets/qio_empty_state.dart';
+import '../widgets/qio_skeleton.dart';
 
 class _QueueHistory {
   const _QueueHistory(this.queue, this.entries);
@@ -57,31 +59,13 @@ class _MetricsScreenState extends State<MetricsScreen> {
         future: _future,
         builder: (context, snap) {
           if (snap.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      l10n.loadMetricsError,
-                      textAlign: TextAlign.center,
-                      style: QioTextStyles.body.copyWith(
-                        color: QioColors.statusClosedText,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextButton(
-                      onPressed: () => setState(() => _future = _load()),
-                      child: Text(l10n.retry),
-                    ),
-                  ],
-                ),
-              ),
+            return QioErrorState(
+              message: l10n.loadMetricsError,
+              onRetry: () => setState(() => _future = _load()),
             );
           }
           if (!snap.hasData) {
-            return const Center(child: CircularProgressIndicator());
+            return const QioSkeletonList(count: 3);
           }
           return _buildContent(l10n, snap.data!);
         },
@@ -91,12 +75,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
 
   Widget _buildContent(AppLocalizations l10n, List<_QueueHistory> data) {
     if (data.isEmpty) {
-      return Center(
-        child: Text(
-          l10n.noQueuesYet,
-          style: QioTextStyles.body.copyWith(color: QioColors.textSecondary),
-        ),
-      );
+      return QioEmptyState(icon: Icons.bar_chart, title: l10n.noQueuesYet);
     }
     final now = DateTime.now();
     final perQueue = [
@@ -137,8 +116,11 @@ class _MetricsScreenState extends State<MetricsScreen> {
         if (all.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 32),
-            child: Center(
-              child: Text(l10n.noMetricsData, style: QioTextStyles.caption),
+            child: QioEmptyState(
+              icon: Icons.bar_chart,
+              title: l10n.noMetricsData,
+              message: l10n.emptyMetricsHint,
+              compact: true,
             ),
           )
         else ...[

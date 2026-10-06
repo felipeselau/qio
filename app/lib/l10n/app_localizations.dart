@@ -1473,6 +1473,84 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Tentar novamente'**
   String get retry;
+
+  /// No description provided for @forgotPassword.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esqueci a senha'**
+  String get forgotPassword;
+
+  /// No description provided for @resetEmailRequired.
+  ///
+  /// In pt, this message translates to:
+  /// **'Informe seu e-mail para recuperar a senha'**
+  String get resetEmailRequired;
+
+  /// No description provided for @resetEmailSent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Se houver uma conta com esse e-mail, enviamos um link para redefinir a senha.'**
+  String get resetEmailSent;
+
+  /// No description provided for @showPassword.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostrar senha'**
+  String get showPassword;
+
+  /// No description provided for @hidePassword.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ocultar senha'**
+  String get hidePassword;
+
+  /// No description provided for @offlineBanner.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem conexão. Os dados podem estar desatualizados.'**
+  String get offlineBanner;
+
+  /// No description provided for @loadErrorTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Algo deu errado'**
+  String get loadErrorTitle;
+
+  /// No description provided for @loadErrorBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível carregar seus dados. Verifique a conexão e tente de novo.'**
+  String get loadErrorBody;
+
+  /// No description provided for @hapticsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Vibração'**
+  String get hapticsTitle;
+
+  /// No description provided for @hapticsSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Vibrar ao chamar, finalizar e confirmar ações'**
+  String get hapticsSubtitle;
+
+  /// No description provided for @nobodyInQueueHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quando alguém entrar pelo QR code, aparece aqui.'**
+  String get nobodyInQueueHint;
+
+  /// No description provided for @emptyHistoryHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os atendimentos finalizados aparecem aqui.'**
+  String get emptyHistoryHint;
+
+  /// No description provided for @emptyMetricsHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolha outro período ou aguarde os primeiros atendimentos.'**
+  String get emptyMetricsHint;
 }
 
 class _AppLocalizationsDelegate

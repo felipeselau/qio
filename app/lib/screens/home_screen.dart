@@ -14,6 +14,8 @@ import '../widgets/qio_avatar.dart';
 import '../widgets/qio_badge.dart';
 import '../widgets/onboarding_tour.dart';
 import '../widgets/qio_card.dart';
+import '../widgets/qio_empty_state.dart';
+import '../widgets/qio_skeleton.dart';
 import 'account_screen.dart';
 import 'create_queue_screen.dart';
 import 'join_operator_screen.dart';
@@ -28,14 +30,21 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  late final Stream<List<Queue>> _ownedStream = QueueService.instance
+  late Stream<List<Queue>> _ownedStream = QueueService.instance
       .watchOwnerQueues();
-  late final Stream<List<QueueOperator>> _operatingStream = OperatorService
-      .instance
+  late Stream<List<QueueOperator>> _operatingStream = OperatorService.instance
       .watchMyOperatorQueues();
-  late final Stream<List<OperatorRequest>> _requestsStream = OperatorService
-      .instance
+  late Stream<List<OperatorRequest>> _requestsStream = OperatorService.instance
       .watchMyRequests();
+
+  void _retry() {
+    setState(() {
+      _ownedStream = QueueService.instance.watchOwnerQueues();
+      _operatingStream = OperatorService.instance.watchMyOperatorQueues();
+      _requestsStream = OperatorService.instance.watchMyRequests();
+    });
+  }
+
   final _fabKey = GlobalKey();
   final _operatorKey = GlobalKey();
   final _firstQueueKey = GlobalKey();
@@ -129,8 +138,13 @@ class _HomeScreenState extends State<HomeScreen> {
               return StreamBuilder<List<OperatorRequest>>(
                 stream: _requestsStream,
                 builder: (context, requestsSnap) {
+                  if (ownedSnap.hasError ||
+                      operatingSnap.hasError ||
+                      requestsSnap.hasError) {
+                    return QioErrorState(onRetry: _retry);
+                  }
                   if (ownedSnap.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
+                    return const QioSkeletonList();
                   }
                   _scheduleTour((ownedSnap.data ?? []).isNotEmpty);
                   return _buildBody(
@@ -162,26 +176,14 @@ class _HomeScreenState extends State<HomeScreen> {
   ) {
     final l10n = AppLocalizations.of(context);
     if (owned.isEmpty && operating.isEmpty && requests.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.qr_code_2, size: 64, color: QioColors.gray300),
-              const SizedBox(height: 16),
-              Text(l10n.emptyQueuesTitle, style: QioTextStyles.heading2),
-              const SizedBox(height: 8),
-              Text(
-                l10n.emptyQueuesBody,
-                style: QioTextStyles.body.copyWith(
-                  color: QioColors.textSecondary,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
+      return QioEmptyState(
+        icon: Icons.qr_code_2,
+        title: l10n.emptyQueuesTitle,
+        message: l10n.emptyQueuesBody,
+        actionLabel: l10n.createQueue,
+        onAction: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const CreateQueueScreen())),
       );
     }
     final showHeaders = operating.isNotEmpty || requests.isNotEmpty;

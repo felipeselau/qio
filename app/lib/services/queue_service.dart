@@ -239,6 +239,13 @@ class QueueService {
         );
   }
 
+  Stream<bool> watchConnection() {
+    return _rtdb
+        .ref('.info/connected')
+        .onValue
+        .map((event) => event.snapshot.value == true);
+  }
+
   Stream<int> watchWaitingCount(String queueId) {
     return _rtdb.ref('queues/$queueId/public').onValue.map((event) {
       final map = event.snapshot.value as Map<dynamic, dynamic>?;

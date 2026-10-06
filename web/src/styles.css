@@ -12,6 +12,7 @@
   --text: #000000;
   --border: #F3F4F6;
   --muted: #5B6472;
+  --skeleton: #E2E5EA;
   --control-border: #7B8494;
   --badge-open: #065F46;
   --badge-paused: #92400E;
@@ -30,6 +31,7 @@
   --text: #F9FAFB;
   --border: #374151;
   --muted: #A3ABB8;
+  --skeleton: #1F2937;
   --control-border: #6B7280;
   --badge-open: #34D399;
   --badge-paused: #FBBF24;
@@ -46,6 +48,7 @@
     --text: #F9FAFB;
     --border: #374151;
     --muted: #A3ABB8;
+    --skeleton: #1F2937;
     --control-border: #6B7280;
     --badge-open: #34D399;
     --badge-paused: #FBBF24;
@@ -357,5 +360,72 @@ a {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+.fade-in {
+  animation: fade-in 0.22s ease-out both;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.pop {
+  display: inline-block;
+  animation: pop 0.28s ease-out both;
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.skeleton {
+  border-radius: 8px;
+  background: var(--skeleton);
+  animation: skeleton-pulse 1.1s ease-in-out infinite alternate;
+}
+
+.skeleton-title {
+  height: 28px;
+  width: 60%;
+  margin: 16px auto 0;
+}
+
+.skeleton-badge {
+  height: 22px;
+  width: 80px;
+  margin: 0 auto 16px;
+  border-radius: 12px;
+}
+
+.skeleton-field {
+  height: 48px;
+}
+
+.skeleton-btn {
+  height: 52px;
+}
+
+@keyframes skeleton-pulse {
+  from {
+    opacity: 0.55;
+  }
+  to {
+    opacity: 1;
   }
 }

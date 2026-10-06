@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import '../l10n/app_localizations.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
 
@@ -16,6 +18,11 @@ class QioInput extends StatelessWidget {
     this.prefixIcon,
     this.suffixIcon,
     this.enabled = true,
+    this.textInputAction,
+    this.autofillHints,
+    this.onSubmitted,
+    this.focusNode,
+    this.autofocus = false,
   });
 
   final String label;
@@ -29,6 +36,11 @@ class QioInput extends StatelessWidget {
   final IconData? prefixIcon;
   final Widget? suffixIcon;
   final bool enabled;
+  final TextInputAction? textInputAction;
+  final Iterable<String>? autofillHints;
+  final ValueChanged<String>? onSubmitted;
+  final FocusNode? focusNode;
+  final bool autofocus;
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +57,11 @@ class QioInput extends StatelessWidget {
           onChanged: onChanged,
           maxLines: maxLines,
           enabled: enabled,
+          textInputAction: textInputAction,
+          autofillHints: autofillHints,
+          onFieldSubmitted: onSubmitted,
+          focusNode: focusNode,
+          autofocus: autofocus,
           decoration: InputDecoration(
             hintText: hint,
             prefixIcon: prefixIcon != null
@@ -54,6 +71,61 @@ class QioInput extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class QioPasswordInput extends StatefulWidget {
+  const QioPasswordInput({
+    super.key,
+    required this.label,
+    this.hint,
+    this.controller,
+    this.validator,
+    this.textInputAction,
+    this.autofillHints = const [AutofillHints.password],
+    this.onSubmitted,
+    this.focusNode,
+  });
+
+  final String label;
+  final String? hint;
+  final TextEditingController? controller;
+  final String? Function(String?)? validator;
+  final TextInputAction? textInputAction;
+  final Iterable<String> autofillHints;
+  final ValueChanged<String>? onSubmitted;
+  final FocusNode? focusNode;
+
+  @override
+  State<QioPasswordInput> createState() => _QioPasswordInputState();
+}
+
+class _QioPasswordInputState extends State<QioPasswordInput> {
+  bool _visible = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return QioInput(
+      label: widget.label,
+      hint: widget.hint,
+      controller: widget.controller,
+      obscureText: !_visible,
+      validator: widget.validator,
+      textInputAction: widget.textInputAction,
+      autofillHints: widget.autofillHints,
+      onSubmitted: widget.onSubmitted,
+      focusNode: widget.focusNode,
+      keyboardType: TextInputType.visiblePassword,
+      suffixIcon: IconButton(
+        tooltip: _visible ? l10n.hidePassword : l10n.showPassword,
+        icon: Icon(
+          _visible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+          color: QioColors.gray500,
+        ),
+        onPressed: () => setState(() => _visible = !_visible),
+      ),
     );
   }
 }

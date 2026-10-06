@@ -15,6 +15,8 @@ import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
 import '../widgets/qio_card.dart';
+import '../widgets/qio_empty_state.dart';
+import '../widgets/qio_skeleton.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key, required this.queueId, this.queueName = ''});
@@ -27,7 +29,7 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  late final Stream<List<HistoryEntry>> _stream;
+  late Stream<List<HistoryEntry>> _stream;
   HistoryPeriod _period = HistoryPeriod.all;
   String? _result;
   List<HistoryEntry> _filtered = const [];
@@ -134,31 +136,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
         stream: _stream,
         builder: (context, snap) {
           if (snap.hasError) {
-            return Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  l10n.loadHistoryError,
-                  textAlign: TextAlign.center,
-                  style: QioTextStyles.body.copyWith(
-                    color: QioColors.statusClosedText,
-                  ),
-                ),
-              ),
+            return QioErrorState(
+              message: l10n.loadHistoryError,
+              onRetry: () => setState(() {
+                _stream = QueueService.instance.watchHistory(widget.queueId);
+              }),
             );
           }
           if (!snap.hasData) {
-            return const Center(child: CircularProgressIndicator());
+            return const QioSkeletonList(count: 4);
           }
           final all = snap.data!;
           if (all.isEmpty) {
-            return Center(
-              child: Text(
-                l10n.noHistoryYet,
-                style: QioTextStyles.body.copyWith(
-                  color: QioColors.textSecondary,
-                ),
-              ),
+            return QioEmptyState(
+              icon: Icons.history,
+              title: l10n.noHistoryYet,
+              message: l10n.emptyHistoryHint,
             );
           }
           final filtered = filterHistory(

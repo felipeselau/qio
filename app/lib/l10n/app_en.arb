@@ -230,5 +230,18 @@
   "noMetricsData": "No services in this period",
   "loadMetricsError": "Could not load metrics. Please try again.",
   "noQueuesYet": "You don't have any queues yet",
-  "retry": "Try again"
+  "retry": "Try again",
+  "forgotPassword": "Forgot password",
+  "resetEmailRequired": "Enter your email to reset the password",
+  "resetEmailSent": "If an account exists for that email, we sent a link to reset the password.",
+  "showPassword": "Show password",
+  "hidePassword": "Hide password",
+  "offlineBanner": "No connection. Data may be out of date.",
+  "loadErrorTitle": "Something went wrong",
+  "loadErrorBody": "We could not load your data. Check your connection and try again.",
+  "hapticsTitle": "Vibration",
+  "hapticsSubtitle": "Vibrate when calling, finishing and confirming actions",
+  "nobodyInQueueHint": "When someone joins through the QR code, they show up here.",
+  "emptyHistoryHint": "Finished services show up here.",
+  "emptyMetricsHint": "Pick another period or wait for the first services."
 }
