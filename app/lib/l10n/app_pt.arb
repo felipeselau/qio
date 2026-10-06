@@ -230,5 +230,20 @@
   "@stepOf": {"placeholders": {"index": {"type": "int"}, "total": {"type": "int"}}},
   "tapToContinue": "Toque para continuar",
   "avatarLabel": "Avatar: {name}",
-  "@avatarLabel": {"placeholders": {"name": {"type": "String"}}}
+  "@avatarLabel": {"placeholders": {"name": {"type": "String"}}},
+  "metricsTitle": "Métricas",
+  "metricsTooltip": "Métricas das filas",
+  "metricsTotal": "Atendimentos",
+  "peakHoursTitle": "Picos de demanda",
+  "peakHoursSubtitle": "Pessoas que entraram por horário",
+  "peakHoursTop": "Horários mais cheios: {hours}",
+  "@peakHoursTop": {"placeholders": {"hours": {"type": "String"}}},
+  "noPeakData": "Sem dados no período",
+  "mostActiveQueues": "Filas mais ativas",
+  "queueActivityLine": "{total} atendimentos · {rate}% não compareceram",
+  "@queueActivityLine": {"placeholders": {"total": {"type": "int"}, "rate": {"type": "int"}}},
+  "noMetricsData": "Nenhum atendimento no período",
+  "loadMetricsError": "Não foi possível carregar as métricas. Tente novamente.",
+  "noQueuesYet": "Você ainda não tem filas",
+  "retry": "Tentar novamente"
 }
