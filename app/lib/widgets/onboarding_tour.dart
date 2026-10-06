@@ -43,6 +43,7 @@ Future<void> showOnboardingTour(
           identify: visible[i].title,
           keyTarget: visible[i].key,
           shape: visible[i].shape,
+          enableOverlayTab: true,
           radius: 12,
           contents: [
             TargetContent(

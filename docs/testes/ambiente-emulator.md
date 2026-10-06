@@ -19,3 +19,18 @@ Contas de teste (existem só no emulator de auth):
 | --- | --- | --- |
 | Dono | dono@qio.test | teste-qio-2026 |
 | Operador | operador@qio.test | teste-qio-2026 |
+
+## Dados de demonstração e prints
+
+Com os emulators no ar, `node functions/scripts/seed-emulator.js` cria a conta
+do dono, duas filas (`qdemo1`, `qdemo2`), histórico com horários variados,
+avaliações e quatro pessoas na fila ativa. As telas novas do app (tour,
+métricas, modo escuro, idiomas, histórico com avaliação) foram capturadas assim,
+com o app rodando em `flutter run -d web-server --dart-define=USE_EMULATORS=true`.
+
+Se a porta 5001 estiver ocupada, suba os emulators com outra porta para
+functions (copie `firebase.json` trocando `emulators.functions.port`) e rode a
+web com `VITE_FUNCTIONS_EMULATOR_PORT=<porta>`.
+
+O `flutter build web` em release com `USE_EMULATORS` pode ficar em branco por
+`MissingPluginException` do `shared_preferences`; use o servidor de debug.
