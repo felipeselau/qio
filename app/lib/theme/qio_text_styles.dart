@@ -6,7 +6,7 @@ class QioTextStyles {
 
   static const String _fontFamily = 'Inter';
 
-  static const TextStyle display = TextStyle(
+  static TextStyle get display => TextStyle(
     fontFamily: _fontFamily,
     fontSize: 32,
     fontWeight: FontWeight.w700,
@@ -14,7 +14,7 @@ class QioTextStyles {
     height: 1.2,
   );
 
-  static const TextStyle heading1 = TextStyle(
+  static TextStyle get heading1 => TextStyle(
     fontFamily: _fontFamily,
     fontSize: 24,
     fontWeight: FontWeight.w700,
@@ -22,7 +22,7 @@ class QioTextStyles {
     height: 1.3,
   );
 
-  static const TextStyle heading2 = TextStyle(
+  static TextStyle get heading2 => TextStyle(
     fontFamily: _fontFamily,
     fontSize: 20,
     fontWeight: FontWeight.w600,
@@ -30,7 +30,7 @@ class QioTextStyles {
     height: 1.3,
   );
 
-  static const TextStyle heading3 = TextStyle(
+  static TextStyle get heading3 => TextStyle(
     fontFamily: _fontFamily,
     fontSize: 16,
     fontWeight: FontWeight.w600,
@@ -38,7 +38,7 @@ class QioTextStyles {
     height: 1.4,
   );
 
-  static const TextStyle body = TextStyle(
+  static TextStyle get body => TextStyle(
     fontFamily: _fontFamily,
     fontSize: 14,
     fontWeight: FontWeight.w400,
@@ -46,7 +46,7 @@ class QioTextStyles {
     height: 1.5,
   );
 
-  static const TextStyle bodyMedium = TextStyle(
+  static TextStyle get bodyMedium => TextStyle(
     fontFamily: _fontFamily,
     fontSize: 14,
     fontWeight: FontWeight.w500,
@@ -54,7 +54,7 @@ class QioTextStyles {
     height: 1.5,
   );
 
-  static const TextStyle caption = TextStyle(
+  static TextStyle get caption => TextStyle(
     fontFamily: _fontFamily,
     fontSize: 12,
     fontWeight: FontWeight.w400,
@@ -62,7 +62,7 @@ class QioTextStyles {
     height: 1.4,
   );
 
-  static const TextStyle label = TextStyle(
+  static TextStyle get label => TextStyle(
     fontFamily: _fontFamily,
     fontSize: 12,
     fontWeight: FontWeight.w500,
@@ -70,14 +70,14 @@ class QioTextStyles {
     height: 1.4,
   );
 
-  static const TextStyle button = TextStyle(
+  static TextStyle get button => TextStyle(
     fontFamily: _fontFamily,
     fontSize: 16,
     fontWeight: FontWeight.w600,
     height: 1.2,
   );
 
-  static const TextStyle ticket = TextStyle(
+  static TextStyle get ticket => TextStyle(
     fontFamily: _fontFamily,
     fontSize: 48,
     fontWeight: FontWeight.w800,

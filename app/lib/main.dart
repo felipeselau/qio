@@ -8,6 +8,7 @@ import 'firebase_options.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/auth_service.dart';
+import 'services/theme_controller.dart';
 import 'theme/qio_theme.dart';
 
 void main() async {
@@ -22,18 +23,56 @@ void main() async {
     FirebaseFirestore.instance.useFirestoreEmulator(host, 8080);
     FirebaseDatabase.instance.useDatabaseEmulator(host, 9000);
   }
+  await ThemeController.instance.load();
   runApp(const QioApp());
 }
 
-class QioApp extends StatelessWidget {
+class QioApp extends StatefulWidget {
   const QioApp({super.key});
 
   @override
+  State<QioApp> createState() => _QioAppState();
+}
+
+class _QioAppState extends State<QioApp> with WidgetsBindingObserver {
+  final _theme = ThemeController.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _theme.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    _theme.removeListener(_onThemeChanged);
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangePlatformBrightness() => _onThemeChanged();
+
+  void _onThemeChanged() {
+    setState(() {});
+    void markDirty(Element e) {
+      e.markNeedsBuild();
+      e.visitChildren(markDirty);
+    }
+
+    WidgetsBinding.instance.rootElement?.visitChildren(markDirty);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final brightness = _theme.resolve(
+      WidgetsBinding.instance.platformDispatcher.platformBrightness,
+    );
     return MaterialApp(
       title: 'Qio',
       debugShowCheckedModeBanner: false,
-      theme: QioTheme.light,
+      theme: QioTheme.forBrightness(brightness),
       home: StreamBuilder(
         stream: AuthService.instance.authStateChanges,
         builder: (context, snap) {
