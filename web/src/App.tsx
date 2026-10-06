@@ -47,6 +47,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/q/:queueId" element={<QueuePage />} />
+          <Route path="/c/:queueId" element={<QueuePage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

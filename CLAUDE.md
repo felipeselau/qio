@@ -230,6 +230,20 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   release: versões desalinhadas de `firebase_core`/`firebase_auth` quebram a
   compilação Android.
 
+## Deep links
+
+- Android App Links para `https://qio.web.app/q/*` (`AndroidManifest.xml`,
+  `autoVerify`). O arquivo `web/public/.well-known/assetlinks.json` precisa estar
+  no ar com o SHA-256 da chave de **release** (e do Play App Signing, se usar a
+  Play Store). O `firebase.json` não pode ignorar dotfiles: `**/.*` foi removido
+  do `hosting.ignore` por causa do `.well-known`.
+- `HomeScreen` trata o link (`queueIdFromLink`): dono/operador abre o painel;
+  os outros são mandados ao navegador em `/c/{id}` (mesma página do cliente), e
+  não em `/q/`, para não cair em laço com o App Link. O QR e o link
+  compartilhado continuam `/q/{id}`.
+- Verificação no aparelho: `adb shell pm get-app-links com.qio.qio_app` deve
+  mostrar `qio.web.app: verified`. iOS (Associated Domains) não foi feito.
+
 ## Marca
 
 - Fonte da verdade em `design/brand/` (SVGs, PNGs, `generate.py`, regras de uso).

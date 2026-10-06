@@ -210,6 +210,23 @@ class QueueService {
         .map((d) => Queue.fromDoc(d.id, d.data()!));
   }
 
+  Future<({Queue queue, bool isOwner})?> resolveAccess(String queueId) async {
+    final uid = _uid;
+    try {
+      final doc = _firestore.collection('queues').doc(queueId);
+      final operator = await doc.collection('operators').doc(uid).get();
+      final snap = await doc.get();
+      if (!snap.exists || snap.data() == null) return null;
+      final queue = Queue.fromDoc(snap.id, snap.data()!);
+      if (queue.ownerId == uid) return (queue: queue, isOwner: true);
+      if (operator.exists) return (queue: queue, isOwner: false);
+      return null;
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied' || e.code == 'not-found') return null;
+      rethrow;
+    }
+  }
+
   Stream<List<QueueEntry>> watchEntries(String queueId) {
     return _rtdb
         .ref('queues/$queueId/entries')

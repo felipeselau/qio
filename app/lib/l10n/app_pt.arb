@@ -291,5 +291,6 @@
   "callResent": "Chamada reenviada",
   "movedToEnd": "{name} foi para o fim da fila",
   "@movedToEnd": {"placeholders": {"name": {"type": "String"}}},
-  "entryUnavailable": "Esta pessoa já não está aguardando"
+  "entryUnavailable": "Esta pessoa já não está aguardando",
+  "linkForCustomers": "Este link é para clientes. Abrindo no navegador."
 }

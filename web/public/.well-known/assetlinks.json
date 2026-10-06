@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.qio.qio_app",
+      "sha256_cert_fingerprints": [
+        "9F:4A:4E:0F:6B:47:16:C4:DF:EE:7C:E5:C7:F6:EC:6F:31:1F:5E:B2:8C:DD:FF:65:2B:75:F0:F2:E0:F9:87:99"
+      ]
+    }
+  }
+]
