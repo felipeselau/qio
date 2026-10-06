@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 import '../models/operator.dart';
 import '../models/queue.dart';
 import '../services/auth_service.dart';
+import '../services/onboarding_service.dart';
 import '../services/operator_service.dart';
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
 import '../widgets/qio_avatar.dart';
 import '../widgets/qio_badge.dart';
+import '../widgets/onboarding_tour.dart';
 import '../widgets/qio_card.dart';
 import 'account_screen.dart';
 import 'create_queue_screen.dart';
@@ -31,6 +34,40 @@ class _HomeScreenState extends State<HomeScreen> {
   late final Stream<List<OperatorRequest>> _requestsStream = OperatorService
       .instance
       .watchMyRequests();
+  final _fabKey = GlobalKey();
+  final _operatorKey = GlobalKey();
+  final _firstQueueKey = GlobalKey();
+  bool _tourScheduled = false;
+
+  void _scheduleTour(bool hasOwned) {
+    if (_tourScheduled) return;
+    _tourScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      showOnboardingTour(context, OnboardingTour.home, [
+        OnboardingStep(
+          key: _fabKey,
+          title: 'Crie sua primeira fila',
+          body: 'Toque no + para criar uma fila e gerar o QR code.',
+          shape: ShapeLightFocus.Circle,
+          above: true,
+        ),
+        if (hasOwned)
+          OnboardingStep(
+            key: _firstQueueKey,
+            title: 'Abra sua fila',
+            body: 'Toque no cartão para ver o QR code e chamar as pessoas.',
+          ),
+        OnboardingStep(
+          key: _operatorKey,
+          title: 'Entrar como operador',
+          body:
+              'Recebeu um código de convite? Use aqui para ajudar em uma fila.',
+          shape: ShapeLightFocus.Circle,
+        ),
+      ]);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +85,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           IconButton(
+            key: _operatorKey,
             tooltip: 'Entrar como operador',
             icon: const Icon(Icons.badge_outlined, color: QioColors.primary),
             onPressed: () => Navigator.of(context).push(
@@ -84,6 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (ownedSnap.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
                   }
+                  _scheduleTour((ownedSnap.data ?? []).isNotEmpty);
                   return _buildBody(
                     ownedSnap.data ?? [],
                     operatingSnap.data ?? [],
@@ -96,6 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton(
+        key: _fabKey,
         tooltip: 'Criar fila',
         onPressed: () => Navigator.of(
           context,
@@ -139,7 +179,11 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         if (showHeaders && owned.isNotEmpty) _sectionTitle('SOU DONO'),
         for (final q in owned) ...[
-          _QueueCard(queue: q, isOwner: true),
+          _QueueCard(
+            key: q == owned.first ? _firstQueueKey : null,
+            queue: q,
+            isOwner: true,
+          ),
           const SizedBox(height: 16),
         ],
         if (operating.isNotEmpty) _sectionTitle('SOU OPERADOR'),
@@ -172,7 +216,7 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _QueueCard extends StatelessWidget {
-  const _QueueCard({required this.queue, required this.isOwner});
+  const _QueueCard({super.key, required this.queue, required this.isOwner});
 
   final Queue queue;
   final bool isOwner;
