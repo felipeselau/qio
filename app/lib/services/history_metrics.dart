@@ -1,16 +1,17 @@
+import '../l10n/app_localizations.dart';
 import '../models/history_entry.dart';
 
 enum HistoryPeriod { today, last7Days, all }
 
 extension HistoryPeriodX on HistoryPeriod {
-  String get label {
+  String label(AppLocalizations l10n) {
     switch (this) {
       case HistoryPeriod.today:
-        return 'Hoje';
+        return l10n.periodToday;
       case HistoryPeriod.last7Days:
-        return '7 dias';
+        return l10n.period7Days;
       case HistoryPeriod.all:
-        return 'Tudo';
+        return l10n.periodAll;
     }
   }
 }

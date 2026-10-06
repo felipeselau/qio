@@ -1,13 +1,24 @@
+import 'dart:ui';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:qio_app/l10n/app_localizations.dart';
 import 'package:qio_app/models/queue.dart';
 
 void main() {
   group('QueueStatusX', () {
     test('label returns pt-BR labels', () {
-      expect(QueueStatus.open.label, 'Aberta');
-      expect(QueueStatus.paused.label, 'Pausada');
-      expect(QueueStatus.closed.label, 'Fechada');
+      final l10n = lookupAppLocalizations(const Locale('pt'));
+      expect(QueueStatus.open.label(l10n), 'Aberta');
+      expect(QueueStatus.paused.label(l10n), 'Pausada');
+      expect(QueueStatus.closed.label(l10n), 'Fechada');
+    });
+
+    test('label follows the locale', () {
+      final en = lookupAppLocalizations(const Locale('en'));
+      final es = lookupAppLocalizations(const Locale('es'));
+      expect(QueueStatus.open.label(en), 'Open');
+      expect(QueueStatus.closed.label(es), 'Cerrada');
     });
 
     test('value returns storage values', () {

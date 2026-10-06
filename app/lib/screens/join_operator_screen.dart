@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/operator.dart';
 import '../services/operator_service.dart';
 import '../theme/qio_colors.dart';
@@ -54,8 +55,8 @@ class _JoinOperatorScreenState extends State<JoinOperatorScreen> {
           SnackBar(
             content: Text(
               e is OperatorInviteException
-                  ? e.message
-                  : 'Não foi possível enviar o pedido. Tente novamente.',
+                  ? e.message(AppLocalizations.of(context))
+                  : AppLocalizations.of(context).sendRequestError,
             ),
             backgroundColor: QioColors.error,
           ),
@@ -68,11 +69,12 @@ class _JoinOperatorScreenState extends State<JoinOperatorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         backgroundColor: QioColors.surface,
         title: Text(
-          'Entrar como operador',
+          l10n.joinAsOperator,
           style: QioTextStyles.heading2.copyWith(
             fontWeight: FontWeight.w700,
             color: QioColors.textPrimary,
@@ -89,25 +91,25 @@ class _JoinOperatorScreenState extends State<JoinOperatorScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Peça o código de convite ao dono da fila. Depois de enviar, o dono precisa aprovar seu acesso.',
+                  l10n.joinOperatorIntro,
                   style: QioTextStyles.body.copyWith(
                     color: QioColors.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 24),
                 QioInput(
-                  label: 'Código de convite',
-                  hint: 'Ex: K7M2QX',
+                  label: l10n.inviteCodeLabel,
+                  hint: l10n.inviteCodeHint,
                   controller: _codeCtrl,
                   prefixIcon: Icons.vpn_key_outlined,
                   validator: (v) =>
                       OperatorService.normalizeCode(v ?? '').length != 6
-                      ? 'O código tem 6 caracteres'
+                      ? l10n.inviteCodeLength
                       : null,
                 ),
                 const SizedBox(height: 32),
                 QioButton(
-                  label: 'Enviar pedido',
+                  label: l10n.sendRequest,
                   onPressed: _isLoading ? null : _submit,
                   isLoading: _isLoading,
                   isFullWidth: true,
@@ -148,8 +150,8 @@ class _OperatorPendingScreenState extends State<OperatorPendingScreen> {
     } on Exception {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Não foi possível cancelar. Tente novamente.'),
+          SnackBar(
+            content: Text(AppLocalizations.of(context).cancelRequestError),
             backgroundColor: QioColors.error,
           ),
         );
@@ -173,6 +175,7 @@ class _OperatorPendingScreenState extends State<OperatorPendingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: QioColors.gray100,
       appBar: AppBar(
@@ -197,32 +200,32 @@ class _OperatorPendingScreenState extends State<OperatorPendingScreen> {
             OperatorRequestStatus.pending => (
               Icons.hourglass_top,
               QioColors.warning,
-              'Aguardando aprovação',
-              'O dono da fila precisa aprovar seu pedido. Esta tela atualiza sozinha.',
+              l10n.awaitingApproval,
+              l10n.pendingBody,
             ),
             OperatorRequestStatus.approved => (
               Icons.check_circle_outline,
               QioColors.success,
-              'Pedido aprovado',
-              'Você já pode atender esta fila.',
+              l10n.requestApproved,
+              l10n.approvedBody,
             ),
             OperatorRequestStatus.rejected => (
               Icons.block,
               QioColors.error,
-              'Pedido recusado',
-              'O dono da fila recusou seu pedido.',
+              l10n.requestRejected,
+              l10n.rejectedBody,
             ),
             OperatorRequestStatus.removed => (
               Icons.person_off_outlined,
               QioColors.error,
-              'Você foi removido',
-              'O dono da fila removeu seu acesso de operador.',
+              l10n.removedTitle,
+              l10n.removedBody,
             ),
             null => (
               Icons.help_outline,
               QioColors.gray400,
-              'Pedido não encontrado',
-              'O pedido foi cancelado ou removido.',
+              l10n.requestNotFound,
+              l10n.requestNotFoundBody,
             ),
           };
           return ListView(
@@ -253,13 +256,13 @@ class _OperatorPendingScreenState extends State<OperatorPendingScreen> {
               const SizedBox(height: 24),
               if (request?.status == OperatorRequestStatus.approved)
                 QioButton(
-                  label: 'Abrir fila',
+                  label: l10n.openQueue,
                   isFullWidth: true,
                   onPressed: _openQueue,
                 )
               else if (request?.status == OperatorRequestStatus.pending)
                 QioButton(
-                  label: 'Cancelar pedido',
+                  label: l10n.cancelRequest,
                   variant: QioButtonVariant.secondary,
                   isFullWidth: true,
                   isLoading: _cancelLoading,
@@ -267,7 +270,7 @@ class _OperatorPendingScreenState extends State<OperatorPendingScreen> {
                 )
               else
                 QioButton(
-                  label: 'Voltar',
+                  label: l10n.back,
                   variant: QioButtonVariant.secondary,
                   isFullWidth: true,
                   onPressed: () => Navigator.of(context).pop(),

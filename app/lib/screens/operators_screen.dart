@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/operator.dart';
 import '../models/queue.dart';
 import '../services/operator_service.dart';
@@ -11,6 +12,24 @@ import '../theme/qio_text_styles.dart';
 import '../widgets/qio_avatar.dart';
 import '../widgets/qio_button.dart';
 import '../widgets/qio_card.dart';
+
+enum _Validity {
+  hour(Duration(hours: 1)),
+  day(OperatorService.defaultInviteValidity),
+  week(Duration(days: 7)),
+  none(null);
+
+  const _Validity(this.duration);
+
+  final Duration? duration;
+
+  String label(AppLocalizations l10n) => switch (this) {
+    _Validity.hour => l10n.validityHour,
+    _Validity.day => l10n.validityDay,
+    _Validity.week => l10n.validityWeek,
+    _Validity.none => l10n.noExpiration,
+  };
+}
 
 class OperatorsScreen extends StatefulWidget {
   const OperatorsScreen({super.key, required this.queueId});
@@ -22,17 +41,10 @@ class OperatorsScreen extends StatefulWidget {
 }
 
 class _OperatorsScreenState extends State<OperatorsScreen> {
-  static const _validityOptions = <String, Duration?>{
-    '1 hora': Duration(hours: 1),
-    '24 horas': OperatorService.defaultInviteValidity,
-    '7 dias': Duration(days: 7),
-    'Sem expiração': null,
-  };
-
   late final Stream<Queue> _queueStream;
   late final Stream<List<OperatorRequest>> _requestsStream;
   late final Stream<List<QueueOperator>> _operatorsStream;
-  String _validity = '24 horas';
+  _Validity _validity = _Validity.day;
   bool _inviteLoading = false;
   final Set<String> _busyUids = {};
 
@@ -49,12 +61,13 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: QioColors.gray100,
       appBar: AppBar(
         backgroundColor: QioColors.surface,
         title: Text(
-          'Operadores',
+          l10n.operatorsTitle,
           style: QioTextStyles.heading2.copyWith(
             fontWeight: FontWeight.w700,
             color: QioColors.textPrimary,
@@ -70,27 +83,27 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
             builder: (context, snap) => _buildInviteCard(snap.data),
           ),
           const SizedBox(height: 24),
-          _sectionTitle('PEDIDOS PENDENTES'),
+          _sectionTitle(l10n.pendingRequestsSection),
           const SizedBox(height: 12),
           StreamBuilder<List<OperatorRequest>>(
             stream: _requestsStream,
             builder: (context, snap) {
               final requests = snap.data ?? [];
               if (requests.isEmpty) {
-                return _emptyCard('Nenhum pedido pendente');
+                return _emptyCard(l10n.noPendingRequests);
               }
               return Column(children: requests.map(_buildRequestTile).toList());
             },
           ),
           const SizedBox(height: 24),
-          _sectionTitle('OPERADORES ATIVOS'),
+          _sectionTitle(l10n.activeOperatorsSection),
           const SizedBox(height: 12),
           StreamBuilder<List<QueueOperator>>(
             stream: _operatorsStream,
             builder: (context, snap) {
               final operators = snap.data ?? [];
               if (operators.isEmpty) {
-                return _emptyCard('Nenhum operador ainda');
+                return _emptyCard(l10n.noOperatorsYet);
               }
               return Column(
                 children: operators.map(_buildOperatorTile).toList(),
@@ -123,6 +136,7 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
   }
 
   Widget _buildInviteCard(Queue? queue) {
+    final l10n = AppLocalizations.of(context);
     final code = queue?.operatorInviteCode;
     final expiresAt = queue?.operatorInviteExpiresAt;
     final expired = isInviteExpired(expiresAt, DateTime.now());
@@ -134,17 +148,14 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Código de convite',
+            l10n.inviteCodeLabel,
             style: QioTextStyles.heading3.copyWith(
               fontWeight: FontWeight.w600,
               color: QioColors.textPrimary,
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            'Quem receber o código pede acesso pelo app. Você aprova cada pedido.',
-            style: QioTextStyles.caption,
-          ),
+          Text(l10n.inviteExplain, style: QioTextStyles.caption),
           const SizedBox(height: 16),
           if (active) ...[
             SelectableText(
@@ -160,8 +171,8 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
             const SizedBox(height: 8),
             Text(
               expiresAt == null
-                  ? 'Sem expiração'
-                  : 'Válido até ${_formatDateTime(expiresAt)}',
+                  ? l10n.noExpiration
+                  : l10n.validUntil(_formatDateTime(expiresAt)),
               textAlign: TextAlign.center,
               style: QioTextStyles.caption,
             ),
@@ -170,7 +181,7 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
               children: [
                 Expanded(
                   child: QioButton(
-                    label: 'Copiar',
+                    label: l10n.copy,
                     icon: Icons.copy,
                     fontSize: 14,
                     isFullWidth: true,
@@ -180,7 +191,7 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: QioButton(
-                    label: 'Compartilhar',
+                    label: l10n.share,
                     icon: Icons.share_outlined,
                     variant: QioButtonVariant.secondary,
                     fontSize: 14,
@@ -192,7 +203,7 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
             ),
             const SizedBox(height: 12),
             QioButton(
-              label: 'Revogar código',
+              label: l10n.revokeCode,
               variant: QioButtonVariant.dangerSoft,
               fontSize: 14,
               isFullWidth: true,
@@ -204,23 +215,23 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
-                  'O código anterior expirou.',
+                  l10n.previousCodeExpired,
                   style: QioTextStyles.caption.copyWith(
                     color: QioColors.warning,
                   ),
                 ),
               ),
-            Text('Validade', style: QioTextStyles.label),
+            Text(l10n.validity, style: QioTextStyles.label),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: _validityOptions.keys
+              children: _Validity.values
                   .map(
-                    (label) => ChoiceChip(
-                      label: Text(label),
-                      selected: _validity == label,
-                      onSelected: (_) => setState(() => _validity = label),
+                    (v) => ChoiceChip(
+                      label: Text(v.label(l10n)),
+                      selected: _validity == v,
+                      onSelected: (_) => setState(() => _validity = v),
                     ),
                   )
                   .toList(),
@@ -228,7 +239,7 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
             const SizedBox(height: 16),
           ],
           QioButton(
-            label: active ? 'Gerar novo código' : 'Gerar código',
+            label: active ? l10n.generateNewCode : l10n.generateCode,
             variant: active
                 ? QioButtonVariant.secondary
                 : QioButtonVariant.primary,
@@ -244,6 +255,7 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
   }
 
   Widget _buildRequestTile(OperatorRequest request) {
+    final l10n = AppLocalizations.of(context);
     final busy = _busyUids.contains(request.uid);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -257,7 +269,7 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
               children: [
                 Expanded(
                   child: QioButton(
-                    label: 'Recusar',
+                    label: l10n.reject,
                     variant: QioButtonVariant.dangerSoft,
                     fontSize: 14,
                     isFullWidth: true,
@@ -267,7 +279,7 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: QioButton(
-                    label: 'Aprovar',
+                    label: l10n.approve,
                     variant: QioButtonVariant.successSoft,
                     fontSize: 14,
                     isFullWidth: true,
@@ -284,6 +296,7 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
   }
 
   Widget _buildOperatorTile(QueueOperator operator) {
+    final l10n = AppLocalizations.of(context);
     final busy = _busyUids.contains(operator.uid);
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -292,7 +305,7 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
           children: [
             Expanded(child: _personRow(operator.label, operator.email)),
             IconButton(
-              tooltip: 'Remover operador',
+              tooltip: l10n.removeOperatorTooltip,
               icon: const Icon(Icons.person_remove_outlined),
               color: QioColors.error,
               onPressed: busy ? null : () => _confirmRemove(operator),
@@ -343,7 +356,7 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
     try {
       await OperatorService.instance.generateOperatorInvite(
         widget.queueId,
-        validFor: _validityOptions[_validity],
+        validFor: _validity.duration,
       );
     } on Exception catch (e) {
       _showError(e);
@@ -384,23 +397,22 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
   }
 
   Future<void> _confirmRemove(QueueOperator operator) async {
+    final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Remover operador?'),
-        content: Text(
-          '${operator.label} perde o acesso à fila. Atendimentos já chamados por essa pessoa continuam na fila.',
-        ),
+        title: Text(l10n.removeOperatorTitle),
+        content: Text(l10n.removeOperatorBody(operator.label)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(
-              'Remover',
-              style: TextStyle(color: QioColors.error),
+            child: Text(
+              l10n.remove,
+              style: const TextStyle(color: QioColors.error),
             ),
           ),
         ],
@@ -429,21 +441,18 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
     await Clipboard.setData(ClipboardData(text: code));
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Código copiado!'),
+      SnackBar(
+        content: Text(AppLocalizations.of(context).codeCopied),
         backgroundColor: QioColors.secondary,
       ),
     );
   }
 
   Future<void> _shareCode(String code, String queueName) async {
+    final l10n = AppLocalizations.of(context);
     try {
       await SharePlus.instance.share(
-        ShareParams(
-          text:
-              'Código para atender a fila "$queueName" no Qio: $code\n'
-              'Abra o app Qio > Entrar como operador.',
-        ),
+        ShareParams(text: l10n.shareCodeText(queueName, code)),
       );
     } on Exception catch (e) {
       _showError(e);
@@ -452,12 +461,13 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
 
   void _showError(Object e) {
     if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           e is OperatorInviteException
-              ? e.message
-              : 'Não foi possível concluir a ação. Tente novamente.',
+              ? e.message(l10n)
+              : l10n.genericActionError,
         ),
         backgroundColor: QioColors.error,
       ),

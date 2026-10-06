@@ -5,15 +5,32 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 
+import '../l10n/app_localizations.dart';
 import '../models/operator.dart';
 
-class OperatorInviteException implements Exception {
-  OperatorInviteException(this.message);
+enum OperatorInviteError {
+  generateFailed,
+  invalid,
+  invalidOrRevoked,
+  expired,
+  ownQueue,
+}
 
-  final String message;
+class OperatorInviteException implements Exception {
+  OperatorInviteException(this.error);
+
+  final OperatorInviteError error;
+
+  String message(AppLocalizations l10n) => switch (error) {
+    OperatorInviteError.generateFailed => l10n.inviteGenerateFailed,
+    OperatorInviteError.invalid => l10n.inviteInvalid,
+    OperatorInviteError.invalidOrRevoked => l10n.inviteInvalidOrRevoked,
+    OperatorInviteError.expired => l10n.inviteExpired,
+    OperatorInviteError.ownQueue => l10n.inviteOwnQueue,
+  };
 
   @override
-  String toString() => message;
+  String toString() => error.name;
 }
 
 class OperatorService {
@@ -60,7 +77,7 @@ class OperatorService {
       if (!existing.exists) code = candidate;
     }
     if (code == null) {
-      throw OperatorInviteException('Não foi possível gerar um código.');
+      throw OperatorInviteException(OperatorInviteError.generateFailed);
     }
 
     final expiresAt = validFor == null
@@ -98,20 +115,20 @@ class OperatorService {
   Future<OperatorRequest> requestToJoinAsOperator(String rawCode) async {
     final code = normalizeCode(rawCode);
     if (code.length != _codeLength) {
-      throw OperatorInviteException('Código inválido.');
+      throw OperatorInviteException(OperatorInviteError.invalid);
     }
     final inviteSnap = await _invites.doc(code).get();
     final invite = inviteSnap.data();
     if (invite == null) {
-      throw OperatorInviteException('Código inválido ou revogado.');
+      throw OperatorInviteException(OperatorInviteError.invalidOrRevoked);
     }
     final expiresAt = invite['expiresAt'];
     if (expiresAt is Timestamp &&
         isInviteExpired(expiresAt.toDate(), DateTime.now())) {
-      throw OperatorInviteException('Código expirado. Peça um novo ao dono.');
+      throw OperatorInviteException(OperatorInviteError.expired);
     }
     if (invite['ownerId'] == _uid) {
-      throw OperatorInviteException('Você já é o dono desta fila.');
+      throw OperatorInviteException(OperatorInviteError.ownQueue);
     }
 
     final queueId = invite['queueId'] as String;

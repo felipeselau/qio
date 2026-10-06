@@ -5,9 +5,11 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 
 import 'firebase_options.dart';
+import 'l10n/app_localizations.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/auth_service.dart';
+import 'services/locale_controller.dart';
 import 'services/theme_controller.dart';
 import 'theme/qio_theme.dart';
 
@@ -24,6 +26,7 @@ void main() async {
     FirebaseDatabase.instance.useDatabaseEmulator(host, 9000);
   }
   await ThemeController.instance.load();
+  await LocaleController.instance.load();
   runApp(const QioApp());
 }
 
@@ -36,17 +39,20 @@ class QioApp extends StatefulWidget {
 
 class _QioAppState extends State<QioApp> with WidgetsBindingObserver {
   final _theme = ThemeController.instance;
+  final _locale = LocaleController.instance;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _theme.addListener(_onThemeChanged);
+    _locale.addListener(_onThemeChanged);
   }
 
   @override
   void dispose() {
     _theme.removeListener(_onThemeChanged);
+    _locale.removeListener(_onThemeChanged);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -71,6 +77,15 @@ class _QioAppState extends State<QioApp> with WidgetsBindingObserver {
     );
     return MaterialApp(
       title: 'Qio',
+      locale: _locale.locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      localeResolutionCallback: (locale, supported) {
+        for (final s in supported) {
+          if (s.languageCode == locale?.languageCode) return s;
+        }
+        return const Locale('pt');
+      },
       debugShowCheckedModeBanner: false,
       theme: QioTheme.forBrightness(brightness),
       home: StreamBuilder(

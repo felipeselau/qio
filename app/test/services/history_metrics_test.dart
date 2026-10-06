@@ -1,5 +1,8 @@
+import 'dart:ui';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:qio_app/l10n/app_localizations.dart';
 import 'package:qio_app/models/history_entry.dart';
 import 'package:qio_app/services/history_metrics.dart';
 
@@ -183,9 +186,12 @@ void main() {
     });
 
     test('labels', () {
-      expect(HistoryPeriod.today.label, 'Hoje');
-      expect(HistoryPeriod.last7Days.label, '7 dias');
-      expect(HistoryPeriod.all.label, 'Tudo');
+      final pt = lookupAppLocalizations(const Locale('pt'));
+      expect(HistoryPeriod.today.label(pt), 'Hoje');
+      expect(HistoryPeriod.last7Days.label(pt), '7 dias');
+      expect(HistoryPeriod.all.label(pt), 'Tudo');
+      final en = lookupAppLocalizations(const Locale('en'));
+      expect(HistoryPeriod.last7Days.label(en), '7 days');
     });
   });
 
