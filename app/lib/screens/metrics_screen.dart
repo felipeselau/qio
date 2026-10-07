@@ -356,15 +356,18 @@ class _OperatorRow extends StatelessWidget {
     return Semantics(
       label: '$name. $counts. $detail',
       child: ExcludeSemantics(
-        child: QioCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(name, style: QioTextStyles.bodyMedium),
-              const SizedBox(height: 2),
-              Text(counts, style: QioTextStyles.caption),
-              Text(detail, style: QioTextStyles.caption),
-            ],
+        child: SizedBox(
+          width: double.infinity,
+          child: QioCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: QioTextStyles.bodyMedium),
+                const SizedBox(height: 2),
+                Text(counts, style: QioTextStyles.caption),
+                Text(detail, style: QioTextStyles.caption),
+              ],
+            ),
           ),
         ),
       ),
