@@ -366,5 +366,9 @@
   "heatmapCellSemantics": "{day}, {hour}: {count, plural, =1{1 arrival} other{{count} arrivals}}",
   "@heatmapCellSemantics": {"placeholders": {"day": {"type": "String"}, "hour": {"type": "String"}, "count": {"type": "int"}}},
   "csvWeekday": "day",
-  "csvArrivals": "arrivals"
+  "csvArrivals": "arrivals",
+  "heatmapLegendLess": "less",
+  "heatmapLegendMore": "more",
+  "weekdayChartSemantics": "Arrivals per day: {details}",
+  "@weekdayChartSemantics": {"placeholders": {"details": {"type": "String"}}}
 }

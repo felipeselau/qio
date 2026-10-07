@@ -360,7 +360,8 @@ pw.Widget _metric(String label, String value) => pw.Column(
 
 PdfColor _heatColor(int count, int max) {
   if (count == 0 || max == 0) return PdfColors.grey200;
-  final t = 0.2 + 0.8 * count / max;
+  final level = (4 * count / max).ceil().clamp(1, 4);
+  final t = const [0.55, 0.7, 0.85, 1.0][level - 1];
   double mix(double base) => 1 - (1 - base) * t;
   return PdfColor(mix(0x25 / 255), mix(0x63 / 255), mix(0xEB / 255));
 }

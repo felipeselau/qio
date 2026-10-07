@@ -7,6 +7,15 @@ import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
 import 'qio_card.dart';
 
+const _levelMix = [0.55, 0.7, 0.85, 1.0];
+
+int heatLevel(int count, int max) =>
+    count <= 0 || max <= 0 ? 0 : (4 * count / max).ceil().clamp(1, 4);
+
+Color heatColor(int level, Color empty) => level == 0
+    ? empty
+    : Color.lerp(empty, QioColors.primary, _levelMix[level - 1])!;
+
 bool _hasDemand(MetricsReport report) =>
     report.weekdays.length == 7 &&
     report.heatmap.length == 7 &&
@@ -35,7 +44,16 @@ class DemandCharts extends StatelessWidget {
               children: [
                 Text(l10n.weekdayDemandTitle, style: QioTextStyles.heading3),
                 const SizedBox(height: 16),
-                _WeekdayChart(counts: report.weekdays, names: names),
+                _WeekdayChart(
+                  counts: report.weekdays,
+                  names: names,
+                  summary: l10n.weekdayChartSemantics(
+                    [
+                      for (var d = 0; d < 7; d++)
+                        '${names[d]}: ${report.weekdays[d]}',
+                    ].join(', '),
+                  ),
+                ),
               ],
             ),
           ),
@@ -57,6 +75,11 @@ class DemandCharts extends StatelessWidget {
                       l10n.heatmapCellSemantics(names[d], hourLabel(h), count),
                 ),
                 const SizedBox(height: 12),
+                _HeatmapLegend(
+                  less: l10n.heatmapLegendLess,
+                  more: l10n.heatmapLegendMore,
+                ),
+                const SizedBox(height: 12),
                 ExcludeSemantics(
                   child: Text(summary, style: QioTextStyles.body),
                 ),
@@ -70,18 +93,21 @@ class DemandCharts extends StatelessWidget {
 }
 
 class _WeekdayChart extends StatelessWidget {
-  const _WeekdayChart({required this.counts, required this.names});
+  const _WeekdayChart({
+    required this.counts,
+    required this.names,
+    required this.summary,
+  });
 
   final List<int> counts;
   final List<String> names;
+  final String summary;
 
   @override
   Widget build(BuildContext context) {
     final max = counts.fold<int>(0, (m, v) => v > m ? v : m);
     return Semantics(
-      label: [
-        for (var d = 0; d < 7; d++) '${names[d]}: ${counts[d]}',
-      ].join(', '),
+      label: summary,
       child: ExcludeSemantics(
         child: Column(
           children: [
@@ -116,6 +142,8 @@ class _WeekdayChart extends StatelessWidget {
                     child: Text(
                       names[d],
                       textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: QioTextStyles.caption,
                     ),
                   ),
@@ -138,9 +166,6 @@ class _HeatmapChart extends StatelessWidget {
     required this.cellLabel,
   });
 
-  static const double _rowHeight = 18;
-  static const double _labelWidth = 36;
-
   final List<List<int>> matrix;
   final List<String> names;
   final String summary;
@@ -148,6 +173,10 @@ class _HeatmapChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scaler = MediaQuery.textScalerOf(context);
+    final labelWidth = scaler.scale(34).clamp(34.0, 72.0);
+    final rowHeight = scaler.scale(16).clamp(18.0, 36.0);
+    final direction = Directionality.of(context);
     return Semantics(
       container: true,
       explicitChildNodes: true,
@@ -156,14 +185,14 @@ class _HeatmapChart extends StatelessWidget {
         children: [
           Row(
             children: [
-              const SizedBox(width: _labelWidth),
+              SizedBox(width: labelWidth),
               Expanded(
                 child: ExcludeSemantics(
                   child: LayoutBuilder(
                     builder: (context, c) {
                       final cellW = c.maxWidth / 24;
                       return SizedBox(
-                        height: 16,
+                        height: rowHeight,
                         child: Stack(
                           clipBehavior: Clip.none,
                           children: [
@@ -172,7 +201,7 @@ class _HeatmapChart extends StatelessWidget {
                                 left: h == 23 ? null : h * cellW,
                                 right: h == 23 ? 0 : null,
                                 child: Text(
-                                  '${h}h',
+                                  hourLabel(h),
                                   style: QioTextStyles.caption,
                                 ),
                               ),
@@ -189,19 +218,19 @@ class _HeatmapChart extends StatelessWidget {
             children: [
               ExcludeSemantics(
                 child: SizedBox(
-                  width: _labelWidth,
+                  width: labelWidth,
                   child: Column(
                     children: [
                       for (var d = 0; d < 7; d++)
                         SizedBox(
-                          height: _rowHeight,
+                          height: rowHeight,
                           child: Align(
-                            alignment: Alignment.centerLeft,
+                            alignment: AlignmentDirectional.centerStart,
                             child: Text(
                               names[d],
                               style: QioTextStyles.caption,
                               maxLines: 1,
-                              overflow: TextOverflow.clip,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ),
@@ -211,11 +240,13 @@ class _HeatmapChart extends StatelessWidget {
               ),
               Expanded(
                 child: SizedBox(
-                  height: _rowHeight * 7,
+                  height: rowHeight * 7,
                   child: CustomPaint(
                     painter: _HeatmapPainter(
                       matrix: matrix,
                       emptyColor: QioColors.gray200,
+                      borderColor: QioColors.gray300,
+                      textDirection: direction,
                       cellLabel: cellLabel,
                     ),
                     size: Size.infinite,
@@ -234,11 +265,15 @@ class _HeatmapPainter extends CustomPainter {
   _HeatmapPainter({
     required this.matrix,
     required this.emptyColor,
+    required this.borderColor,
+    required this.textDirection,
     required this.cellLabel,
   });
 
   final List<List<int>> matrix;
   final Color emptyColor;
+  final Color borderColor;
+  final TextDirection textDirection;
   final _CellLabel cellLabel;
 
   int get _max {
@@ -261,16 +296,21 @@ class _HeatmapPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final max = _max;
     final paint = Paint();
+    final border = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1
+      ..color = borderColor;
     for (var d = 0; d < 7; d++) {
       for (var h = 0; h < 24; h++) {
         final count = matrix[d][h];
-        paint.color = count == 0 || max == 0
-            ? emptyColor
-            : QioColors.primary.withValues(alpha: 0.2 + 0.8 * count / max);
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(_cell(size, d, h), const Radius.circular(2)),
-          paint,
+        final level = heatLevel(count, max);
+        paint.color = heatColor(level, emptyColor);
+        final rrect = RRect.fromRectAndRadius(
+          _cell(size, d, h),
+          const Radius.circular(2),
         );
+        canvas.drawRRect(rrect, paint);
+        if (level == 0) canvas.drawRRect(rrect, border);
       }
     }
   }
@@ -286,15 +326,54 @@ class _HeatmapPainter extends CustomPainter {
                 rect: _cell(size, d, h),
                 properties: SemanticsProperties(
                   label: cellLabel(d, h, matrix[d][h]),
-                  textDirection: TextDirection.ltr,
+                  textDirection: textDirection,
                 ),
               ),
       ];
 
   @override
   bool shouldRepaint(_HeatmapPainter old) =>
-      old.matrix != matrix || old.emptyColor != emptyColor;
+      old.matrix != matrix ||
+      old.emptyColor != emptyColor ||
+      old.borderColor != borderColor;
 
   @override
-  bool shouldRebuildSemantics(_HeatmapPainter old) => old.matrix != matrix;
+  bool shouldRebuildSemantics(_HeatmapPainter old) =>
+      old.matrix != matrix || old.textDirection != textDirection;
+}
+
+class _HeatmapLegend extends StatelessWidget {
+  const _HeatmapLegend({required this.less, required this.more});
+
+  final String less;
+  final String more;
+
+  @override
+  Widget build(BuildContext context) {
+    final empty = QioColors.gray200;
+    Widget swatch(int level) => Container(
+      width: 14,
+      height: 14,
+      margin: const EdgeInsets.symmetric(horizontal: 2),
+      decoration: BoxDecoration(
+        color: heatColor(level, empty),
+        borderRadius: BorderRadius.circular(2),
+        border: level == 0 ? Border.all(color: QioColors.gray300) : null,
+      ),
+    );
+    return ExcludeSemantics(
+      child: Wrap(
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 4,
+        children: [
+          Text(less, style: QioTextStyles.caption),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [for (var l = 0; l <= 4; l++) swatch(l)],
+          ),
+          Text(more, style: QioTextStyles.caption),
+        ],
+      ),
+    );
+  }
 }

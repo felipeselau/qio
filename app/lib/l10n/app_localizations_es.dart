@@ -1174,4 +1174,15 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get csvArrivals => 'llegadas';
+
+  @override
+  String get heatmapLegendLess => 'menos';
+
+  @override
+  String get heatmapLegendMore => 'más';
+
+  @override
+  String weekdayChartSemantics(String details) {
+    return 'Llegadas por día: $details';
+  }
 }

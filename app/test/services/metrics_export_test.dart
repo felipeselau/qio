@@ -96,6 +96,30 @@ void main() {
       expect(none.weekdays, List<int>.filled(7, 0));
     });
 
+    test('weekdays match heatmap rows and total', () {
+      final data = [
+        QueueHistoryInput(
+          queue('a'),
+          [
+            served('1', joinedAt: DateTime(2026, 10, 5, 23, 59)),
+            served('2', joinedAt: DateTime(2026, 10, 6, 0, 0)),
+            served('3', joinedAt: DateTime(2026, 10, 4, 8)),
+            served('4', joinedAt: DateTime(2026, 10, 4, 8, 30)),
+          ],
+          const [],
+          const [],
+        ),
+      ];
+      final r = report(data);
+      expect([
+        for (final row in r.heatmap) row.fold(0, (a, b) => a + b),
+      ], r.weekdays);
+      expect(r.weekdays.fold<int>(0, (a, b) => a + b), r.metrics.total);
+      expect(r.weekdays[6], 2);
+      expect(r.heatmap[0][23], 1);
+      expect(r.heatmap[1][0], 1);
+    });
+
     test('queue selector only affects operators', () {
       final data = [
         QueueHistoryInput(
@@ -451,6 +475,28 @@ void main() {
       expect(l.length, i + 20);
     });
 
+    test('csv without weekday data omits the demand sections', () {
+      final r = report(data);
+      final bare = MetricsReport(
+        period: r.period,
+        operatorQueueId: null,
+        operatorQueueName: null,
+        isEmpty: false,
+        metrics: r.metrics,
+        distribution: r.distribution,
+        peaks: r.peaks,
+        ranking: r.ranking,
+        operators: r.operators,
+        operatorNames: r.operatorNames,
+        truncated: false,
+        historyLimit: 500,
+      );
+      final l = lines(pt, bare);
+      expect(l, isNot(contains('Dias de maior movimento')));
+      expect(l.last, '');
+      expect(l, contains('Por atendente'));
+    });
+
     test('demand headers follow the locale', () {
       final l = lines(en, report(data));
       final i = l.indexOf('Busiest days');
@@ -537,6 +583,31 @@ void main() {
       final bytes = await buildMetricsPdf(
         l10n: es,
         report: report(data),
+        generatedAt: DateTime(2026, 10, 7),
+      );
+      expect(String.fromCharCodes(bytes.take(4)), '%PDF');
+    });
+
+    test('builds without weekday data', () async {
+      final r = report([
+        QueueHistoryInput(queue('a'), [served('1')], const [], const []),
+      ]);
+      final bytes = await buildMetricsPdf(
+        l10n: pt,
+        report: MetricsReport(
+          period: r.period,
+          operatorQueueId: null,
+          operatorQueueName: null,
+          isEmpty: false,
+          metrics: r.metrics,
+          distribution: r.distribution,
+          peaks: r.peaks,
+          ranking: r.ranking,
+          operators: r.operators,
+          operatorNames: r.operatorNames,
+          truncated: false,
+          historyLimit: 500,
+        ),
         generatedAt: DateTime(2026, 10, 7),
       );
       expect(String.fromCharCodes(bytes.take(4)), '%PDF');

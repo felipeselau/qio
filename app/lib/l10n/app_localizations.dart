@@ -2217,6 +2217,24 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'chegadas'**
   String get csvArrivals;
+
+  /// No description provided for @heatmapLegendLess.
+  ///
+  /// In pt, this message translates to:
+  /// **'menos'**
+  String get heatmapLegendLess;
+
+  /// No description provided for @heatmapLegendMore.
+  ///
+  /// In pt, this message translates to:
+  /// **'mais'**
+  String get heatmapLegendMore;
+
+  /// No description provided for @weekdayChartSemantics.
+  ///
+  /// In pt, this message translates to:
+  /// **'Chegadas por dia: {details}'**
+  String weekdayChartSemantics(String details);
 }
 
 class _AppLocalizationsDelegate
