@@ -978,4 +978,34 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get pushDenied =>
       'Permissão negada. Ative as notificações nas configurações do sistema.';
+
+  @override
+  String get byOperatorTitle => 'Por atendente';
+
+  @override
+  String get operatorFilterAll => 'Todas as filas';
+
+  @override
+  String get ownerAttendant => 'Dono';
+
+  @override
+  String get formerOperator => 'ex-operador';
+
+  @override
+  String get noOperatorData => 'Nenhum atendimento por atendente no período';
+
+  @override
+  String historyTruncatedWarning(int limit) {
+    return 'Mostrando só os $limit registros mais recentes de uma fila; os números podem estar incompletos.';
+  }
+
+  @override
+  String operatorCountsLine(int served, int noShow) {
+    return '$served atendidos · $noShow não compareceram';
+  }
+
+  @override
+  String operatorDetailLine(String avg, String rating) {
+    return 'Atendimento médio: $avg · Avaliação: $rating';
+  }
 }

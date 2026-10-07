@@ -301,5 +301,16 @@
   "pushPromptBody": "Te avisamos cuando alguien entre en una de tus filas, incluso con la app cerrada. Puedes cambiarlo después en Mi cuenta.",
   "pushPromptNotNow": "Ahora no",
   "pushPromptEnable": "Activar",
-  "pushDenied": "Permiso denegado. Activa las notificaciones en los ajustes del sistema."
+  "pushDenied": "Permiso denegado. Activa las notificaciones en los ajustes del sistema.",
+  "byOperatorTitle": "Por atendente",
+  "operatorFilterAll": "Todas las filas",
+  "ownerAttendant": "Dueño",
+  "formerOperator": "ex operador",
+  "noOperatorData": "Ninguna atención por atendente en el período",
+  "historyTruncatedWarning": "Mostrando solo los {limit} registros más recientes de una fila; las cifras pueden estar incompletas.",
+  "@historyTruncatedWarning": {"placeholders": {"limit": {"type": "int"}}},
+  "operatorCountsLine": "{served} atendidos · {noShow} no se presentaron",
+  "@operatorCountsLine": {"placeholders": {"served": {"type": "int"}, "noShow": {"type": "int"}}},
+  "operatorDetailLine": "Atención promedio: {avg} · Valoración: {rating}",
+  "@operatorDetailLine": {"placeholders": {"avg": {"type": "String"}, "rating": {"type": "String"}}}
 }
