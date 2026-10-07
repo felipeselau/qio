@@ -59,7 +59,12 @@
     "pausedTitle": "Queue paused",
     "closedTitle": "Queue closed",
     "returnAt": "Expected back at {{time}}",
-    "opensAt": "Opens {{when}}"
+    "opensAt": "Opens {{when}}",
+    "pushTitle": "Alerts",
+    "pushBody": "Want a phone alert when it's your turn? It works even with the page closed.",
+    "pushEnable": "Turn on alerts",
+    "pushOn": "You will be notified when it's your turn.",
+    "pushDenied": "Alerts are blocked in the browser. The page still alerts you while it is open."
   },
   "errors": {
     "nameRequired": "Enter your name",

@@ -1,5 +1,21 @@
 # FCM Push Notifications — Guia de ativação (fase 2)
 
+## Atualização (v1.4)
+
+- O pedido de permissão deixou de ser automático: na tela da senha o cliente
+  toca em **Ativar aviso** (gesto do usuário). Se a permissão já foi concedida
+  antes, o token é registrado sozinho; se foi negada, a página mostra um texto.
+- `joinQueue` grava o idioma (`lang`) na entry e as notificações saem em
+  pt/en/es (`functions/src/webpush.js`).
+- `onQueueAdvanced`: quando alguém sai da espera (chamado, saiu, removido), o novo
+  primeiro da fila recebe **"Você é o próximo"** uma única vez (`nextNotifiedAt`).
+- O service worker só desenha a notificação quando o payload não traz
+  `notification` (evita duplicar o aviso que o FCM já exibe).
+- Falta só a chave **VAPID** (`VITE_VAPID_KEY`): gerar em Firebase Console >
+  Configurações do projeto > Cloud Messaging > Web Push certificates, guardar em
+  GitHub > Actions > Variables e em `web/.env.local`. No iOS o push web só
+  funciona com a PWA instalada na tela inicial.
+
 ## Status atual
 
 O projeto está no plano **Blaze (pay-as-you-go)** desde 01/10/2026 (Cloud

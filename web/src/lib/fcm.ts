@@ -4,6 +4,26 @@ import { getMessagingSafe } from '../firebase';
 
 const vapidKey = import.meta.env.VITE_VAPID_KEY as string | undefined;
 
+export type PushSupport = 'ready' | 'granted' | 'denied' | 'unsupported';
+
+export async function pushSupport(): Promise<PushSupport> {
+  if (!vapidKey) return 'unsupported';
+  if (typeof Notification === 'undefined') return 'unsupported';
+  try {
+    if (!(await isSupported())) return 'unsupported';
+  } catch {
+    return 'unsupported';
+  }
+  if (Notification.permission === 'granted') return 'granted';
+  if (Notification.permission === 'denied') return 'denied';
+  return 'ready';
+}
+
+export async function requestPushPermission(): Promise<'granted' | 'denied'> {
+  const result = await Notification.requestPermission();
+  return result === 'granted' ? 'granted' : 'denied';
+}
+
 export async function getFcmToken(): Promise<string | null> {
   if (!vapidKey) return null;
   try {
