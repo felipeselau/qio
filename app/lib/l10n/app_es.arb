@@ -358,5 +358,13 @@
   "csvRecallRatePct": "entradas con re-llamada sobre llamadas (%)",
   "csvSkipsTotal": "movidos al final",
   "csvSkippedEntries": "entradas movidas al final",
-  "p90Insufficient": "muestras insuficientes"
+  "p90Insufficient": "muestras insuficientes",
+  "weekdayDemandTitle": "Días de mayor movimiento",
+  "heatmapTitle": "Mapa de calor: día × hora",
+  "demandPeakSummary": "Pico: {day}, {from}–{to}",
+  "@demandPeakSummary": {"placeholders": {"day": {"type": "String"}, "from": {"type": "String"}, "to": {"type": "String"}}},
+  "heatmapCellSemantics": "{day}, {hour}: {count, plural, =1{1 llegada} other{{count} llegadas}}",
+  "@heatmapCellSemantics": {"placeholders": {"day": {"type": "String"}, "hour": {"type": "String"}, "count": {"type": "int"}}},
+  "csvWeekday": "día",
+  "csvArrivals": "llegadas"
 }

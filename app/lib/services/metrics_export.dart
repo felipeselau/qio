@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -155,6 +156,18 @@ MetricsReport buildMetricsReport({
   );
 }
 
+String weekdayLabel(String locale, int index) =>
+    DateFormat.E(locale).format(DateTime(2024, 1, 1 + index));
+
+String hourLabel(int h) => '${h.toString().padLeft(2, '0')}h';
+
+String demandPeakText(AppLocalizations l10n, String locale, DemandPeak peak) =>
+    l10n.demandPeakSummary(
+      weekdayLabel(locale, peak.weekday),
+      hourLabel(peak.hour),
+      hourLabel((peak.hour + 1) % 24),
+    );
+
 String _num(double? v) => v == null ? '' : v.toStringAsFixed(1);
 
 String _scopeLabel(AppLocalizations l10n, MetricsReport report) =>
@@ -293,8 +306,6 @@ String _ratingLabel(OperatorStats s) => s.feedback.average == null
     ? '-'
     : '${s.feedback.average!.toStringAsFixed(1)} (${s.feedback.count})';
 
-String _hourLabel(int h) => '${h.toString().padLeft(2, '0')}h';
-
 pw.Widget _section(String title) => pw.Padding(
   padding: const pw.EdgeInsets.only(top: 16, bottom: 6),
   child: pw.Text(
@@ -391,7 +402,7 @@ Future<Uint8List> buildMetricsPdf({
           pw.Text(
             report.peaks.isEmpty
                 ? l10n.noPeakData
-                : l10n.peakHoursTop(report.peaks.map(_hourLabel).join(', ')),
+                : l10n.peakHoursTop(report.peaks.map(hourLabel).join(', ')),
             style: const pw.TextStyle(fontSize: 10),
           ),
           pw.SizedBox(height: 6),
@@ -400,7 +411,7 @@ Future<Uint8List> buildMetricsPdf({
             [
               for (var h = 0; h < report.distribution.length; h++)
                 if (report.distribution[h] > 0)
-                  [_hourLabel(h), '${report.distribution[h]}'],
+                  [hourLabel(h), '${report.distribution[h]}'],
             ],
           ),
           _section(l10n.mostActiveQueues),

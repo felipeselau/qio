@@ -2181,6 +2181,42 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'amostras insuficientes'**
   String get p90Insufficient;
+
+  /// No description provided for @weekdayDemandTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dias de maior movimento'**
+  String get weekdayDemandTitle;
+
+  /// No description provided for @heatmapTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mapa de calor: dia × hora'**
+  String get heatmapTitle;
+
+  /// No description provided for @demandPeakSummary.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pico: {day}, {from}–{to}'**
+  String demandPeakSummary(String day, String from, String to);
+
+  /// No description provided for @heatmapCellSemantics.
+  ///
+  /// In pt, this message translates to:
+  /// **'{day}, {hour}: {count, plural, =1{1 chegada} other{{count} chegadas}}'**
+  String heatmapCellSemantics(String day, String hour, int count);
+
+  /// No description provided for @csvWeekday.
+  ///
+  /// In pt, this message translates to:
+  /// **'dia'**
+  String get csvWeekday;
+
+  /// No description provided for @csvArrivals.
+  ///
+  /// In pt, this message translates to:
+  /// **'chegadas'**
+  String get csvArrivals;
 }
 
 class _AppLocalizationsDelegate

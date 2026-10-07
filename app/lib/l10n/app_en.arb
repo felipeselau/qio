@@ -358,5 +358,13 @@
   "csvRecallRatePct": "entries with recall over called (%)",
   "csvSkipsTotal": "moved to end",
   "csvSkippedEntries": "entries moved to end",
-  "p90Insufficient": "not enough samples"
+  "p90Insufficient": "not enough samples",
+  "weekdayDemandTitle": "Busiest days",
+  "heatmapTitle": "Heatmap: day × hour",
+  "demandPeakSummary": "Peak: {day}, {from}–{to}",
+  "@demandPeakSummary": {"placeholders": {"day": {"type": "String"}, "from": {"type": "String"}, "to": {"type": "String"}}},
+  "heatmapCellSemantics": "{day}, {hour}: {count, plural, =1{1 arrival} other{{count} arrivals}}",
+  "@heatmapCellSemantics": {"placeholders": {"day": {"type": "String"}, "hour": {"type": "String"}, "count": {"type": "int"}}},
+  "csvWeekday": "day",
+  "csvArrivals": "arrivals"
 }
