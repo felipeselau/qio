@@ -50,4 +50,35 @@ describe('logError', () => {
     logError('evt', 'texto', undefined, logger);
     assert.equal(logger.calls[0].payload.error.message, 'texto');
   });
+
+  it('mascara telefone, e-mail e token na mensagem', () => {
+    const logger = fakeLogger();
+    const token = 'a'.repeat(60);
+    logError(
+      'evt',
+      new Error(`falha (11) 99999-9999 ana@exemplo.com ${token}`),
+      {},
+      logger,
+    );
+    const { message } = logger.calls[0].payload.error;
+    assert.equal(message, 'falha [phone] [email] [token]');
+  });
+
+  it('trunca mensagem e stack', () => {
+    const logger = fakeLogger();
+    const err = new Error('m '.repeat(1000));
+    err.stack = 's '.repeat(3000);
+    logError('evt', err, {}, logger);
+    const { message, stack } = logger.calls[0].payload.error;
+    assert.equal(message.length, 500);
+    assert.equal(stack.length, 2000);
+  });
+
+  it('ctx não sobrescreve event nem error', () => {
+    const logger = fakeLogger();
+    logError('real', new Error('boom'), { event: 'fake', error: 'fake' }, logger);
+    const { payload } = logger.calls[0];
+    assert.equal(payload.event, 'real');
+    assert.equal(payload.error.message, 'boom');
+  });
 });

@@ -39,6 +39,7 @@ const {
 } = require('./src/feedback');
 const { MAX_SAMPLES, estimateServiceMin } = require('./src/estimate');
 const { logError } = require('./src/log');
+const { guarded } = require('./src/guard');
 
 initializeApp();
 
@@ -94,19 +95,6 @@ exports.onEntryCalled = onValueWritten(
 );
 
 const ACTIVE_STATUSES = ['waiting', 'called'];
-
-function guarded(event, handler) {
-  return async (request) => {
-    try {
-      return await handler(request);
-    } catch (err) {
-      if (!(err instanceof HttpsError)) {
-        logError(`${event} failed`, err, { queueId: request.data?.queueId });
-      }
-      throw err;
-    }
-  };
-}
 
 function findActive(snap) {
   const found = [];

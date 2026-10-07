@@ -23,20 +23,35 @@ function scrub(value, depth = 0) {
   return out;
 }
 
+const MAX_MESSAGE = 500;
+const MAX_STACK = 2000;
+
+function maskPii(text) {
+  return text
+    .replace(/\(\d{2}\) ?\d{4,5}-\d{4}/g, '[phone]')
+    .replace(/[\w.+-]+@[\w-]+(\.[\w-]+)+/g, '[email]')
+    .replace(/[A-Za-z0-9_:-]{40,}/g, '[token]');
+}
+
+function clean(value, max) {
+  if (typeof value !== 'string') return value;
+  return maskPii(value).slice(0, max);
+}
+
 function describeError(err) {
   if (err instanceof Error) {
     return {
       name: err.name,
-      message: err.message,
+      message: clean(err.message, MAX_MESSAGE),
       code: err.code,
-      stack: err.stack,
+      stack: clean(err.stack, MAX_STACK),
     };
   }
-  return { message: String(err) };
+  return { message: clean(String(err), MAX_MESSAGE) };
 }
 
 function logError(event, err, ctx = {}, logger = defaultLogger) {
-  logger.error(event, { event, error: describeError(err), ...scrub(ctx) });
+  logger.error(event, { ...scrub(ctx), event, error: describeError(err) });
 }
 
 module.exports = { logError, scrub };
