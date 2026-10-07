@@ -790,6 +790,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Vibrate when calling, finishing and confirming actions';
 
   @override
+  String get analyticsTitle => 'Help improve Qio';
+
+  @override
+  String get analyticsSubtitle =>
+      'Sends anonymous usage statistics (no names, phone numbers or customer data). You can turn this off at any time.';
+
+  @override
   String get nobodyInQueueHint =>
       'When someone joins through the QR code, they show up here.';
 

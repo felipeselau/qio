@@ -5,7 +5,9 @@
     "themeLight": "Usar tema claro",
     "themeDark": "Usar tema escuro",
     "language": "Idioma",
-    "loading": "Carregando a fila"
+    "loading": "Carregando a fila",
+    "analyticsOptOut": "Não coletar estatísticas de uso",
+    "analyticsOptIn": "Voltar a permitir estatísticas de uso"
   },
   "queue": {
     "connectFailed": "Não foi possível conectar",
