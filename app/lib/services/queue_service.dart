@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
+import '../models/alerts_config.dart';
 import '../models/history_entry.dart';
 import '../models/queue.dart';
 import '../models/queue_entry.dart';
@@ -166,6 +167,12 @@ class QueueService {
           ? schedule.toMap()
           : FieldValue.delete(),
       'scheduleLastDesired': FieldValue.delete(),
+    });
+  }
+
+  Future<void> updateAlerts(String queueId, AlertsConfig config) async {
+    await _firestore.collection('queues').doc(queueId).update({
+      'alerts': config.toMap(),
     });
   }
 

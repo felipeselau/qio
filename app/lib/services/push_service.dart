@@ -10,6 +10,11 @@ String pushLanguageCode(String languageCode) {
   return const {'pt', 'en', 'es'}.contains(code) ? code : 'pt';
 }
 
+String? queueIdFromPush(Map<String, dynamic> data) {
+  final id = data['queueId'];
+  return id is String && id.isNotEmpty ? id : null;
+}
+
 class PushService {
   PushService._();
 
@@ -39,6 +44,21 @@ class PushService {
     final doc = await FirebaseFirestore.instance.doc('owners/$uid').get();
     final wants = doc.data()?['notifyNewEntries'] != false;
     return wants && await hasPermission();
+  }
+
+  Future<bool> alertsEnabled() async {
+    final uid = _uid;
+    if (uid == null) return true;
+    final doc = await FirebaseFirestore.instance.doc('owners/$uid').get();
+    return doc.data()?['notifyAlerts'] != false;
+  }
+
+  Future<void> setAlertsEnabled(bool value) async {
+    final uid = _uid;
+    if (uid == null) return;
+    await FirebaseFirestore.instance.doc('owners/$uid').set({
+      'notifyAlerts': value,
+    }, SetOptions(merge: true));
   }
 
   Future<bool> enable() async {

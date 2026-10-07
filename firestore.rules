@@ -23,6 +23,32 @@ service cloud.firestore {
         && (invite.data.expiresAt == null || invite.data.expiresAt > request.time);
     }
 
+    function validNullableInt(m, key, lo, hi) {
+      return !(key in m) || m[key] == null || (m[key] is int && m[key] >= lo && m[key] <= hi);
+    }
+
+    function validAlerts(a) {
+      return a == null
+        || (a is map
+          && a.keys().hasOnly(['enabled', 'maxWaitMin', 'maxNoShowPct', 'idleMin', 'cooldownMin'])
+          && a.keys().hasAll(['enabled'])
+          && a.enabled is bool
+          && validNullableInt(a, 'maxWaitMin', 1, 240)
+          && validNullableInt(a, 'maxNoShowPct', 1, 100)
+          && validNullableInt(a, 'idleMin', 5, 240)
+          && validNullableInt(a, 'cooldownMin', 5, 1440));
+    }
+
+    function alertsOkOnCreate() {
+      return validAlerts(request.resource.data.get('alerts', null))
+        && !('alertState' in request.resource.data);
+    }
+
+    function alertsOk() {
+      return validAlerts(request.resource.data.get('alerts', null))
+        && request.resource.data.get('alertState', null) == resource.data.get('alertState', null);
+    }
+
     match /owners/{uid} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
 
@@ -54,8 +80,9 @@ service cloud.firestore {
       allow get: if signedIn()
         && (resource.data.ownerId == request.auth.uid || isQueueOperator(queueId));
       allow list: if signedIn() && resource.data.ownerId == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid;
-      allow update, delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid && alertsOkOnCreate();
+      allow update: if request.auth != null && resource.data.ownerId == request.auth.uid && alertsOk();
+      allow delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
 
       match /history/{entryId} {
         allow read, write: if signedIn() && isQueueOwner(queueId);

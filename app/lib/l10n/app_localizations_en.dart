@@ -1081,6 +1081,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportMetricsError => 'Couldn\'t export the metrics.';
 
   @override
+  String get alertsTitle => 'Operational alerts';
+
+  @override
+  String get alertsEnable => 'Get alerts for this queue';
+
+  @override
+  String get alertsWaitLimit => 'Estimated wait above';
+
+  @override
+  String get alertsNoShowLimit => 'No-show rate today from';
+
+  @override
+  String get alertsIdleLimit =>
+      'Queue stalled with people waiting for more than';
+
+  @override
+  String get alertsCooldown => 'Minimum interval between alerts';
+
+  @override
+  String get alertsPushOff =>
+      'Notifications are turned off. Enable them to receive alerts.';
+
+  @override
+  String get alertsOff => 'Off';
+
+  @override
+  String alertsActive(int count) {
+    return '$count active rules';
+  }
+
+  @override
+  String alertsMinutes(int n) {
+    return '$n min';
+  }
+
+  @override
+  String alertsPercent(int n) {
+    return '$n%';
+  }
+
+  @override
+  String get alertsNoRule => 'Turn on at least one rule to receive alerts.';
+
+  @override
+  String get alertsNotify => 'Receive alerts on this account';
+
+  @override
   String get waitDistributionTitle => 'Wait and calls';
 
   @override

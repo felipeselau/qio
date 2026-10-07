@@ -2062,6 +2062,84 @@ abstract class AppLocalizations {
   /// **'Não foi possível exportar as métricas.'**
   String get exportMetricsError;
 
+  /// No description provided for @alertsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alertas operacionais'**
+  String get alertsTitle;
+
+  /// No description provided for @alertsEnable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Receber alertas desta fila'**
+  String get alertsEnable;
+
+  /// No description provided for @alertsWaitLimit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Espera estimada acima de'**
+  String get alertsWaitLimit;
+
+  /// No description provided for @alertsNoShowLimit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não comparecimento hoje a partir de'**
+  String get alertsNoShowLimit;
+
+  /// No description provided for @alertsIdleLimit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fila parada com gente esperando por mais de'**
+  String get alertsIdleLimit;
+
+  /// No description provided for @alertsCooldown.
+  ///
+  /// In pt, this message translates to:
+  /// **'Intervalo mínimo entre alertas'**
+  String get alertsCooldown;
+
+  /// No description provided for @alertsPushOff.
+  ///
+  /// In pt, this message translates to:
+  /// **'As notificações estão desativadas. Ative-as para receber os alertas.'**
+  String get alertsPushOff;
+
+  /// No description provided for @alertsOff.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desligado'**
+  String get alertsOff;
+
+  /// No description provided for @alertsActive.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count} regras ativas'**
+  String alertsActive(int count);
+
+  /// No description provided for @alertsMinutes.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n} min'**
+  String alertsMinutes(int n);
+
+  /// No description provided for @alertsPercent.
+  ///
+  /// In pt, this message translates to:
+  /// **'{n}%'**
+  String alertsPercent(int n);
+
+  /// No description provided for @alertsNoRule.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ative ao menos uma regra para receber alertas.'**
+  String get alertsNoRule;
+
+  /// No description provided for @alertsNotify.
+  ///
+  /// In pt, this message translates to:
+  /// **'Receber alertas nesta conta'**
+  String get alertsNotify;
+
   /// No description provided for @waitDistributionTitle.
   ///
   /// In pt, this message translates to:

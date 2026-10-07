@@ -148,6 +148,28 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
 - App: `HistoryScreen` mostra média/contagem (respeitando os filtros) e `★ n` por
   atendimento. Deploy: `--only functions:submitFeedback` e depois `--only firestore:rules`.
 
+## Alertas operacionais
+
+- Opt-in por fila (desligado por padrão), só o dono recebe. Config em
+  `queues/{id}.alerts = {enabled, maxWaitMin 1–240, maxNoShowPct 1–100, idleMin
+  5–240, cooldownMin}` (Firestore, dono escreve; rules validam). Sem espelho no RTDB.
+  `alertState = {waitAt, noShowAt, idleAt}` é escrito só pela function (rules
+  bloqueiam o cliente), em transação antes do envio, para não duplicar.
+- `evaluateQueueAlerts` (a cada 5 min, `functions/src/alerts.js`) só avalia filas com
+  `alerts.enabled` e `status == open`. Regras: espera estimada
+  (`waiting × (avgServiceMinAuto ?? avgServiceMin ?? 10)`), no-show do dia em
+  `America/Sao_Paulo` (mínimo 5 atendimentos) e fila parada (`max(meta/updatedAt,
+  menor order em espera)`; `updatedAt` muda a cada chamada, mas também em edições do
+  dono, o que só reduz alertas). Lê só `meta` e `public/` (sem PII), com
+  concorrência 5 e `timeoutSeconds: 300`. Cooldown padrão 30 min (mín. 5) por regra/fila.
+- Push reaproveita `push.js` (`data.type = 'queue-alert'`, tag `queueId-regra`) e
+  respeita `owners/{uid}.notifyAlerts` (padrão ligado; switch na tela de alertas).
+  `notifyAlerts == false` e ausência de tokens são checados antes da transação, então
+  não consomem cooldown. Se o FCM falhar depois da transação de `alertState`, o alerta
+  se perde até o próximo cooldown. Toque abre o painel.
+- Deploy (Blaze + Cloud Scheduler): `--only functions:evaluateQueueAlerts` →
+  `--only firestore:rules` → distribuir o APK.
+
 ## Operadores
 
 - **Convite**: `operatorInvites/{code}` (6 chars, validade padrão 24 h) é a fonte
