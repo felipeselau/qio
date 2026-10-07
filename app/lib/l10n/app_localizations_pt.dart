@@ -954,4 +954,28 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get brandError =>
       'Não foi possível salvar. Verifique a conexão e tente de novo.';
+
+  @override
+  String get pushTitle => 'Avisos de novas entradas';
+
+  @override
+  String get pushSubtitle =>
+      'Notificar quando alguém entrar na fila, mesmo com o app fechado';
+
+  @override
+  String get pushPromptTitle => 'Receber avisos?';
+
+  @override
+  String get pushPromptBody =>
+      'Avisamos quando alguém entrar em uma das suas filas, mesmo com o app fechado. Você pode mudar isso depois em Minha conta.';
+
+  @override
+  String get pushPromptNotNow => 'Agora não';
+
+  @override
+  String get pushPromptEnable => 'Ativar';
+
+  @override
+  String get pushDenied =>
+      'Permissão negada. Ative as notificações nas configurações do sistema.';
 }

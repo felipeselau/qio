@@ -25,6 +25,17 @@ service cloud.firestore {
 
     match /owners/{uid} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      match /devices/{deviceId} {
+        allow read, delete: if request.auth != null && request.auth.uid == uid;
+        allow create, update: if request.auth != null
+          && request.auth.uid == uid
+          && request.resource.data.keys().hasOnly(['token', 'platform', 'lang', 'updatedAt'])
+          && request.resource.data.keys().hasAll(['token'])
+          && request.resource.data.token is string
+          && request.resource.data.token.size() > 0
+          && request.resource.data.token.size() <= 4096;
+      }
     }
 
     match /operatorInvites/{code} {

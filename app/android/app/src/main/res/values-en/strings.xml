@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="new_entries_channel_name">New people in the queue</string>
+    <string name="new_entries_channel_description">Notifies you when someone joins one of your queues</string>
+</resources>

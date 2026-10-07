@@ -1827,6 +1827,48 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Não foi possível salvar. Verifique a conexão e tente de novo.'**
   String get brandError;
+
+  /// No description provided for @pushTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Avisos de novas entradas'**
+  String get pushTitle;
+
+  /// No description provided for @pushSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Notificar quando alguém entrar na fila, mesmo com o app fechado'**
+  String get pushSubtitle;
+
+  /// No description provided for @pushPromptTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Receber avisos?'**
+  String get pushPromptTitle;
+
+  /// No description provided for @pushPromptBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Avisamos quando alguém entrar em uma das suas filas, mesmo com o app fechado. Você pode mudar isso depois em Minha conta.'**
+  String get pushPromptBody;
+
+  /// No description provided for @pushPromptNotNow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Agora não'**
+  String get pushPromptNotNow;
+
+  /// No description provided for @pushPromptEnable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ativar'**
+  String get pushPromptEnable;
+
+  /// No description provided for @pushDenied.
+  ///
+  /// In pt, this message translates to:
+  /// **'Permissão negada. Ative as notificações nas configurações do sistema.'**
+  String get pushDenied;
 }
 
 class _AppLocalizationsDelegate

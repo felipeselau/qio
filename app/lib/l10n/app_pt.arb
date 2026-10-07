@@ -309,5 +309,12 @@
   "brandColorLabel": "Cor",
   "brandLogoLabel": "Logo",
   "brandChooseImage": "Escolher imagem",
-  "brandError": "Não foi possível salvar. Verifique a conexão e tente de novo."
+  "brandError": "Não foi possível salvar. Verifique a conexão e tente de novo.",
+  "pushTitle": "Avisos de novas entradas",
+  "pushSubtitle": "Notificar quando alguém entrar na fila, mesmo com o app fechado",
+  "pushPromptTitle": "Receber avisos?",
+  "pushPromptBody": "Avisamos quando alguém entrar em uma das suas filas, mesmo com o app fechado. Você pode mudar isso depois em Minha conta.",
+  "pushPromptNotNow": "Agora não",
+  "pushPromptEnable": "Ativar",
+  "pushDenied": "Permissão negada. Ative as notificações nas configurações do sistema."
 }

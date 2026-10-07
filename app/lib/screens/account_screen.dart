@@ -6,6 +6,7 @@ import '../l10n/app_localizations.dart';
 import '../services/account_format.dart';
 import '../services/auth_service.dart';
 import '../services/haptics.dart';
+import '../services/push_service.dart';
 import '../services/locale_controller.dart';
 import '../services/theme_controller.dart';
 import '../theme/qio_colors.dart';
@@ -321,6 +322,68 @@ class _HapticsCard extends StatelessWidget {
           value: Haptics.instance.enabled,
           onChanged: Haptics.instance.setEnabled,
         ),
+      ),
+    );
+  }
+}
+
+class _PushCard extends StatefulWidget {
+  const _PushCard();
+
+  @override
+  State<_PushCard> createState() => _PushCardState();
+}
+
+class _PushCardState extends State<_PushCard> {
+  bool? _enabled;
+  bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    PushService.instance.isEnabled().then((v) {
+      if (mounted) setState(() => _enabled = v);
+    });
+  }
+
+  Future<void> _toggle(bool value) async {
+    final l10n = AppLocalizations.of(context);
+    setState(() => _busy = true);
+    try {
+      if (value) {
+        final granted = await PushService.instance.enable();
+        if (!granted && mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.pushDenied)));
+        }
+        if (mounted) setState(() => _enabled = granted);
+      } else {
+        await PushService.instance.disable();
+        if (mounted) setState(() => _enabled = false);
+      }
+    } on Exception {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.genericActionError)));
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return QioCard(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: SwitchListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+        title: Text(l10n.pushTitle, style: QioTextStyles.bodyMedium),
+        subtitle: Text(l10n.pushSubtitle, style: QioTextStyles.caption),
+        value: _enabled ?? false,
+        onChanged: _enabled == null || _busy ? null : _toggle,
       ),
     );
   }

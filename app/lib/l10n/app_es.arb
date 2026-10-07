@@ -294,5 +294,12 @@
   "brandColorLabel": "Color",
   "brandLogoLabel": "Logo",
   "brandChooseImage": "Elegir imagen",
-  "brandError": "No se pudo guardar. Revisa la conexión e inténtalo de nuevo."
+  "brandError": "No se pudo guardar. Revisa la conexión e inténtalo de nuevo.",
+  "pushTitle": "Avisos de nuevas entradas",
+  "pushSubtitle": "Notificar cuando alguien entre en la fila, incluso con la app cerrada",
+  "pushPromptTitle": "¿Recibir avisos?",
+  "pushPromptBody": "Te avisamos cuando alguien entre en una de tus filas, incluso con la app cerrada. Puedes cambiarlo después en Mi cuenta.",
+  "pushPromptNotNow": "Ahora no",
+  "pushPromptEnable": "Activar",
+  "pushDenied": "Permiso denegado. Activa las notificaciones en los ajustes del sistema."
 }

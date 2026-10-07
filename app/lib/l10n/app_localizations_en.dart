@@ -951,4 +951,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get brandError =>
       'Could not save. Check your connection and try again.';
+
+  @override
+  String get pushTitle => 'New entry alerts';
+
+  @override
+  String get pushSubtitle =>
+      'Notify when someone joins the queue, even with the app closed';
+
+  @override
+  String get pushPromptTitle => 'Get alerts?';
+
+  @override
+  String get pushPromptBody =>
+      'We notify you when someone joins one of your queues, even with the app closed. You can change this later in My account.';
+
+  @override
+  String get pushPromptNotNow => 'Not now';
+
+  @override
+  String get pushPromptEnable => 'Turn on';
+
+  @override
+  String get pushDenied =>
+      'Permission denied. Turn on notifications in the system settings.';
 }
