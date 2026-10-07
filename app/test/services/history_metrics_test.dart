@@ -12,6 +12,8 @@ HistoryEntry entry({
   required DateTime joinedAt,
   DateTime? calledAt,
   DateTime? finishedAt,
+  int recalls = 0,
+  int skips = 0,
 }) => HistoryEntry(
   id: id,
   ticket: 1,
@@ -20,6 +22,8 @@ HistoryEntry entry({
   joinedAt: joinedAt,
   calledAt: calledAt,
   finishedAt: finishedAt,
+  recalls: recalls,
+  skips: skips,
 );
 
 void main() {
@@ -239,6 +243,128 @@ void main() {
       final e = HistoryEntry.fromDoc('x', {});
       expect(e.id, 'x');
       expect(e.joinedAt, DateTime.fromMillisecondsSinceEpoch(0));
+    });
+  });
+
+  HistoryEntry waited(
+    double min, {
+    String result = 'served',
+    int recalls = 0,
+    int skips = 0,
+  }) => entry(
+    result: result,
+    joinedAt: base,
+    calledAt: base.add(Duration(milliseconds: (min * 60000).round())),
+    recalls: recalls,
+    skips: skips,
+  );
+
+  group('computeWaitStats', () {
+    test('vazio', () {
+      final w = computeWaitStats([]);
+      expect(w.samples, 0);
+      expect(w.medianMin, isNull);
+      expect(w.p90Min, isNull);
+      expect(w.avgMin, isNull);
+      expect(w.bucketCounts, [0, 0, 0, 0]);
+    });
+
+    test('n=1', () {
+      final w = computeWaitStats([waited(7)]);
+      expect(w.samples, 1);
+      expect(w.medianMin, 7);
+      expect(w.avgMin, 7);
+      expect(w.p90Min, isNull);
+      expect(w.bucketCounts, [0, 1, 0, 0]);
+    });
+
+    test('mediana impar e par', () {
+      expect(computeWaitStats([waited(9), waited(1), waited(5)]).medianMin, 5);
+      expect(
+        computeWaitStats([
+          waited(1),
+          waited(2),
+          waited(4),
+          waited(10),
+        ]).medianMin,
+        3,
+      );
+    });
+
+    test('P90 com 10 amostras e null com n<5', () {
+      final w = computeWaitStats([
+        for (var i = 1; i <= 10; i++) waited(i * 1.0),
+      ]);
+      expect(w.p90Min, 9);
+      expect(w.avgMin, 5.5);
+      final four = [for (var i = 1; i <= 4; i++) waited(i * 1.0)];
+      expect(computeWaitStats(four).p90Min, isNull);
+      final five = [for (var i = 1; i <= 5; i++) waited(i * 1.0)];
+      expect(computeWaitStats(five).p90Min, 5);
+    });
+
+    test('limites 5/15/30 e soma das faixas', () {
+      final w = computeWaitStats([
+        waited(4.99),
+        waited(5),
+        waited(14.99),
+        waited(15),
+        waited(29.99),
+        waited(30),
+        waited(0),
+      ]);
+      expect(w.bucketCounts, [2, 2, 2, 1]);
+      expect(w.bucketCounts.reduce((a, b) => a + b), w.samples);
+    });
+
+    test('left, sem calledAt e negativa ignorados; no_show entra', () {
+      final w = computeWaitStats([
+        waited(3, result: 'left'),
+        waited(-2),
+        entry(joinedAt: base),
+        waited(6, result: 'no_show'),
+      ]);
+      expect(w.samples, 1);
+      expect(w.medianMin, 6);
+    });
+  });
+
+  group('computeCallEffort', () {
+    test('vazio', () {
+      final c = computeCallEffort([]);
+      expect(c.called, 0);
+      expect(c.recallRate, isNull);
+      expect(c.recallsTotal, 0);
+      expect(c.skipsTotal, 0);
+    });
+
+    test('somas, entries afetadas e taxa', () {
+      final c = computeCallEffort([
+        waited(1, recalls: 2),
+        waited(1, recalls: 1, skips: 3, result: 'no_show'),
+        waited(1),
+        waited(1),
+      ]);
+      expect(c.called, 4);
+      expect(c.recallsTotal, 3);
+      expect(c.recalledEntries, 2);
+      expect(c.skipsTotal, 3);
+      expect(c.skippedEntries, 1);
+      expect(c.recallRate, 0.5);
+    });
+
+    test('left fica fora, mesmo com calledAt, recalls e skips', () {
+      final c = computeCallEffort([
+        waited(1, recalls: 1),
+        waited(2, result: 'left', recalls: 5, skips: 4),
+        entry(result: 'left', joinedAt: base, skips: 1),
+      ]);
+      expect(c.called, 1);
+      expect(c.recallsTotal, 1);
+      expect(c.recalledEntries, 1);
+      expect(c.skipsTotal, 0);
+      expect(c.skippedEntries, 0);
+      expect(c.recallRate, 1);
     });
   });
 }

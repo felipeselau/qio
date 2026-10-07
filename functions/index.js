@@ -38,6 +38,8 @@ const {
   buildFeedbackDoc,
 } = require('./src/feedback');
 const { MAX_SAMPLES, estimateServiceMin } = require('./src/estimate');
+const { logError } = require('./src/log');
+const { guarded } = require('./src/guard');
 
 initializeApp();
 
@@ -86,7 +88,7 @@ exports.onEntryCalled = onValueWritten(
       await getMessaging().send(message);
       return { ok: true };
     } catch (err) {
-      console.error('FCM send failed', err);
+      logError('onEntryCalled failed', err, { queueId });
       return null;
     }
   },
@@ -111,7 +113,7 @@ exports.joinQueue = onCall(
     invoker: 'public',
     enforceAppCheck: process.env.ENFORCE_APP_CHECK === 'true',
   },
-  async (request) => {
+  guarded('joinQueue', async (request) => {
     const uid = request.auth?.uid;
     if (!uid) {
       throw new HttpsError('unauthenticated', 'Faça login para entrar na fila.');
@@ -215,7 +217,7 @@ exports.joinQueue = onCall(
     });
 
     return { entryId: newRef.key, ticket, existing: false };
-  },
+  }),
 );
 
 exports.submitFeedback = onCall(
@@ -224,7 +226,7 @@ exports.submitFeedback = onCall(
     invoker: 'public',
     enforceAppCheck: process.env.ENFORCE_APP_CHECK === 'true',
   },
-  async (request) => {
+  guarded('submitFeedback', async (request) => {
     const uid = request.auth?.uid;
     if (!uid) {
       throw new HttpsError('unauthenticated', 'Faça login para avaliar.');
@@ -259,7 +261,7 @@ exports.submitFeedback = onCall(
       return { ok: true, existing: true };
     }
     return { ok: true, existing: false };
-  },
+  }),
 );
 
 exports.syncPublicTicket = onValueWritten(
@@ -272,17 +274,22 @@ exports.syncPublicTicket = onValueWritten(
     const { queueId, entryId } = event.params;
     const db = getDatabase();
     const publicRef = db.ref(`queues/${queueId}/public/${entryId}`);
-    if (after && after.status === 'left') {
-      try {
-        await archiveLeftEntry(queueId, entryId, after);
-        await db.ref(`queues/${queueId}/entries/${entryId}`).remove();
-      } finally {
+    try {
+      if (after && after.status === 'left') {
+        try {
+          await archiveLeftEntry(queueId, entryId, after);
+          await db.ref(`queues/${queueId}/entries/${entryId}`).remove();
+        } finally {
+          await publicRef.remove();
+        }
+      } else if (after && ACTIVE_STATUSES.includes(after.status)) {
+        await publicRef.set(publicTicketFor(after));
+      } else {
         await publicRef.remove();
       }
-    } else if (after && ACTIVE_STATUSES.includes(after.status)) {
-      await publicRef.set(publicTicketFor(after));
-    } else {
-      await publicRef.remove();
+    } catch (err) {
+      logError('syncPublicTicket failed', err, { queueId, entryId });
+      throw err;
     }
     return null;
   },
@@ -324,7 +331,7 @@ exports.updateServiceEstimate = onDocumentCreated(
       await metaRef.child('avgServiceMinAuto').set(estimate);
       return { ok: true };
     } catch (err) {
-      console.error('updateServiceEstimate failed', err);
+      logError('updateServiceEstimate failed', err, { queueId });
       return null;
     }
   },
@@ -373,7 +380,7 @@ exports.applyQueueSchedules = onSchedule(
           await metaRef.update(patch);
         }
       } catch (err) {
-        console.error('applyQueueSchedules failed', doc.id, err);
+        logError('applyQueueSchedules failed', err, { queueId: doc.id });
       }
     }
   },
@@ -433,7 +440,7 @@ exports.onEntryJoined = onValueCreated(
         }
       }
     } catch (err) {
-      console.error('onEntryJoined failed', err);
+      logError('onEntryJoined failed', err, { queueId });
     }
     return null;
   },
@@ -468,7 +475,7 @@ exports.onQueueAdvanced = onValueWritten(
         }),
       );
     } catch (err) {
-      console.error('onQueueAdvanced failed', err);
+      logError('onQueueAdvanced failed', err, { queueId });
     }
     return null;
   },

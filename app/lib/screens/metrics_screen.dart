@@ -24,6 +24,7 @@ import '../widgets/group_compare_card.dart';
 import '../widgets/qio_card.dart';
 import '../widgets/qio_empty_state.dart';
 import '../widgets/qio_skeleton.dart';
+import '../widgets/wait_effort_card.dart';
 import '../widgets/qio_responsive_body.dart';
 
 class MetricsScreen extends StatefulWidget {
@@ -313,6 +314,11 @@ class _MetricsScreenState extends State<MetricsScreen> {
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: 16),
+          WaitEffortCard(
+            waitStats: report.waitStats,
+            callEffort: report.callEffort,
           ),
           const SizedBox(height: 16),
           QioCard(

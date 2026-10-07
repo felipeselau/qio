@@ -794,6 +794,13 @@ class AppLocalizationsEs extends AppLocalizations {
       'Vibrar al llamar, finalizar y confirmar acciones';
 
   @override
+  String get analyticsTitle => 'Ayudar a mejorar Qio';
+
+  @override
+  String get analyticsSubtitle =>
+      'Envía estadísticas anónimas de uso (sin nombres, teléfonos ni datos de clientes). Puedes desactivarlo cuando quieras.';
+
+  @override
   String get nobodyInQueueHint =>
       'Cuando alguien entre por el código QR, aparecerá aquí.';
 
@@ -1146,4 +1153,74 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get groupsUnavailable =>
       'Grupos no disponibles. Actualiza la app o las reglas de Firestore.';
+
+  @override
+  String get waitDistributionTitle => 'Espera y llamadas';
+
+  @override
+  String get medianWait => 'Mediana';
+
+  @override
+  String get p90Wait => 'P90';
+
+  @override
+  String get waitBucketUnder5 => 'Menos de 5 min';
+
+  @override
+  String get waitBucket5to15 => '5–15 min';
+
+  @override
+  String get waitBucket15to30 => '15–30 min';
+
+  @override
+  String get waitBucketOver30 => 'Más de 30 min';
+
+  @override
+  String get recallsTitle => 'Re-llamadas';
+
+  @override
+  String get skipsTitle => 'Movidos al final';
+
+  @override
+  String recallsStat(int entries, int total, int pct, int recalls) {
+    return '$entries entradas de $total ($pct%) · $recalls re-llamadas';
+  }
+
+  @override
+  String skipsStat(int entries, int total, int skips) {
+    return '$entries entradas de $total · $skips movidos al final';
+  }
+
+  @override
+  String get csvWaitSamples => 'muestras de espera';
+
+  @override
+  String get csvMedianWaitMin => 'mediana (min)';
+
+  @override
+  String get csvP90WaitMin => 'P90 (min)';
+
+  @override
+  String get csvWaitRange => 'rango de espera';
+
+  @override
+  String get csvCalledEntries => 'entradas llamadas';
+
+  @override
+  String get csvRecallsTotal => 're-llamadas';
+
+  @override
+  String get csvRecalledEntries => 'entradas con re-llamada';
+
+  @override
+  String get csvRecallRatePct => 'entradas con re-llamada sobre llamadas (%)';
+
+  @override
+  String get csvSkipsTotal => 'movidos al final';
+
+  @override
+  String get csvSkippedEntries => 'entradas movidas al final';
+
+  @override
+  String get p90Insufficient => 'muestras insuficientes';
 }

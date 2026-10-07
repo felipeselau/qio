@@ -10,6 +10,7 @@ import 'firebase_options.dart';
 import 'l10n/app_localizations.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
+import 'services/analytics_service.dart';
 import 'services/auth_service.dart';
 import 'services/haptics.dart';
 import 'services/locale_controller.dart';
@@ -43,6 +44,7 @@ void main() async {
     FirebaseFirestore.instance.useFirestoreEmulator(host, 8080);
     FirebaseDatabase.instance.useDatabaseEmulator(host, 9000);
   }
+  if (!kIsWeb) await AnalyticsController.instance.load();
   await ThemeController.instance.load();
   await Haptics.instance.load();
   await LocaleController.instance.load();

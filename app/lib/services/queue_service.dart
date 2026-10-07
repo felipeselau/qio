@@ -10,6 +10,7 @@ import '../models/queue.dart';
 import '../models/queue_entry.dart';
 import '../models/queue_feedback.dart';
 import '../models/queue_schedule.dart';
+import 'analytics_service.dart';
 import 'mirror.dart';
 import 'operator_service.dart';
 
@@ -75,6 +76,7 @@ class QueueService {
       rethrow;
     }
 
+    unawaited(AnalyticsController.instance.service.queueCreated(queueId));
     return Queue(
       id: queueId,
       ownerId: _uid,
@@ -392,6 +394,7 @@ class QueueService {
       final claimed = await _claimEntry(entriesRef.child(candidate.id));
       if (claimed == null) continue;
       await _advanceServing(metaRef, claimed.ticket);
+      unawaited(AnalyticsController.instance.service.entryCalled(queueId));
       return claimed;
     }
     return null;
@@ -404,6 +407,7 @@ class QueueService {
     );
     if (claimed == null) return null;
     await _advanceServing(_rtdb.ref('queues/$queueId/meta'), claimed.ticket);
+    unawaited(AnalyticsController.instance.service.entryCalled(queueId));
     return claimed;
   }
 
@@ -473,6 +477,7 @@ class QueueService {
 
   Future<void> markServed(String queueId, QueueEntry entry) async {
     await _finishEntry(queueId, entry, EntryStatus.served);
+    unawaited(AnalyticsController.instance.service.entryServed(queueId));
   }
 
   Future<void> markNoShow(String queueId, QueueEntry entry) async {
