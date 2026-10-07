@@ -1,4 +1,4 @@
-const { onValueWritten } = require('firebase-functions/v2/database');
+const { onValueWritten, onValueCreated } = require('firebase-functions/v2/database');
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { onDocumentCreated } = require('firebase-functions/v2/firestore');
@@ -17,6 +17,13 @@ const { historyFromLeftEntry } = require('./src/history');
 const { isQueueFull } = require('./src/capacity');
 const { publicTicketFor, shouldRenotify } = require('./src/ticket');
 const { planScheduleChange } = require('./src/schedule');
+const {
+  buildNewEntryMessage,
+  recipientUids,
+  wantsNewEntryPush,
+  isStaleTokenError,
+  groupTokensByLang,
+} = require('./src/push');
 const {
   normalizeRating,
   normalizeComment,
@@ -367,5 +374,65 @@ exports.applyQueueSchedules = onSchedule(
         console.error('applyQueueSchedules failed', doc.id, err);
       }
     }
+  },
+);
+
+exports.onEntryJoined = onValueCreated(
+  { ref: 'queues/{queueId}/entries/{entryId}', region: 'us-central1' },
+  async (event) => {
+    const entry = event.data.val();
+    if (!entry || entry.status !== 'waiting') return null;
+    const { queueId } = event.params;
+    const db = getDatabase();
+    const firestore = getFirestore();
+
+    try {
+      const [ownerSnap, opsSnap, nameSnap] = await Promise.all([
+        db.ref(`owners/${queueId}/ownerUid`).once('value'),
+        db.ref(`queues/${queueId}/operatorUids`).once('value'),
+        db.ref(`queues/${queueId}/meta/name`).once('value'),
+      ]);
+      const ops = opsSnap.val() ?? {};
+      const uids = recipientUids({
+        ownerUid: ownerSnap.val(),
+        operatorUids: Object.keys(ops).filter((k) => ops[k] === true),
+      });
+
+      const devices = [];
+      for (const uid of uids) {
+        const ownerDoc = await firestore.doc(`owners/${uid}`).get();
+        if (!wantsNewEntryPush(ownerDoc.data())) continue;
+        const snap = await firestore.collection(`owners/${uid}/devices`).get();
+        snap.forEach((d) => devices.push({ ref: d.ref, ...d.data() }));
+      }
+      if (devices.length === 0) return null;
+
+      const byLang = groupTokensByLang(devices);
+      const refsByToken = new Map(devices.map((d) => [d.token, d.ref]));
+      for (const [lang, tokens] of Object.entries(byLang)) {
+        for (let i = 0; i < tokens.length; i += 500) {
+          const chunk = tokens.slice(i, i + 500);
+          const response = await getMessaging().sendEachForMulticast({
+            tokens: chunk,
+            ...buildNewEntryMessage({
+              queueId,
+              queueName: nameSnap.val(),
+              entryName: entry.name,
+              lang,
+            }),
+          });
+          await Promise.all(
+            response.responses.map((r, idx) =>
+              !r.success && isStaleTokenError(r.error?.code)
+                ? refsByToken.get(chunk[idx])?.delete()
+                : null,
+            ),
+          );
+        }
+      }
+    } catch (err) {
+      console.error('onEntryJoined failed', err);
+    }
+    return null;
   },
 );

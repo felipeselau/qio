@@ -2,6 +2,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
+import 'push_service.dart';
+
 class AuthService {
   AuthService._();
   static final AuthService instance = AuthService._();
@@ -57,6 +59,11 @@ class AuthService {
       _auth.sendPasswordResetEmail(email: email.trim());
 
   Future<void> signOut() async {
+    try {
+      await PushService.instance.unregisterDevice();
+    } on Exception {
+      // signing out must not depend on push cleanup
+    }
     await _auth.signOut();
   }
 

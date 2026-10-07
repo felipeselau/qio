@@ -91,6 +91,33 @@ describe('Firestore rules', () => {
     });
   });
 
+  describe('devices de push', () => {
+    const device = { token: 'abc', platform: 'android', lang: 'pt', updatedAt: 1 };
+
+    it('o próprio usuário registra, lê e apaga o aparelho', async () => {
+      const ref = doc(db(OWNER), 'owners', OWNER, 'devices', 'd1');
+      await assertSucceeds(setDoc(ref, device));
+      await assertSucceeds(getDoc(ref));
+      await assertSucceeds(deleteDoc(ref));
+    });
+
+    it('outro usuário não lê nem escreve nos aparelhos alheios', async () => {
+      const ref = doc(db(STRANGER), 'owners', OWNER, 'devices', 'd1');
+      await assertFails(setDoc(ref, device));
+      await assertFails(getDoc(ref));
+      await assertFails(deleteDoc(ref));
+    });
+
+    it('rejeita token vazio, grande demais, sem token ou com campo extra', async () => {
+      const ref = doc(db(OWNER), 'owners', OWNER, 'devices', 'd2');
+      await assertFails(setDoc(ref, { ...device, token: '' }));
+      await assertFails(setDoc(ref, { ...device, token: 'x'.repeat(4097) }));
+      await assertFails(setDoc(ref, { platform: 'android' }));
+      await assertFails(setDoc(ref, { ...device, admin: true }));
+      await assertFails(setDoc(ref, { ...device, token: 5 }));
+    });
+  });
+
   describe('conta do dono', () => {
     it('usuário lê o próprio owners/{uid}', async () => {
       await assertSucceeds(getDoc(doc(db(OWNER), 'owners', OWNER)));

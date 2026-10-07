@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:app_links/app_links.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -11,6 +12,7 @@ import '../models/operator.dart';
 import '../models/queue.dart';
 import '../services/auth_service.dart';
 import '../services/deep_link.dart';
+import '../services/push_service.dart';
 import '../services/onboarding_service.dart';
 import '../services/operator_service.dart';
 import '../services/queue_service.dart';
@@ -53,11 +55,60 @@ class _HomeScreenState extends State<HomeScreen> {
       if (uri != null && mounted) _openLink(uri);
     });
     _linkSub = links.uriLinkStream.listen(_openLink);
+    if (PushService.instance.supported) _initPush();
+  }
+
+  StreamSubscription<RemoteMessage>? _pushSub;
+
+  Future<void> _initPush() async {
+    try {
+      await PushService.instance.registerIfAllowed();
+    } on Exception {
+      // push is optional
+    }
+    final initial = await FirebaseMessaging.instance.getInitialMessage();
+    final initialId = initial?.data['queueId'] as String?;
+    if (initialId != null && mounted) _openQueue(initialId);
+    _pushSub = FirebaseMessaging.onMessageOpenedApp.listen((m) {
+      final id = m.data['queueId'] as String?;
+      if (id != null) _openQueue(id);
+    });
+    if (await PushService.instance.shouldPrompt() && mounted) {
+      await _askForPush();
+    }
+  }
+
+  Future<void> _askForPush() async {
+    final l10n = AppLocalizations.of(context);
+    await PushService.instance.markPrompted();
+    if (!mounted) return;
+    final enable = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.pushPromptTitle),
+        content: Text(l10n.pushPromptBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.pushPromptNotNow),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.pushPromptEnable),
+          ),
+        ],
+      ),
+    );
+    if (enable == true) await PushService.instance.enable();
   }
 
   Future<void> _openLink(Uri uri) async {
     final queueId = queueIdFromLink(uri);
     if (queueId == null) return;
+    await _openQueue(queueId);
+  }
+
+  Future<void> _openQueue(String queueId) async {
     final access = await QueueService.instance.resolveAccess(queueId);
     if (!mounted) return;
     if (access == null) {
@@ -84,6 +135,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _linkSub?.cancel();
+    _pushSub?.cancel();
     _controller.dispose();
     super.dispose();
   }

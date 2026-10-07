@@ -294,5 +294,12 @@
   "brandColorLabel": "Color",
   "brandLogoLabel": "Logo",
   "brandChooseImage": "Choose image",
-  "brandError": "Could not save. Check your connection and try again."
+  "brandError": "Could not save. Check your connection and try again.",
+  "pushTitle": "New entry alerts",
+  "pushSubtitle": "Notify when someone joins the queue, even with the app closed",
+  "pushPromptTitle": "Get alerts?",
+  "pushPromptBody": "We notify you when someone joins one of your queues, even with the app closed. You can change this later in My account.",
+  "pushPromptNotNow": "Not now",
+  "pushPromptEnable": "Turn on",
+  "pushDenied": "Permission denied. Turn on notifications in the system settings."
 }

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="new_entries_channel_name">Nuevas personas en la fila</string>
+    <string name="new_entries_channel_description">Te avisa cuando alguien entra en una de tus filas</string>
+</resources>
