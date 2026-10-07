@@ -312,5 +312,6 @@
   "operatorCountsLine": "{served} served · {noShow} no-shows",
   "@operatorCountsLine": {"placeholders": {"served": {"type": "int"}, "noShow": {"type": "int"}}},
   "operatorDetailLine": "Avg. service: {avg} · Rating: {rating}",
-  "@operatorDetailLine": {"placeholders": {"avg": {"type": "String"}, "rating": {"type": "String"}}}
+  "@operatorDetailLine": {"placeholders": {"avg": {"type": "String"}, "rating": {"type": "String"}}},
+  "operatorFilterLabel": "Filter by queue"
 }

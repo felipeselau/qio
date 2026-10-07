@@ -312,5 +312,6 @@
   "operatorCountsLine": "{served} atendidos · {noShow} no se presentaron",
   "@operatorCountsLine": {"placeholders": {"served": {"type": "int"}, "noShow": {"type": "int"}}},
   "operatorDetailLine": "Atención promedio: {avg} · Valoración: {rating}",
-  "@operatorDetailLine": {"placeholders": {"avg": {"type": "String"}, "rating": {"type": "String"}}}
+  "@operatorDetailLine": {"placeholders": {"avg": {"type": "String"}, "rating": {"type": "String"}}},
+  "operatorFilterLabel": "Filtrar por fila"
 }

@@ -1010,4 +1010,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String operatorDetailLine(String avg, String rating) {
     return 'Atención promedio: $avg · Valoración: $rating';
   }
+
+  @override
+  String get operatorFilterLabel => 'Filtrar por fila';
 }

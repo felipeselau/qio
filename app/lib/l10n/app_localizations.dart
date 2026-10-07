@@ -1917,6 +1917,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Atendimento médio: {avg} · Avaliação: {rating}'**
   String operatorDetailLine(String avg, String rating);
+
+  /// No description provided for @operatorFilterLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Filtrar por fila'**
+  String get operatorFilterLabel;
 }
 
 class _AppLocalizationsDelegate

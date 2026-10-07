@@ -1006,4 +1006,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String operatorDetailLine(String avg, String rating) {
     return 'Avg. service: $avg · Rating: $rating';
   }
+
+  @override
+  String get operatorFilterLabel => 'Filter by queue';
 }

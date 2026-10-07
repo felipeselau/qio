@@ -40,12 +40,16 @@ class _MetricsScreenState extends State<MetricsScreen> {
 
   Future<List<_QueueHistory>> _load() async {
     final queues = await QueueService.instance.watchOwnerQueues().first;
-    return Future.wait([
+    final result = await Future.wait([
       for (final q in queues)
         Future.wait([
           QueueService.instance.fetchHistory(q.id),
-          QueueService.instance.fetchFeedback(q.id),
-          OperatorService.instance.fetchOperators(q.id),
+          QueueService.instance
+              .fetchFeedback(q.id)
+              .catchError((_) => <QueueFeedback>[]),
+          OperatorService.instance
+              .fetchOperators(q.id)
+              .catchError((_) => <QueueOperator>[]),
         ]).then(
           (r) => _QueueHistory(
             q,
@@ -55,6 +59,11 @@ class _MetricsScreenState extends State<MetricsScreen> {
           ),
         ),
     ]);
+    if (_operatorQueueId != null &&
+        !result.any((d) => d.queue.id == _operatorQueueId)) {
+      _operatorQueueId = null;
+    }
+    return result;
   }
 
   @override
@@ -244,48 +253,59 @@ class _MetricsScreenState extends State<MetricsScreen> {
           (d) => _operatorQueueId == null || d.queue.id == _operatorQueueId,
         )
         .toList();
-    final truncated = selected.any(
-      (d) => d.entries.length >= QueueService.historyFetchLimit,
-    );
+    final truncated = selected.any((d) {
+      if (d.entries.length < QueueService.historyFetchLimit) return false;
+      final oldest = d.entries.reduce(
+        (a, b) => a.referenceTime.isBefore(b.referenceTime) ? a : b,
+      );
+      return filterHistory([oldest], period: _period, now: now).isNotEmpty;
+    });
     final names = <String, String>{
       for (final d in data)
         for (final o in d.operators) o.uid: o.label,
     };
-    final stats = [
-      for (final d in selected)
-        ...computeOperatorMetrics(
-          filterHistory(d.entries, period: _period, now: now),
-          ownerUid: d.queue.ownerId,
-          feedback: d.feedback,
-        ),
-    ];
-    final merged = _mergeStats(stats, names);
+    final merged = computeOperatorMetrics(
+      [
+        for (final d in selected)
+          ...filterHistory(d.entries, period: _period, now: now),
+      ],
+      ownerUids: {for (final d in selected) d.queue.ownerId},
+      feedback: [for (final d in selected) ...d.feedback],
+      names: names,
+      unknownName: l10n.formerOperator,
+    );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(l10n.byOperatorTitle, style: QioTextStyles.heading3),
         const SizedBox(height: 8),
-        DropdownButton<String?>(
-          isExpanded: true,
-          value: _operatorQueueId,
-          onChanged: (v) => setState(() => _operatorQueueId = v),
-          items: [
-            DropdownMenuItem<String?>(
-              value: null,
-              child: Text(l10n.operatorFilterAll),
-            ),
-            for (final d in data)
+        Semantics(
+          label: l10n.operatorFilterLabel,
+          child: DropdownButton<String?>(
+            isExpanded: true,
+            value: _operatorQueueId,
+            onChanged: (v) => setState(() => _operatorQueueId = v),
+            items: [
               DropdownMenuItem<String?>(
-                value: d.queue.id,
-                child: Text(d.queue.name, overflow: TextOverflow.ellipsis),
+                value: null,
+                child: Text(l10n.operatorFilterAll),
               ),
-          ],
+              for (final d in data)
+                DropdownMenuItem<String?>(
+                  value: d.queue.id,
+                  child: Text(d.queue.name, overflow: TextOverflow.ellipsis),
+                ),
+            ],
+          ),
         ),
         if (truncated) ...[
           const SizedBox(height: 8),
-          Text(
-            l10n.historyTruncatedWarning(QueueService.historyFetchLimit),
-            style: QioTextStyles.caption,
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              l10n.historyTruncatedWarning(QueueService.historyFetchLimit),
+              style: QioTextStyles.caption,
+            ),
           ),
         ],
         const SizedBox(height: 8),
@@ -308,60 +328,6 @@ class _MetricsScreenState extends State<MetricsScreen> {
       ],
     );
   }
-}
-
-List<OperatorStats> _mergeStats(
-  List<OperatorStats> stats,
-  Map<String, String> names,
-) {
-  final byId = <String?, List<OperatorStats>>{};
-  for (final s in stats) {
-    byId.putIfAbsent(s.attendantId, () => []).add(s);
-  }
-  final merged = [
-    for (final g in byId.values)
-      if (g.length == 1)
-        g.first
-      else
-        OperatorStats(
-          attendantId: g.first.attendantId,
-          served: g.fold(0, (a, s) => a + s.served),
-          noShow: g.fold(0, (a, s) => a + s.noShow),
-          serviceSamples: g.fold(0, (a, s) => a + s.serviceSamples),
-          avgServiceMin: _weightedAvg(g),
-          feedback: _mergeFeedback(g),
-        ),
-  ];
-  String nameOf(OperatorStats s) =>
-      (s.attendantId == null ? '' : names[s.attendantId] ?? s.attendantId!)
-          .toLowerCase();
-  merged.sort((a, b) {
-    final byVolume = b.volume.compareTo(a.volume);
-    if (byVolume != 0) return byVolume;
-    if (a.isOwner != b.isOwner) return a.isOwner ? -1 : 1;
-    return nameOf(a).compareTo(nameOf(b));
-  });
-  return merged;
-}
-
-double? _weightedAvg(List<OperatorStats> g) {
-  final samples = g.fold<int>(0, (a, s) => a + s.serviceSamples);
-  if (samples < minServiceSamples) return null;
-  final total = g.fold<double>(
-    0,
-    (a, s) => a + (s.avgServiceMin ?? 0) * s.serviceSamples,
-  );
-  return total / samples;
-}
-
-FeedbackSummary _mergeFeedback(List<OperatorStats> g) {
-  final count = g.fold<int>(0, (a, s) => a + s.feedback.count);
-  if (count == 0) return const FeedbackSummary(count: 0);
-  final total = g.fold<double>(
-    0,
-    (a, s) => a + (s.feedback.average ?? 0) * s.feedback.count,
-  );
-  return FeedbackSummary(count: count, average: total / count);
 }
 
 String _minutes(AppLocalizations l10n, double? v) {

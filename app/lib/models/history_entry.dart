@@ -25,7 +25,11 @@ class HistoryEntry {
   final String? calledBy;
   final String? operatorId;
 
-  String? get attendantId => calledBy ?? operatorId;
+  String? get attendantId {
+    if (calledBy != null && calledBy!.isNotEmpty) return calledBy;
+    if (operatorId != null && operatorId!.isNotEmpty) return operatorId;
+    return null;
+  }
 
   bool get isServed => result == 'served';
   bool get isNoShow => result == 'no_show';
