@@ -64,6 +64,7 @@ class FakeQueueService implements QueueService {
   String uid;
   QueueEntry? callNextResult;
   Object? ownerQueuesError;
+  Object? historyError;
   Object? callNextError;
   final List<String> calls = [];
 
@@ -92,7 +93,9 @@ class FakeQueueService implements QueueService {
 
   @override
   Stream<List<HistoryEntry>> watchHistory(String queueId, {int limit = 200}) =>
-      Stream.value(history);
+      historyError != null
+      ? Stream.error(historyError!)
+      : Stream.value(history);
 
   @override
   Future<List<HistoryEntry>> fetchHistory(
@@ -172,4 +175,25 @@ class FakeOperatorService implements OperatorService {
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+HistoryEntry fakeHistory(
+  String id,
+  int ticket, {
+  String? name,
+  String result = 'served',
+  required DateTime finishedAt,
+  int waitMin = 5,
+  int serviceMin = 3,
+}) {
+  final calledAt = finishedAt.subtract(Duration(minutes: serviceMin));
+  return HistoryEntry(
+    id: id,
+    ticket: ticket,
+    name: name ?? 'Cliente $ticket',
+    result: result,
+    joinedAt: calledAt.subtract(Duration(minutes: waitMin)),
+    calledAt: calledAt,
+    finishedAt: finishedAt,
+  );
 }
