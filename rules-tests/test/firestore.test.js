@@ -193,6 +193,24 @@ describe('Firestore rules', () => {
       await assertFails(updateDoc(queueRef(), { alerts: { ...valid, extra: 1 } }));
     });
 
+    it('nega double no limite', async () => {
+      await assertFails(updateDoc(queueRef(), { alerts: { ...valid, maxWaitMin: 30.5 } }));
+    });
+
+    it('create da fila valida alerts e nega alertState', async () => {
+      const ref = doc(db(OWNER), 'queues', 'novaFila');
+      const base = { ownerId: OWNER, name: 'Nova', status: 'open' };
+      await assertSucceeds(setDoc(ref, { ...base, alerts: valid }));
+      const ref2 = doc(db(OWNER), 'queues', 'novaFila2');
+      await assertFails(setDoc(ref2, { ...base, alerts: { ...valid, maxWaitMin: 30.5 } }));
+      await assertFails(setDoc(ref2, { ...base, alertState: { waitAt: 123 } }));
+    });
+
+    it('dono grava notifyAlerts em owners/{uid}', async () => {
+      await assertSucceeds(setDoc(doc(db(OWNER), 'owners', OWNER), { notifyAlerts: false }, { merge: true }));
+      await assertFails(setDoc(doc(db(STRANGER), 'owners', OWNER), { notifyAlerts: false }, { merge: true }));
+    });
+
     it('dono não escreve alertState', async () => {
       await assertFails(updateDoc(queueRef(), { alertState: { waitAt: 1 } }));
     });
