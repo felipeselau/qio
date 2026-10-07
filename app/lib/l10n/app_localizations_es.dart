@@ -1153,4 +1153,43 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get p90Insufficient => 'muestras insuficientes';
+
+  @override
+  String get weekdayDemandTitle => 'Días de mayor movimiento';
+
+  @override
+  String get heatmapTitle => 'Mapa de calor: día × hora';
+
+  @override
+  String demandPeakSummary(String day, String from, String to) {
+    return 'Pico: $day, $from–$to';
+  }
+
+  @override
+  String heatmapCellSemantics(String day, String hour, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count llegadas',
+      one: '1 llegada',
+    );
+    return '$day, $hour: $_temp0';
+  }
+
+  @override
+  String get csvWeekday => 'día';
+
+  @override
+  String get csvArrivals => 'llegadas';
+
+  @override
+  String get heatmapLegendLess => 'menos';
+
+  @override
+  String get heatmapLegendMore => 'más';
+
+  @override
+  String weekdayChartSemantics(String details) {
+    return 'Llegadas por día: $details';
+  }
 }

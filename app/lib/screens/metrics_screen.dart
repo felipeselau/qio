@@ -17,6 +17,7 @@ import '../services/operator_service.dart';
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
+import '../widgets/demand_charts.dart';
 import '../widgets/qio_card.dart';
 import '../widgets/qio_empty_state.dart';
 import '../widgets/qio_skeleton.dart';
@@ -314,6 +315,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
             ),
           const SizedBox(height: 16),
           _buildOperatorSection(l10n, data, report),
+          DemandCharts(report: report),
         ],
       ],
     );
