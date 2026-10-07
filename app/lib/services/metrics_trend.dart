@@ -106,6 +106,17 @@ List<DayPoint> dailySeries(List<HistoryEntry> entries, DateRange range) {
   return points;
 }
 
+({double avg, DayPoint? peak}) trendStats(List<DayPoint> series) {
+  if (series.isEmpty) return (avg: 0, peak: null);
+  var total = 0;
+  DayPoint? peak;
+  for (final p in series) {
+    total += p.total;
+    if (p.total > 0 && (peak == null || p.total > peak.total)) peak = p;
+  }
+  return (avg: total / series.length, peak: peak);
+}
+
 enum MetricKey { total, noShowRate, avgWait, avgService, waitMedian, waitP90 }
 
 class Delta {

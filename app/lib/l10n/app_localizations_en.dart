@@ -1268,4 +1268,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deltaVsPrevious => 'vs. previous period';
+
+  @override
+  String get trendTitle => 'Daily trend';
+
+  @override
+  String get trendSeriesTotal => 'Entries';
+
+  @override
+  String get trendSeriesWait => 'Average wait';
+
+  @override
+  String get trendSeriesNoShow => 'No-show';
+
+  @override
+  String trendSummary(String avg, String peakDay) {
+    return 'Average of $avg per day, peak on $peakDay';
+  }
 }

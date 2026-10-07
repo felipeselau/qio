@@ -415,5 +415,11 @@
   "@deltaPoints": {"placeholders": {"pp": {"type": "int"}}},
   "deltaRose": "subiu",
   "deltaFell": "caiu",
-  "deltaVsPrevious": "vs. período anterior"
+  "deltaVsPrevious": "vs. período anterior",
+  "trendTitle": "Tendência diária",
+  "trendSeriesTotal": "Atendimentos",
+  "trendSeriesWait": "Espera média",
+  "trendSeriesNoShow": "Não comparecimento",
+  "trendSummary": "Média de {avg} por dia, pico em {peakDay}",
+  "@trendSummary": {"placeholders": {"avg": {"type": "String"}, "peakDay": {"type": "String"}}}
 }

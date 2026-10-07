@@ -400,5 +400,11 @@
   "@deltaPoints": {"placeholders": {"pp": {"type": "int"}}},
   "deltaRose": "rose",
   "deltaFell": "fell",
-  "deltaVsPrevious": "vs. previous period"
+  "deltaVsPrevious": "vs. previous period",
+  "trendTitle": "Daily trend",
+  "trendSeriesTotal": "Entries",
+  "trendSeriesWait": "Average wait",
+  "trendSeriesNoShow": "No-show",
+  "trendSummary": "Average of {avg} per day, peak on {peakDay}",
+  "@trendSummary": {"placeholders": {"avg": {"type": "String"}, "peakDay": {"type": "String"}}}
 }

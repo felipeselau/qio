@@ -2379,6 +2379,36 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'vs. período anterior'**
   String get deltaVsPrevious;
+
+  /// No description provided for @trendTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tendência diária'**
+  String get trendTitle;
+
+  /// No description provided for @trendSeriesTotal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atendimentos'**
+  String get trendSeriesTotal;
+
+  /// No description provided for @trendSeriesWait.
+  ///
+  /// In pt, this message translates to:
+  /// **'Espera média'**
+  String get trendSeriesWait;
+
+  /// No description provided for @trendSeriesNoShow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não comparecimento'**
+  String get trendSeriesNoShow;
+
+  /// No description provided for @trendSummary.
+  ///
+  /// In pt, this message translates to:
+  /// **'Média de {avg} por dia, pico em {peakDay}'**
+  String trendSummary(String avg, String peakDay);
 }
 
 class _AppLocalizationsDelegate

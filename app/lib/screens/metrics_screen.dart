@@ -23,6 +23,7 @@ import '../widgets/delta_badge.dart';
 import '../widgets/qio_card.dart';
 import '../widgets/qio_empty_state.dart';
 import '../widgets/qio_skeleton.dart';
+import '../widgets/trend_chart.dart';
 import '../widgets/wait_effort_card.dart';
 import '../widgets/qio_responsive_body.dart';
 
@@ -314,6 +315,19 @@ class _MetricsScreenState extends State<MetricsScreen> {
               ],
             ),
           ),
+          if (report.series.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            QioCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.trendTitle, style: QioTextStyles.heading3),
+                  const SizedBox(height: 12),
+                  TrendChart(series: report.series),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           WaitEffortCard(
             waitStats: report.waitStats,
