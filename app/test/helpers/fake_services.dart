@@ -1,0 +1,178 @@
+import 'dart:async';
+
+import 'package:qio_app/models/history_entry.dart';
+import 'package:qio_app/models/operator.dart';
+import 'package:qio_app/models/queue.dart';
+import 'package:qio_app/models/queue_entry.dart';
+import 'package:qio_app/models/queue_feedback.dart';
+import 'package:qio_app/services/operator_service.dart';
+import 'package:qio_app/services/queue_service.dart';
+
+Queue fakeQueue(
+  String id, {
+  String? name,
+  QueueStatus status = QueueStatus.open,
+  int maxWaiting = 0,
+  String? statusMessage,
+}) => Queue(
+  id: id,
+  ownerId: 'uid-1',
+  name: name ?? 'Fila $id',
+  status: status,
+  createdAt: DateTime(2025, 5, 20),
+  maxWaiting: maxWaiting,
+  statusMessage: statusMessage,
+);
+
+QueueEntry fakeEntry(
+  String id,
+  int ticket, {
+  String? name,
+  EntryStatus status = EntryStatus.waiting,
+  String? operatorId,
+}) => QueueEntry(
+  id: id,
+  ticket: ticket,
+  name: name ?? 'Cliente $ticket',
+  uid: 'c-$id',
+  status: status,
+  joinedAt: DateTime(2025, 5, 20, 10, ticket),
+  calledAt: status == EntryStatus.called ? DateTime(2025, 5, 20, 11) : null,
+  operatorId: operatorId,
+);
+
+class FakeQueueService implements QueueService {
+  FakeQueueService({
+    this.ownerQueues = const [],
+    Map<String, Queue>? queues,
+    Map<String, int>? waitingCounts,
+    Map<String, List<QueueEntry>>? entries,
+    this.history = const [],
+    this.feedback = const [],
+    this.uid = 'uid-1',
+    this.callNextResult,
+  }) : queues = queues ?? {},
+       waitingCounts = waitingCounts ?? {},
+       entries = entries ?? {};
+
+  List<Queue> ownerQueues;
+  Map<String, Queue> queues;
+  Map<String, int> waitingCounts;
+  Map<String, List<QueueEntry>> entries;
+  List<HistoryEntry> history;
+  List<QueueFeedback> feedback;
+  String uid;
+  QueueEntry? callNextResult;
+  Object? ownerQueuesError;
+  Object? callNextError;
+  final List<String> calls = [];
+
+  @override
+  String get currentUid => uid;
+
+  @override
+  Stream<List<Queue>> watchOwnerQueues() {
+    if (ownerQueuesError != null) return Stream.error(ownerQueuesError!);
+    return Stream.value(ownerQueues);
+  }
+
+  @override
+  Stream<Queue> watchQueue(String queueId) {
+    final q = queues[queueId];
+    return q == null ? const Stream.empty() : Stream.value(q);
+  }
+
+  @override
+  Stream<int> watchWaitingCount(String queueId) =>
+      Stream.value(waitingCounts[queueId] ?? 0);
+
+  @override
+  Stream<List<QueueEntry>> watchEntries(String queueId) =>
+      Stream.value(entries[queueId] ?? const []);
+
+  @override
+  Stream<List<HistoryEntry>> watchHistory(String queueId, {int limit = 200}) =>
+      Stream.value(history);
+
+  @override
+  Future<List<HistoryEntry>> fetchHistory(
+    String queueId, {
+    int limit = QueueService.historyFetchLimit,
+  }) async => history;
+
+  @override
+  Stream<List<QueueFeedback>> watchFeedback(String queueId) =>
+      Stream.value(feedback);
+
+  @override
+  Future<List<QueueFeedback>> fetchFeedback(String queueId) async => feedback;
+
+  @override
+  String queueJoinUrl(String queueId) => 'https://qio.web.app/q/$queueId';
+
+  @override
+  Future<void> ensureMirror(String queueId) async {
+    calls.add('ensureMirror:$queueId');
+  }
+
+  @override
+  Future<QueueEntry?> callNext(String queueId) async {
+    calls.add('callNext:$queueId');
+    if (callNextError != null) throw callNextError!;
+    return callNextResult;
+  }
+
+  @override
+  Future<void> markServed(String queueId, QueueEntry entry) async {
+    calls.add('served:${entry.id}');
+  }
+
+  @override
+  Future<void> markNoShow(String queueId, QueueEntry entry) async {
+    calls.add('noShow:${entry.id}');
+  }
+
+  @override
+  Future<void> updateQueueStatus(
+    String queueId,
+    QueueStatus status, {
+    String? message,
+    DateTime? resumeAt,
+  }) async {
+    calls.add('status:$queueId:${status.value}');
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class FakeOperatorService implements OperatorService {
+  FakeOperatorService({
+    this.operating = const [],
+    this.requests = const [],
+    this.isOperator = true,
+  });
+
+  List<QueueOperator> operating;
+  List<OperatorRequest> requests;
+  bool isOperator;
+  final List<String> calls = [];
+
+  @override
+  Stream<List<QueueOperator>> watchMyOperatorQueues() =>
+      Stream.value(operating);
+
+  @override
+  Stream<List<OperatorRequest>> watchMyRequests() => Stream.value(requests);
+
+  @override
+  Stream<bool> watchIsOperator(String queueId) => Stream.value(isOperator);
+
+  @override
+  Future<void> cancelMyRequest(String queueId) async {
+    calls.add('cancel:$queueId');
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
