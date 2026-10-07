@@ -21,7 +21,7 @@ function normalizeAlerts(raw) {
     maxWaitMin: limitIn(raw.maxWaitMin, 1, 240),
     maxNoShowPct: limitIn(raw.maxNoShowPct, 1, 100),
     idleMin: limitIn(raw.idleMin, 5, 240),
-    cooldownMin: limitIn(raw.cooldownMin, 1, 1440) ?? DEFAULT_COOLDOWN_MIN,
+    cooldownMin: limitIn(raw.cooldownMin, 5, 1440) ?? DEFAULT_COOLDOWN_MIN,
   };
   if (config.maxWaitMin === null && config.maxNoShowPct === null && config.idleMin === null) {
     return null;
@@ -41,13 +41,21 @@ function finite(list) {
   );
 }
 
-function lastActivityOf({ calledAts, waitingJoinedAts }) {
-  const called = finite(calledAts);
-  const joined = finite(waitingJoinedAts);
-  if (called.length === 0 && joined.length === 0) return null;
-  const lastCall = called.length > 0 ? Math.max(...called) : -Infinity;
-  const oldestJoin = joined.length > 0 ? Math.min(...joined) : -Infinity;
-  return Math.max(lastCall, oldestJoin);
+function lastActivityOf({ updatedAt, waitingOrders }) {
+  const orders = finite(waitingOrders);
+  const signals = [];
+  if (typeof updatedAt === 'number' && Number.isFinite(updatedAt)) signals.push(updatedAt);
+  if (orders.length > 0) signals.push(Math.min(...orders));
+  return signals.length > 0 ? Math.max(...signals) : null;
+}
+
+async function mapLimit(items, limit, fn) {
+  const queue = [...items];
+  const size = Math.max(1, Math.min(limit, queue.length));
+  const workers = Array.from({ length: size }, async () => {
+    while (queue.length > 0) await fn(queue.shift());
+  });
+  await Promise.all(workers);
 }
 
 function cooledDown(state, rule, now, cooldownMin) {
@@ -159,6 +167,7 @@ module.exports = {
   normalizeAlerts,
   startOfDaySaoPaulo,
   lastActivityOf,
+  mapLimit,
   evaluateAlerts,
   stateAfter,
   buildAlertMessage,

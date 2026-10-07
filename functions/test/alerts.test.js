@@ -4,6 +4,7 @@ const {
   normalizeAlerts,
   startOfDaySaoPaulo,
   lastActivityOf,
+  mapLimit,
   evaluateAlerts,
   stateAfter,
   buildAlertMessage,
@@ -34,6 +35,10 @@ describe('normalizeAlerts', () => {
     assert.equal(normalizeAlerts(undefined), null);
     assert.equal(normalizeAlerts({ enabled: false, maxWaitMin: 30 }), null);
     assert.equal(normalizeAlerts({ enabled: true }), null);
+  });
+  it('cooldown abaixo de 5 cai no padrão', () => {
+    const c = normalizeAlerts({ enabled: true, idleMin: 10, cooldownMin: 1 });
+    assert.equal(c.cooldownMin, 30);
   });
   it('descarta limites fora do intervalo e aplica cooldown padrão', () => {
     const c = normalizeAlerts({ enabled: true, maxWaitMin: 500, idleMin: 2, maxNoShowPct: 50 });
@@ -124,15 +129,57 @@ describe('startOfDaySaoPaulo', () => {
 });
 
 describe('lastActivityOf', () => {
-  it('é o maior entre última chamada e entrada mais antiga em espera', () => {
-    assert.equal(lastActivityOf({ calledAts: [100, 300], waitingJoinedAts: [200, 500] }), 300);
-    assert.equal(lastActivityOf({ calledAts: [100], waitingJoinedAts: [200, 500] }), 200);
+  it('usa o maior entre updatedAt da meta e a entrada mais antiga em espera', () => {
+    assert.equal(lastActivityOf({ updatedAt: 300, waitingOrders: [200, 500] }), 300);
+    assert.equal(lastActivityOf({ updatedAt: 100, waitingOrders: [200, 500] }), 200);
   });
-  it('sem chamadas usa a entrada mais antiga', () => {
-    assert.equal(lastActivityOf({ calledAts: [], waitingJoinedAts: [500, 200] }), 200);
+  it('sem updatedAt usa a entrada mais antiga', () => {
+    assert.equal(lastActivityOf({ waitingOrders: [500, 200] }), 200);
   });
-  it('sem dados devolve null', () => {
-    assert.equal(lastActivityOf({ calledAts: [], waitingJoinedAts: [] }), null);
+  it('só com updatedAt usa ele', () => {
+    assert.equal(lastActivityOf({ updatedAt: 70, waitingOrders: [] }), 70);
+  });
+  it('sem sinal devolve null', () => {
+    assert.equal(lastActivityOf({ waitingOrders: [] }), null);
+  });
+  it('fila andando com entries antigas já removidas não alerta', () => {
+    const lastActivityAt = lastActivityOf({
+      updatedAt: NOW - 2 * MIN,
+      waitingOrders: [NOW - 90 * MIN],
+    });
+    assert.deepEqual(evaluateAlerts(base({ waiting: 1, lastActivityAt })), []);
+  });
+  it('fila parada de verdade alerta', () => {
+    const lastActivityAt = lastActivityOf({
+      updatedAt: NOW - 40 * MIN,
+      waitingOrders: [NOW - 90 * MIN],
+    });
+    const r = evaluateAlerts(base({ waiting: 1, lastActivityAt }));
+    assert.deepEqual(r, [{ rule: 'idle', value: 40, limit: 15 }]);
+  });
+  it('pessoa que acabou de entrar numa fila ociosa não alerta', () => {
+    const lastActivityAt = lastActivityOf({
+      updatedAt: NOW - 120 * MIN,
+      waitingOrders: [NOW - MIN],
+    });
+    assert.deepEqual(evaluateAlerts(base({ waiting: 1, lastActivityAt })), []);
+  });
+});
+
+describe('mapLimit', () => {
+  it('processa tudo respeitando a concorrência', async () => {
+    let running = 0;
+    let peak = 0;
+    const seen = [];
+    await mapLimit([1, 2, 3, 4, 5, 6, 7], 3, async (n) => {
+      running++;
+      peak = Math.max(peak, running);
+      await new Promise((r) => setTimeout(r, 5));
+      seen.push(n);
+      running--;
+    });
+    assert.equal(seen.length, 7);
+    assert.ok(peak <= 3);
   });
 });
 
