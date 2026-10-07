@@ -191,8 +191,10 @@ class _AccountScreenState extends State<AccountScreen> {
         if (!kIsWeb) ...[
           const SizedBox(height: 12),
           const _HapticsCard(),
-          const SizedBox(height: 12),
-          const _AnalyticsCard(),
+          if (AnalyticsController.instance.available) ...[
+            const SizedBox(height: 12),
+            const _AnalyticsCard(),
+          ],
         ],
         const SizedBox(height: 24),
         QioButton(

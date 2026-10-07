@@ -55,6 +55,7 @@ void main() {
   test('stays off in debug builds', () async {
     final c = build(debug: true);
     await c.load();
+    expect(c.available, isFalse);
     expect(c.active, isFalse);
     expect(c.service, isA<NoopAnalytics>());
     expect(collection, [false]);
@@ -71,6 +72,7 @@ void main() {
   test('turns on in release by default', () async {
     final c = build();
     await c.load();
+    expect(c.available, isTrue);
     expect(c.active, isTrue);
     expect(c.service, same(recorder));
     expect(collection, [true]);

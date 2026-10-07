@@ -84,6 +84,8 @@ class AnalyticsController extends ChangeNotifier {
 
   bool get optedOut => _optedOut;
 
+  bool get available => !_debug && !_emulators && !kIsWeb;
+
   bool get active =>
       analyticsAllowed(
         debug: _debug,
