@@ -1869,6 +1869,60 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Permissão negada. Ative as notificações nas configurações do sistema.'**
   String get pushDenied;
+
+  /// No description provided for @byOperatorTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Por atendente'**
+  String get byOperatorTitle;
+
+  /// No description provided for @operatorFilterAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Todas as filas'**
+  String get operatorFilterAll;
+
+  /// No description provided for @ownerAttendant.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dono'**
+  String get ownerAttendant;
+
+  /// No description provided for @formerOperator.
+  ///
+  /// In pt, this message translates to:
+  /// **'ex-operador'**
+  String get formerOperator;
+
+  /// No description provided for @noOperatorData.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum atendimento por atendente no período'**
+  String get noOperatorData;
+
+  /// No description provided for @historyTruncatedWarning.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostrando só os {limit} registros mais recentes de uma fila; os números podem estar incompletos.'**
+  String historyTruncatedWarning(int limit);
+
+  /// No description provided for @operatorCountsLine.
+  ///
+  /// In pt, this message translates to:
+  /// **'{served} atendidos · {noShow} não compareceram'**
+  String operatorCountsLine(int served, int noShow);
+
+  /// No description provided for @operatorDetailLine.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atendimento médio: {avg} · Avaliação: {rating}'**
+  String operatorDetailLine(String avg, String rating);
+
+  /// No description provided for @operatorFilterLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Filtrar por fila'**
+  String get operatorFilterLabel;
 }
 
 class _AppLocalizationsDelegate

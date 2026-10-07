@@ -316,9 +316,11 @@ class QueueService {
         );
   }
 
+  static const int historyFetchLimit = 500;
+
   Future<List<HistoryEntry>> fetchHistory(
     String queueId, {
-    int limit = 500,
+    int limit = historyFetchLimit,
   }) async {
     final snap = await _firestore
         .collection('queues')
@@ -328,6 +330,15 @@ class QueueService {
         .limit(limit)
         .get();
     return snap.docs.map((d) => HistoryEntry.fromDoc(d.id, d.data())).toList();
+  }
+
+  Future<List<QueueFeedback>> fetchFeedback(String queueId) async {
+    final snap = await _firestore
+        .collection('queues')
+        .doc(queueId)
+        .collection('feedback')
+        .get();
+    return snap.docs.map((d) => QueueFeedback.fromDoc(d.id, d.data())).toList();
   }
 
   Stream<List<QueueFeedback>> watchFeedback(String queueId) {

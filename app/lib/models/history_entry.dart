@@ -10,6 +10,8 @@ class HistoryEntry {
     required this.joinedAt,
     this.calledAt,
     this.finishedAt,
+    this.calledBy,
+    this.operatorId,
   });
 
   final String id;
@@ -20,6 +22,14 @@ class HistoryEntry {
   final DateTime joinedAt;
   final DateTime? calledAt;
   final DateTime? finishedAt;
+  final String? calledBy;
+  final String? operatorId;
+
+  String? get attendantId {
+    if (calledBy != null && calledBy!.isNotEmpty) return calledBy;
+    if (operatorId != null && operatorId!.isNotEmpty) return operatorId;
+    return null;
+  }
 
   bool get isServed => result == 'served';
   bool get isNoShow => result == 'no_show';
@@ -50,6 +60,8 @@ class HistoryEntry {
           _toDate(data['joinedAt']) ?? DateTime.fromMillisecondsSinceEpoch(0),
       calledAt: _toDate(data['calledAt']),
       finishedAt: _toDate(data['finishedAt']),
+      calledBy: data['calledBy'] as String?,
+      operatorId: data['operatorId'] as String?,
     );
   }
 }

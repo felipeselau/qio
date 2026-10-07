@@ -301,5 +301,17 @@
   "pushPromptBody": "We notify you when someone joins one of your queues, even with the app closed. You can change this later in My account.",
   "pushPromptNotNow": "Not now",
   "pushPromptEnable": "Turn on",
-  "pushDenied": "Permission denied. Turn on notifications in the system settings."
+  "pushDenied": "Permission denied. Turn on notifications in the system settings.",
+  "byOperatorTitle": "By attendant",
+  "operatorFilterAll": "All queues",
+  "ownerAttendant": "Owner",
+  "formerOperator": "former operator",
+  "noOperatorData": "No attended entries by attendant in this period",
+  "historyTruncatedWarning": "Showing only the {limit} most recent records of a queue; numbers may be incomplete.",
+  "@historyTruncatedWarning": {"placeholders": {"limit": {"type": "int"}}},
+  "operatorCountsLine": "{served} served · {noShow} no-shows",
+  "@operatorCountsLine": {"placeholders": {"served": {"type": "int"}, "noShow": {"type": "int"}}},
+  "operatorDetailLine": "Avg. service: {avg} · Rating: {rating}",
+  "@operatorDetailLine": {"placeholders": {"avg": {"type": "String"}, "rating": {"type": "String"}}},
+  "operatorFilterLabel": "Filter by queue"
 }

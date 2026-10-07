@@ -975,4 +975,38 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pushDenied =>
       'Permission denied. Turn on notifications in the system settings.';
+
+  @override
+  String get byOperatorTitle => 'By attendant';
+
+  @override
+  String get operatorFilterAll => 'All queues';
+
+  @override
+  String get ownerAttendant => 'Owner';
+
+  @override
+  String get formerOperator => 'former operator';
+
+  @override
+  String get noOperatorData =>
+      'No attended entries by attendant in this period';
+
+  @override
+  String historyTruncatedWarning(int limit) {
+    return 'Showing only the $limit most recent records of a queue; numbers may be incomplete.';
+  }
+
+  @override
+  String operatorCountsLine(int served, int noShow) {
+    return '$served served · $noShow no-shows';
+  }
+
+  @override
+  String operatorDetailLine(String avg, String rating) {
+    return 'Avg. service: $avg · Rating: $rating';
+  }
+
+  @override
+  String get operatorFilterLabel => 'Filter by queue';
 }

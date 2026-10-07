@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/history_entry.dart';
+import '../models/operator.dart';
 import '../models/queue.dart';
+import '../models/queue_feedback.dart';
 import '../services/history_metrics.dart';
+import '../services/operator_metrics.dart';
+import '../services/operator_service.dart';
 import '../services/queue_analytics.dart';
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
@@ -14,10 +18,12 @@ import '../widgets/qio_skeleton.dart';
 import '../widgets/qio_responsive_body.dart';
 
 class _QueueHistory {
-  const _QueueHistory(this.queue, this.entries);
+  const _QueueHistory(this.queue, this.entries, this.feedback, this.operators);
 
   final Queue queue;
   final List<HistoryEntry> entries;
+  final List<QueueFeedback> feedback;
+  final List<QueueOperator> operators;
 }
 
 class MetricsScreen extends StatefulWidget {
@@ -30,15 +36,34 @@ class MetricsScreen extends StatefulWidget {
 class _MetricsScreenState extends State<MetricsScreen> {
   late Future<List<_QueueHistory>> _future = _load();
   HistoryPeriod _period = HistoryPeriod.last7Days;
+  String? _operatorQueueId;
 
   Future<List<_QueueHistory>> _load() async {
     final queues = await QueueService.instance.watchOwnerQueues().first;
-    return Future.wait([
+    final result = await Future.wait([
       for (final q in queues)
-        QueueService.instance
-            .fetchHistory(q.id)
-            .then((entries) => _QueueHistory(q, entries)),
+        Future.wait([
+          QueueService.instance.fetchHistory(q.id),
+          QueueService.instance
+              .fetchFeedback(q.id)
+              .catchError((_) => <QueueFeedback>[]),
+          OperatorService.instance
+              .fetchOperators(q.id)
+              .catchError((_) => <QueueOperator>[]),
+        ]).then(
+          (r) => _QueueHistory(
+            q,
+            r[0] as List<HistoryEntry>,
+            r[1] as List<QueueFeedback>,
+            r[2] as List<QueueOperator>,
+          ),
+        ),
     ]);
+    if (_operatorQueueId != null &&
+        !result.any((d) => d.queue.id == _operatorQueueId)) {
+      _operatorQueueId = null;
+    }
+    return result;
   }
 
   @override
@@ -211,7 +236,95 @@ class _MetricsScreenState extends State<MetricsScreen> {
                 ),
               ),
             ),
+          const SizedBox(height: 16),
+          _buildOperatorSection(l10n, data, now),
         ],
+      ],
+    );
+  }
+
+  Widget _buildOperatorSection(
+    AppLocalizations l10n,
+    List<_QueueHistory> data,
+    DateTime now,
+  ) {
+    final selected = data
+        .where(
+          (d) => _operatorQueueId == null || d.queue.id == _operatorQueueId,
+        )
+        .toList();
+    final truncated = selected.any((d) {
+      if (d.entries.length < QueueService.historyFetchLimit) return false;
+      final oldest = d.entries.reduce(
+        (a, b) => a.referenceTime.isBefore(b.referenceTime) ? a : b,
+      );
+      return filterHistory([oldest], period: _period, now: now).isNotEmpty;
+    });
+    final names = <String, String>{
+      for (final d in data)
+        for (final o in d.operators) o.uid: o.label,
+    };
+    final merged = computeOperatorMetrics(
+      [
+        for (final d in selected)
+          ...filterHistory(d.entries, period: _period, now: now),
+      ],
+      ownerUids: {for (final d in selected) d.queue.ownerId},
+      feedback: [for (final d in selected) ...d.feedback],
+      names: names,
+      unknownName: l10n.formerOperator,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(l10n.byOperatorTitle, style: QioTextStyles.heading3),
+        const SizedBox(height: 8),
+        Semantics(
+          label: l10n.operatorFilterLabel,
+          child: DropdownButton<String?>(
+            isExpanded: true,
+            value: _operatorQueueId,
+            onChanged: (v) => setState(() => _operatorQueueId = v),
+            items: [
+              DropdownMenuItem<String?>(
+                value: null,
+                child: Text(l10n.operatorFilterAll),
+              ),
+              for (final d in data)
+                DropdownMenuItem<String?>(
+                  value: d.queue.id,
+                  child: Text(d.queue.name, overflow: TextOverflow.ellipsis),
+                ),
+            ],
+          ),
+        ),
+        if (truncated) ...[
+          const SizedBox(height: 8),
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              l10n.historyTruncatedWarning(QueueService.historyFetchLimit),
+              style: QioTextStyles.caption,
+            ),
+          ),
+        ],
+        const SizedBox(height: 8),
+        if (merged.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Text(l10n.noOperatorData, style: QioTextStyles.body),
+          )
+        else
+          for (final s in merged)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _OperatorRow(
+                stats: s,
+                name: s.attendantId == null
+                    ? l10n.ownerAttendant
+                    : names[s.attendantId] ?? l10n.formerOperator,
+              ),
+            ),
       ],
     );
   }
@@ -221,6 +334,45 @@ String _minutes(AppLocalizations l10n, double? v) {
   if (v == null) return '—';
   if (v < 1) return l10n.durationLessThanMinute;
   return l10n.durationMinutes(v.round());
+}
+
+class _OperatorRow extends StatelessWidget {
+  const _OperatorRow({required this.stats, required this.name});
+
+  final OperatorStats stats;
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final counts = l10n.operatorCountsLine(stats.served, stats.noShow);
+    final rating = stats.feedback.average == null
+        ? '—'
+        : '${stats.feedback.average!.toStringAsFixed(1)} ★ (${stats.feedback.count})';
+    final detail = l10n.operatorDetailLine(
+      _minutes(l10n, stats.avgServiceMin),
+      rating,
+    );
+    return Semantics(
+      label: '$name. $counts. $detail',
+      child: ExcludeSemantics(
+        child: SizedBox(
+          width: double.infinity,
+          child: QioCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: QioTextStyles.bodyMedium),
+                const SizedBox(height: 2),
+                Text(counts, style: QioTextStyles.caption),
+                Text(detail, style: QioTextStyles.caption),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _Stat extends StatelessWidget {
