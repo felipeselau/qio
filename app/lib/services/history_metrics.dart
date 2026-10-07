@@ -1,5 +1,6 @@
 import '../l10n/app_localizations.dart';
 import '../models/history_entry.dart';
+import 'metrics_trend.dart';
 
 enum HistoryPeriod { today, last7Days, all }
 
@@ -42,15 +43,10 @@ List<HistoryEntry> filterHistory(
   HistoryPeriod period = HistoryPeriod.all,
   required DateTime now,
 }) {
-  final startOfToday = DateTime(now.year, now.month, now.day);
-  final cutoff = switch (period) {
-    HistoryPeriod.today => startOfToday,
-    HistoryPeriod.last7Days => now.subtract(const Duration(days: 7)),
-    HistoryPeriod.all => null,
-  };
+  final range = rangeFor(period, now);
   return entries.where((e) {
     if (result != null && e.result != result) return false;
-    if (cutoff != null && e.referenceTime.isBefore(cutoff)) return false;
+    if (range != null && !range.contains(e.referenceTime)) return false;
     return true;
   }).toList();
 }

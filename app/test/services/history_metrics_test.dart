@@ -174,6 +174,21 @@ void main() {
       );
     });
 
+    test('7 dias usa dias de calendário', () {
+      final edgeIn = entry(id: 'in', joinedAt: DateTime(2026, 5, 4));
+      final edgeOut = entry(id: 'out', joinedAt: DateTime(2026, 5, 3, 23, 59));
+      expect(
+        ids(
+          filterHistory(
+            [edgeIn, edgeOut],
+            period: HistoryPeriod.last7Days,
+            now: now,
+          ),
+        ),
+        ['in'],
+      );
+    });
+
     test('tudo e combinação', () {
       expect(filterHistory(all, now: now).length, 4);
       expect(
