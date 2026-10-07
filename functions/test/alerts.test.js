@@ -7,6 +7,7 @@ const {
   evaluateAlerts,
   stateAfter,
   buildAlertMessage,
+  buildAlertPush,
   wantsAlertPush,
 } = require('../src/alerts');
 
@@ -153,5 +154,26 @@ describe('wantsAlertPush', () => {
   it('padrão ligado', () => {
     assert.equal(wantsAlertPush(undefined), true);
     assert.equal(wantsAlertPush({ notifyAlerts: false }), false);
+  });
+});
+
+describe('buildAlertPush', () => {
+  it('monta payload com tipo, tag por fila e regra', () => {
+    const m = buildAlertPush({
+      queueId: 'q1',
+      queueName: 'Loja',
+      rule: 'idle',
+      vars: { value: 20, limit: 15 },
+      lang: 'en',
+    });
+    assert.equal(m.notification.title, 'Loja');
+    assert.equal(m.notification.body, buildAlertMessage('idle', { value: 20, limit: 15 }, 'en'));
+    assert.deepEqual(m.data, { type: 'queue-alert', queueId: 'q1', rule: 'idle' });
+    assert.equal(m.android.notification.tag, 'q1-idle');
+    assert.equal(m.android.notification.channelId, 'qio_new_entries');
+  });
+  it('sem nome usa Qio', () => {
+    const m = buildAlertPush({ queueId: 'q', rule: 'wait', vars: { value: 1, limit: 1 } });
+    assert.equal(m.notification.title, 'Qio');
   });
 });

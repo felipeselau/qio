@@ -5,7 +5,7 @@ const { onDocumentCreated } = require('firebase-functions/v2/firestore');
 const { initializeApp } = require('firebase-admin/app');
 const { getMessaging } = require('firebase-admin/messaging');
 const { getDatabase } = require('firebase-admin/database');
-const { getFirestore, FieldValue } = require('firebase-admin/firestore');
+const { getFirestore, FieldValue, Timestamp } = require('firebase-admin/firestore');
 const {
   rateLimitFromEnv,
   normalizeName,
@@ -38,6 +38,14 @@ const {
   buildFeedbackDoc,
 } = require('./src/feedback');
 const { MAX_SAMPLES, estimateServiceMin } = require('./src/estimate');
+const {
+  evaluateAlerts,
+  stateAfter,
+  startOfDaySaoPaulo,
+  lastActivityOf,
+  buildAlertPush,
+  wantsAlertPush,
+} = require('./src/alerts');
 
 initializeApp();
 
@@ -471,5 +479,105 @@ exports.onQueueAdvanced = onValueWritten(
       console.error('onQueueAdvanced failed', err);
     }
     return null;
+  },
+);
+
+async function sendQueueAlerts({ firestore, ownerUid, queueId, queueName, fired }) {
+  const ownerDoc = await firestore.doc(`owners/${ownerUid}`).get();
+  if (!wantsAlertPush(ownerDoc.data())) return;
+  const snap = await firestore.collection(`owners/${ownerUid}/devices`).get();
+  const devices = snap.docs.map((d) => ({ ref: d.ref, ...d.data() }));
+  if (devices.length === 0) return;
+  const byLang = groupTokensByLang(devices);
+  const refsByToken = new Map(devices.map((d) => [d.token, d.ref]));
+  for (const alert of fired) {
+    for (const [lang, tokens] of Object.entries(byLang)) {
+      for (let i = 0; i < tokens.length; i += 500) {
+        const chunk = tokens.slice(i, i + 500);
+        const response = await getMessaging().sendEachForMulticast({
+          tokens: chunk,
+          ...buildAlertPush({ queueId, queueName, rule: alert.rule, vars: alert, lang }),
+        });
+        await Promise.all(
+          response.responses.map((r, idx) =>
+            !r.success && isStaleTokenError(r.error?.code)
+              ? refsByToken.get(chunk[idx])?.delete()
+              : null,
+          ),
+        );
+      }
+    }
+  }
+}
+
+exports.evaluateQueueAlerts = onSchedule(
+  { schedule: 'every 5 minutes', region: 'us-central1', timeZone: 'UTC' },
+  async () => {
+    const firestore = getFirestore();
+    const db = getDatabase();
+    const snap = await firestore.collection('queues').where('alerts.enabled', '==', true).get();
+    const now = Date.now();
+    const dayStart = Timestamp.fromMillis(startOfDaySaoPaulo(now));
+    for (const doc of snap.docs) {
+      try {
+        const data = doc.data();
+        if (typeof data.ownerId !== 'string' || !data.ownerId) continue;
+        const [metaSnap, entriesSnap] = await Promise.all([
+          db.ref(`queues/${doc.id}/meta`).once('value'),
+          db.ref(`queues/${doc.id}/entries`).once('value'),
+        ]);
+        const meta = metaSnap.val();
+        const status = meta?.status ?? data.status;
+        if (status !== 'open') continue;
+
+        const entries = Object.values(entriesSnap.val() ?? {});
+        const waitingEntries = entries.filter((e) => e?.status === 'waiting');
+        const history = firestore.collection(`queues/${doc.id}/history`);
+        const [served, noShow] = await Promise.all(
+          ['served', 'no_show'].map((result) =>
+            history
+              .where('result', '==', result)
+              .where('finishedAt', '>=', dayStart)
+              .count()
+              .get(),
+          ),
+        );
+
+        const input = {
+          config: data.alerts,
+          now,
+          status,
+          waiting: waitingEntries.length,
+          avgServiceMin: meta?.avgServiceMinAuto ?? meta?.avgServiceMin ?? null,
+          noShowToday: noShow.data().count,
+          servedToday: served.data().count,
+          lastActivityAt: lastActivityOf({
+            calledAts: entries.map((e) => e?.calledAt),
+            waitingJoinedAts: waitingEntries.map((e) => e.joinedAt),
+          }),
+        };
+
+        const fired = await firestore.runTransaction(async (tx) => {
+          const fresh = await tx.get(doc.ref);
+          const state = fresh.data()?.alertState ?? {};
+          const result = evaluateAlerts({ ...input, state });
+          if (result.length > 0) {
+            tx.update(doc.ref, { alertState: stateAfter(state, result, now) });
+          }
+          return result;
+        });
+        if (fired.length === 0) continue;
+
+        await sendQueueAlerts({
+          firestore,
+          ownerUid: data.ownerId,
+          queueId: doc.id,
+          queueName: meta?.name ?? data.name,
+          fired,
+        });
+      } catch (err) {
+        console.error('evaluateQueueAlerts failed', doc.id, err);
+      }
+    }
   },
 );

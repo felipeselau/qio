@@ -1,3 +1,5 @@
+const { CHANNEL_ID, normalizeLang } = require('./push');
+
 const MINUTE = 60 * 1000;
 const DEFAULT_COOLDOWN_MIN = 30;
 const DEFAULT_SERVICE_MIN = 10;
@@ -130,6 +132,21 @@ function buildAlertMessage(rule, vars, lang) {
   return fn ? fn(vars) : '';
 }
 
+function buildAlertPush({ queueId, queueName, rule, vars, lang }) {
+  return {
+    notification: {
+      title: typeof queueName === 'string' && queueName ? queueName : 'Qio',
+      body: buildAlertMessage(rule, vars, normalizeLang(lang)),
+    },
+    data: { type: 'queue-alert', queueId, rule },
+    android: {
+      priority: 'high',
+      collapseKey: `${queueId}-${rule}`,
+      notification: { channelId: CHANNEL_ID, tag: `${queueId}-${rule}` },
+    },
+  };
+}
+
 function wantsAlertPush(ownerDoc) {
   return ownerDoc?.notifyAlerts !== false;
 }
@@ -145,5 +162,6 @@ module.exports = {
   evaluateAlerts,
   stateAfter,
   buildAlertMessage,
+  buildAlertPush,
   wantsAlertPush,
 };
