@@ -158,10 +158,15 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
 - `evaluateQueueAlerts` (a cada 5 min, `functions/src/alerts.js`) só avalia filas com
   `alerts.enabled` e `status == open`. Regras: espera estimada
   (`waiting × (avgServiceMinAuto ?? avgServiceMin ?? 10)`), no-show do dia em
-  `America/Sao_Paulo` (mínimo 5 atendimentos) e fila parada (`max(último calledAt,
-  joinedAt mais antigo em espera)`). Cooldown padrão 30 min por regra/fila.
+  `America/Sao_Paulo` (mínimo 5 atendimentos) e fila parada (`max(meta/updatedAt,
+  menor order em espera)`; `updatedAt` muda a cada chamada, mas também em edições do
+  dono, o que só reduz alertas). Lê só `meta` e `public/` (sem PII), com
+  concorrência 5 e `timeoutSeconds: 300`. Cooldown padrão 30 min (mín. 5) por regra/fila.
 - Push reaproveita `push.js` (`data.type = 'queue-alert'`, tag `queueId-regra`) e
-  respeita `owners/{uid}.notifyAlerts` (padrão ligado). Toque abre o painel.
+  respeita `owners/{uid}.notifyAlerts` (padrão ligado; switch na tela de alertas).
+  `notifyAlerts == false` e ausência de tokens são checados antes da transação, então
+  não consomem cooldown. Se o FCM falhar depois da transação de `alertState`, o alerta
+  se perde até o próximo cooldown. Toque abre o painel.
 - Deploy (Blaze + Cloud Scheduler): `--only functions:evaluateQueueAlerts` →
   `--only firestore:rules` → distribuir o APK.
 

@@ -349,5 +349,6 @@
   "@alertsMinutes": {"placeholders": {"n": {"type": "int"}}},
   "alertsPercent": "{n}%",
   "@alertsPercent": {"placeholders": {"n": {"type": "int"}}},
-  "alertsNoRule": "Turn on at least one rule to receive alerts."
+  "alertsNoRule": "Turn on at least one rule to receive alerts.",
+  "alertsNotify": "Receive alerts on this account"
 }

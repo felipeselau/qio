@@ -28,11 +28,32 @@ class _AlertsSettingsScreenState extends State<AlertsSettingsScreen> {
   late AlertsConfig _config = widget.initial ?? const AlertsConfig();
   bool _saving = false;
   bool _pushOff = false;
+  bool _notify = true;
 
   @override
   void initState() {
     super.initState();
     _checkPush();
+    _loadNotify();
+  }
+
+  Future<void> _loadNotify() async {
+    try {
+      final v = await PushService.instance.alertsEnabled();
+      if (mounted) setState(() => _notify = v);
+    } on Exception {
+      return;
+    }
+  }
+
+  Future<void> _toggleNotify(bool v) async {
+    final previous = _notify;
+    setState(() => _notify = v);
+    try {
+      await PushService.instance.setAlertsEnabled(v);
+    } on Exception {
+      if (mounted) setState(() => _notify = previous);
+    }
   }
 
   Future<void> _checkPush() async {
@@ -102,6 +123,15 @@ class _AlertsSettingsScreenState extends State<AlertsSettingsScreen> {
               ),
               const SizedBox(height: 16),
             ],
+            QioCard(
+              child: SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(l10n.alertsNotify),
+                value: _notify,
+                onChanged: _toggleNotify,
+              ),
+            ),
+            const SizedBox(height: 12),
             QioCard(
               child: SwitchListTile(
                 contentPadding: EdgeInsets.zero,

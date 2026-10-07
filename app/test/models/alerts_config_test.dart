@@ -62,8 +62,8 @@ void main() {
     expect(Queue.fromDoc('q', {'ownerId': 'o'}).alerts, isNull);
   });
 
-  test('queueIdFromPush reads queueId for queue-alert', () {
-    expect(queueIdFromPush({'type': alertPushType, 'queueId': 'q1'}), 'q1');
+  test('queueIdFromPush reads queueId', () {
+    expect(queueIdFromPush({'type': 'queue-alert', 'queueId': 'q1'}), 'q1');
     expect(queueIdFromPush({'queueId': ''}), isNull);
     expect(queueIdFromPush({}), isNull);
   });

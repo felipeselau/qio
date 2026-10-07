@@ -1119,4 +1119,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get alertsNoRule => 'Activa al menos una regla para recibir alertas.';
+
+  @override
+  String get alertsNotify => 'Recibir alertas en esta cuenta';
 }

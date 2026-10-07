@@ -2121,6 +2121,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Ative ao menos uma regra para receber alertas.'**
   String get alertsNoRule;
+
+  /// No description provided for @alertsNotify.
+  ///
+  /// In pt, this message translates to:
+  /// **'Receber alertas nesta conta'**
+  String get alertsNotify;
 }
 
 class _AppLocalizationsDelegate
