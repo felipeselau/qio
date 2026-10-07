@@ -8,7 +8,7 @@ class FakeUser implements User {
     this.email = 'dono@qio.app',
     DateTime? createdAt,
   }) : metadata = UserMetadata(
-         (createdAt ?? DateTime(2025, 3, 10)).millisecondsSinceEpoch,
+         (createdAt ?? DateTime.utc(2025, 3, 10, 12)).millisecondsSinceEpoch,
          0,
        );
 
