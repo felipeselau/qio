@@ -118,6 +118,56 @@ describe('Firestore rules', () => {
     });
   });
 
+  describe('grupos de filas', () => {
+    const group = { name: 'Loja Centro', createdAt: 1 };
+    const ref = (uid, id = 'g1') => doc(db(uid), 'owners', OWNER, 'groups', id);
+
+    beforeEach(async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), 'owners', OWNER, 'groups', 'g1'), group);
+      });
+    });
+
+    it('dono cria, lê, renomeia e apaga', async () => {
+      await assertSucceeds(setDoc(ref(OWNER, 'g2'), group));
+      await assertSucceeds(getDoc(ref(OWNER)));
+      await assertSucceeds(getDocs(collection(db(OWNER), 'owners', OWNER, 'groups')));
+      await assertSucceeds(updateDoc(ref(OWNER), { name: 'Loja Norte' }));
+      await assertSucceeds(deleteDoc(ref(OWNER)));
+    });
+
+    it('outro uid e operador não leem nem escrevem', async () => {
+      for (const uid of [STRANGER, OPERATOR]) {
+        await assertFails(getDoc(ref(uid)));
+        await assertFails(getDocs(collection(db(uid), 'owners', OWNER, 'groups')));
+        await assertFails(setDoc(ref(uid, 'g3'), group));
+        await assertFails(updateDoc(ref(uid), { name: 'X' }));
+        await assertFails(deleteDoc(ref(uid)));
+      }
+    });
+
+    it('rejeita nome vazio, grande demais, não string, ausente ou chave extra', async () => {
+      await assertFails(setDoc(ref(OWNER, 'g4'), { ...group, name: '' }));
+      await assertFails(setDoc(ref(OWNER, 'g4'), { ...group, name: 'x'.repeat(41) }));
+      await assertFails(setDoc(ref(OWNER, 'g4'), { ...group, name: 5 }));
+      await assertFails(setDoc(ref(OWNER, 'g4'), { createdAt: 1 }));
+      await assertFails(setDoc(ref(OWNER, 'g4'), { ...group, queueIds: [] }));
+      await assertFails(updateDoc(ref(OWNER), { name: '' }));
+      await assertSucceeds(setDoc(ref(OWNER, 'g5'), { ...group, name: 'x'.repeat(40) }));
+    });
+
+    it('somente o dono define groupId na fila', async () => {
+      await assertSucceeds(updateDoc(doc(db(OWNER), 'queues', QUEUE), { groupId: 'g1' }));
+      await assertFails(updateDoc(doc(db(OPERATOR), 'queues', QUEUE), { groupId: 'g1' }));
+      await assertFails(updateDoc(doc(db(STRANGER), 'queues', QUEUE), { groupId: 'g1' }));
+    });
+
+    it('groupId inválido na fila é negado', async () => {
+      await assertFails(updateDoc(doc(db(OWNER), 'queues', QUEUE), { groupId: 5 }));
+      await assertFails(updateDoc(doc(db(OWNER), 'queues', QUEUE), { groupId: 'x'.repeat(41) }));
+    });
+  });
+
   describe('conta do dono', () => {
     it('usuário lê o próprio owners/{uid}', async () => {
       await assertSucceeds(getDoc(doc(db(OWNER), 'owners', OWNER)));
