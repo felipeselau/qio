@@ -2,9 +2,21 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
-## [Não lançado]
+## [1.4.0] - 2026-10-06 (teste)
 
 ### Adicionado
+- Push para o dono e operadores quando alguém entra na fila, com o app fechado
+  (`onEntryJoined`; título = nome da fila, corpo com o nome sem telefone, idioma
+  do aparelho). Opt-in em Minha conta e pergunta única na home.
+- Aviso no celular do cliente com a aba fechada (push web): ativação por botão
+  na tela da senha, textos em pt/en/es e "Você é o próximo" (precisa da chave
+  VAPID no build da web).
+- Identidade da fila: cor (paleta de 8 cores com contraste AA) e logo aparecem
+  na página do cliente; o dono escolhe no painel. Logos ficam no Firebase
+  Storage (`queue-logos/{queueId}/logo.jpg`).
+- Horário de funcionamento: a fila abre e fecha sozinha (dias, abre/fecha, fuso
+  de Brasília) pela function `applyQueueSchedules`, a cada 5 minutos; o cliente
+  vê "Abre ..." quando está fechada por horário.
 - Links de fila (`qio.web.app/q/{id}`) abrem o painel direto no app para dono e
   operador (Android App Links); para quem não é da equipe o app repassa ao
   navegador em `/c/{id}`, que o app não captura.
