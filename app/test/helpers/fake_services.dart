@@ -147,15 +147,10 @@ class FakeQueueService implements QueueService {
 }
 
 class FakeOperatorService implements OperatorService {
-  FakeOperatorService({
-    this.operating = const [],
-    this.requests = const [],
-    this.isOperator = true,
-  });
+  FakeOperatorService({this.operating = const [], this.requests = const []});
 
   List<QueueOperator> operating;
   List<OperatorRequest> requests;
-  bool isOperator;
   final List<String> calls = [];
 
   @override
@@ -165,8 +160,10 @@ class FakeOperatorService implements OperatorService {
   @override
   Stream<List<OperatorRequest>> watchMyRequests() => Stream.value(requests);
 
+  final StreamController<bool> access = StreamController<bool>.broadcast();
+
   @override
-  Stream<bool> watchIsOperator(String queueId) => Stream.value(isOperator);
+  Stream<bool> watchIsOperator(String queueId) => access.stream;
 
   @override
   Future<void> cancelMyRequest(String queueId) async {
