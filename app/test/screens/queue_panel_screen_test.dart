@@ -167,6 +167,7 @@ void main() {
   ) async {
     final queues = service();
     final operators = FakeOperatorService();
+    addTearDown(operators.access.close);
     await pumpApp(
       tester,
       panel(queues, isOwner: false, operators: operators),

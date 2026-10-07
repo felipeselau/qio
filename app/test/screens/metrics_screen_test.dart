@@ -15,8 +15,13 @@ Future<void> tick(WidgetTester tester) async {
 
 Finder chip(String label) => find.widgetWithText(ChoiceChip, label);
 
+final fixedNow = DateTime(2025, 6, 15, 12);
+
+MetricsScreen screen({Future<List<QueueHistoryInput>> Function()? loader}) =>
+    MetricsScreen(loader: loader ?? sample, clock: () => fixedNow);
+
 Future<List<QueueHistoryInput>> sample() async {
-  final now = DateTime.now();
+  final now = fixedNow;
   return [
     QueueHistoryInput(
       fakeQueue('a', name: 'Padaria'),
@@ -57,14 +62,14 @@ Future<List<QueueHistoryInput>> sample() async {
 
 void main() {
   testWidgets('shows skeleton while loading', (tester) async {
-    await pumpApp(tester, MetricsScreen(loader: sample), size: tall);
+    await pumpApp(tester, screen(), size: tall);
     expect(find.text('Métricas'), findsOneWidget);
     expect(find.text('Filas mais ativas'), findsNothing);
     await tick(tester);
   });
 
   testWidgets('no queues shows the empty state', (tester) async {
-    await pumpApp(tester, MetricsScreen(loader: () async => []), size: tall);
+    await pumpApp(tester, screen(loader: () async => []), size: tall);
     await tick(tester);
     expect(find.text('Você ainda não tem filas'), findsOneWidget);
     expect(find.byIcon(Icons.file_download_outlined), findsNothing);
@@ -73,7 +78,7 @@ void main() {
   testWidgets('loader error shows the retry state', (tester) async {
     await pumpApp(
       tester,
-      MetricsScreen(loader: () async => throw Exception('x')),
+      screen(loader: () async => throw Exception('x')),
       size: tall,
     );
     await tick(tester);
@@ -86,7 +91,7 @@ void main() {
   testWidgets('queues without history show the no-data state', (tester) async {
     await pumpApp(
       tester,
-      MetricsScreen(
+      screen(
         loader: () async => [
           QueueHistoryInput(fakeQueue('a'), const [], const [], const []),
         ],
@@ -101,7 +106,7 @@ void main() {
   testWidgets('default period is 7 days and excludes older entries', (
     tester,
   ) async {
-    await pumpApp(tester, MetricsScreen(loader: sample), size: tall);
+    await pumpApp(tester, screen(), size: tall);
     await tick(tester);
     expect(find.text('Atendimentos'), findsOneWidget);
     expect(find.text('3'), findsWidgets);
@@ -112,7 +117,7 @@ void main() {
   });
 
   testWidgets('period selector recomputes the totals', (tester) async {
-    await pumpApp(tester, MetricsScreen(loader: sample), size: tall);
+    await pumpApp(tester, screen(), size: tall);
     await tick(tester);
     await tester.tap(chip('Tudo'));
     await tick(tester);
@@ -124,8 +129,27 @@ void main() {
     expect(find.text('1 (33%)'), findsOneWidget);
   });
 
+  testWidgets('operator filter narrows the per-attendant section', (
+    tester,
+  ) async {
+    await pumpApp(tester, screen(), size: tall);
+    await tick(tester);
+    expect(
+      find.text('Nenhum atendimento por atendente no período'),
+      findsNothing,
+    );
+    await tester.tap(find.byType(DropdownButton<String?>));
+    await tick(tester);
+    await tester.tap(find.text('Clinica').last);
+    await tick(tester);
+    expect(
+      find.text('Nenhum atendimento por atendente no período'),
+      findsOneWidget,
+    );
+  });
+
   testWidgets('export action is available once data is loaded', (tester) async {
-    await pumpApp(tester, MetricsScreen(loader: sample), size: tall);
+    await pumpApp(tester, screen(), size: tall);
     await tick(tester);
     await tester.tap(find.byIcon(Icons.file_download_outlined));
     await tick(tester);
@@ -136,7 +160,7 @@ void main() {
   testWidgets('renders in English dark at 320 width', (tester) async {
     await pumpApp(
       tester,
-      MetricsScreen(loader: sample),
+      screen(),
       locale: const Locale('en'),
       themeMode: ThemeMode.dark,
       size: const Size(320, 2400),

@@ -13,13 +13,19 @@ Future<void> tick(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 300));
 }
 
-HistoryScreen screen(FakeQueueService queues) =>
-    HistoryScreen(queueId: 'q1', queueName: 'Padaria', queues: queues);
+final fixedNow = DateTime(2025, 6, 15, 12);
+
+HistoryScreen screen(FakeQueueService queues) => HistoryScreen(
+  queueId: 'q1',
+  queueName: 'Padaria',
+  queues: queues,
+  clock: () => fixedNow,
+);
 
 Finder chip(String label) => find.widgetWithText(ChoiceChip, label);
 
 FakeQueueService withData() {
-  final now = DateTime.now();
+  final now = fixedNow;
   return FakeQueueService(
     history: [
       fakeHistory(
