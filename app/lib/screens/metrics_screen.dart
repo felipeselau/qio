@@ -1,14 +1,19 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/history_entry.dart';
 import '../models/operator.dart';
-import '../models/queue.dart';
 import '../models/queue_feedback.dart';
+import '../services/history_export.dart';
 import '../services/history_metrics.dart';
+import '../services/metrics_export.dart';
 import '../services/operator_metrics.dart';
 import '../services/operator_service.dart';
-import '../services/queue_analytics.dart';
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
@@ -16,15 +21,6 @@ import '../widgets/qio_card.dart';
 import '../widgets/qio_empty_state.dart';
 import '../widgets/qio_skeleton.dart';
 import '../widgets/qio_responsive_body.dart';
-
-class _QueueHistory {
-  const _QueueHistory(this.queue, this.entries, this.feedback, this.operators);
-
-  final Queue queue;
-  final List<HistoryEntry> entries;
-  final List<QueueFeedback> feedback;
-  final List<QueueOperator> operators;
-}
 
 class MetricsScreen extends StatefulWidget {
   const MetricsScreen({super.key});
@@ -34,11 +30,83 @@ class MetricsScreen extends StatefulWidget {
 }
 
 class _MetricsScreenState extends State<MetricsScreen> {
-  late Future<List<_QueueHistory>> _future = _load();
+  late Future<List<QueueHistoryInput>> _future = _load();
   HistoryPeriod _period = HistoryPeriod.last7Days;
   String? _operatorQueueId;
+  List<QueueHistoryInput> _data = const [];
+  bool _exporting = false;
 
-  Future<List<_QueueHistory>> _load() async {
+  String _baseName(DateTime now) =>
+      'metricas-${switch (_period) {
+        HistoryPeriod.today => 'hoje',
+        HistoryPeriod.last7Days => '7dias',
+        HistoryPeriod.all => 'tudo',
+      }}-${formatExportDateTime(now).substring(0, 10)}';
+
+  MetricsReport _report(AppLocalizations l10n, List<QueueHistoryInput> data) =>
+      buildMetricsReport(
+        data: data,
+        period: _period,
+        now: DateTime.now(),
+        historyLimit: QueueService.historyFetchLimit,
+        unknownOperatorName: l10n.formerOperator,
+        operatorQueueId: _operatorQueueId,
+      );
+
+  Future<void> _export(
+    Future<void> Function(MetricsReport report) action,
+  ) async {
+    if (_exporting) return;
+    final report = _report(AppLocalizations.of(context), _data);
+    if (report.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).nothingToExport)),
+      );
+      return;
+    }
+    setState(() => _exporting = true);
+    try {
+      await action(report);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).exportMetricsError),
+          backgroundColor: QioColors.error,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  Future<void> _exportCsv() => _export((report) async {
+    final l10n = AppLocalizations.of(context);
+    final bytes = Uint8List.fromList(
+      utf8.encode(buildMetricsCsv(l10n, report, generatedAt: DateTime.now())),
+    );
+    final fileName = '${_baseName(DateTime.now())}.csv';
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile.fromData(bytes, mimeType: 'text/csv', name: fileName)],
+        fileNameOverrides: [fileName],
+      ),
+    );
+  });
+
+  Future<void> _exportPdf() => _export((report) async {
+    final bytes = await buildMetricsPdf(
+      l10n: AppLocalizations.of(context),
+      report: report,
+      generatedAt: DateTime.now(),
+    );
+    await Printing.sharePdf(
+      bytes: bytes,
+      filename: '${_baseName(DateTime.now())}.pdf',
+    );
+  });
+
+  Future<List<QueueHistoryInput>> _load() async {
     final queues = await QueueService.instance.watchOwnerQueues().first;
     final result = await Future.wait([
       for (final q in queues)
@@ -51,7 +119,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
               .fetchOperators(q.id)
               .catchError((_) => <QueueOperator>[]),
         ]).then(
-          (r) => _QueueHistory(
+          (r) => QueueHistoryInput(
             q,
             r[0] as List<HistoryEntry>,
             r[1] as List<QueueFeedback>,
@@ -63,6 +131,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
         !result.any((d) => d.queue.id == _operatorQueueId)) {
       _operatorQueueId = null;
     }
+    if (mounted) setState(() => _data = result);
     return result;
   }
 
@@ -80,15 +149,31 @@ class _MetricsScreenState extends State<MetricsScreen> {
             color: QioColors.textPrimary,
           ),
         ),
+        actions: [
+          if (_data.isNotEmpty)
+            PopupMenuButton<String>(
+              tooltip: l10n.exportTooltip,
+              icon: const Icon(Icons.file_download_outlined),
+              enabled: !_exporting,
+              onSelected: (v) => v == 'csv' ? _exportCsv() : _exportPdf(),
+              itemBuilder: (_) => [
+                PopupMenuItem(value: 'csv', child: Text(l10n.exportCsv)),
+                PopupMenuItem(value: 'pdf', child: Text(l10n.exportPdf)),
+              ],
+            ),
+        ],
       ),
       body: QioResponsiveBody(
-        child: FutureBuilder<List<_QueueHistory>>(
+        child: FutureBuilder<List<QueueHistoryInput>>(
           future: _future,
           builder: (context, snap) {
             if (snap.hasError) {
               return QioErrorState(
                 message: l10n.loadMetricsError,
-                onRetry: () => setState(() => _future = _load()),
+                onRetry: () => setState(() {
+                  _data = const [];
+                  _future = _load();
+                }),
               );
             }
             if (!snap.hasData) {
@@ -101,30 +186,15 @@ class _MetricsScreenState extends State<MetricsScreen> {
     );
   }
 
-  Widget _buildContent(AppLocalizations l10n, List<_QueueHistory> data) {
+  Widget _buildContent(AppLocalizations l10n, List<QueueHistoryInput> data) {
     if (data.isEmpty) {
       return QioEmptyState(icon: Icons.bar_chart, title: l10n.noQueuesYet);
     }
-    final now = DateTime.now();
-    final perQueue = [
-      for (final d in data)
-        (
-          queue: d.queue,
-          entries: filterHistory(d.entries, period: _period, now: now),
-        ),
-    ];
-    final all = [for (final p in perQueue) ...p.entries];
-    final metrics = computeHistoryMetrics(all);
-    final distribution = hourlyDistribution(all);
-    final peaks = peakHours(distribution);
-    final ranking = rankByActivity([
-      for (final p in perQueue)
-        QueueActivity(
-          queueId: p.queue.id,
-          name: p.queue.name,
-          metrics: computeHistoryMetrics(p.entries),
-        ),
-    ]);
+    final report = _report(l10n, data);
+    final metrics = report.metrics;
+    final distribution = report.distribution;
+    final peaks = report.peaks;
+    final ranking = report.ranking;
     final pct = (metrics.noShowRate * 100).round();
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -141,7 +211,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
           ],
         ),
         const SizedBox(height: 16),
-        if (all.isEmpty)
+        if (report.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 32),
             child: QioEmptyState(
@@ -237,7 +307,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
               ),
             ),
           const SizedBox(height: 16),
-          _buildOperatorSection(l10n, data, now),
+          _buildOperatorSection(l10n, data, report),
         ],
       ],
     );
@@ -245,35 +315,12 @@ class _MetricsScreenState extends State<MetricsScreen> {
 
   Widget _buildOperatorSection(
     AppLocalizations l10n,
-    List<_QueueHistory> data,
-    DateTime now,
+    List<QueueHistoryInput> data,
+    MetricsReport report,
   ) {
-    final selected = data
-        .where(
-          (d) => _operatorQueueId == null || d.queue.id == _operatorQueueId,
-        )
-        .toList();
-    final truncated = selected.any((d) {
-      if (d.entries.length < QueueService.historyFetchLimit) return false;
-      final oldest = d.entries.reduce(
-        (a, b) => a.referenceTime.isBefore(b.referenceTime) ? a : b,
-      );
-      return filterHistory([oldest], period: _period, now: now).isNotEmpty;
-    });
-    final names = <String, String>{
-      for (final d in data)
-        for (final o in d.operators) o.uid: o.label,
-    };
-    final merged = computeOperatorMetrics(
-      [
-        for (final d in selected)
-          ...filterHistory(d.entries, period: _period, now: now),
-      ],
-      ownerUids: {for (final d in selected) d.queue.ownerId},
-      feedback: [for (final d in selected) ...d.feedback],
-      names: names,
-      unknownName: l10n.formerOperator,
-    );
+    final merged = report.operators;
+    final truncated = report.truncated;
+    final names = report.operatorNames;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

@@ -982,7 +982,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Permiso denegado. Activa las notificaciones en los ajustes del sistema.';
 
   @override
-  String get byOperatorTitle => 'Por atendente';
+  String get byOperatorTitle => 'Por agente';
 
   @override
   String get operatorFilterAll => 'Todas las filas';
@@ -994,7 +994,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get formerOperator => 'ex operador';
 
   @override
-  String get noOperatorData => 'Ninguna atención por atendente en el período';
+  String get noOperatorData => 'Ninguna atención por agente en el período';
 
   @override
   String historyTruncatedWarning(int limit) {
@@ -1013,4 +1013,67 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get operatorFilterLabel => 'Filtrar por fila';
+
+  @override
+  String get metricsPdfTitle => 'Qio - Métricas de las filas';
+
+  @override
+  String get csvPeriod => 'período';
+
+  @override
+  String get csvScope => 'alcance por agente';
+
+  @override
+  String get csvGeneratedAt => 'generado el';
+
+  @override
+  String get csvMetric => 'métrica';
+
+  @override
+  String get csvValue => 'valor';
+
+  @override
+  String get csvHour => 'hora';
+
+  @override
+  String get csvEntries => 'entradas';
+
+  @override
+  String get csvPosition => 'posición';
+
+  @override
+  String get csvQueue => 'fila';
+
+  @override
+  String get csvTotal => 'total';
+
+  @override
+  String get csvServed => 'atendidos';
+
+  @override
+  String get csvNoShow => 'no se presentaron';
+
+  @override
+  String get csvLeft => 'desistieron';
+
+  @override
+  String get csvNoShowRatePct => 'tasa de ausencia (%)';
+
+  @override
+  String get csvAvgWaitMin => 'espera promedio (min)';
+
+  @override
+  String get csvAvgServiceMin => 'atención promedio (min)';
+
+  @override
+  String get csvAvgRating => 'valoración promedio';
+
+  @override
+  String get csvRatingCount => 'cant. valoraciones';
+
+  @override
+  String get csvAttendant => 'agente';
+
+  @override
+  String get exportMetricsError => 'No se pudieron exportar las métricas.';
 }

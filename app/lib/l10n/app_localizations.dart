@@ -1923,6 +1923,132 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Filtrar por fila'**
   String get operatorFilterLabel;
+
+  /// No description provided for @metricsPdfTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Qio - Métricas das filas'**
+  String get metricsPdfTitle;
+
+  /// No description provided for @csvPeriod.
+  ///
+  /// In pt, this message translates to:
+  /// **'período'**
+  String get csvPeriod;
+
+  /// No description provided for @csvScope.
+  ///
+  /// In pt, this message translates to:
+  /// **'escopo por atendente'**
+  String get csvScope;
+
+  /// No description provided for @csvGeneratedAt.
+  ///
+  /// In pt, this message translates to:
+  /// **'gerado em'**
+  String get csvGeneratedAt;
+
+  /// No description provided for @csvMetric.
+  ///
+  /// In pt, this message translates to:
+  /// **'métrica'**
+  String get csvMetric;
+
+  /// No description provided for @csvValue.
+  ///
+  /// In pt, this message translates to:
+  /// **'valor'**
+  String get csvValue;
+
+  /// No description provided for @csvHour.
+  ///
+  /// In pt, this message translates to:
+  /// **'hora'**
+  String get csvHour;
+
+  /// No description provided for @csvEntries.
+  ///
+  /// In pt, this message translates to:
+  /// **'entradas'**
+  String get csvEntries;
+
+  /// No description provided for @csvPosition.
+  ///
+  /// In pt, this message translates to:
+  /// **'posição'**
+  String get csvPosition;
+
+  /// No description provided for @csvQueue.
+  ///
+  /// In pt, this message translates to:
+  /// **'fila'**
+  String get csvQueue;
+
+  /// No description provided for @csvTotal.
+  ///
+  /// In pt, this message translates to:
+  /// **'total'**
+  String get csvTotal;
+
+  /// No description provided for @csvServed.
+  ///
+  /// In pt, this message translates to:
+  /// **'atendidos'**
+  String get csvServed;
+
+  /// No description provided for @csvNoShow.
+  ///
+  /// In pt, this message translates to:
+  /// **'não compareceram'**
+  String get csvNoShow;
+
+  /// No description provided for @csvLeft.
+  ///
+  /// In pt, this message translates to:
+  /// **'desistiram'**
+  String get csvLeft;
+
+  /// No description provided for @csvNoShowRatePct.
+  ///
+  /// In pt, this message translates to:
+  /// **'taxa de não comparecimento (%)'**
+  String get csvNoShowRatePct;
+
+  /// No description provided for @csvAvgWaitMin.
+  ///
+  /// In pt, this message translates to:
+  /// **'espera média (min)'**
+  String get csvAvgWaitMin;
+
+  /// No description provided for @csvAvgServiceMin.
+  ///
+  /// In pt, this message translates to:
+  /// **'atendimento médio (min)'**
+  String get csvAvgServiceMin;
+
+  /// No description provided for @csvAvgRating.
+  ///
+  /// In pt, this message translates to:
+  /// **'nota média'**
+  String get csvAvgRating;
+
+  /// No description provided for @csvRatingCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'qtd notas'**
+  String get csvRatingCount;
+
+  /// No description provided for @csvAttendant.
+  ///
+  /// In pt, this message translates to:
+  /// **'atendente'**
+  String get csvAttendant;
+
+  /// No description provided for @exportMetricsError.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível exportar as métricas.'**
+  String get exportMetricsError;
 }
 
 class _AppLocalizationsDelegate
