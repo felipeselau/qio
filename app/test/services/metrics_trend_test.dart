@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:qio_app/models/history_entry.dart';
 import 'package:qio_app/services/history_metrics.dart';
 import 'package:qio_app/services/metrics_trend.dart';
 
@@ -70,6 +71,146 @@ void main() {
     test('duração em dias não depende de horário de verão', () {
       final r = DateRange(DateTime(2026, 3, 7), DateTime(2026, 3, 9));
       expect(r.days, 2);
+    });
+  });
+
+  HistoryEntry entry(
+    String id,
+    DateTime finished, {
+    String result = 'served',
+    int waitMin = 5,
+  }) => HistoryEntry(
+    id: id,
+    ticket: 1,
+    name: id,
+    result: result,
+    joinedAt: finished.subtract(Duration(minutes: waitMin + 10)),
+    calledAt: finished.subtract(const Duration(minutes: 10)),
+    finishedAt: finished,
+  );
+
+  group('dailySeries', () {
+    final range = DateRange(DateTime(2026, 2, 27), DateTime(2026, 3, 3));
+
+    test('preenche todos os dias com zero', () {
+      final s = dailySeries([entry('a', DateTime(2026, 3, 1, 10))], range);
+      expect(s.map((p) => p.day), [
+        DateTime(2026, 2, 27),
+        DateTime(2026, 2, 28),
+        DateTime(2026, 3, 1),
+        DateTime(2026, 3, 2),
+      ]);
+      expect(s.map((p) => p.total), [0, 0, 1, 0]);
+      expect(s[0].avgWaitMin, isNull);
+      expect(s[0].noShowRate, 0);
+      expect(s[2].avgWaitMin, 5);
+    });
+
+    test('série vazia ainda tem um ponto por dia', () {
+      expect(dailySeries(const [], range).length, 4);
+    });
+
+    test('limites 00:00 e 23:59 ficam no dia certo', () {
+      final s = dailySeries([
+        entry('a', DateTime(2026, 2, 28)),
+        entry('b', DateTime(2026, 2, 27, 23, 59)),
+        entry('c', DateTime(2026, 3, 2, 23, 59)),
+        entry('d', DateTime(2026, 3, 3)),
+        entry('e', DateTime(2026, 2, 26, 23, 59)),
+      ], range);
+      expect(s.map((p) => p.total), [1, 1, 0, 1]);
+    });
+
+    test('conta served, no_show e taxa por dia', () {
+      final d = DateTime(2026, 3, 1, 9);
+      final s = dailySeries([
+        entry('a', d),
+        entry('b', d, result: 'no_show'),
+        entry('c', d, result: 'no_show'),
+        entry('d', d, result: 'left'),
+      ], range);
+      expect(s[2].total, 4);
+      expect(s[2].served, 1);
+      expect(s[2].noShow, 2);
+      expect(s[2].noShowRate, 0.5);
+    });
+
+    test('atravessa mudança de horário de verão sem pular dia', () {
+      final r = DateRange(DateTime(2026, 11, 1), DateTime(2026, 11, 9));
+      final s = dailySeries(const [], r);
+      expect(s.length, 8);
+      expect(s.last.day, DateTime(2026, 11, 8));
+    });
+  });
+
+  group('compare', () {
+    HistoryMetrics m(List<HistoryEntry> e) => computeHistoryMetrics(e);
+    final d = DateTime(2026, 3, 1, 9);
+
+    test('anterior vazio não gera deltas', () {
+      expect(compare(m([entry('a', d)]), m(const [])), isEmpty);
+    });
+
+    test('aumento e queda em total', () {
+      final prev = m([entry('a', d), entry('b', d)]);
+      final up = compare(
+        m([entry('a', d), entry('b', d), entry('c', d)]),
+        prev,
+      );
+      expect(up[MetricKey.total]!.pct, 50);
+      expect(up[MetricKey.total]!.abs, 1);
+      final down = compare(m([entry('a', d)]), prev);
+      expect(down[MetricKey.total]!.pct, -50);
+    });
+
+    test('no-show em pontos percentuais', () {
+      final prev = m([entry('a', d), entry('b', d, result: 'no_show')]);
+      final cur = m([
+        entry('a', d),
+        entry('b', d, result: 'no_show'),
+        entry('c', d, result: 'no_show'),
+        entry('e', d, result: 'no_show'),
+      ]);
+      final delta = compare(cur, prev)[MetricKey.noShowRate]!;
+      expect(delta.abs, 25);
+      expect(delta.pct, 50);
+    });
+
+    test('no-show anterior zero mantém pontos e omite pct', () {
+      final prev = m([entry('a', d)]);
+      final cur = m([entry('a', d), entry('b', d, result: 'no_show')]);
+      final delta = compare(cur, prev)[MetricKey.noShowRate]!;
+      expect(delta.abs, 50);
+      expect(delta.pct, isNull);
+    });
+
+    test('valor anterior zero ou nulo é omitido', () {
+      final noWait = HistoryEntry(
+        id: 'x',
+        ticket: 1,
+        name: 'x',
+        result: 'served',
+        joinedAt: d,
+        finishedAt: d,
+      );
+      final deltas = compare(m([entry('a', d)]), m([noWait]));
+      expect(deltas.containsKey(MetricKey.avgWait), isFalse);
+      expect(deltas.containsKey(MetricKey.avgService), isFalse);
+      expect(deltas.containsKey(MetricKey.total), isTrue);
+    });
+
+    test('espera média e mediana', () {
+      final prev = [entry('a', d, waitMin: 10)];
+      final cur = [entry('a', d, waitMin: 5)];
+      final deltas = compare(
+        m(cur),
+        m(prev),
+        curWait: computeWaitStats(cur),
+        prevWait: computeWaitStats(prev),
+      );
+      expect(deltas[MetricKey.avgWait]!.pct, -50);
+      expect(deltas[MetricKey.waitMedian]!.pct, -50);
+      expect(deltas.containsKey(MetricKey.waitP90), isFalse);
     });
   });
 }
