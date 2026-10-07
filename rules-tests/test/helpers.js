@@ -13,5 +13,6 @@ export async function setupEnv() {
     projectId: 'demo-qio',
     firestore: { rules: readFileSync(new URL('firestore.rules', root), 'utf8') },
     database: { rules: readFileSync(new URL('database.rules.json', root), 'utf8') },
+    storage: { rules: readFileSync(new URL('storage.rules', root), 'utf8') },
   });
 }

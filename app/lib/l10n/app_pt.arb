@@ -303,5 +303,11 @@
   "scheduleInvalidDays": "Escolha ao menos um dia",
   "scheduleInvalidTime": "Abertura e fechamento devem ser diferentes",
   "scheduleNote": "Horário de Brasília. Se você abrir, pausar ou fechar na mão, vale até a próxima abertura ou fechamento do horário.",
-  "linkForCustomers": "Este link é para clientes. Abrindo no navegador."
+  "linkForCustomers": "Este link é para clientes. Abrindo no navegador.",
+  "brandTitle": "Identidade da fila",
+  "brandSubtitle": "Cor e logo na página do cliente",
+  "brandColorLabel": "Cor",
+  "brandLogoLabel": "Logo",
+  "brandChooseImage": "Escolher imagem",
+  "brandError": "Não foi possível salvar. Verifique a conexão e tente de novo."
 }

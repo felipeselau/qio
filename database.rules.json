@@ -22,6 +22,12 @@
           },
           "opensAt": {
             ".validate": "newData.isNumber()"
+          },
+          "brandColor": {
+            ".validate": "newData.isString() && newData.val().matches(/^#[0-9A-Fa-f]{6}$/)"
+          },
+          "logoUrl": {
+            ".validate": "newData.isString() && newData.val().length <= 600 && newData.val().matches(/^https:\\/\\/firebasestorage\\.googleapis\\.com\\//)"
           }
         },
         "entries": {

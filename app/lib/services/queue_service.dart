@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart' hide Query, Transaction;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 import '../models/history_entry.dart';
 import '../models/queue.dart';
@@ -162,6 +164,51 @@ class QueueService {
           ? schedule.toMap()
           : FieldValue.delete(),
       'scheduleLastDesired': FieldValue.delete(),
+    });
+  }
+
+  Future<void> updateBrandColor(String queueId, String? hex) async {
+    await _firestore.collection('queues').doc(queueId).update({
+      'brandColor': hex ?? FieldValue.delete(),
+    });
+    await _ensureOwnerMirror(queueId);
+    await _rtdb.ref('queues/$queueId/meta').update({
+      'brandColor': hex,
+      'updatedAt': ServerValue.timestamp,
+    });
+  }
+
+  Future<String> uploadLogo(String queueId, Uint8List bytes) async {
+    if (bytes.lengthInBytes >= 300 * 1024) {
+      throw const FormatException('logo too large');
+    }
+    final ref = FirebaseStorage.instance.ref('queue-logos/$queueId/logo.jpg');
+    await ref.putData(bytes, SettableMetadata(contentType: 'image/jpeg'));
+    final url = await ref.getDownloadURL();
+    await _firestore.collection('queues').doc(queueId).update({'logoUrl': url});
+    await _ensureOwnerMirror(queueId);
+    await _rtdb.ref('queues/$queueId/meta').update({
+      'logoUrl': url,
+      'updatedAt': ServerValue.timestamp,
+    });
+    return url;
+  }
+
+  Future<void> removeLogo(String queueId) async {
+    try {
+      await FirebaseStorage.instance
+          .ref('queue-logos/$queueId/logo.jpg')
+          .delete();
+    } on FirebaseException catch (e) {
+      if (e.code != 'object-not-found') rethrow;
+    }
+    await _firestore.collection('queues').doc(queueId).update({
+      'logoUrl': FieldValue.delete(),
+    });
+    await _ensureOwnerMirror(queueId);
+    await _rtdb.ref('queues/$queueId/meta').update({
+      'logoUrl': null,
+      'updatedAt': ServerValue.timestamp,
     });
   }
 

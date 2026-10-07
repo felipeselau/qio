@@ -932,4 +932,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get linkForCustomers =>
       'This link is for customers. Opening in the browser.';
+
+  @override
+  String get brandTitle => 'Queue branding';
+
+  @override
+  String get brandSubtitle => 'Color and logo on the customer page';
+
+  @override
+  String get brandColorLabel => 'Color';
+
+  @override
+  String get brandLogoLabel => 'Logo';
+
+  @override
+  String get brandChooseImage => 'Choose image';
+
+  @override
+  String get brandError =>
+      'Could not save. Check your connection and try again.';
 }

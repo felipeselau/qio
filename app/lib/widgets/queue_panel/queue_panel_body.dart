@@ -11,6 +11,7 @@ import '../../widgets/qio_responsive_body.dart';
 import '../../widgets/queue_panel/current_called_card.dart';
 import '../../widgets/queue_panel/waiting_tile.dart';
 import '../../widgets/queue_panel/queue_limit_tile.dart';
+import '../../widgets/queue_panel/queue_brand_tile.dart';
 import '../../widgets/queue_panel/queue_schedule_tile.dart';
 import '../../widgets/queue_panel/queue_qr_card.dart';
 import '../../widgets/queue_panel/operators_tile.dart';
@@ -66,6 +67,13 @@ class QueuePanelBody extends StatelessWidget {
                   QueueLimitTile(queueId: queueId, maxWaiting: maxWaiting),
                   const SizedBox(height: 16),
                   QueueScheduleTile(queueId: queueId, schedule: schedule),
+                  const SizedBox(height: 16),
+                  QueueBrandTile(
+                    queueId: queueId,
+                    queueName: queueName,
+                    brandColor: queueSnap.data?.brandColor,
+                    logoUrl: queueSnap.data?.logoUrl,
+                  ),
                   const SizedBox(height: 16),
                 ],
                 QioCard(
@@ -127,6 +135,13 @@ class QueuePanelBody extends StatelessWidget {
                   QueueLimitTile(queueId: queueId, maxWaiting: maxWaiting),
                   const SizedBox(height: 16),
                   QueueScheduleTile(queueId: queueId, schedule: schedule),
+                  const SizedBox(height: 16),
+                  QueueBrandTile(
+                    queueId: queueId,
+                    queueName: queueName,
+                    brandColor: queueSnap.data?.brandColor,
+                    logoUrl: queueSnap.data?.logoUrl,
+                  ),
                   const SizedBox(height: 16),
                 ],
               ];

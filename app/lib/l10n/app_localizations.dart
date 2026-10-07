@@ -1791,6 +1791,42 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Este link é para clientes. Abrindo no navegador.'**
   String get linkForCustomers;
+
+  /// No description provided for @brandTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Identidade da fila'**
+  String get brandTitle;
+
+  /// No description provided for @brandSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cor e logo na página do cliente'**
+  String get brandSubtitle;
+
+  /// No description provided for @brandColorLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cor'**
+  String get brandColorLabel;
+
+  /// No description provided for @brandLogoLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Logo'**
+  String get brandLogoLabel;
+
+  /// No description provided for @brandChooseImage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolher imagem'**
+  String get brandChooseImage;
+
+  /// No description provided for @brandError.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível salvar. Verifique a conexão e tente de novo.'**
+  String get brandError;
 }
 
 class _AppLocalizationsDelegate

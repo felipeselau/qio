@@ -288,5 +288,11 @@
   "scheduleInvalidDays": "Choose at least one day",
   "scheduleInvalidTime": "Opening and closing times must differ",
   "scheduleNote": "Brasília time. If you open, pause or close manually, it holds until the next scheduled opening or closing.",
-  "linkForCustomers": "This link is for customers. Opening in the browser."
+  "linkForCustomers": "This link is for customers. Opening in the browser.",
+  "brandTitle": "Queue branding",
+  "brandSubtitle": "Color and logo on the customer page",
+  "brandColorLabel": "Color",
+  "brandLogoLabel": "Logo",
+  "brandChooseImage": "Choose image",
+  "brandError": "Could not save. Check your connection and try again."
 }
