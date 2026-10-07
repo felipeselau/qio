@@ -12,6 +12,7 @@ import '../models/queue_feedback.dart';
 import '../services/history_export.dart';
 import '../services/history_metrics.dart';
 import '../services/metrics_export.dart';
+import '../services/metrics_trend.dart';
 import '../services/operator_metrics.dart';
 import '../services/operator_service.dart';
 import '../services/queue_service.dart';
@@ -39,16 +40,44 @@ class MetricsScreen extends StatefulWidget {
 class _MetricsScreenState extends State<MetricsScreen> {
   late Future<List<QueueHistoryInput>> _future = _load();
   HistoryPeriod _period = HistoryPeriod.last7Days;
+  DateRange? _custom;
   String? _operatorQueueId;
   List<QueueHistoryInput> _data = const [];
   bool _exporting = false;
 
   String _baseName(DateTime now) =>
-      'metricas-${switch (_period) {
-        HistoryPeriod.today => 'hoje',
-        HistoryPeriod.last7Days => '7dias',
-        HistoryPeriod.all => 'tudo',
-      }}-${formatExportDateTime(now).substring(0, 10)}';
+      'metricas-${_period.fileSlug}-${formatExportDateTime(now).substring(0, 10)}';
+
+  Future<void> _selectPeriod(HistoryPeriod p) async {
+    if (p != HistoryPeriod.custom) {
+      setState(() => _period = p);
+      return;
+    }
+    final now = DateTime.now();
+    final picked = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(now.year - 5),
+      lastDate: DateTime(now.year, now.month, now.day),
+      initialDateRange: _custom == null
+          ? null
+          : DateTimeRange(
+              start: _custom!.start,
+              end: DateTime(
+                _custom!.end.year,
+                _custom!.end.month,
+                _custom!.end.day - 1,
+              ),
+            ),
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      _custom = DateRange(
+        picked.start,
+        DateTime(picked.end.year, picked.end.month, picked.end.day + 1),
+      );
+      _period = HistoryPeriod.custom;
+    });
+  }
 
   MetricsReport _report(AppLocalizations l10n, List<QueueHistoryInput> data) =>
       buildMetricsReport(
@@ -58,6 +87,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
         historyLimit: QueueService.historyFetchLimit,
         unknownOperatorName: l10n.formerOperator,
         operatorQueueId: _operatorQueueId,
+        customRange: _custom,
       );
 
   Future<void> _export(
@@ -219,7 +249,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
               ChoiceChip(
                 label: Text(p.label(l10n)),
                 selected: _period == p,
-                onSelected: (_) => setState(() => _period = p),
+                onSelected: (_) => _selectPeriod(p),
               ),
           ],
         ),

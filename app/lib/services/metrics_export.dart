@@ -11,6 +11,7 @@ import '../models/queue.dart';
 import '../models/queue_feedback.dart';
 import 'history_export.dart';
 import 'history_metrics.dart';
+import 'metrics_trend.dart';
 import 'operator_metrics.dart';
 import 'queue_analytics.dart';
 
@@ -89,12 +90,18 @@ MetricsReport buildMetricsReport({
   required int historyLimit,
   required String unknownOperatorName,
   String? operatorQueueId,
+  DateRange? customRange,
 }) {
   final perQueue = [
     for (final d in data)
       (
         queue: d.queue,
-        entries: filterHistory(d.entries, period: period, now: now),
+        entries: filterHistory(
+          d.entries,
+          period: period,
+          now: now,
+          custom: customRange,
+        ),
       ),
   ];
   final all = [for (final p in perQueue) ...p.entries];
@@ -108,7 +115,12 @@ MetricsReport buildMetricsReport({
     final oldest = d.entries.reduce(
       (a, b) => a.referenceTime.isBefore(b.referenceTime) ? a : b,
     );
-    return filterHistory([oldest], period: period, now: now).isNotEmpty;
+    return filterHistory(
+      [oldest],
+      period: period,
+      now: now,
+      custom: customRange,
+    ).isNotEmpty;
   });
   final names = <String, String>{
     for (final d in data)
@@ -117,7 +129,12 @@ MetricsReport buildMetricsReport({
   final operators = computeOperatorMetrics(
     [
       for (final d in selected)
-        ...filterHistory(d.entries, period: period, now: now),
+        ...filterHistory(
+          d.entries,
+          period: period,
+          now: now,
+          custom: customRange,
+        ),
     ],
     ownerUids: {for (final d in selected) d.queue.ownerId},
     feedback: [for (final d in selected) ...d.feedback],

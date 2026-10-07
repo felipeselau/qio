@@ -41,6 +41,19 @@ DateRange? rangeFor(HistoryPeriod period, DateTime now, {DateRange? custom}) {
       return DateRange(today, tomorrow);
     case HistoryPeriod.last7Days:
       return DateRange(DateTime(now.year, now.month, now.day - 6), tomorrow);
+    case HistoryPeriod.last30Days:
+      return DateRange(DateTime(now.year, now.month, now.day - 29), tomorrow);
+    case HistoryPeriod.custom:
+      if (custom == null) return null;
+      var start = _dayStart(custom.start);
+      var end = _dayStart(custom.end);
+      if (end.isBefore(start)) {
+        final swap = start;
+        start = end;
+        end = swap;
+      }
+      if (end == start) end = DateTime(end.year, end.month, end.day + 1);
+      return DateRange(start, end);
     case HistoryPeriod.all:
       return null;
   }

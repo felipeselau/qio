@@ -1235,4 +1235,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String weekdayChartSemantics(String details) {
     return 'Arrivals per day: $details';
   }
+
+  @override
+  String get period30Days => '30 days';
+
+  @override
+  String get periodCustom => 'Custom';
 }

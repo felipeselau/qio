@@ -21,6 +21,44 @@ void main() {
       expect(r.days, 7);
     });
 
+    test('30 dias inclui hoje e 29 anteriores', () {
+      final r = rangeFor(HistoryPeriod.last30Days, now)!;
+      expect(r.start, DateTime(2026, 9, 8));
+      expect(r.end, DateTime(2026, 10, 8));
+      expect(r.days, 30);
+    });
+
+    test('personalizado de 1 dia', () {
+      final r = rangeFor(
+        HistoryPeriod.custom,
+        now,
+        custom: DateRange(DateTime(2026, 5, 10, 14), DateTime(2026, 5, 10, 18)),
+      )!;
+      expect(r.start, DateTime(2026, 5, 10));
+      expect(r.end, DateTime(2026, 5, 11));
+      expect(r.days, 1);
+    });
+
+    test('personalizado invertido é normalizado', () {
+      final r = rangeFor(
+        HistoryPeriod.custom,
+        now,
+        custom: DateRange(DateTime(2026, 5, 20), DateTime(2026, 5, 10)),
+      )!;
+      expect(r.start, DateTime(2026, 5, 10));
+      expect(r.end, DateTime(2026, 5, 20));
+    });
+
+    test('personalizado ignora horário e sem faixa é nulo', () {
+      final r = rangeFor(
+        HistoryPeriod.custom,
+        now,
+        custom: DateRange(DateTime(2026, 5, 1, 13), DateTime(2026, 5, 4, 9)),
+      )!;
+      expect(r, DateRange(DateTime(2026, 5, 1), DateTime(2026, 5, 4)));
+      expect(rangeFor(HistoryPeriod.custom, now), isNull);
+    });
+
     test('tudo é nulo', () {
       expect(rangeFor(HistoryPeriod.all, now), isNull);
     });

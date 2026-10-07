@@ -388,5 +388,7 @@
   "heatmapLegendLess": "menos",
   "heatmapLegendMore": "más",
   "weekdayChartSemantics": "Llegadas por día: {details}",
-  "@weekdayChartSemantics": {"placeholders": {"details": {"type": "String"}}}
+  "@weekdayChartSemantics": {"placeholders": {"details": {"type": "String"}}},
+  "period30Days": "30 días",
+  "periodCustom": "Personalizado"
 }

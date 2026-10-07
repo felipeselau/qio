@@ -2325,6 +2325,18 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Chegadas por dia: {details}'**
   String weekdayChartSemantics(String details);
+
+  /// No description provided for @period30Days.
+  ///
+  /// In pt, this message translates to:
+  /// **'30 dias'**
+  String get period30Days;
+
+  /// No description provided for @periodCustom.
+  ///
+  /// In pt, this message translates to:
+  /// **'Personalizado'**
+  String get periodCustom;
 }
 
 class _AppLocalizationsDelegate
