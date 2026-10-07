@@ -168,6 +168,9 @@ String demandPeakText(AppLocalizations l10n, String locale, DemandPeak peak) =>
       hourLabel((peak.hour + 1) % 24),
     );
 
+bool _hasDemand(MetricsReport report) =>
+    report.weekdays.length == 7 && report.heatmap.length == 7;
+
 String _num(double? v) => v == null ? '' : v.toStringAsFixed(1);
 
 String _scopeLabel(AppLocalizations l10n, MetricsReport report) =>
@@ -285,6 +288,23 @@ String buildMetricsCsv(
       [l10n.csvSkipsTotal, '${report.callEffort.skipsTotal}'],
       [l10n.csvSkippedEntries, '${report.callEffort.skippedEntries}'],
     ],
+    if (_hasDemand(report)) ...[
+      [
+        [l10n.weekdayDemandTitle],
+        [l10n.csvWeekday, l10n.csvArrivals],
+        for (var d = 0; d < 7; d++)
+          [weekdayLabel(l10n.localeName, d), '${report.weekdays[d]}'],
+      ],
+      [
+        [l10n.heatmapTitle],
+        [l10n.csvWeekday, for (var h = 0; h < 24; h++) '$h'],
+        for (var d = 0; d < 7; d++)
+          [
+            weekdayLabel(l10n.localeName, d),
+            for (var h = 0; h < 24; h++) '${report.heatmap[d][h]}',
+          ],
+      ],
+    ],
   ];
   final lines = <String>[];
   for (var i = 0; i < sections.length; i++) {
@@ -337,6 +357,79 @@ pw.Widget _metric(String label, String value) => pw.Column(
     ),
   ],
 );
+
+PdfColor _heatColor(int count, int max) {
+  if (count == 0 || max == 0) return PdfColors.grey200;
+  final t = 0.2 + 0.8 * count / max;
+  double mix(double base) => 1 - (1 - base) * t;
+  return PdfColor(mix(0x25 / 255), mix(0x63 / 255), mix(0xEB / 255));
+}
+
+List<pw.Widget> _demandPdf(AppLocalizations l10n, MetricsReport report) {
+  final locale = l10n.localeName;
+  final peak = report.demandPeak;
+  var max = 0;
+  for (final row in report.heatmap) {
+    for (final c in row) {
+      if (c > max) max = c;
+    }
+  }
+  pw.Widget cell(String text, {PdfColor? color, bool bold = false}) =>
+      pw.Container(
+        height: 14,
+        color: color,
+        alignment: pw.Alignment.center,
+        child: pw.Text(
+          text,
+          style: pw.TextStyle(
+            fontSize: 7,
+            fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
+          ),
+        ),
+      );
+  return [
+    _section(l10n.weekdayDemandTitle),
+    _table(
+      [l10n.csvWeekday, l10n.csvArrivals],
+      [
+        for (var d = 0; d < 7; d++)
+          [weekdayLabel(locale, d), '${report.weekdays[d]}'],
+      ],
+    ),
+    _section(l10n.heatmapTitle),
+    if (peak != null)
+      pw.Text(
+        demandPeakText(l10n, locale, peak).replaceAll('\u2013', '-'),
+        style: const pw.TextStyle(fontSize: 10),
+      ),
+    pw.SizedBox(height: 6),
+    pw.Table(
+      columnWidths: {
+        0: const pw.FixedColumnWidth(34),
+        for (var h = 1; h <= 24; h++) h: const pw.FlexColumnWidth(),
+      },
+      children: [
+        pw.TableRow(
+          children: [
+            cell(''),
+            for (var h = 0; h < 24; h++) cell('$h', bold: true),
+          ],
+        ),
+        for (var d = 0; d < 7; d++)
+          pw.TableRow(
+            children: [
+              cell(weekdayLabel(locale, d), bold: true),
+              for (var h = 0; h < 24; h++)
+                cell(
+                  report.heatmap[d][h] == 0 ? '' : '${report.heatmap[d][h]}',
+                  color: _heatColor(report.heatmap[d][h], max),
+                ),
+            ],
+          ),
+      ],
+    ),
+  ];
+}
 
 Future<Uint8List> buildMetricsPdf({
   required AppLocalizations l10n,
@@ -513,6 +606,7 @@ Future<Uint8List> buildMetricsPdf({
             ),
           ],
         ],
+        if (_hasDemand(report)) ..._demandPdf(l10n, report),
       ],
     ),
   );

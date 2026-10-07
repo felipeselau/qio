@@ -65,7 +65,15 @@ void main() {
       });
     }
 
-    walk(tester.binding.pipelineOwner.semanticsOwner!.rootSemanticsNode!);
+    walk(
+      tester
+          .binding
+          .rootElement!
+          .renderObject!
+          .owner!
+          .semanticsOwner!
+          .rootSemanticsNode!,
+    );
     expect(labels, contains('sex., 18h: 5 chegadas'));
     expect(labels, contains('seg., 09h: 1 chegada'));
     expect(labels.where((l) => RegExp(r', \d\dh: ').hasMatch(l)), hasLength(2));
