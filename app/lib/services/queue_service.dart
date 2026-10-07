@@ -316,9 +316,11 @@ class QueueService {
         );
   }
 
+  static const int historyFetchLimit = 500;
+
   Future<List<HistoryEntry>> fetchHistory(
     String queueId, {
-    int limit = 500,
+    int limit = historyFetchLimit,
   }) async {
     final snap = await _firestore
         .collection('queues')
