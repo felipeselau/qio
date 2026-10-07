@@ -41,6 +41,14 @@ class MetricsReport {
     required this.operatorNames,
     required this.truncated,
     required this.historyLimit,
+    this.waitStats = const WaitStats(samples: 0, bucketCounts: [0, 0, 0, 0]),
+    this.callEffort = const CallEffortStats(
+      called: 0,
+      recallsTotal: 0,
+      recalledEntries: 0,
+      skipsTotal: 0,
+      skippedEntries: 0,
+    ),
   });
 
   final HistoryPeriod period;
@@ -55,6 +63,8 @@ class MetricsReport {
   final Map<String, String> operatorNames;
   final bool truncated;
   final int historyLimit;
+  final WaitStats waitStats;
+  final CallEffortStats callEffort;
 
   String operatorLabel(
     OperatorStats stats, {
@@ -130,6 +140,8 @@ MetricsReport buildMetricsReport({
     operatorNames: names,
     truncated: truncated,
     historyLimit: historyLimit,
+    waitStats: computeWaitStats(all),
+    callEffort: computeCallEffort(all),
   );
 }
 
