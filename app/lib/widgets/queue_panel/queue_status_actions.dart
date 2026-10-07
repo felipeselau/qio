@@ -13,11 +13,13 @@ class QueueStatusActions extends StatelessWidget {
     required this.queueId,
     required this.queueName,
     required this.onStatus,
+    this.queues,
   });
 
   final String queueId;
   final String queueName;
   final void Function(QueueStatus, StatusChange?) onStatus;
+  final QueueService? queues;
 
   Future<void> _change(BuildContext context, QueueStatus target) async {
     if (target == QueueStatus.open) {
@@ -39,13 +41,16 @@ class QueueStatusActions extends StatelessWidget {
           tooltip: l10n.historyTitle,
           onPressed: () => Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (_) =>
-                  HistoryScreen(queueId: queueId, queueName: queueName),
+              builder: (_) => HistoryScreen(
+                queueId: queueId,
+                queueName: queueName,
+                queues: queues,
+              ),
             ),
           ),
         ),
         StreamBuilder<Queue>(
-          stream: QueueService.instance.watchQueue(queueId),
+          stream: (queues ?? QueueService.instance).watchQueue(queueId),
           builder: (context, snap) {
             final q = snap.data;
             final status = q?.status ?? QueueStatus.open;

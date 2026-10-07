@@ -30,6 +30,7 @@ class QueuePanelBody extends StatelessWidget {
     required this.onCall,
     required this.onMoveToEnd,
     required this.onRecall,
+    this.queues,
   });
 
   final String queueId;
@@ -42,15 +43,17 @@ class QueuePanelBody extends StatelessWidget {
   final void Function(QueueEntry) onCall;
   final void Function(QueueEntry) onMoveToEnd;
   final void Function(QueueEntry) onRecall;
+  final QueueService? queues;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final joinUrl = QueueService.instance.queueJoinUrl(queueId);
+    final service = queues ?? QueueService.instance;
+    final joinUrl = service.queueJoinUrl(queueId);
     return QioResponsiveBody(
       maxWidth: 1100,
       child: StreamBuilder<Queue>(
-        stream: QueueService.instance.watchQueue(queueId),
+        stream: service.watchQueue(queueId),
         builder: (context, queueSnap) {
           final status = queueSnap.data?.status ?? QueueStatus.open;
           final maxWaiting = queueSnap.data?.maxWaiting ?? 0;
@@ -113,7 +116,7 @@ class QueuePanelBody extends StatelessWidget {
             );
           }
           return StreamBuilder<List<QueueEntry>>(
-            stream: QueueService.instance.watchEntries(queueId),
+            stream: service.watchEntries(queueId),
             builder: (context, snap) {
               final entries = snap.data ?? [];
               final waiting = entries
