@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
@@ -11,7 +11,13 @@ import {
   clearPendingFeedback,
 } from '../lib/storage';
 import { joinQueue, leaveQueue, saveFcmToken, submitFeedback } from '../lib/join';
-import { getFcmToken, listenForMessages } from '../lib/fcm';
+import {
+  getFcmToken,
+  listenForMessages,
+  pushSupport,
+  requestPushPermission,
+  type PushSupport,
+} from '../lib/fcm';
 import { useQueue, type QueueMeta } from '../lib/useQueue';
 import { formatPhone, isValidPhone } from '../lib/format';
 import { useInstallPrompt } from '../lib/useInstallPrompt';
@@ -284,17 +290,35 @@ export default function QueuePage() {
     setError(null);
   }
 
-  // salva o FCM token da entry na tela do ticket (uma vez por entry)
+  const [push, setPush] = useState<PushSupport>('unsupported');
+  const [pushBusy, setPushBusy] = useState(false);
+
+  const registerToken = useCallback(() => {
+    if (!entryId) return;
+    getFcmToken().then((token) => {
+      if (token) saveFcmToken(queueId, entryId, token).catch(() => {});
+    });
+  }, [entryId, queueId]);
+
   useEffect(() => {
-    if (phase === 'ticket' && myEntry && entryId && !fcmDone) {
-      setFcmDone(true);
-      getFcmToken().then((token) => {
-        if (token) {
-          saveFcmToken(queueId, entryId, token).catch(() => {});
-        }
-      });
+    if (phase !== 'ticket' || !myEntry || !entryId || fcmDone) return;
+    setFcmDone(true);
+    pushSupport().then((state) => {
+      setPush(state);
+      if (state === 'granted') registerToken();
+    });
+  }, [phase, myEntry, entryId, fcmDone, registerToken]);
+
+  async function enablePush() {
+    setPushBusy(true);
+    try {
+      const result = await requestPushPermission();
+      setPush(result);
+      if (result === 'granted') registerToken();
+    } finally {
+      setPushBusy(false);
     }
-  }, [phase, myEntry, entryId, fcmDone, queueId]);
+  }
 
   // notificação foreground (page oculta) — RTDB já cuida do estado em tela
   useEffect(() => {
@@ -533,6 +557,24 @@ export default function QueuePage() {
           </div>
 
           <StatusNotice meta={meta} />
+
+          {push === 'ready' && (
+            <section className="install-banner" role="region" aria-label={t('queue.pushTitle')}>
+              <p>{t('queue.pushBody')}</p>
+              <div className="install-banner-actions">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  disabled={pushBusy}
+                  onClick={enablePush}
+                >
+                  {t('queue.pushEnable')}
+                </button>
+              </div>
+            </section>
+          )}
+          {push === 'granted' && <p className="muted push-note">{t('queue.pushOn')}</p>}
+          {push === 'denied' && <p className="muted push-note">{t('queue.pushDenied')}</p>}
 
           {(installPrompt.canInstall || installPrompt.hint) && (
             <section className="install-banner" role="region" aria-label={t('queue.installAria')}>

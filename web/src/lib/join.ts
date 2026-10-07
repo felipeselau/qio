@@ -25,10 +25,10 @@ export async function joinQueue(
   let result: JoinResult;
   try {
     const call = httpsCallable<
-      { queueId: string; name: string; phone: string },
+      { queueId: string; name: string; phone: string; lang: string },
       JoinResult
     >(functions, 'joinQueue');
-    result = (await call({ queueId, name, phone })).data;
+    result = (await call({ queueId, name, phone, lang: i18n.language })).data;
   } catch (err) {
     const e = err as { code?: string; details?: { reason?: string } } | null;
     const code = e?.code ?? '';

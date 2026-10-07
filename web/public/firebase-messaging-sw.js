@@ -14,6 +14,7 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
+  if (payload.notification) return;
   const title = payload.notification?.title ?? 'Qio';
   const options = {
     body: payload.notification?.body ?? '',

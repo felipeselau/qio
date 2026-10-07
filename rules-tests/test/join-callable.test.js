@@ -100,6 +100,16 @@ describe('callable joinQueue (emulador)', () => {
     assert.equal(pub.order, entry.joinedAt);
   });
 
+  it('guarda o idioma do cliente na entry (pt como padrão)', async () => {
+    const en = await newClient('lang-en');
+    const bad = await newClient('lang-bad');
+    const a = await en.join({ queueId: QUEUE, name: 'Ana', phone: '', lang: 'en-US' });
+    const b = await bad.join({ queueId: QUEUE, name: 'Bia', phone: '', lang: 'klingon' });
+    const read = (id) => adminDb(async (db) => (await get(ref(db, `queues/${QUEUE}/entries/${id}`))).val());
+    assert.equal((await read(a.entryId)).lang, 'en');
+    assert.equal((await read(b.entryId)).lang, 'pt');
+  });
+
   it('segundo join do mesmo uid devolve a mesma entry', async () => {
     const c = await newClient('b');
     const first = await c.join({ queueId: QUEUE, name: 'Bia', phone: '' });

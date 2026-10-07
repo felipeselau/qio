@@ -59,7 +59,12 @@
     "pausedTitle": "Fila en pausa",
     "closedTitle": "Fila cerrada",
     "returnAt": "Regreso previsto: {{time}}",
-    "opensAt": "Abre {{when}}"
+    "opensAt": "Abre {{when}}",
+    "pushTitle": "Avisos",
+    "pushBody": "¿Quieres un aviso en el celular cuando sea tu turno? Funciona incluso con la página cerrada.",
+    "pushEnable": "Activar aviso",
+    "pushOn": "Te avisaremos cuando sea tu turno.",
+    "pushDenied": "Los avisos están bloqueados en el navegador. La página sigue avisando mientras esté abierta."
   },
   "errors": {
     "nameRequired": "Ingresa tu nombre",

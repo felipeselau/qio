@@ -468,3 +468,8 @@ a {
   font-size: 28px;
   font-weight: 700;
 }
+
+.push-note {
+  font-size: 13px;
+  text-align: center;
+}

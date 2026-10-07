@@ -23,7 +23,14 @@ const {
   wantsNewEntryPush,
   isStaleTokenError,
   groupTokensByLang,
+  normalizeLang,
 } = require('./src/push');
+const {
+  buildCalledMessage,
+  buildNextMessage,
+  pickNextWaiting,
+  advancedFromWaiting,
+} = require('./src/webpush');
 const {
   normalizeRating,
   normalizeComment,
@@ -67,20 +74,13 @@ exports.onEntryCalled = onValueWritten(
       // fallback name
     }
 
-    const ticket = after.ticket ?? '';
-
-    const message = {
+    const message = buildCalledMessage({
       token,
-      notification: {
-        title: 'É a sua vez!',
-        body: `Senha #${ticket} — dirija-se ao atendimento (${queueName})`,
-      },
-      webpush: {
-        fcmOptions: {
-          link: `https://qio.web.app/q/${queueId}`,
-        },
-      },
-    };
+      ticket: after.ticket,
+      queueName,
+      queueId,
+      lang: after.lang,
+    });
 
     try {
       await getMessaging().send(message);
@@ -137,6 +137,7 @@ exports.joinQueue = onCall(
       );
     }
     const cleanPhone = phone.trim();
+    const lang = normalizeLang(data.lang);
 
     const db = getDatabase();
     const metaSnap = await db.ref(`queues/${queueId}/meta`).once('value');
@@ -208,6 +209,7 @@ exports.joinQueue = onCall(
       name,
       phone: cleanPhone,
       uid,
+      lang,
       status: 'waiting',
       joinedAt: Date.now(),
     });
@@ -432,6 +434,41 @@ exports.onEntryJoined = onValueCreated(
       }
     } catch (err) {
       console.error('onEntryJoined failed', err);
+    }
+    return null;
+  },
+);
+
+exports.onQueueAdvanced = onValueWritten(
+  { ref: 'queues/{queueId}/entries/{entryId}', region: 'us-central1' },
+  async (event) => {
+    const before = event.data.before.val();
+    const after = event.data.after.val();
+    if (!advancedFromWaiting(before, after)) return null;
+    const { queueId } = event.params;
+    const db = getDatabase();
+    try {
+      const snap = await db
+        .ref(`queues/${queueId}/entries`)
+        .orderByChild('status')
+        .equalTo('waiting')
+        .once('value');
+      const next = pickNextWaiting(snap.val());
+      if (!next || !next.fcmToken || next.nextNotifiedAt) return null;
+      const nameSnap = await db.ref(`queues/${queueId}/meta/name`).once('value');
+      await db
+        .ref(`queues/${queueId}/entries/${next.id}/nextNotifiedAt`)
+        .set(Date.now());
+      await getMessaging().send(
+        buildNextMessage({
+          token: next.fcmToken,
+          queueName: nameSnap.val(),
+          queueId,
+          lang: next.lang,
+        }),
+      );
+    } catch (err) {
+      console.error('onQueueAdvanced failed', err);
     }
     return null;
   },
