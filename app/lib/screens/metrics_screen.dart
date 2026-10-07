@@ -1,4 +1,9 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/history_entry.dart';
@@ -27,6 +32,75 @@ class _MetricsScreenState extends State<MetricsScreen> {
   late Future<List<QueueHistoryInput>> _future = _load();
   HistoryPeriod _period = HistoryPeriod.last7Days;
   String? _operatorQueueId;
+  List<QueueHistoryInput> _data = const [];
+  bool _exporting = false;
+
+  String get _baseName =>
+      'metricas-${switch (_period) {
+        HistoryPeriod.today => 'hoje',
+        HistoryPeriod.last7Days => '7dias',
+        HistoryPeriod.all => 'tudo',
+      }}';
+
+  MetricsReport _report(AppLocalizations l10n, List<QueueHistoryInput> data) =>
+      buildMetricsReport(
+        data: data,
+        period: _period,
+        now: DateTime.now(),
+        historyLimit: QueueService.historyFetchLimit,
+        unknownOperatorName: l10n.formerOperator,
+        operatorQueueId: _operatorQueueId,
+      );
+
+  Future<void> _export(
+    Future<void> Function(MetricsReport report) action,
+  ) async {
+    if (_exporting) return;
+    final report = _report(AppLocalizations.of(context), _data);
+    if (report.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).nothingToExport)),
+      );
+      return;
+    }
+    setState(() => _exporting = true);
+    try {
+      await action(report);
+    } on Exception {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context).exportError),
+          backgroundColor: QioColors.error,
+        ),
+      );
+    } finally {
+      if (mounted) setState(() => _exporting = false);
+    }
+  }
+
+  Future<void> _exportCsv() => _export((report) async {
+    final l10n = AppLocalizations.of(context);
+    final bytes = Uint8List.fromList(
+      utf8.encode(buildMetricsCsv(l10n, report, generatedAt: DateTime.now())),
+    );
+    final fileName = '$_baseName.csv';
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile.fromData(bytes, mimeType: 'text/csv', name: fileName)],
+        fileNameOverrides: [fileName],
+      ),
+    );
+  });
+
+  Future<void> _exportPdf() => _export((report) async {
+    final bytes = await buildMetricsPdf(
+      l10n: AppLocalizations.of(context),
+      report: report,
+      generatedAt: DateTime.now(),
+    );
+    await Printing.sharePdf(bytes: bytes, filename: '$_baseName.pdf');
+  });
 
   Future<List<QueueHistoryInput>> _load() async {
     final queues = await QueueService.instance.watchOwnerQueues().first;
@@ -53,6 +127,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
         !result.any((d) => d.queue.id == _operatorQueueId)) {
       _operatorQueueId = null;
     }
+    if (mounted) setState(() => _data = result);
     return result;
   }
 
@@ -70,6 +145,19 @@ class _MetricsScreenState extends State<MetricsScreen> {
             color: QioColors.textPrimary,
           ),
         ),
+        actions: [
+          if (_data.isNotEmpty)
+            PopupMenuButton<String>(
+              tooltip: l10n.exportTooltip,
+              icon: const Icon(Icons.file_download_outlined),
+              enabled: !_exporting,
+              onSelected: (v) => v == 'csv' ? _exportCsv() : _exportPdf(),
+              itemBuilder: (_) => [
+                PopupMenuItem(value: 'csv', child: Text(l10n.exportCsv)),
+                PopupMenuItem(value: 'pdf', child: Text(l10n.exportPdf)),
+              ],
+            ),
+        ],
       ),
       body: QioResponsiveBody(
         child: FutureBuilder<List<QueueHistoryInput>>(
@@ -78,7 +166,10 @@ class _MetricsScreenState extends State<MetricsScreen> {
             if (snap.hasError) {
               return QioErrorState(
                 message: l10n.loadMetricsError,
-                onRetry: () => setState(() => _future = _load()),
+                onRetry: () => setState(() {
+                  _data = const [];
+                  _future = _load();
+                }),
               );
             }
             if (!snap.hasData) {
@@ -95,14 +186,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
     if (data.isEmpty) {
       return QioEmptyState(icon: Icons.bar_chart, title: l10n.noQueuesYet);
     }
-    final report = buildMetricsReport(
-      data: data,
-      period: _period,
-      now: DateTime.now(),
-      historyLimit: QueueService.historyFetchLimit,
-      unknownOperatorName: l10n.formerOperator,
-      operatorQueueId: _operatorQueueId,
-    );
+    final report = _report(l10n, data);
     final metrics = report.metrics;
     final distribution = report.distribution;
     final peaks = report.peaks;
