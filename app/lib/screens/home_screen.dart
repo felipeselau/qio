@@ -37,13 +37,13 @@ class HomeScreen extends StatefulWidget {
     this.auth,
     this.queues,
     this.operators,
-    this.listenExternalEvents = true,
+    this.enableIntegrations = true,
   });
 
   final AuthService? auth;
   final QueueService? queues;
   final OperatorService? operators;
-  final bool listenExternalEvents;
+  final bool enableIntegrations;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -65,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    if (!widget.listenExternalEvents) return;
+    if (!widget.enableIntegrations) return;
     final links = AppLinks();
     links.getInitialLink().then((uri) {
       if (uri != null && mounted) _openLink(uri);
@@ -162,7 +162,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _tourScheduled = false;
 
   void _scheduleTour(bool hasOwned) {
-    if (_tourScheduled) return;
+    if (_tourScheduled || !widget.enableIntegrations) return;
     _tourScheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
