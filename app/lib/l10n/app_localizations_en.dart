@@ -1009,4 +1009,64 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get operatorFilterLabel => 'Filter by queue';
+
+  @override
+  String get metricsPdfTitle => 'Qio - Queue metrics';
+
+  @override
+  String get csvPeriod => 'period';
+
+  @override
+  String get csvScope => 'attendant scope';
+
+  @override
+  String get csvGeneratedAt => 'generated at';
+
+  @override
+  String get csvMetric => 'metric';
+
+  @override
+  String get csvValue => 'value';
+
+  @override
+  String get csvHour => 'hour';
+
+  @override
+  String get csvEntries => 'entries';
+
+  @override
+  String get csvPosition => 'position';
+
+  @override
+  String get csvQueue => 'queue';
+
+  @override
+  String get csvTotal => 'total';
+
+  @override
+  String get csvServed => 'served';
+
+  @override
+  String get csvNoShow => 'no-shows';
+
+  @override
+  String get csvLeft => 'left';
+
+  @override
+  String get csvNoShowRatePct => 'no-show rate (%)';
+
+  @override
+  String get csvAvgWaitMin => 'avg. wait (min)';
+
+  @override
+  String get csvAvgServiceMin => 'avg. service (min)';
+
+  @override
+  String get csvAvgRating => 'avg. rating';
+
+  @override
+  String get csvRatingCount => 'rating count';
+
+  @override
+  String get csvAttendant => 'attendant';
 }

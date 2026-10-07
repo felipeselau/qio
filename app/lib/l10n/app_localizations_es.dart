@@ -1013,4 +1013,64 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get operatorFilterLabel => 'Filtrar por fila';
+
+  @override
+  String get metricsPdfTitle => 'Qio - Métricas de las filas';
+
+  @override
+  String get csvPeriod => 'período';
+
+  @override
+  String get csvScope => 'alcance por atendente';
+
+  @override
+  String get csvGeneratedAt => 'generado el';
+
+  @override
+  String get csvMetric => 'métrica';
+
+  @override
+  String get csvValue => 'valor';
+
+  @override
+  String get csvHour => 'hora';
+
+  @override
+  String get csvEntries => 'entradas';
+
+  @override
+  String get csvPosition => 'posición';
+
+  @override
+  String get csvQueue => 'fila';
+
+  @override
+  String get csvTotal => 'total';
+
+  @override
+  String get csvServed => 'atendidos';
+
+  @override
+  String get csvNoShow => 'no se presentaron';
+
+  @override
+  String get csvLeft => 'desistieron';
+
+  @override
+  String get csvNoShowRatePct => 'tasa de ausencia (%)';
+
+  @override
+  String get csvAvgWaitMin => 'espera promedio (min)';
+
+  @override
+  String get csvAvgServiceMin => 'atención promedio (min)';
+
+  @override
+  String get csvAvgRating => 'valoración promedio';
+
+  @override
+  String get csvRatingCount => 'cant. valoraciones';
+
+  @override
+  String get csvAttendant => 'atendente';
 }

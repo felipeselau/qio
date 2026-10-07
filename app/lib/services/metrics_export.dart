@@ -1,7 +1,9 @@
+import '../l10n/app_localizations.dart';
 import '../models/history_entry.dart';
 import '../models/operator.dart';
 import '../models/queue.dart';
 import '../models/queue_feedback.dart';
+import 'history_export.dart';
 import 'history_metrics.dart';
 import 'operator_metrics.dart';
 import 'queue_analytics.dart';
@@ -33,6 +35,7 @@ class MetricsReport {
     required this.operators,
     required this.operatorNames,
     required this.truncated,
+    required this.historyLimit,
   });
 
   final HistoryPeriod period;
@@ -46,6 +49,7 @@ class MetricsReport {
   final List<OperatorStats> operators;
   final Map<String, String> operatorNames;
   final bool truncated;
+  final int historyLimit;
 
   String operatorLabel(
     OperatorStats stats, {
@@ -120,5 +124,102 @@ MetricsReport buildMetricsReport({
     operators: operators,
     operatorNames: names,
     truncated: truncated,
+    historyLimit: historyLimit,
   );
+}
+
+String _num(double? v) => v == null ? '' : v.toStringAsFixed(1);
+
+String _scopeLabel(AppLocalizations l10n, MetricsReport report) =>
+    report.operatorQueueName ?? l10n.operatorFilterAll;
+
+String _operatorName(AppLocalizations l10n, MetricsReport report, int i) =>
+    report.operatorLabel(
+      report.operators[i],
+      ownerLabel: l10n.ownerAttendant,
+      unknownLabel: l10n.formerOperator,
+    );
+
+String buildMetricsCsv(
+  AppLocalizations l10n,
+  MetricsReport report, {
+  required DateTime generatedAt,
+}) {
+  final m = report.metrics;
+  final sections = <List<List<String>>>[
+    [
+      [l10n.metricsPdfTitle],
+      [l10n.csvPeriod, report.period.label(l10n)],
+      [l10n.csvScope, _scopeLabel(l10n, report)],
+      [l10n.csvGeneratedAt, formatExportDateTime(generatedAt)],
+      if (report.truncated) [l10n.historyTruncatedWarning(report.historyLimit)],
+    ],
+    [
+      [l10n.metricsTotal],
+      [l10n.csvMetric, l10n.csvValue],
+      [l10n.csvTotal, '${m.total}'],
+      [l10n.csvServed, '${m.served}'],
+      [l10n.csvNoShow, '${m.noShow}'],
+      [l10n.csvLeft, '${m.left}'],
+      [l10n.csvNoShowRatePct, _num(m.noShowRate * 100)],
+      [l10n.csvAvgWaitMin, _num(m.avgWaitMin)],
+      [l10n.csvAvgServiceMin, _num(m.avgServiceMin)],
+    ],
+    [
+      [l10n.peakHoursTitle],
+      [l10n.csvHour, l10n.csvEntries],
+      for (var h = 0; h < report.distribution.length; h++)
+        ['$h', '${report.distribution[h]}'],
+    ],
+    [
+      [l10n.mostActiveQueues],
+      [
+        l10n.csvPosition,
+        l10n.csvQueue,
+        l10n.csvTotal,
+        l10n.csvNoShow,
+        l10n.csvNoShowRatePct,
+      ],
+      for (var i = 0; i < report.ranking.length; i++)
+        [
+          '${i + 1}',
+          report.ranking[i].name,
+          '${report.ranking[i].metrics.total}',
+          '${report.ranking[i].metrics.noShow}',
+          _num(report.ranking[i].metrics.noShowRate * 100),
+        ],
+    ],
+    [
+      [l10n.byOperatorTitle],
+      if (report.operators.isEmpty)
+        [l10n.noOperatorData]
+      else ...[
+        [
+          l10n.csvAttendant,
+          l10n.csvServed,
+          l10n.csvNoShow,
+          l10n.csvAvgServiceMin,
+          l10n.csvAvgRating,
+          l10n.csvRatingCount,
+        ],
+        for (var i = 0; i < report.operators.length; i++)
+          [
+            _operatorName(l10n, report, i),
+            '${report.operators[i].served}',
+            '${report.operators[i].noShow}',
+            _num(report.operators[i].avgServiceMin),
+            _num(report.operators[i].feedback.average),
+            '${report.operators[i].feedback.count}',
+          ],
+      ],
+    ],
+  ];
+  final lines = <String>[];
+  for (var i = 0; i < sections.length; i++) {
+    if (i > 0) lines.add('');
+    for (final row in sections[i]) {
+      lines.add(row.map(csvCell).join(','));
+    }
+  }
+  return '\u{FEFF}${lines.join('\r\n')}\r\n';
 }

@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:qio_app/l10n/app_localizations.dart';
 import 'package:qio_app/models/history_entry.dart';
 import 'package:qio_app/models/operator.dart';
 import 'package:qio_app/models/queue.dart';
@@ -150,6 +153,179 @@ void main() {
       expect(r.truncated, isFalse);
       expect(r.ranking.single.name, 'Fila a');
       expect(report(const []).isEmpty, isTrue);
+    });
+  });
+
+  group('buildMetricsCsv', () {
+    final pt = lookupAppLocalizations(const Locale('pt'));
+    final en = lookupAppLocalizations(const Locale('en'));
+    final es = lookupAppLocalizations(const Locale('es'));
+    final at = DateTime(2026, 10, 7, 12, 30, 5);
+
+    List<String> lines(AppLocalizations l10n, MetricsReport r) {
+      final csv = buildMetricsCsv(l10n, r, generatedAt: at);
+      expect(csv.startsWith('\u{FEFF}'), isTrue);
+      expect(csv.endsWith('\r\n'), isTrue);
+      expect(csv.replaceAll('\r\n', '').contains('\n'), isFalse);
+      return csv.substring(1).split('\r\n');
+    }
+
+    final data = [
+      QueueHistoryInput(
+        queue('a', ownerId: 'o1', name: 'Caixa'),
+        [
+          served('1'),
+          served('2', calledBy: 'u1'),
+          served('3', calledBy: 'u1'),
+          served('4', calledBy: 'u1', serviceMin: 20),
+          served('5', calledBy: 'gone', result: 'no_show'),
+        ],
+        const [QueueFeedback(entryId: '2', rating: 4)],
+        [op('u1', 'Bia')],
+      ),
+    ];
+
+    test('sections come in order separated by blank lines', () {
+      final l = lines(pt, report(data));
+      final titles = [
+        for (var i = 0; i < l.length; i++)
+          if (i == 0 || l[i - 1].isEmpty) l[i],
+      ];
+      expect(titles, [
+        'Qio - Métricas das filas',
+        'Atendimentos',
+        'Picos de demanda',
+        'Filas mais ativas',
+        'Por atendente',
+      ]);
+    });
+
+    test('header section and summary values', () {
+      final l = lines(pt, report(data));
+      expect(l[1], 'período,Tudo');
+      expect(l[2], 'escopo por atendente,Todas as filas');
+      expect(l[3], 'gerado em,2026-10-07 12:30:05');
+      expect(l[4], '');
+      expect(l[5], 'Atendimentos');
+      expect(l[6], 'métrica,valor');
+      expect(l[7], 'total,5');
+      expect(l[8], 'atendidos,4');
+      expect(l[9], 'não compareceram,1');
+      expect(l[10], 'desistiram,0');
+      expect(l[11], 'taxa de não comparecimento (%),20.0');
+      expect(l[12], 'espera média (min),5.0');
+      expect(l[13], 'atendimento médio (min),12.5');
+    });
+
+    test('peak hours has 24 rows', () {
+      final l = lines(pt, report(data));
+      final i = l.indexOf('Picos de demanda');
+      expect(l[i + 1], 'hora,entradas');
+      expect(l.sublist(i + 2, i + 26).length, 24);
+      expect(l[i + 2], '0,0');
+      expect(l[i + 11], '9,5');
+      expect(l[i + 26], '');
+    });
+
+    test('ranking and rate', () {
+      final l = lines(pt, report(data));
+      final i = l.indexOf('Filas mais ativas');
+      expect(
+        l[i + 1],
+        'posição,fila,total,não compareceram,taxa de não comparecimento (%)',
+      );
+      expect(l[i + 2], '1,Caixa,5,1,20.0');
+    });
+
+    test('operators: owner, operator, former operator and null cells', () {
+      final l = lines(pt, report(data));
+      final i = l.indexOf('Por atendente');
+      expect(
+        l[i + 1],
+        'atendente,atendidos,não compareceram,atendimento médio (min),'
+        'nota média,qtd notas',
+      );
+      expect(l[i + 2], 'Bia,3,0,13.3,4.0,1');
+      expect(l[i + 3], 'Dono,1,0,,,0');
+      expect(l[i + 4], 'ex-operador,0,1,,,0');
+    });
+
+    test('null averages stay empty', () {
+      final r = report([
+        QueueHistoryInput(queue('a'), const [], const [], const []),
+      ]);
+      final l = lines(pt, r);
+      expect(l[12], 'espera média (min),');
+      expect(l[13], 'atendimento médio (min),');
+    });
+
+    test('empty operators shows the empty message', () {
+      final r = report([
+        QueueHistoryInput(queue('a'), const [], const [], const []),
+      ]);
+      final l = lines(pt, r);
+      expect(
+        l[l.indexOf('Por atendente') + 1],
+        'Nenhum atendimento por atendente no período',
+      );
+    });
+
+    test('scope shows the selected queue and truncation note', () {
+      final r = report(data, queueId: 'a', limit: 5);
+      final l = lines(pt, r);
+      expect(l[2], 'escopo por atendente,Caixa');
+      expect(l[4], startsWith('Mostrando só os 5 registros'));
+    });
+
+    test('neutralizes formulas and escapes commas and quotes', () {
+      for (final bad in ['=1+1', '+1', '-1', '@x']) {
+        final d = [
+          QueueHistoryInput(
+            queue('a', name: bad),
+            const [],
+            const [],
+            const [],
+          ),
+        ];
+        final l = lines(pt, report(d));
+        final i = l.indexOf('Filas mais ativas');
+        expect(l[i + 2], "1,'$bad,0,0,0.0");
+      }
+      final d = [
+        QueueHistoryInput(
+          queue('a', name: 'A, "B"'),
+          const [],
+          const [],
+          const [],
+        ),
+      ];
+      final l = lines(pt, report(d));
+      final i = l.indexOf('Filas mais ativas');
+      expect(l[i + 2], '1,"A, ""B""",0,0,0.0');
+    });
+
+    test('operator names are protected too', () {
+      final d = [
+        QueueHistoryInput(
+          queue('a'),
+          [served('1', calledBy: 'u1')],
+          const [],
+          [op('u1', '=HYPERLINK("x")')],
+        ),
+      ];
+      final l = lines(pt, report(d));
+      final i = l.indexOf('Por atendente');
+      expect(l[i + 2], startsWith('"\'=HYPERLINK(""x"")",1,0'));
+    });
+
+    test('headers follow the locale', () {
+      final r = report(data);
+      expect(lines(en, r)[1], 'period,All time');
+      expect(lines(en, r)[7], 'total,5');
+      expect(lines(en, r)[11], 'no-show rate (%),20.0');
+      expect(lines(es, r)[0], 'Qio - Métricas de las filas');
+      expect(lines(es, r)[1], 'período,Todo');
+      expect(lines(es, r)[13], 'atención promedio (min),12.5');
     });
   });
 }
