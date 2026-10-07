@@ -81,3 +81,87 @@ HistoryMetrics computeHistoryMetrics(List<HistoryEntry> entries) {
     avgServiceMin: _averageMinutes(services),
   );
 }
+
+const waitBucketEdgesMin = [5, 15, 30];
+
+class WaitStats {
+  const WaitStats({
+    required this.samples,
+    this.medianMin,
+    this.p90Min,
+    this.avgMin,
+    required this.bucketCounts,
+  });
+
+  final int samples;
+  final double? medianMin;
+  final double? p90Min;
+  final double? avgMin;
+  final List<int> bucketCounts;
+}
+
+double _percentile(List<double> sorted, double p) =>
+    sorted[(p * sorted.length).ceil() - 1];
+
+WaitStats computeWaitStats(List<HistoryEntry> entries) {
+  final waits = <double>[];
+  for (final e in entries) {
+    if (e.isLeft || e.calledAt == null) continue;
+    final ms = e.calledAt!.difference(e.joinedAt).inMilliseconds;
+    if (ms < 0) continue;
+    waits.add(ms / 60000);
+  }
+  waits.sort();
+  final buckets = List<int>.filled(waitBucketEdgesMin.length + 1, 0);
+  for (final w in waits) {
+    var i = 0;
+    while (i < waitBucketEdgesMin.length && w >= waitBucketEdgesMin[i]) {
+      i++;
+    }
+    buckets[i]++;
+  }
+  final n = waits.length;
+  if (n == 0) return WaitStats(samples: 0, bucketCounts: buckets);
+  final median = n.isOdd
+      ? waits[n ~/ 2]
+      : (waits[n ~/ 2 - 1] + waits[n ~/ 2]) / 2;
+  return WaitStats(
+    samples: n,
+    medianMin: median,
+    p90Min: n >= 5 ? _percentile(waits, 0.9) : null,
+    avgMin: waits.fold<double>(0, (s, w) => s + w) / n,
+    bucketCounts: buckets,
+  );
+}
+
+class CallEffortStats {
+  const CallEffortStats({
+    required this.called,
+    required this.recallsTotal,
+    required this.recalledEntries,
+    required this.skipsTotal,
+    required this.skippedEntries,
+    this.recallRate,
+  });
+
+  final int called;
+  final int recallsTotal;
+  final int recalledEntries;
+  final int skipsTotal;
+  final int skippedEntries;
+  final double? recallRate;
+}
+
+CallEffortStats computeCallEffort(List<HistoryEntry> entries) {
+  final called = entries.where((e) => e.calledAt != null).length;
+  final recalled = entries.where((e) => e.recalls > 0).length;
+  final skipped = entries.where((e) => e.skips > 0).length;
+  return CallEffortStats(
+    called: called,
+    recallsTotal: entries.fold<int>(0, (s, e) => s + e.recalls),
+    recalledEntries: recalled,
+    skipsTotal: entries.fold<int>(0, (s, e) => s + e.skips),
+    skippedEntries: skipped,
+    recallRate: called == 0 ? null : recalled / called,
+  );
+}
