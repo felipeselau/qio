@@ -10,8 +10,15 @@ Divisão do que já está no código e do que **só você pode fazer no console*
   (severidade `ERROR`, JSON no Cloud Logging) com `event`, `error {name, message, code,
   stack}` e o `ctx`. Remove do `ctx`, em qualquer nível: `name`, `entryName`, `phone`,
   `token`, `fcmToken`, `tokens`, `comment`, `email`. Passe só IDs (`queueId`, `entryId`).
+  `message` e `stack` do erro são truncados (500 e 2000 caracteres) e têm telefone
+  `(DD) 9999-9999`, e-mails e sequências longas (40+ caracteres, tokens) mascarados.
+  **Limitação**: o mascaramento é por padrão; nomes ou outros textos livres dentro de uma
+  mensagem de erro de biblioteca não são detectados. Não coloque dados do usuário em
+  mensagens de `Error`. `event` e `error` nunca são sobrescritos pelo `ctx`.
 - Usado em: callables `joinQueue` e `submitFeedback` (apenas erros inesperados; `HttpsError`
-  de validação, como `already-exists` ou `resource-exhausted`, não é logado como erro),
+  de cliente, como `invalid-argument`, `not-found`, `already-exists` ou
+  `resource-exhausted`, não é logado; `HttpsError('internal')`, `unavailable` e erros
+  inesperados são; `queueId` é validado como string e cortado em 64 caracteres),
   `syncPublicTicket` (relança o erro), `onEntryCalled`, `onEntryJoined`, `onQueueAdvanced`,
   `updateServiceEstimate` e `applyQueueSchedules`.
 - Consulta no Logs Explorer:
@@ -48,7 +55,11 @@ Nunca enviar nome, telefone, token, e-mail ou comentário.
   do módulo (mesmo cuidado de `getMessagingSafe`).
 - Só em `import.meta.env.PROD`, sem `VITE_USE_EMULATORS`, com `VITE_MEASUREMENT_ID`
   definido, sem opt-out e sem Do Not Track. Opt-out do visitante:
-  `localStorage['qio:analytics-optout'] = '1'` (`setAnalyticsOptOut(true)`).
+  `localStorage['qio:analytics-optout'] = '1'` (`setAnalyticsOptOut(true)`), exposto como
+  link discreto no rodapé da página do cliente ("Não coletar estatísticas de uso" /
+  "Voltar a permitir", pt/en/es; só aparece quando a coleta está configurada).
+- `send_page_view: false`: a web não envia `page_view` automático, então a URL
+  `/q/{queueId}` não vai como página; o `queue_id` só segue nos dois eventos acima.
 - `google_signals` e personalização de anúncios desligados na configuração do SDK.
 - `VITE_MEASUREMENT_ID` vem de `vars.VITE_MEASUREMENT_ID` no GitHub Actions (já repassado
   no `ci.yml`) e de `web/.env.local`.
@@ -80,8 +91,12 @@ Nada abaixo foi feito pelo código. Projeto: `qio-app`.
 6. **Validar no DebugView**: Firebase → Analytics → DebugView. No Android, build de
    release com `adb shell setprop debug.firebase.analytics.app com.qio.qio_app`
    (debug/emulators ficam sem Analytics por design). Na web, extensão "Google Analytics
-   Debugger" no site de produção. Conferir que só aparecem os 5 eventos acima e só com
-   `queue_id`.
+   Debugger" no site de produção. Conferir que os 5 eventos acima chegam só com
+   `queue_id`. O SDK/GA4 também emitem eventos automáticos (`first_open`,
+   `session_start`, `user_engagement`, `screen_view` no app); a web não envia
+   `page_view` (`send_page_view: false`, ver acima). Para reduzir ainda mais no app, desligue
+   `screen_view`/eventos automáticos em GA4 → Admin → Fluxos de dados → Medição
+   otimizada.
 
 ## 3. Ordem de deploy
 

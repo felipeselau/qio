@@ -29,14 +29,17 @@ function doNotTrack(): boolean {
   );
 }
 
-export function analyticsAllowed(): boolean {
+export function analyticsConfigured(): boolean {
   return (
     import.meta.env.PROD &&
     import.meta.env.VITE_USE_EMULATORS !== 'true' &&
     Boolean(import.meta.env.VITE_MEASUREMENT_ID) &&
-    !isAnalyticsOptedOut() &&
     !doNotTrack()
   );
+}
+
+export function analyticsAllowed(): boolean {
+  return analyticsConfigured() && !isAnalyticsOptedOut();
 }
 
 let _analytics: Promise<Analytics | null> | undefined;
@@ -49,6 +52,7 @@ function getAnalyticsSafe(): Promise<Analytics | null> {
       if (!(await mod.isSupported())) return null;
       return mod.initializeAnalytics(app, {
         config: {
+          send_page_view: false,
           allow_google_signals: false,
           allow_ad_personalization_signals: false,
         },
