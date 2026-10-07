@@ -20,10 +20,16 @@ import '../widgets/qio_skeleton.dart';
 import '../widgets/qio_responsive_body.dart';
 
 class HistoryScreen extends StatefulWidget {
-  const HistoryScreen({super.key, required this.queueId, this.queueName = ''});
+  const HistoryScreen({
+    super.key,
+    required this.queueId,
+    this.queueName = '',
+    this.queues,
+  });
 
   final String queueId;
   final String queueName;
+  final QueueService? queues;
 
   @override
   State<HistoryScreen> createState() => _HistoryScreenState();
@@ -37,6 +43,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
   bool _exporting = false;
   StreamSubscription<List<QueueFeedback>>? _feedbackSub;
   Map<String, QueueFeedback> _feedback = const {};
+
+  QueueService get _queues => widget.queues ?? QueueService.instance;
 
   String get _baseName => 'historico-${widget.queueId}';
 
@@ -91,10 +99,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   void initState() {
     super.initState();
-    _stream = QueueService.instance.watchHistory(widget.queueId);
-    _feedbackSub = QueueService.instance.watchFeedback(widget.queueId).listen((
-      list,
-    ) {
+    _stream = _queues.watchHistory(widget.queueId);
+    _feedbackSub = _queues.watchFeedback(widget.queueId).listen((list) {
       if (!mounted) return;
       setState(() => _feedback = {for (final f in list) f.entryId: f});
     }, onError: (_) {});
@@ -141,7 +147,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               return QioErrorState(
                 message: l10n.loadHistoryError,
                 onRetry: () => setState(() {
-                  _stream = QueueService.instance.watchHistory(widget.queueId);
+                  _stream = _queues.watchHistory(widget.queueId);
                 }),
               );
             }
