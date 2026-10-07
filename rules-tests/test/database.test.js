@@ -173,6 +173,35 @@ describe('RTDB rules', () => {
       await assertFails(update(ref(rtdb(OPERATOR), path('entries/e1')), { vip: true }));
     });
 
+    it('operador chama entry criada pela joinQueue (com lang): transação grava a entry inteira', async () => {
+      const full = {
+        uid: 'client1',
+        ticket: 4,
+        status: 'called',
+        name: 'Ana',
+        phone: '(11) 91234-5678',
+        joinedAt: 0,
+        calledAt: 1790000000000,
+        operatorId: OPERATOR,
+        lang: 'en',
+        nextNotifiedAt: 1790000000500,
+      };
+      await assertSucceeds(set(ref(rtdb(OPERATOR), path('entries/e1')), full));
+    });
+
+    it('cliente não altera lang nem nextNotifiedAt da própria entry', async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await update(ref(ctx.database(), path('entries/e1')), { lang: 'pt', nextNotifiedAt: 5 });
+      });
+      await assertFails(update(ref(rtdb('client1'), path('entries/e1')), { lang: 'en' }));
+      await assertFails(update(ref(rtdb('client1'), path('entries/e1')), { nextNotifiedAt: 9 }));
+      await assertSucceeds(update(ref(rtdb('client1'), path('entries/e1')), { status: 'left' }));
+    });
+
+    it('lang inválido é rejeitado', async () => {
+      await assertFails(update(ref(rtdb(OPERATOR), path('entries/e1')), { lang: 'klingon' }));
+    });
+
     it('operador chama a entry', async () => {
       await assertSucceeds(
         update(ref(rtdb(OPERATOR), path('entries/e1')), { status: 'called', operatorId: OPERATOR }),
