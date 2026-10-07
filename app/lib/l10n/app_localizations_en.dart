@@ -1072,4 +1072,71 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get exportMetricsError => 'Couldn\'t export the metrics.';
+
+  @override
+  String get waitDistributionTitle => 'Wait and calls';
+
+  @override
+  String get medianWait => 'Median';
+
+  @override
+  String get p90Wait => 'P90';
+
+  @override
+  String get waitBucketUnder5 => 'Under 5 min';
+
+  @override
+  String get waitBucket5to15 => '5–15 min';
+
+  @override
+  String get waitBucket15to30 => '15–30 min';
+
+  @override
+  String get waitBucketOver30 => 'Over 30 min';
+
+  @override
+  String get recallsTitle => 'Recalls';
+
+  @override
+  String get skipsTitle => 'Moved to end';
+
+  @override
+  String recallsStat(int n, int pct) {
+    return '$n ($pct%)';
+  }
+
+  @override
+  String skipsStat(int n, int entries) {
+    return '$n in $entries services';
+  }
+
+  @override
+  String get csvWaitSamples => 'wait samples';
+
+  @override
+  String get csvMedianWaitMin => 'median (min)';
+
+  @override
+  String get csvP90WaitMin => 'P90 (min)';
+
+  @override
+  String get csvWaitRange => 'wait range';
+
+  @override
+  String get csvCalledEntries => 'called entries';
+
+  @override
+  String get csvRecallsTotal => 'recalls';
+
+  @override
+  String get csvRecalledEntries => 'entries with recall';
+
+  @override
+  String get csvRecallRatePct => 'recall rate (%)';
+
+  @override
+  String get csvSkipsTotal => 'moved to end';
+
+  @override
+  String get csvSkippedEntries => 'entries moved to end';
 }
