@@ -57,6 +57,7 @@ class Queue {
     this.schedule,
     this.brandColor,
     this.logoUrl,
+    this.groupId,
   });
 
   final String id;
@@ -74,6 +75,7 @@ class Queue {
   final QueueSchedule? schedule;
   final String? brandColor;
   final String? logoUrl;
+  final String? groupId;
 
   bool get hasLimit => maxWaiting > 0;
 
@@ -98,6 +100,7 @@ class Queue {
       schedule: QueueSchedule.fromMap(data['schedule']),
       brandColor: data['brandColor'] as String?,
       logoUrl: data['logoUrl'] as String?,
+      groupId: data['groupId'] as String?,
     );
   }
 

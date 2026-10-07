@@ -41,6 +41,7 @@ class QueueService {
     String? description,
     int avgServiceMin = 10,
     int maxWaiting = 0,
+    String? groupId,
   }) async {
     final now = DateTime.now();
     final docRef = await _firestore.collection('queues').add({
@@ -50,6 +51,7 @@ class QueueService {
       'status': QueueStatus.open.value,
       'avgServiceMin': avgServiceMin,
       'maxWaiting': maxWaiting,
+      'groupId': ?groupId,
       'createdAt': Timestamp.fromDate(now),
     });
 
@@ -81,6 +83,7 @@ class QueueService {
       status: QueueStatus.open,
       avgServiceMin: avgServiceMin,
       createdAt: now,
+      groupId: groupId,
     );
   }
 
