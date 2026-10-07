@@ -10,6 +10,7 @@ import '../../widgets/qio_empty_state.dart';
 import '../../widgets/qio_responsive_body.dart';
 import '../../widgets/queue_panel/current_called_card.dart';
 import '../../widgets/queue_panel/waiting_tile.dart';
+import '../../widgets/queue_panel/queue_group_tile.dart';
 import '../../widgets/queue_panel/queue_limit_tile.dart';
 import '../../widgets/queue_panel/queue_brand_tile.dart';
 import '../../widgets/queue_panel/queue_schedule_tile.dart';
@@ -65,6 +66,11 @@ class QueuePanelBody extends StatelessWidget {
                   OperatorsTile(queueId: queueId),
                   const SizedBox(height: 16),
                   QueueLimitTile(queueId: queueId, maxWaiting: maxWaiting),
+                  const SizedBox(height: 16),
+                  QueueGroupTile(
+                    queueId: queueId,
+                    groupId: queueSnap.data?.groupId,
+                  ),
                   const SizedBox(height: 16),
                   QueueScheduleTile(queueId: queueId, schedule: schedule),
                   const SizedBox(height: 16),
@@ -133,6 +139,11 @@ class QueuePanelBody extends StatelessWidget {
                   OperatorsTile(queueId: queueId),
                   const SizedBox(height: 16),
                   QueueLimitTile(queueId: queueId, maxWaiting: maxWaiting),
+                  const SizedBox(height: 16),
+                  QueueGroupTile(
+                    queueId: queueId,
+                    groupId: queueSnap.data?.groupId,
+                  ),
                   const SizedBox(height: 16),
                   QueueScheduleTile(queueId: queueId, schedule: schedule),
                   const SizedBox(height: 16),

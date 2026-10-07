@@ -27,6 +27,7 @@ import '../widgets/qio_skeleton.dart';
 import '../widgets/qio_responsive_body.dart';
 import 'account_screen.dart';
 import 'create_queue_screen.dart';
+import 'groups_screen.dart';
 import 'join_operator_screen.dart';
 import 'metrics_screen.dart';
 import 'queue_panel_screen.dart';
@@ -191,6 +192,21 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         actions: [
+          ListenableBuilder(
+            listenable: _controller,
+            builder: (context, _) => _controller.ownedQueues.isEmpty
+                ? const SizedBox.shrink()
+                : IconButton(
+                    tooltip: l10n.groups,
+                    icon: const Icon(
+                      Icons.folder_outlined,
+                      color: QioColors.primary,
+                    ),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const GroupsScreen()),
+                    ),
+                  ),
+          ),
           IconButton(
             tooltip: l10n.metricsTooltip,
             icon: const Icon(Icons.bar_chart, color: QioColors.primary),
