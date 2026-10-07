@@ -10,6 +10,13 @@ String pushLanguageCode(String languageCode) {
   return const {'pt', 'en', 'es'}.contains(code) ? code : 'pt';
 }
 
+const alertPushType = 'queue-alert';
+
+String? queueIdFromPush(Map<String, dynamic> data) {
+  final id = data['queueId'];
+  return id is String && id.isNotEmpty ? id : null;
+}
+
 class PushService {
   PushService._();
 

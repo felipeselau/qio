@@ -67,10 +67,10 @@ class _HomeScreenState extends State<HomeScreen> {
       // push is optional
     }
     final initial = await FirebaseMessaging.instance.getInitialMessage();
-    final initialId = initial?.data['queueId'] as String?;
+    final initialId = initial == null ? null : queueIdFromPush(initial.data);
     if (initialId != null && mounted) _openQueue(initialId);
     _pushSub = FirebaseMessaging.onMessageOpenedApp.listen((m) {
-      final id = m.data['queueId'] as String?;
+      final id = queueIdFromPush(m.data);
       if (id != null) _openQueue(id);
     });
     if (await PushService.instance.shouldPrompt() && mounted) {

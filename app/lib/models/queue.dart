@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../l10n/app_localizations.dart';
+import 'alerts_config.dart';
 import 'queue_schedule.dart';
 
 enum QueueStatus { open, paused, closed }
@@ -57,6 +58,7 @@ class Queue {
     this.schedule,
     this.brandColor,
     this.logoUrl,
+    this.alerts,
   });
 
   final String id;
@@ -74,6 +76,7 @@ class Queue {
   final QueueSchedule? schedule;
   final String? brandColor;
   final String? logoUrl;
+  final AlertsConfig? alerts;
 
   bool get hasLimit => maxWaiting > 0;
 
@@ -98,6 +101,7 @@ class Queue {
       schedule: QueueSchedule.fromMap(data['schedule']),
       brandColor: data['brandColor'] as String?,
       logoUrl: data['logoUrl'] as String?,
+      alerts: AlertsConfig.fromMap(data['alerts']),
     );
   }
 

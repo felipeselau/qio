@@ -1074,4 +1074,47 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get exportMetricsError => 'Não foi possível exportar as métricas.';
+
+  @override
+  String get alertsTitle => 'Alertas operacionais';
+
+  @override
+  String get alertsEnable => 'Receber alertas desta fila';
+
+  @override
+  String get alertsWaitLimit => 'Espera estimada acima de';
+
+  @override
+  String get alertsNoShowLimit => 'Não comparecimento hoje a partir de';
+
+  @override
+  String get alertsIdleLimit => 'Fila parada com gente esperando por mais de';
+
+  @override
+  String get alertsCooldown => 'Intervalo mínimo entre alertas';
+
+  @override
+  String get alertsPushOff =>
+      'As notificações estão desativadas. Ative-as para receber os alertas.';
+
+  @override
+  String get alertsOff => 'Desligado';
+
+  @override
+  String alertsActive(int count) {
+    return '$count regras ativas';
+  }
+
+  @override
+  String alertsMinutes(int n) {
+    return '$n min';
+  }
+
+  @override
+  String alertsPercent(int n) {
+    return '$n%';
+  }
+
+  @override
+  String get alertsNoRule => 'Ative ao menos uma regra para receber alertas.';
 }
