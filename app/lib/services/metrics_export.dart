@@ -157,6 +157,13 @@ String _operatorName(AppLocalizations l10n, MetricsReport report, int i) =>
       unknownLabel: l10n.formerOperator,
     );
 
+List<String> _bucketLabels(AppLocalizations l10n) => [
+  l10n.waitBucketUnder5,
+  l10n.waitBucket5to15,
+  l10n.waitBucket15to30,
+  l10n.waitBucketOver30,
+];
+
 String buildMetricsCsv(
   AppLocalizations l10n,
   MetricsReport report, {
@@ -229,6 +236,31 @@ String buildMetricsCsv(
             '${report.operators[i].feedback.count}',
           ],
       ],
+    ],
+    [
+      [l10n.waitDistributionTitle],
+      [l10n.csvMetric, l10n.csvValue],
+      [l10n.csvWaitSamples, '${report.waitStats.samples}'],
+      [l10n.csvMedianWaitMin, _num(report.waitStats.medianMin)],
+      [l10n.csvP90WaitMin, _num(report.waitStats.p90Min)],
+      for (var i = 0; i < report.waitStats.bucketCounts.length; i++)
+        [
+          '${l10n.csvWaitRange}: ${_bucketLabels(l10n)[i]}',
+          '${report.waitStats.bucketCounts[i]}',
+        ],
+      [l10n.csvCalledEntries, '${report.callEffort.called}'],
+      [l10n.csvRecallsTotal, '${report.callEffort.recallsTotal}'],
+      [l10n.csvRecalledEntries, '${report.callEffort.recalledEntries}'],
+      [
+        l10n.csvRecallRatePct,
+        _num(
+          report.callEffort.recallRate == null
+              ? null
+              : report.callEffort.recallRate! * 100,
+        ),
+      ],
+      [l10n.csvSkipsTotal, '${report.callEffort.skipsTotal}'],
+      [l10n.csvSkippedEntries, '${report.callEffort.skippedEntries}'],
     ],
   ];
   final lines = <String>[];
@@ -409,6 +441,53 @@ Future<Uint8List> buildMetricsPdf({
                   ],
               ],
             ),
+          _section(l10n.waitDistributionTitle),
+          pw.Wrap(
+            spacing: 24,
+            runSpacing: 8,
+            children: [
+              _metric(l10n.csvWaitSamples, '${report.waitStats.samples}'),
+              _metric(
+                l10n.medianWait,
+                _minutesLabel(l10n, report.waitStats.medianMin),
+              ),
+              _metric(
+                l10n.p90Wait,
+                _minutesLabel(l10n, report.waitStats.p90Min),
+              ),
+              _metric(
+                l10n.recallsTitle,
+                report.callEffort.recallRate == null
+                    ? '-'
+                    : l10n.recallsStat(
+                        report.callEffort.recallsTotal,
+                        (report.callEffort.recallRate! * 100).round(),
+                      ),
+              ),
+              _metric(
+                l10n.skipsTitle,
+                report.callEffort.called == 0
+                    ? '-'
+                    : l10n.skipsStat(
+                        report.callEffort.skipsTotal,
+                        report.callEffort.called,
+                      ),
+              ),
+            ],
+          ),
+          if (report.waitStats.samples > 0) ...[
+            pw.SizedBox(height: 6),
+            _table(
+              [l10n.csvWaitRange, l10n.csvEntries],
+              [
+                for (var i = 0; i < report.waitStats.bucketCounts.length; i++)
+                  [
+                    _bucketLabels(l10n)[i].replaceAll('–', '-'),
+                    '${report.waitStats.bucketCounts[i]}',
+                  ],
+              ],
+            ),
+          ],
         ],
       ],
     ),

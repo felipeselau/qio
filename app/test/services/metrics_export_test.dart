@@ -197,6 +197,7 @@ void main() {
         'Picos de demanda',
         'Filas mais ativas',
         'Por atendente',
+        'Espera e chamadas',
       ]);
     });
 
@@ -248,6 +249,62 @@ void main() {
       expect(l[i + 2], 'Bia,3,0,13.3,4.0,1');
       expect(l[i + 3], 'Dono,1,0,,,0');
       expect(l[i + 4], 'ex-operador,0,1,,,0');
+    });
+
+    test('wait and calls section', () {
+      final withEffort = [
+        QueueHistoryInput(
+          queue('a'),
+          [
+            for (var i = 0; i < 5; i++) served('$i'),
+            HistoryEntry(
+              id: 'r',
+              ticket: 1,
+              name: 'r',
+              result: 'served',
+              joinedAt: DateTime(2026, 10, 7, 9),
+              calledAt: DateTime(2026, 10, 7, 9, 20),
+              finishedAt: DateTime(2026, 10, 7, 9, 30),
+              recalls: 2,
+              skips: 1,
+            ),
+          ],
+          const [],
+          const [],
+        ),
+      ];
+      final l = lines(pt, report(withEffort));
+      final i = l.indexOf('Espera e chamadas');
+      expect(l.sublist(i, i + 15), [
+        'Espera e chamadas',
+        'métrica,valor',
+        'amostras de espera,6',
+        'mediana (min),5.0',
+        'P90 (min),20.0',
+        'faixa de espera: Menos de 5 min,0',
+        'faixa de espera: 5–15 min,5',
+        'faixa de espera: 15–30 min,1',
+        'faixa de espera: Mais de 30 min,0',
+        'atendimentos chamados,6',
+        're-chamadas,2',
+        'atendimentos com re-chamada,1',
+        'taxa de re-chamada (%),16.7',
+        'movidos ao fim,1',
+        'atendimentos com movido ao fim,1',
+      ]);
+      expect(lines(en, report(withEffort)).contains('Wait and calls'), isTrue);
+    });
+
+    test('wait and calls section is empty-safe', () {
+      final r = report([
+        QueueHistoryInput(queue('a'), const [], const [], const []),
+      ]);
+      final l = lines(pt, r);
+      final i = l.indexOf('Espera e chamadas');
+      expect(l[i + 2], 'amostras de espera,0');
+      expect(l[i + 3], 'mediana (min),');
+      expect(l[i + 4], 'P90 (min),');
+      expect(l[i + 12], 'taxa de re-chamada (%),');
     });
 
     test('null averages stay empty', () {
@@ -350,6 +407,34 @@ void main() {
       final bytes = await buildMetricsPdf(
         l10n: pt,
         report: report(data, limit: 4),
+        generatedAt: DateTime(2026, 10, 7),
+      );
+      expect(String.fromCharCodes(bytes.take(4)), '%PDF');
+    });
+
+    test('builds with recalls and wait samples', () async {
+      final bytes = await buildMetricsPdf(
+        l10n: pt,
+        report: report([
+          QueueHistoryInput(
+            queue('a'),
+            [
+              for (var i = 0; i < 5; i++) served('$i'),
+              HistoryEntry(
+                id: 'r',
+                ticket: 1,
+                name: 'r',
+                result: 'served',
+                joinedAt: DateTime(2026, 10, 7, 9),
+                calledAt: DateTime(2026, 10, 7, 9, 20),
+                recalls: 1,
+                skips: 2,
+              ),
+            ],
+            const [],
+            const [],
+          ),
+        ]),
         generatedAt: DateTime(2026, 10, 7),
       );
       expect(String.fromCharCodes(bytes.take(4)), '%PDF');
