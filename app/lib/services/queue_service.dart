@@ -330,6 +330,15 @@ class QueueService {
     return snap.docs.map((d) => HistoryEntry.fromDoc(d.id, d.data())).toList();
   }
 
+  Future<List<QueueFeedback>> fetchFeedback(String queueId) async {
+    final snap = await _firestore
+        .collection('queues')
+        .doc(queueId)
+        .collection('feedback')
+        .get();
+    return snap.docs.map((d) => QueueFeedback.fromDoc(d.id, d.data())).toList();
+  }
+
   Stream<List<QueueFeedback>> watchFeedback(String queueId) {
     return _firestore
         .collection('queues')

@@ -287,6 +287,11 @@ class OperatorService {
     await syncOperatorMirror(queueId);
   }
 
+  Future<List<QueueOperator>> fetchOperators(String queueId) async {
+    final snap = await _queueDoc(queueId).collection('operators').get();
+    return snap.docs.map((d) => QueueOperator.fromDoc(d.id, d.data())).toList();
+  }
+
   Future<void> syncOperatorMirror(String queueId) async {
     final snap = await _queueDoc(queueId).collection('operators').get();
     await _rtdb.ref('owners/$queueId').update({'ownerUid': _uid});
