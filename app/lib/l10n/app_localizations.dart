@@ -1534,6 +1534,18 @@ abstract class AppLocalizations {
   /// **'Vibrar ao chamar, finalizar e confirmar ações'**
   String get hapticsSubtitle;
 
+  /// No description provided for @analyticsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ajudar a melhorar o Qio'**
+  String get analyticsTitle;
+
+  /// No description provided for @analyticsSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Envia estatísticas anônimas de uso (sem nomes, telefones ou dados de clientes). Você pode desativar quando quiser.'**
+  String get analyticsSubtitle;
+
   /// No description provided for @nobodyInQueueHint.
   ///
   /// In pt, this message translates to:
@@ -2259,6 +2271,60 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'amostras insuficientes'**
   String get p90Insufficient;
+
+  /// No description provided for @weekdayDemandTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dias de maior movimento'**
+  String get weekdayDemandTitle;
+
+  /// No description provided for @heatmapTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mapa de calor: dia × hora'**
+  String get heatmapTitle;
+
+  /// No description provided for @demandPeakSummary.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pico: {day}, {from}–{to}'**
+  String demandPeakSummary(String day, String from, String to);
+
+  /// No description provided for @heatmapCellSemantics.
+  ///
+  /// In pt, this message translates to:
+  /// **'{day}, {hour}: {count, plural, =1{1 chegada} other{{count} chegadas}}'**
+  String heatmapCellSemantics(String day, String hour, int count);
+
+  /// No description provided for @csvWeekday.
+  ///
+  /// In pt, this message translates to:
+  /// **'dia'**
+  String get csvWeekday;
+
+  /// No description provided for @csvArrivals.
+  ///
+  /// In pt, this message translates to:
+  /// **'chegadas'**
+  String get csvArrivals;
+
+  /// No description provided for @heatmapLegendLess.
+  ///
+  /// In pt, this message translates to:
+  /// **'menos'**
+  String get heatmapLegendLess;
+
+  /// No description provided for @heatmapLegendMore.
+  ///
+  /// In pt, this message translates to:
+  /// **'mais'**
+  String get heatmapLegendMore;
+
+  /// No description provided for @weekdayChartSemantics.
+  ///
+  /// In pt, this message translates to:
+  /// **'Chegadas por dia: {details}'**
+  String weekdayChartSemantics(String details);
 }
 
 class _AppLocalizationsDelegate

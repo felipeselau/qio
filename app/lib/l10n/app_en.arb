@@ -241,6 +241,8 @@
   "loadErrorBody": "We could not load your data. Check your connection and try again.",
   "hapticsTitle": "Vibration",
   "hapticsSubtitle": "Vibrate when calling, finishing and confirming actions",
+  "analyticsTitle": "Help improve Qio",
+  "analyticsSubtitle": "Sends anonymous usage statistics (no names, phone numbers or customer data). You can turn this off at any time.",
   "nobodyInQueueHint": "When someone joins through the QR code, they show up here.",
   "emptyHistoryHint": "Finished services show up here.",
   "emptyMetricsHint": "Pick another period or wait for the first services.",
@@ -374,5 +376,17 @@
   "csvRecallRatePct": "entries with recall over called (%)",
   "csvSkipsTotal": "moved to end",
   "csvSkippedEntries": "entries moved to end",
-  "p90Insufficient": "not enough samples"
+  "p90Insufficient": "not enough samples",
+  "weekdayDemandTitle": "Busiest days",
+  "heatmapTitle": "Heatmap: day × hour",
+  "demandPeakSummary": "Peak: {day}, {from}–{to}",
+  "@demandPeakSummary": {"placeholders": {"day": {"type": "String"}, "from": {"type": "String"}, "to": {"type": "String"}}},
+  "heatmapCellSemantics": "{day}, {hour}: {count, plural, =1{1 arrival} other{{count} arrivals}}",
+  "@heatmapCellSemantics": {"placeholders": {"day": {"type": "String"}, "hour": {"type": "String"}, "count": {"type": "int"}}},
+  "csvWeekday": "day",
+  "csvArrivals": "arrivals",
+  "heatmapLegendLess": "less",
+  "heatmapLegendMore": "more",
+  "weekdayChartSemantics": "Arrivals per day: {details}",
+  "@weekdayChartSemantics": {"placeholders": {"details": {"type": "String"}}}
 }

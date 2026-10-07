@@ -5,7 +5,9 @@
     "themeLight": "Use light theme",
     "themeDark": "Use dark theme",
     "language": "Language",
-    "loading": "Loading the queue"
+    "loading": "Loading the queue",
+    "analyticsOptOut": "Do not collect usage statistics",
+    "analyticsOptIn": "Allow usage statistics again"
   },
   "queue": {
     "connectFailed": "Could not connect",

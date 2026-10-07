@@ -2,6 +2,12 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import QueuePage from './routes/QueuePage';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from './lib/theme';
+import { useState } from 'react';
+import {
+  analyticsConfigured,
+  isAnalyticsOptedOut,
+  setAnalyticsOptOut,
+} from './lib/analytics';
 import { LANGUAGES, LANGUAGE_LABELS, setLanguage, type Language } from './i18n';
 
 function NotFound() {
@@ -11,6 +17,26 @@ function NotFound() {
       <h1 style={{ fontSize: 20, fontWeight: 700 }}>{t('app.invalidLink')}</h1>
       <p className="muted">{t('app.invalidLinkHint')}</p>
     </div>
+  );
+}
+
+function AnalyticsFooter() {
+  const { t } = useTranslation();
+  const [optedOut, setOptedOut] = useState(isAnalyticsOptedOut);
+  if (!analyticsConfigured()) return null;
+  return (
+    <footer className="analytics-footer">
+      <button
+        type="button"
+        className="analytics-link"
+        onClick={() => {
+          setAnalyticsOptOut(!optedOut);
+          setOptedOut(!optedOut);
+        }}
+      >
+        {optedOut ? t('app.analyticsOptIn') : t('app.analyticsOptOut')}
+      </button>
+    </footer>
   );
 }
 
@@ -51,6 +77,7 @@ export default function App() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+      <AnalyticsFooter />
     </div>
   );
 }

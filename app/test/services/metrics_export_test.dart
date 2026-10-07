@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:qio_app/l10n/app_localizations.dart';
 import 'package:qio_app/models/history_entry.dart';
 import 'package:qio_app/models/operator.dart';
@@ -57,6 +58,8 @@ MetricsReport report(
 );
 
 void main() {
+  setUpAll(initializeDateFormatting);
+
   group('buildMetricsReport', () {
     test('filters by period', () {
       final old = served('old', joinedAt: DateTime(2026, 9, 1, 9));
@@ -70,6 +73,51 @@ void main() {
       expect(r.isEmpty, isFalse);
       expect(r.peaks, [9]);
       expect(r.distribution[9], 1);
+    });
+
+    test('demand fields respect period', () {
+      final old = served('old', joinedAt: DateTime(2026, 9, 1, 9));
+      final recent = served('new', joinedAt: DateTime(2026, 10, 7, 18, 10));
+      final data = [
+        QueueHistoryInput(queue('a'), [old, recent], const [], const []),
+      ];
+      final all = report(data);
+      expect(all.weekdays.fold<int>(0, (a, b) => a + b), 2);
+      final r = report(data, period: HistoryPeriod.last7Days);
+      expect(r.weekdays.fold<int>(0, (a, b) => a + b), 1);
+      expect(r.weekdays[2], 1);
+      expect(r.heatmap[2][18], 1);
+      expect(r.demandPeak?.weekday, 2);
+      expect(r.demandPeak?.hour, 18);
+      final none = report([
+        QueueHistoryInput(queue('a'), [old], const [], const []),
+      ], period: HistoryPeriod.last7Days);
+      expect(none.demandPeak, isNull);
+      expect(none.weekdays, List<int>.filled(7, 0));
+    });
+
+    test('weekdays match heatmap rows and total', () {
+      final data = [
+        QueueHistoryInput(
+          queue('a'),
+          [
+            served('1', joinedAt: DateTime(2026, 10, 5, 23, 59)),
+            served('2', joinedAt: DateTime(2026, 10, 6, 0, 0)),
+            served('3', joinedAt: DateTime(2026, 10, 4, 8)),
+            served('4', joinedAt: DateTime(2026, 10, 4, 8, 30)),
+          ],
+          const [],
+          const [],
+        ),
+      ];
+      final r = report(data);
+      expect([
+        for (final row in r.heatmap) row.fold(0, (a, b) => a + b),
+      ], r.weekdays);
+      expect(r.weekdays.fold<int>(0, (a, b) => a + b), r.metrics.total);
+      expect(r.weekdays[6], 2);
+      expect(r.heatmap[0][23], 1);
+      expect(r.heatmap[1][0], 1);
     });
 
     test('queue selector only affects operators', () {
@@ -198,6 +246,8 @@ void main() {
         'Filas mais ativas',
         'Por atendente',
         'Espera e chamadas',
+        'Dias de maior movimento',
+        'Mapa de calor: dia × hora',
       ]);
     });
 
@@ -407,6 +457,54 @@ void main() {
       expect(l[i + 2], startsWith('"\'=HYPERLINK(""x"")",1,0'));
     });
 
+    test('demand sections close the file', () {
+      final l = lines(pt, report(data));
+      final i = l.indexOf('Dias de maior movimento');
+      expect(l[i + 1], 'dia,chegadas');
+      expect(l[i + 2], 'seg.,0');
+      expect(l[i + 4], 'qua.,5');
+      expect(l[i + 8], 'dom.,0');
+      expect(l[i + 9], '');
+      expect(l[i + 10], 'Mapa de calor: dia × hora');
+      expect(l[i + 11], 'dia,${List.generate(24, (h) => '$h').join(',')}');
+      final wed = l[i + 14].split(',');
+      expect(wed.length, 25);
+      expect(wed[0], 'qua.');
+      expect(wed[1 + 9], '5');
+      expect(l[i + 19], '');
+      expect(l.length, i + 20);
+    });
+
+    test('csv without weekday data omits the demand sections', () {
+      final r = report(data);
+      final bare = MetricsReport(
+        period: r.period,
+        operatorQueueId: null,
+        operatorQueueName: null,
+        isEmpty: false,
+        metrics: r.metrics,
+        distribution: r.distribution,
+        peaks: r.peaks,
+        ranking: r.ranking,
+        operators: r.operators,
+        operatorNames: r.operatorNames,
+        truncated: false,
+        historyLimit: 500,
+      );
+      final l = lines(pt, bare);
+      expect(l, isNot(contains('Dias de maior movimento')));
+      expect(l.last, '');
+      expect(l, contains('Por atendente'));
+    });
+
+    test('demand headers follow the locale', () {
+      final l = lines(en, report(data));
+      final i = l.indexOf('Busiest days');
+      expect(l[i + 1], 'day,arrivals');
+      expect(l[i + 4], 'Wed,5');
+      expect(lines(es, report(data)), contains('Días de mayor movimiento'));
+    });
+
     test('headers follow the locale', () {
       final r = report(data);
       expect(lines(en, r)[1], 'period,All time');
@@ -421,6 +519,7 @@ void main() {
   group('buildMetricsPdf', () {
     final pt = lookupAppLocalizations(const Locale('pt'));
     final en = lookupAppLocalizations(const Locale('en'));
+    final es = lookupAppLocalizations(const Locale('es'));
 
     test('builds a valid document with data', () async {
       final data = [
@@ -467,6 +566,48 @@ void main() {
             const [],
           ),
         ]),
+        generatedAt: DateTime(2026, 10, 7),
+      );
+      expect(String.fromCharCodes(bytes.take(4)), '%PDF');
+    });
+
+    test('builds with the demand grid and without non-latin glyphs', () async {
+      final data = [
+        QueueHistoryInput(
+          queue('a'),
+          [served('1'), served('2', joinedAt: DateTime(2026, 10, 9, 18))],
+          const [],
+          const [],
+        ),
+      ];
+      final bytes = await buildMetricsPdf(
+        l10n: es,
+        report: report(data),
+        generatedAt: DateTime(2026, 10, 7),
+      );
+      expect(String.fromCharCodes(bytes.take(4)), '%PDF');
+    });
+
+    test('builds without weekday data', () async {
+      final r = report([
+        QueueHistoryInput(queue('a'), [served('1')], const [], const []),
+      ]);
+      final bytes = await buildMetricsPdf(
+        l10n: pt,
+        report: MetricsReport(
+          period: r.period,
+          operatorQueueId: null,
+          operatorQueueName: null,
+          isEmpty: false,
+          metrics: r.metrics,
+          distribution: r.distribution,
+          peaks: r.peaks,
+          ranking: r.ranking,
+          operators: r.operators,
+          operatorNames: r.operatorNames,
+          truncated: false,
+          historyLimit: 500,
+        ),
         generatedAt: DateTime(2026, 10, 7),
       );
       expect(String.fromCharCodes(bytes.take(4)), '%PDF');

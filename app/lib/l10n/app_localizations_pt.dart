@@ -792,6 +792,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get hapticsSubtitle => 'Vibrar ao chamar, finalizar e confirmar ações';
 
   @override
+  String get analyticsTitle => 'Ajudar a melhorar o Qio';
+
+  @override
+  String get analyticsSubtitle =>
+      'Envia estatísticas anônimas de uso (sem nomes, telefones ou dados de clientes). Você pode desativar quando quiser.';
+
+  @override
   String get nobodyInQueueHint =>
       'Quando alguém entrar pelo QR code, aparece aqui.';
 
@@ -1190,4 +1197,43 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get p90Insufficient => 'amostras insuficientes';
+
+  @override
+  String get weekdayDemandTitle => 'Dias de maior movimento';
+
+  @override
+  String get heatmapTitle => 'Mapa de calor: dia × hora';
+
+  @override
+  String demandPeakSummary(String day, String from, String to) {
+    return 'Pico: $day, $from–$to';
+  }
+
+  @override
+  String heatmapCellSemantics(String day, String hour, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count chegadas',
+      one: '1 chegada',
+    );
+    return '$day, $hour: $_temp0';
+  }
+
+  @override
+  String get csvWeekday => 'dia';
+
+  @override
+  String get csvArrivals => 'chegadas';
+
+  @override
+  String get heatmapLegendLess => 'menos';
+
+  @override
+  String get heatmapLegendMore => 'mais';
+
+  @override
+  String weekdayChartSemantics(String details) {
+    return 'Chegadas por dia: $details';
+  }
 }

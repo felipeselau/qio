@@ -11,7 +11,68 @@ HistoryEntry entryAt(int hour, {String result = 'served'}) => HistoryEntry(
   joinedAt: DateTime(2026, 10, 1, hour, 30),
 );
 
+HistoryEntry joinedAt(DateTime t, [String id = 'e']) =>
+    HistoryEntry(id: id, ticket: 1, name: 'x', result: 'served', joinedAt: t);
+
+int matrixSum(List<List<int>> m) =>
+    m.fold(0, (s, row) => s + row.fold(0, (a, b) => a + b));
+
 void main() {
+  group('demand', () {
+    test('empty input gives zero 7 and 7x24 and no peak', () {
+      expect(weekdayDistribution(const []), List<int>.filled(7, 0));
+      final m = weekdayHourMatrix(const []);
+      expect(m.length, 7);
+      expect(m.every((r) => r.length == 24 && r.every((c) => c == 0)), isTrue);
+      expect(peakCell(m), isNull);
+    });
+
+    test('23:59 Monday and 00:00 Tuesday land in distinct rows', () {
+      final entries = [
+        joinedAt(DateTime(2026, 10, 5, 23, 59), 'a'),
+        joinedAt(DateTime(2026, 10, 6, 0, 0), 'b'),
+      ];
+      final m = weekdayHourMatrix(entries);
+      expect(m[0][23], 1);
+      expect(m[1][0], 1);
+      expect(weekdayDistribution(entries).take(2), [1, 1]);
+    });
+
+    test('Sunday is index 6 and Monday index 0', () {
+      final d = weekdayDistribution([
+        joinedAt(DateTime(2026, 10, 4, 10), 'a'),
+        joinedAt(DateTime(2026, 10, 5, 10), 'b'),
+      ]);
+      expect(d[6], 1);
+      expect(d[0], 1);
+    });
+
+    test('matrix sum equals total and matches the weekday totals', () {
+      final entries = [
+        for (var i = 0; i < 40; i++)
+          joinedAt(DateTime(2026, 10, 1 + i % 9, i % 24, 5), '$i'),
+      ];
+      final m = weekdayHourMatrix(entries);
+      expect(matrixSum(m), 40);
+      expect([
+        for (final r in m) r.fold(0, (a, b) => a + b),
+      ], weekdayDistribution(entries));
+    });
+
+    test('peakCell ties go to lower day then lower hour', () {
+      final m = [for (var d = 0; d < 7; d++) List<int>.filled(24, 0)];
+      m[4][18] = 5;
+      m[2][20] = 5;
+      m[2][9] = 5;
+      m[6][1] = 4;
+      final p = peakCell(m)!;
+      expect((p.weekday, p.hour, p.count), (2, 9, 5));
+      m[4][18] = 6;
+      final q = peakCell(m)!;
+      expect((q.weekday, q.hour, q.count), (4, 18, 6));
+    });
+  });
+
   test('hourlyDistribution buckets by join hour', () {
     final d = hourlyDistribution([entryAt(9), entryAt(9), entryAt(14)]);
     expect(d.length, 24);

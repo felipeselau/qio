@@ -256,6 +256,8 @@
   "loadErrorBody": "Não foi possível carregar seus dados. Verifique a conexão e tente de novo.",
   "hapticsTitle": "Vibração",
   "hapticsSubtitle": "Vibrar ao chamar, finalizar e confirmar ações",
+  "analyticsTitle": "Ajudar a melhorar o Qio",
+  "analyticsSubtitle": "Envia estatísticas anônimas de uso (sem nomes, telefones ou dados de clientes). Você pode desativar quando quiser.",
   "nobodyInQueueHint": "Quando alguém entrar pelo QR code, aparece aqui.",
   "emptyHistoryHint": "Os atendimentos finalizados aparecem aqui.",
   "emptyMetricsHint": "Escolha outro período ou aguarde os primeiros atendimentos.",
@@ -389,5 +391,17 @@
   "csvRecallRatePct": "entradas com re-chamada sobre chamadas (%)",
   "csvSkipsTotal": "movidos ao fim",
   "csvSkippedEntries": "entradas movidas ao fim",
-  "p90Insufficient": "amostras insuficientes"
+  "p90Insufficient": "amostras insuficientes",
+  "weekdayDemandTitle": "Dias de maior movimento",
+  "heatmapTitle": "Mapa de calor: dia × hora",
+  "demandPeakSummary": "Pico: {day}, {from}–{to}",
+  "@demandPeakSummary": {"placeholders": {"day": {"type": "String"}, "from": {"type": "String"}, "to": {"type": "String"}}},
+  "heatmapCellSemantics": "{day}, {hour}: {count, plural, =1{1 chegada} other{{count} chegadas}}",
+  "@heatmapCellSemantics": {"placeholders": {"day": {"type": "String"}, "hour": {"type": "String"}, "count": {"type": "int"}}},
+  "csvWeekday": "dia",
+  "csvArrivals": "chegadas",
+  "heatmapLegendLess": "menos",
+  "heatmapLegendMore": "mais",
+  "weekdayChartSemantics": "Chegadas por dia: {details}",
+  "@weekdayChartSemantics": {"placeholders": {"details": {"type": "String"}}}
 }

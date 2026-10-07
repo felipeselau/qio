@@ -1,6 +1,7 @@
 import { ref, update } from 'firebase/database';
 import { httpsCallable } from 'firebase/functions';
 import { auth, db, functions } from '../firebase';
+import { trackEvent } from './analytics';
 import i18n from '../i18n';
 import { storeEntryId } from './storage';
 
@@ -39,6 +40,7 @@ export async function joinQueue(
   }
 
   storeEntryId(queueId, result.entryId);
+  if (!result.existing) trackEvent('queue_joined', queueId);
   return result;
 }
 
@@ -69,6 +71,7 @@ export async function submitFeedback(
   try {
     const call = httpsCallable(functions, 'submitFeedback');
     await call({ queueId, entryId, rating, comment });
+    trackEvent('feedback_sent', queueId);
   } catch (err) {
     const code = (err as { code?: string } | null)?.code ?? '';
     if (code === 'functions/failed-precondition') return;

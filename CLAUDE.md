@@ -307,6 +307,18 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
 - Verificação no aparelho: `adb shell pm get-app-links com.qio.qio_app` deve
   mostrar `qio.web.app: verified`. iOS (Associated Domains) não foi feito.
 
+## Monitoramento e analytics
+
+- Functions logam erros com `logError` (`functions/src/log.js`): remove name/phone/token
+  do contexto; passe só IDs. `HttpsError` de validação não vira log de erro.
+- Eventos Analytics sem PII (`queue_id` apenas): app `queue_created`/`entry_called`/
+  `entry_served` (`analytics_service.dart`, desligado em debug/`USE_EMULATORS`, opt-out em
+  Minha conta); web `queue_joined`/`feedback_sent` (`web/src/lib/analytics.ts`, lazy, só
+  PROD, exige `VITE_MEASUREMENT_ID`, respeita opt-out `qio:analytics-optout` e Do Not Track).
+- Alertas de erro, uptime check, orçamento R$20/mês e ativação do Analytics são **ação
+  manual no console** (passo a passo em `docs/monitoring.md`). Deploy: functions → hosting
+  → APK.
+
 ## Marca
 
 - Fonte da verdade em `design/brand/` (SVGs, PNGs, `generate.py`, regras de uso).
