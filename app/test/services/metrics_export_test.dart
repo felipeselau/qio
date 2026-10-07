@@ -328,4 +328,42 @@ void main() {
       expect(lines(es, r)[13], 'atención promedio (min),12.5');
     });
   });
+
+  group('buildMetricsPdf', () {
+    final pt = lookupAppLocalizations(const Locale('pt'));
+    final en = lookupAppLocalizations(const Locale('en'));
+
+    test('builds a valid document with data', () async {
+      final data = [
+        QueueHistoryInput(
+          queue('a', name: 'Caixa'),
+          [
+            served('1'),
+            served('2', calledBy: 'u1'),
+            served('3', calledBy: 'u1'),
+            served('4', calledBy: 'u1', result: 'no_show'),
+          ],
+          const [QueueFeedback(entryId: '2', rating: 5)],
+          [op('u1', 'Bia')],
+        ),
+      ];
+      final bytes = await buildMetricsPdf(
+        l10n: pt,
+        report: report(data, limit: 4),
+        generatedAt: DateTime(2026, 10, 7),
+      );
+      expect(String.fromCharCodes(bytes.take(4)), '%PDF');
+    });
+
+    test('builds with empty data in another locale', () async {
+      final bytes = await buildMetricsPdf(
+        l10n: en,
+        report: report([
+          QueueHistoryInput(queue('a'), const [], const [], const []),
+        ]),
+        generatedAt: DateTime(2026, 10, 7),
+      );
+      expect(String.fromCharCodes(bytes.take(4)), '%PDF');
+    });
+  });
 }

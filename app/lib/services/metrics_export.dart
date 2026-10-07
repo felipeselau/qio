@@ -1,3 +1,8 @@
+import 'dart:typed_data';
+
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+
 import '../l10n/app_localizations.dart';
 import '../models/history_entry.dart';
 import '../models/operator.dart';
@@ -222,4 +227,178 @@ String buildMetricsCsv(
     }
   }
   return '\u{FEFF}${lines.join('\r\n')}\r\n';
+}
+
+String _minutesLabel(AppLocalizations l10n, double? v) {
+  if (v == null) return '-';
+  if (v < 1) return l10n.durationLessThanMinute;
+  return l10n.durationMinutes(v.round());
+}
+
+String _ratingLabel(OperatorStats s) => s.feedback.average == null
+    ? '-'
+    : '${s.feedback.average!.toStringAsFixed(1)} (${s.feedback.count})';
+
+String _hourLabel(int h) => '${h.toString().padLeft(2, '0')}h';
+
+pw.Widget _section(String title) => pw.Padding(
+  padding: const pw.EdgeInsets.only(top: 16, bottom: 6),
+  child: pw.Text(
+    title,
+    style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+  ),
+);
+
+pw.Widget _table(List<String> headers, List<List<String>> data) =>
+    pw.TableHelper.fromTextArray(
+      headers: headers,
+      data: data,
+      headerStyle: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold),
+      cellStyle: const pw.TextStyle(fontSize: 9),
+      headerDecoration: const pw.BoxDecoration(color: PdfColors.grey200),
+      cellPadding: const pw.EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+    );
+
+pw.Widget _metric(String label, String value) => pw.Column(
+  crossAxisAlignment: pw.CrossAxisAlignment.start,
+  children: [
+    pw.Text(
+      label,
+      style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
+    ),
+    pw.Text(
+      value,
+      style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+    ),
+  ],
+);
+
+Future<Uint8List> buildMetricsPdf({
+  required AppLocalizations l10n,
+  required MetricsReport report,
+  required DateTime generatedAt,
+}) {
+  final m = report.metrics;
+  final pct = (m.noShowRate * 100).round();
+  final doc = pw.Document();
+  doc.addPage(
+    pw.MultiPage(
+      pageFormat: PdfPageFormat.a4,
+      margin: const pw.EdgeInsets.all(32),
+      header: (_) => pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            l10n.metricsPdfTitle,
+            style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
+          ),
+          pw.SizedBox(height: 4),
+          pw.Text(
+            '${l10n.csvPeriod}: ${report.period.label(l10n)}',
+            style: const pw.TextStyle(fontSize: 12),
+          ),
+          pw.Text(
+            '${l10n.csvScope}: ${_scopeLabel(l10n, report)}',
+            style: const pw.TextStyle(fontSize: 12),
+          ),
+          pw.Text(
+            l10n.pdfGeneratedAt(formatExportDateTime(generatedAt)),
+            style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+          ),
+          pw.SizedBox(height: 12),
+        ],
+      ),
+      footer: (ctx) => pw.Align(
+        alignment: pw.Alignment.centerRight,
+        child: pw.Text(
+          '${ctx.pageNumber}/${ctx.pagesCount}',
+          style: const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
+        ),
+      ),
+      build: (_) => [
+        if (report.truncated)
+          pw.Text(
+            l10n.historyTruncatedWarning(report.historyLimit),
+            style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+          ),
+        if (report.isEmpty)
+          pw.Text(l10n.pdfNoRecords)
+        else ...[
+          _section(l10n.metricsTotal),
+          pw.Wrap(
+            spacing: 24,
+            runSpacing: 8,
+            children: [
+              _metric(l10n.pdfTotal, '${m.total}'),
+              _metric(l10n.servedPlural, '${m.served}'),
+              _metric(l10n.noShowPlural, '${m.noShow} ($pct%)'),
+              _metric(l10n.leftPlural, '${m.left}'),
+              _metric(l10n.avgWait, _minutesLabel(l10n, m.avgWaitMin)),
+              _metric(l10n.avgService, _minutesLabel(l10n, m.avgServiceMin)),
+            ],
+          ),
+          _section(l10n.peakHoursTitle),
+          pw.Text(
+            report.peaks.isEmpty
+                ? l10n.noPeakData
+                : l10n.peakHoursTop(report.peaks.map(_hourLabel).join(', ')),
+            style: const pw.TextStyle(fontSize: 10),
+          ),
+          pw.SizedBox(height: 6),
+          _table(
+            [l10n.csvHour, l10n.csvEntries],
+            [
+              for (var h = 0; h < report.distribution.length; h++)
+                if (report.distribution[h] > 0)
+                  [_hourLabel(h), '${report.distribution[h]}'],
+            ],
+          ),
+          _section(l10n.mostActiveQueues),
+          _table(
+            [
+              l10n.csvPosition,
+              l10n.csvQueue,
+              l10n.csvTotal,
+              l10n.csvNoShow,
+              l10n.csvNoShowRatePct,
+            ],
+            [
+              for (var i = 0; i < report.ranking.length; i++)
+                [
+                  '${i + 1}',
+                  report.ranking[i].name,
+                  '${report.ranking[i].metrics.total}',
+                  '${report.ranking[i].metrics.noShow}',
+                  '${(report.ranking[i].metrics.noShowRate * 100).round()}',
+                ],
+            ],
+          ),
+          _section(l10n.byOperatorTitle),
+          if (report.operators.isEmpty)
+            pw.Text(l10n.noOperatorData)
+          else
+            _table(
+              [
+                l10n.csvAttendant,
+                l10n.csvServed,
+                l10n.csvNoShow,
+                l10n.csvAvgServiceMin,
+                l10n.csvAvgRating,
+              ],
+              [
+                for (var i = 0; i < report.operators.length; i++)
+                  [
+                    _operatorName(l10n, report, i),
+                    '${report.operators[i].served}',
+                    '${report.operators[i].noShow}',
+                    _minutesLabel(l10n, report.operators[i].avgServiceMin),
+                    _ratingLabel(report.operators[i]),
+                  ],
+              ],
+            ),
+        ],
+      ],
+    ),
+  );
+  return doc.save();
 }
