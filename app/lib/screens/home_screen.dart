@@ -43,6 +43,7 @@ class HomeScreen extends StatefulWidget {
   final AuthService? auth;
   final QueueService? queues;
   final OperatorService? operators;
+  @visibleForTesting
   final bool enableIntegrations;
 
   @override

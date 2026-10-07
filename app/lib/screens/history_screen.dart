@@ -25,11 +25,14 @@ class HistoryScreen extends StatefulWidget {
     required this.queueId,
     this.queueName = '',
     this.queues,
+    this.clock,
   });
 
   final String queueId;
   final String queueName;
   final QueueService? queues;
+  @visibleForTesting
+  final DateTime Function()? clock;
 
   @override
   State<HistoryScreen> createState() => _HistoryScreenState();
@@ -166,7 +169,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               all,
               result: _result,
               period: _period,
-              now: DateTime.now(),
+              now: (widget.clock ?? DateTime.now)(),
             );
             _filtered = filtered;
             final metrics = computeHistoryMetrics(filtered);

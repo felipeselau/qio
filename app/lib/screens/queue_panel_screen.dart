@@ -37,6 +37,7 @@ class QueuePanelScreen extends StatefulWidget {
   final bool isOwner;
   final QueueService? queues;
   final OperatorService? operators;
+  @visibleForTesting
   final bool showTour;
 
   @override

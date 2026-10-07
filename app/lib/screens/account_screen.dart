@@ -27,7 +27,9 @@ class AccountScreen extends StatefulWidget {
   });
 
   final AuthService? auth;
+  @visibleForTesting
   final Future<Map<String, dynamic>?> Function(String uid)? loadOwner;
+  @visibleForTesting
   final Future<int?> Function(String uid)? loadQueueCount;
 
   @override

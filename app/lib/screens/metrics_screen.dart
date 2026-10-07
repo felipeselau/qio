@@ -25,9 +25,12 @@ import '../widgets/wait_effort_card.dart';
 import '../widgets/qio_responsive_body.dart';
 
 class MetricsScreen extends StatefulWidget {
-  const MetricsScreen({super.key, this.loader});
+  const MetricsScreen({super.key, this.loader, this.clock});
 
+  @visibleForTesting
   final Future<List<QueueHistoryInput>> Function()? loader;
+  @visibleForTesting
+  final DateTime Function()? clock;
 
   @override
   State<MetricsScreen> createState() => _MetricsScreenState();
@@ -51,7 +54,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
       buildMetricsReport(
         data: data,
         period: _period,
-        now: DateTime.now(),
+        now: (widget.clock ?? DateTime.now)(),
         historyLimit: QueueService.historyFetchLimit,
         unknownOperatorName: l10n.formerOperator,
         operatorQueueId: _operatorQueueId,
@@ -111,14 +114,20 @@ class _MetricsScreenState extends State<MetricsScreen> {
   });
 
   Future<List<QueueHistoryInput>> _load() async {
-    final custom = widget.loader;
-    if (custom != null) {
-      final loaded = await custom();
-      if (mounted) setState(() => _data = loaded);
-      return loaded;
+    final result = widget.loader != null
+        ? await widget.loader!()
+        : await _loadFromServices();
+    if (_operatorQueueId != null &&
+        !result.any((d) => d.queue.id == _operatorQueueId)) {
+      _operatorQueueId = null;
     }
+    if (mounted) setState(() => _data = result);
+    return result;
+  }
+
+  Future<List<QueueHistoryInput>> _loadFromServices() async {
     final queues = await QueueService.instance.watchOwnerQueues().first;
-    final result = await Future.wait([
+    return Future.wait([
       for (final q in queues)
         Future.wait([
           QueueService.instance.fetchHistory(q.id),
@@ -137,12 +146,6 @@ class _MetricsScreenState extends State<MetricsScreen> {
           ),
         ),
     ]);
-    if (_operatorQueueId != null &&
-        !result.any((d) => d.queue.id == _operatorQueueId)) {
-      _operatorQueueId = null;
-    }
-    if (mounted) setState(() => _data = result);
-    return result;
   }
 
   @override
