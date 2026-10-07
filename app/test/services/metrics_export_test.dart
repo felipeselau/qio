@@ -9,6 +9,7 @@ import 'package:qio_app/models/queue.dart';
 import 'package:qio_app/models/queue_feedback.dart';
 import 'package:qio_app/services/history_metrics.dart';
 import 'package:qio_app/services/metrics_export.dart';
+import 'package:qio_app/services/metrics_trend.dart';
 
 final now = DateTime(2026, 10, 7, 12);
 
@@ -188,6 +189,101 @@ void main() {
       ];
       expect(report(data, limit: 2).truncated, isTrue);
       expect(report(data, limit: 2, queueId: 'b').truncated, isFalse);
+    });
+
+    test('trend: no previous for period all', () {
+      final data = [
+        QueueHistoryInput(queue('a'), [served('1')], const [], const []),
+      ];
+      final r = report(data);
+      expect(r.range, isNull);
+      expect(r.series, isEmpty);
+      expect(r.previousMetrics, isNull);
+      expect(r.deltas, isEmpty);
+    });
+
+    test('trend: series fills every day and deltas compare periods', () {
+      final data = [
+        QueueHistoryInput(
+          queue('a'),
+          [
+            served('1'),
+            served('2'),
+            served('3', joinedAt: DateTime(2026, 9, 28, 9)),
+          ],
+          const [],
+          const [],
+        ),
+      ];
+      final r = report(data, period: HistoryPeriod.last7Days);
+      expect(r.series.length, 7);
+      expect(r.series.last.total, 2);
+      expect(r.series.first.total, 0);
+      expect(r.previousMetrics!.total, 1);
+      expect(r.deltas[MetricKey.total]!.pct, 100);
+    });
+
+    test('trend: deltas vanish when previous period is empty', () {
+      final data = [
+        QueueHistoryInput(queue('a'), [served('1')], const [], const []),
+      ];
+      final r = report(data, period: HistoryPeriod.last7Days);
+      expect(r.previousMetrics!.total, 0);
+      expect(r.deltas, isEmpty);
+    });
+
+    test('trend: no comparison when history is truncated', () {
+      final data = [
+        QueueHistoryInput(
+          queue('a'),
+          [served('1'), served('2')],
+          const [],
+          const [],
+        ),
+      ];
+      final r = report(data, period: HistoryPeriod.last7Days, limit: 2);
+      expect(r.truncated, isTrue);
+      expect(r.previousMetrics, isNull);
+      expect(r.deltas, isEmpty);
+    });
+
+    test(
+      'trend: no comparison when fetched history starts inside previous',
+      () {
+        final data = [
+          QueueHistoryInput(
+            queue('a'),
+            [served('1'), served('2', joinedAt: DateTime(2026, 9, 29, 9))],
+            const [],
+            const [],
+          ),
+        ];
+        final r = report(data, period: HistoryPeriod.last7Days, limit: 2);
+        expect(r.truncated, isFalse);
+        expect(r.previousMetrics, isNull);
+      },
+    );
+
+    test('custom range drives the report', () {
+      final data = [
+        QueueHistoryInput(
+          queue('a'),
+          [served('1'), served('2', joinedAt: DateTime(2026, 10, 3, 9))],
+          const [],
+          const [],
+        ),
+      ];
+      final r = buildMetricsReport(
+        data: data,
+        period: HistoryPeriod.custom,
+        now: now,
+        historyLimit: 500,
+        unknownOperatorName: 'ex',
+        customRange: DateRange(DateTime(2026, 10, 3), DateTime(2026, 10, 4)),
+      );
+      expect(r.metrics.total, 1);
+      expect(r.series.length, 1);
+      expect(r.range!.days, 1);
     });
 
     test('empty data', () {

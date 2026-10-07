@@ -2337,6 +2337,48 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Personalizado'**
   String get periodCustom;
+
+  /// No description provided for @deltaUp.
+  ///
+  /// In pt, this message translates to:
+  /// **'▲ {pct}%'**
+  String deltaUp(int pct);
+
+  /// No description provided for @deltaDown.
+  ///
+  /// In pt, this message translates to:
+  /// **'▼ {pct}%'**
+  String deltaDown(int pct);
+
+  /// No description provided for @deltaSame.
+  ///
+  /// In pt, this message translates to:
+  /// **'= igual'**
+  String get deltaSame;
+
+  /// No description provided for @deltaPoints.
+  ///
+  /// In pt, this message translates to:
+  /// **'{pp} p.p.'**
+  String deltaPoints(int pp);
+
+  /// No description provided for @deltaRose.
+  ///
+  /// In pt, this message translates to:
+  /// **'subiu'**
+  String get deltaRose;
+
+  /// No description provided for @deltaFell.
+  ///
+  /// In pt, this message translates to:
+  /// **'caiu'**
+  String get deltaFell;
+
+  /// No description provided for @deltaVsPrevious.
+  ///
+  /// In pt, this message translates to:
+  /// **'vs. período anterior'**
+  String get deltaVsPrevious;
 }
 
 class _AppLocalizationsDelegate

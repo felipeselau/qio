@@ -19,6 +19,7 @@ import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
 import '../widgets/demand_charts.dart';
+import '../widgets/delta_badge.dart';
 import '../widgets/qio_card.dart';
 import '../widgets/qio_empty_state.dart';
 import '../widgets/qio_skeleton.dart';
@@ -239,6 +240,9 @@ class _MetricsScreenState extends State<MetricsScreen> {
     final peaks = report.peaks;
     final ranking = report.ranking;
     final pct = (metrics.noShowRate * 100).round();
+    Widget? badge(MetricKey key) => report.deltas[key] == null
+        ? null
+        : DeltaBadge(metric: key, delta: report.deltas[key]!);
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -270,10 +274,15 @@ class _MetricsScreenState extends State<MetricsScreen> {
               children: [
                 Row(
                   children: [
-                    _Stat(label: l10n.metricsTotal, value: '${metrics.total}'),
+                    _Stat(
+                      label: l10n.metricsTotal,
+                      value: '${metrics.total}',
+                      footer: badge(MetricKey.total),
+                    ),
                     _Stat(
                       label: l10n.noShowPlural,
                       value: '${metrics.noShow} ($pct%)',
+                      footer: badge(MetricKey.noShowRate),
                     ),
                   ],
                 ),
@@ -283,13 +292,25 @@ class _MetricsScreenState extends State<MetricsScreen> {
                     _Stat(
                       label: l10n.avgWait,
                       value: _minutes(l10n, metrics.avgWaitMin),
+                      footer: badge(MetricKey.avgWait),
                     ),
                     _Stat(
                       label: l10n.avgService,
                       value: _minutes(l10n, metrics.avgServiceMin),
+                      footer: badge(MetricKey.avgService),
                     ),
                   ],
                 ),
+                if (report.deltas.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      l10n.deltaVsPrevious,
+                      style: QioTextStyles.caption,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -472,10 +493,11 @@ class _OperatorRow extends StatelessWidget {
 }
 
 class _Stat extends StatelessWidget {
-  const _Stat({required this.label, required this.value});
+  const _Stat({required this.label, required this.value, this.footer});
 
   final String label;
   final String value;
+  final Widget? footer;
 
   @override
   Widget build(BuildContext context) {
@@ -486,6 +508,7 @@ class _Stat extends StatelessWidget {
           Text(label, style: QioTextStyles.label),
           const SizedBox(height: 4),
           Text(value, style: QioTextStyles.heading2),
+          ?footer,
         ],
       ),
     );

@@ -1244,4 +1244,31 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get periodCustom => 'Personalizado';
+
+  @override
+  String deltaUp(int pct) {
+    return '▲ $pct%';
+  }
+
+  @override
+  String deltaDown(int pct) {
+    return '▼ $pct%';
+  }
+
+  @override
+  String get deltaSame => '= igual';
+
+  @override
+  String deltaPoints(int pp) {
+    return '$pp p.p.';
+  }
+
+  @override
+  String get deltaRose => 'subió';
+
+  @override
+  String get deltaFell => 'bajó';
+
+  @override
+  String get deltaVsPrevious => 'vs. período anterior';
 }

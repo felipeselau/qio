@@ -405,5 +405,15 @@
   "weekdayChartSemantics": "Chegadas por dia: {details}",
   "@weekdayChartSemantics": {"placeholders": {"details": {"type": "String"}}},
   "period30Days": "30 dias",
-  "periodCustom": "Personalizado"
+  "periodCustom": "Personalizado",
+  "deltaUp": "▲ {pct}%",
+  "@deltaUp": {"placeholders": {"pct": {"type": "int"}}},
+  "deltaDown": "▼ {pct}%",
+  "@deltaDown": {"placeholders": {"pct": {"type": "int"}}},
+  "deltaSame": "= igual",
+  "deltaPoints": "{pp} p.p.",
+  "@deltaPoints": {"placeholders": {"pp": {"type": "int"}}},
+  "deltaRose": "subiu",
+  "deltaFell": "caiu",
+  "deltaVsPrevious": "vs. período anterior"
 }

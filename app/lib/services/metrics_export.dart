@@ -54,6 +54,10 @@ class MetricsReport {
     this.weekdays = const [],
     this.heatmap = const [],
     this.demandPeak,
+    this.range,
+    this.series = const [],
+    this.previousMetrics,
+    this.deltas = const {},
   });
 
   final HistoryPeriod period;
@@ -73,6 +77,10 @@ class MetricsReport {
   final List<int> weekdays;
   final List<List<int>> heatmap;
   final DemandPeak? demandPeak;
+  final DateRange? range;
+  final List<DayPoint> series;
+  final HistoryMetrics? previousMetrics;
+  final Map<MetricKey, Delta> deltas;
 
   String operatorLabel(
     OperatorStats stats, {
@@ -145,12 +153,37 @@ MetricsReport buildMetricsReport({
   for (final d in data) {
     if (d.queue.id == operatorQueueId) queueName = d.queue.name;
   }
+  final range = rangeFor(period, now, custom: customRange);
+  final metrics = computeHistoryMetrics(all);
+  final waitStats = computeWaitStats(all);
+  HistoryMetrics? previousMetrics;
+  var deltas = const <MetricKey, Delta>{};
+  if (range != null && !truncated) {
+    final prev = range.previous();
+    final incomplete = data.any((d) {
+      if (d.entries.length < historyLimit) return false;
+      return d.entries.every((e) => !e.referenceTime.isBefore(prev.start));
+    });
+    if (!incomplete) {
+      final prevEntries = [
+        for (final d in data)
+          ...d.entries.where((e) => prev.contains(e.referenceTime)),
+      ];
+      previousMetrics = computeHistoryMetrics(prevEntries);
+      deltas = compare(
+        metrics,
+        previousMetrics,
+        curWait: waitStats,
+        prevWait: computeWaitStats(prevEntries),
+      );
+    }
+  }
   return MetricsReport(
     period: period,
     operatorQueueId: operatorQueueId,
     operatorQueueName: queueName,
     isEmpty: all.isEmpty,
-    metrics: computeHistoryMetrics(all),
+    metrics: metrics,
     distribution: distribution,
     peaks: peakHours(distribution),
     ranking: rankByActivity([
@@ -165,11 +198,15 @@ MetricsReport buildMetricsReport({
     operatorNames: names,
     truncated: truncated,
     historyLimit: historyLimit,
-    waitStats: computeWaitStats(all),
+    waitStats: waitStats,
     callEffort: computeCallEffort(all),
     weekdays: weekdayDistribution(all),
     heatmap: heatmap,
     demandPeak: peakCell(heatmap),
+    range: range,
+    series: range == null ? const [] : dailySeries(all, range),
+    previousMetrics: previousMetrics,
+    deltas: deltas,
   );
 }
 
