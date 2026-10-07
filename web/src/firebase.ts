@@ -13,9 +13,10 @@ const firebaseConfig = {
   storageBucket: 'qio-app.firebasestorage.app',
   messagingSenderId: '981965097928',
   appId: '1:981965097928:web:b08d7d1bfce182d3d4cefd',
+  measurementId: (import.meta.env.VITE_MEASUREMENT_ID as string | undefined) || undefined,
 };
 
-const app = initializeApp(firebaseConfig);
+export const app = initializeApp(firebaseConfig);
 
 // App Check (reCAPTCHA Enterprise / Fraud Defense) — mitiga entradas falsas/automatizadas na fila,
 // rejeitando no backend do Firebase requisições que não venham do site legítimo
