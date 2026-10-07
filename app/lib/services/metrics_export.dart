@@ -41,8 +41,10 @@ class MetricsReport {
     required this.operatorNames,
     required this.truncated,
     required this.historyLimit,
+    this.scopeLabel,
   });
 
+  final String? scopeLabel;
   final HistoryPeriod period;
   final String? operatorQueueId;
   final String? operatorQueueName;
@@ -72,6 +74,7 @@ MetricsReport buildMetricsReport({
   required int historyLimit,
   required String unknownOperatorName,
   String? operatorQueueId,
+  String? scopeLabel,
 }) {
   final perQueue = [
     for (final d in data)
@@ -130,6 +133,7 @@ MetricsReport buildMetricsReport({
     operatorNames: names,
     truncated: truncated,
     historyLimit: historyLimit,
+    scopeLabel: scopeLabel,
   );
 }
 
@@ -155,6 +159,7 @@ String buildMetricsCsv(
     [
       [l10n.metricsPdfTitle],
       [l10n.csvPeriod, report.period.label(l10n)],
+      if (report.scopeLabel != null) [l10n.csvDataScope, report.scopeLabel!],
       [l10n.csvScope, _scopeLabel(l10n, report)],
       [l10n.csvGeneratedAt, formatExportDateTime(generatedAt)],
       if (report.truncated) [l10n.historyTruncatedWarning(report.historyLimit)],
@@ -297,6 +302,11 @@ Future<Uint8List> buildMetricsPdf({
             '${l10n.csvPeriod}: ${report.period.label(l10n)}',
             style: const pw.TextStyle(fontSize: 12),
           ),
+          if (report.scopeLabel != null)
+            pw.Text(
+              '${l10n.csvDataScope}: ${report.scopeLabel}',
+              style: const pw.TextStyle(fontSize: 12),
+            ),
           pw.Text(
             l10n.pdfGeneratedAt(formatExportDateTime(generatedAt)),
             style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
