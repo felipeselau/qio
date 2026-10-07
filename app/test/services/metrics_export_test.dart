@@ -285,14 +285,46 @@ void main() {
         'faixa de espera: 5–15 min,5',
         'faixa de espera: 15–30 min,1',
         'faixa de espera: Mais de 30 min,0',
-        'atendimentos chamados,6',
+        'entradas chamadas,6',
         're-chamadas,2',
-        'atendimentos com re-chamada,1',
-        'taxa de re-chamada (%),16.7',
+        'entradas com re-chamada,1',
+        'entradas com re-chamada sobre chamadas (%),16.7',
         'movidos ao fim,1',
-        'atendimentos com movido ao fim,1',
+        'entradas movidas ao fim,1',
       ]);
       expect(lines(en, report(withEffort)).contains('Wait and calls'), isTrue);
+    });
+
+    test('fractional median is rounded to one decimal', () {
+      HistoryEntry w(String id, int sec) => HistoryEntry(
+        id: id,
+        ticket: 1,
+        name: id,
+        result: 'served',
+        joinedAt: DateTime(2026, 10, 7, 9),
+        calledAt: DateTime(2026, 10, 7, 9).add(Duration(seconds: sec)),
+      );
+      final r = report([
+        QueueHistoryInput(
+          queue('a'),
+          [w('a', 60), w('b', 125)],
+          const [],
+          const [],
+        ),
+      ]);
+      final l = lines(pt, r);
+      final i = l.indexOf('Espera e chamadas');
+      expect(l[i + 3], 'mediana (min),1.5');
+      expect(l[i + 4], 'P90 (min),');
+    });
+
+    test('report carries wait stats and call effort', () {
+      final r = report(data);
+      expect(r.waitStats.samples, 5);
+      expect(r.waitStats.medianMin, 5);
+      expect(r.waitStats.p90Min, 5);
+      expect(r.callEffort.called, 5);
+      expect(r.callEffort.recallRate, 0);
     });
 
     test('wait and calls section is empty-safe', () {
@@ -304,7 +336,7 @@ void main() {
       expect(l[i + 2], 'amostras de espera,0');
       expect(l[i + 3], 'mediana (min),');
       expect(l[i + 4], 'P90 (min),');
-      expect(l[i + 12], 'taxa de re-chamada (%),');
+      expect(l[i + 12], 'entradas com re-chamada sobre chamadas (%),');
     });
 
     test('null averages stay empty', () {

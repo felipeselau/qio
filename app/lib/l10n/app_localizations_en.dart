@@ -1101,13 +1101,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get skipsTitle => 'Moved to end';
 
   @override
-  String recallsStat(int n, int pct) {
-    return '$n ($pct%)';
+  String recallsStat(int entries, int total, int pct, int recalls) {
+    return '$entries entries of $total ($pct%) · $recalls recalls';
   }
 
   @override
-  String skipsStat(int n, int entries) {
-    return '$n in $entries services';
+  String skipsStat(int entries, int total, int skips) {
+    return '$entries entries of $total · $skips moved to end';
   }
 
   @override
@@ -1132,11 +1132,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get csvRecalledEntries => 'entries with recall';
 
   @override
-  String get csvRecallRatePct => 'recall rate (%)';
+  String get csvRecallRatePct => 'entries with recall over called (%)';
 
   @override
   String get csvSkipsTotal => 'moved to end';
 
   @override
   String get csvSkippedEntries => 'entries moved to end';
+
+  @override
+  String get p90Insufficient => 'not enough samples';
 }

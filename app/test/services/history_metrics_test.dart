@@ -344,14 +344,27 @@ void main() {
         waited(1, recalls: 1, skips: 3, result: 'no_show'),
         waited(1),
         waited(1),
-        entry(result: 'left', joinedAt: base, skips: 1),
       ]);
       expect(c.called, 4);
       expect(c.recallsTotal, 3);
       expect(c.recalledEntries, 2);
-      expect(c.skipsTotal, 4);
-      expect(c.skippedEntries, 2);
+      expect(c.skipsTotal, 3);
+      expect(c.skippedEntries, 1);
       expect(c.recallRate, 0.5);
+    });
+
+    test('left fica fora, mesmo com calledAt, recalls e skips', () {
+      final c = computeCallEffort([
+        waited(1, recalls: 1),
+        waited(2, result: 'left', recalls: 5, skips: 4),
+        entry(result: 'left', joinedAt: base, skips: 1),
+      ]);
+      expect(c.called, 1);
+      expect(c.recallsTotal, 1);
+      expect(c.recalledEntries, 1);
+      expect(c.skipsTotal, 0);
+      expect(c.skippedEntries, 0);
+      expect(c.recallRate, 1);
     });
   });
 }

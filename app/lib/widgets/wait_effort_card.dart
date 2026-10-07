@@ -34,10 +34,19 @@ class WaitEffortCard extends StatelessWidget {
     final rate = callEffort.recallRate;
     final recalls = rate == null
         ? '—'
-        : l10n.recallsStat(callEffort.recallsTotal, (rate * 100).round());
+        : l10n.recallsStat(
+            callEffort.recalledEntries,
+            callEffort.called,
+            (rate * 100).round(),
+            callEffort.recallsTotal,
+          );
     final skips = callEffort.called == 0
         ? '—'
-        : l10n.skipsStat(callEffort.skipsTotal, callEffort.called);
+        : l10n.skipsStat(
+            callEffort.skippedEntries,
+            callEffort.called,
+            callEffort.skipsTotal,
+          );
     return QioCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,6 +62,9 @@ class WaitEffortCard extends StatelessWidget {
               _Stat(
                 label: l10n.p90Wait,
                 value: _minutes(l10n, waitStats.p90Min),
+                hint: waitStats.samples > 0 && waitStats.p90Min == null
+                    ? l10n.p90Insufficient
+                    : null,
               ),
             ],
           ),
@@ -66,23 +78,40 @@ class WaitEffortCard extends StatelessWidget {
               ),
           ],
           const SizedBox(height: 16),
-          Row(
-            children: [
-              _Stat(label: l10n.recallsTitle, value: recalls),
-              _Stat(label: l10n.skipsTitle, value: skips),
-            ],
-          ),
+          _Line(label: l10n.recallsTitle, value: recalls),
+          const SizedBox(height: 8),
+          _Line(label: l10n.skipsTitle, value: skips),
         ],
       ),
     );
   }
 }
 
-class _Stat extends StatelessWidget {
-  const _Stat({required this.label, required this.value});
+class _Line extends StatelessWidget {
+  const _Line({required this.label, required this.value});
 
   final String label;
   final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: QioTextStyles.label),
+        const SizedBox(height: 2),
+        Text(value, style: QioTextStyles.body),
+      ],
+    );
+  }
+}
+
+class _Stat extends StatelessWidget {
+  const _Stat({required this.label, required this.value, this.hint});
+
+  final String label;
+  final String value;
+  final String? hint;
 
   @override
   Widget build(BuildContext context) {
@@ -93,6 +122,7 @@ class _Stat extends StatelessWidget {
           Text(label, style: QioTextStyles.label),
           const SizedBox(height: 4),
           Text(value, style: QioTextStyles.heading2),
+          if (hint != null) Text(hint!, style: QioTextStyles.caption),
         ],
       ),
     );

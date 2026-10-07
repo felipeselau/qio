@@ -1103,13 +1103,13 @@ class AppLocalizationsPt extends AppLocalizations {
   String get skipsTitle => 'Movidos ao fim';
 
   @override
-  String recallsStat(int n, int pct) {
-    return '$n ($pct%)';
+  String recallsStat(int entries, int total, int pct, int recalls) {
+    return '$entries entradas de $total ($pct%) · $recalls re-chamadas';
   }
 
   @override
-  String skipsStat(int n, int entries) {
-    return '$n em $entries atendimentos';
+  String skipsStat(int entries, int total, int skips) {
+    return '$entries entradas de $total · $skips movidos ao fim';
   }
 
   @override
@@ -1125,20 +1125,23 @@ class AppLocalizationsPt extends AppLocalizations {
   String get csvWaitRange => 'faixa de espera';
 
   @override
-  String get csvCalledEntries => 'atendimentos chamados';
+  String get csvCalledEntries => 'entradas chamadas';
 
   @override
   String get csvRecallsTotal => 're-chamadas';
 
   @override
-  String get csvRecalledEntries => 'atendimentos com re-chamada';
+  String get csvRecalledEntries => 'entradas com re-chamada';
 
   @override
-  String get csvRecallRatePct => 'taxa de re-chamada (%)';
+  String get csvRecallRatePct => 'entradas com re-chamada sobre chamadas (%)';
 
   @override
   String get csvSkipsTotal => 'movidos ao fim';
 
   @override
-  String get csvSkippedEntries => 'atendimentos com movido ao fim';
+  String get csvSkippedEntries => 'entradas movidas ao fim';
+
+  @override
+  String get p90Insufficient => 'amostras insuficientes';
 }

@@ -344,10 +344,10 @@
   "waitBucketOver30": "Over 30 min",
   "recallsTitle": "Recalls",
   "skipsTitle": "Moved to end",
-  "recallsStat": "{n} ({pct}%)",
-  "@recallsStat": {"placeholders": {"n": {"type": "int"}, "pct": {"type": "int"}}},
-  "skipsStat": "{n} in {entries} services",
-  "@skipsStat": {"placeholders": {"n": {"type": "int"}, "entries": {"type": "int"}}},
+  "recallsStat": "{entries} entries of {total} ({pct}%) · {recalls} recalls",
+  "@recallsStat": {"placeholders": {"entries": {"type": "int"}, "total": {"type": "int"}, "pct": {"type": "int"}, "recalls": {"type": "int"}}},
+  "skipsStat": "{entries} entries of {total} · {skips} moved to end",
+  "@skipsStat": {"placeholders": {"entries": {"type": "int"}, "total": {"type": "int"}, "skips": {"type": "int"}}},
   "csvWaitSamples": "wait samples",
   "csvMedianWaitMin": "median (min)",
   "csvP90WaitMin": "P90 (min)",
@@ -355,7 +355,8 @@
   "csvCalledEntries": "called entries",
   "csvRecallsTotal": "recalls",
   "csvRecalledEntries": "entries with recall",
-  "csvRecallRatePct": "recall rate (%)",
+  "csvRecallRatePct": "entries with recall over called (%)",
   "csvSkipsTotal": "moved to end",
-  "csvSkippedEntries": "entries moved to end"
+  "csvSkippedEntries": "entries moved to end",
+  "p90Insufficient": "not enough samples"
 }

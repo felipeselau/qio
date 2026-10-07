@@ -460,8 +460,10 @@ Future<Uint8List> buildMetricsPdf({
                 report.callEffort.recallRate == null
                     ? '-'
                     : l10n.recallsStat(
-                        report.callEffort.recallsTotal,
+                        report.callEffort.recalledEntries,
+                        report.callEffort.called,
                         (report.callEffort.recallRate! * 100).round(),
+                        report.callEffort.recallsTotal,
                       ),
               ),
               _metric(
@@ -469,8 +471,9 @@ Future<Uint8List> buildMetricsPdf({
                 report.callEffort.called == 0
                     ? '-'
                     : l10n.skipsStat(
-                        report.callEffort.skipsTotal,
+                        report.callEffort.skippedEntries,
                         report.callEffort.called,
+                        report.callEffort.skipsTotal,
                       ),
               ),
             ],

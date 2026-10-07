@@ -153,14 +153,15 @@ class CallEffortStats {
 }
 
 CallEffortStats computeCallEffort(List<HistoryEntry> entries) {
-  final called = entries.where((e) => e.calledAt != null).length;
-  final recalled = entries.where((e) => e.recalls > 0).length;
-  final skipped = entries.where((e) => e.skips > 0).length;
+  final active = entries.where((e) => !e.isLeft).toList();
+  final called = active.where((e) => e.calledAt != null).length;
+  final recalled = active.where((e) => e.recalls > 0).length;
+  final skipped = active.where((e) => e.skips > 0).length;
   return CallEffortStats(
     called: called,
-    recallsTotal: entries.fold<int>(0, (s, e) => s + e.recalls),
+    recallsTotal: active.fold<int>(0, (s, e) => s + e.recalls),
     recalledEntries: recalled,
-    skipsTotal: entries.fold<int>(0, (s, e) => s + e.skips),
+    skipsTotal: active.fold<int>(0, (s, e) => s + e.skips),
     skippedEntries: skipped,
     recallRate: called == 0 ? null : recalled / called,
   );

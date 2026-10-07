@@ -2107,14 +2107,14 @@ abstract class AppLocalizations {
   /// No description provided for @recallsStat.
   ///
   /// In pt, this message translates to:
-  /// **'{n} ({pct}%)'**
-  String recallsStat(int n, int pct);
+  /// **'{entries} entradas de {total} ({pct}%) · {recalls} re-chamadas'**
+  String recallsStat(int entries, int total, int pct, int recalls);
 
   /// No description provided for @skipsStat.
   ///
   /// In pt, this message translates to:
-  /// **'{n} em {entries} atendimentos'**
-  String skipsStat(int n, int entries);
+  /// **'{entries} entradas de {total} · {skips} movidos ao fim'**
+  String skipsStat(int entries, int total, int skips);
 
   /// No description provided for @csvWaitSamples.
   ///
@@ -2143,7 +2143,7 @@ abstract class AppLocalizations {
   /// No description provided for @csvCalledEntries.
   ///
   /// In pt, this message translates to:
-  /// **'atendimentos chamados'**
+  /// **'entradas chamadas'**
   String get csvCalledEntries;
 
   /// No description provided for @csvRecallsTotal.
@@ -2155,13 +2155,13 @@ abstract class AppLocalizations {
   /// No description provided for @csvRecalledEntries.
   ///
   /// In pt, this message translates to:
-  /// **'atendimentos com re-chamada'**
+  /// **'entradas com re-chamada'**
   String get csvRecalledEntries;
 
   /// No description provided for @csvRecallRatePct.
   ///
   /// In pt, this message translates to:
-  /// **'taxa de re-chamada (%)'**
+  /// **'entradas com re-chamada sobre chamadas (%)'**
   String get csvRecallRatePct;
 
   /// No description provided for @csvSkipsTotal.
@@ -2173,8 +2173,14 @@ abstract class AppLocalizations {
   /// No description provided for @csvSkippedEntries.
   ///
   /// In pt, this message translates to:
-  /// **'atendimentos com movido ao fim'**
+  /// **'entradas movidas ao fim'**
   String get csvSkippedEntries;
+
+  /// No description provided for @p90Insufficient.
+  ///
+  /// In pt, this message translates to:
+  /// **'amostras insuficientes'**
+  String get p90Insufficient;
 }
 
 class _AppLocalizationsDelegate
