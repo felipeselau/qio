@@ -49,6 +49,9 @@ class MetricsReport {
       skipsTotal: 0,
       skippedEntries: 0,
     ),
+    this.weekdays = const [],
+    this.heatmap = const [],
+    this.demandPeak,
   });
 
   final HistoryPeriod period;
@@ -65,6 +68,9 @@ class MetricsReport {
   final int historyLimit;
   final WaitStats waitStats;
   final CallEffortStats callEffort;
+  final List<int> weekdays;
+  final List<List<int>> heatmap;
+  final DemandPeak? demandPeak;
 
   String operatorLabel(
     OperatorStats stats, {
@@ -92,6 +98,7 @@ MetricsReport buildMetricsReport({
   ];
   final all = [for (final p in perQueue) ...p.entries];
   final distribution = hourlyDistribution(all);
+  final heatmap = weekdayHourMatrix(all);
   final selected = data
       .where((d) => operatorQueueId == null || d.queue.id == operatorQueueId)
       .toList();
@@ -142,6 +149,9 @@ MetricsReport buildMetricsReport({
     historyLimit: historyLimit,
     waitStats: computeWaitStats(all),
     callEffort: computeCallEffort(all),
+    weekdays: weekdayDistribution(all),
+    heatmap: heatmap,
+    demandPeak: peakCell(heatmap),
   );
 }
 

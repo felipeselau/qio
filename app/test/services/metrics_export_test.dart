@@ -72,6 +72,27 @@ void main() {
       expect(r.distribution[9], 1);
     });
 
+    test('demand fields respect period', () {
+      final old = served('old', joinedAt: DateTime(2026, 9, 1, 9));
+      final recent = served('new', joinedAt: DateTime(2026, 10, 7, 18, 10));
+      final data = [
+        QueueHistoryInput(queue('a'), [old, recent], const [], const []),
+      ];
+      final all = report(data);
+      expect(all.weekdays.fold<int>(0, (a, b) => a + b), 2);
+      final r = report(data, period: HistoryPeriod.last7Days);
+      expect(r.weekdays.fold<int>(0, (a, b) => a + b), 1);
+      expect(r.weekdays[2], 1);
+      expect(r.heatmap[2][18], 1);
+      expect(r.demandPeak?.weekday, 2);
+      expect(r.demandPeak?.hour, 18);
+      final none = report([
+        QueueHistoryInput(queue('a'), [old], const [], const []),
+      ], period: HistoryPeriod.last7Days);
+      expect(none.demandPeak, isNull);
+      expect(none.weekdays, List<int>.filled(7, 0));
+    });
+
     test('queue selector only affects operators', () {
       final data = [
         QueueHistoryInput(
