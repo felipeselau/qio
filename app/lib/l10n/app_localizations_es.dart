@@ -982,7 +982,7 @@ class AppLocalizationsEs extends AppLocalizations {
       'Permiso denegado. Activa las notificaciones en los ajustes del sistema.';
 
   @override
-  String get byOperatorTitle => 'Por atendente';
+  String get byOperatorTitle => 'Por agente';
 
   @override
   String get operatorFilterAll => 'Todas las filas';
@@ -994,7 +994,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get formerOperator => 'ex operador';
 
   @override
-  String get noOperatorData => 'Ninguna atención por atendente en el período';
+  String get noOperatorData => 'Ninguna atención por agente en el período';
 
   @override
   String historyTruncatedWarning(int limit) {
@@ -1021,7 +1021,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get csvPeriod => 'período';
 
   @override
-  String get csvScope => 'alcance por atendente';
+  String get csvScope => 'alcance por agente';
 
   @override
   String get csvGeneratedAt => 'generado el';
@@ -1072,5 +1072,8 @@ class AppLocalizationsEs extends AppLocalizations {
   String get csvRatingCount => 'cant. valoraciones';
 
   @override
-  String get csvAttendant => 'atendente';
+  String get csvAttendant => 'agente';
+
+  @override
+  String get exportMetricsError => 'No se pudieron exportar las métricas.';
 }

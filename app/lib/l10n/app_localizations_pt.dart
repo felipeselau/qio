@@ -1071,4 +1071,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get csvAttendant => 'atendente';
+
+  @override
+  String get exportMetricsError => 'Não foi possível exportar as métricas.';
 }

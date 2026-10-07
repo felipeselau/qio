@@ -333,5 +333,6 @@
   "csvAvgServiceMin": "avg. service (min)",
   "csvAvgRating": "avg. rating",
   "csvRatingCount": "rating count",
-  "csvAttendant": "attendant"
+  "csvAttendant": "attendant",
+  "exportMetricsError": "Couldn't export the metrics."
 }

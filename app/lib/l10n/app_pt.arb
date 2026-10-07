@@ -348,5 +348,6 @@
   "csvAvgServiceMin": "atendimento médio (min)",
   "csvAvgRating": "nota média",
   "csvRatingCount": "qtd notas",
-  "csvAttendant": "atendente"
+  "csvAttendant": "atendente",
+  "exportMetricsError": "Não foi possível exportar as métricas."
 }

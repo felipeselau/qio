@@ -2043,6 +2043,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'atendente'**
   String get csvAttendant;
+
+  /// No description provided for @exportMetricsError.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível exportar as métricas.'**
+  String get exportMetricsError;
 }
 
 class _AppLocalizationsDelegate

@@ -9,6 +9,7 @@ import '../l10n/app_localizations.dart';
 import '../models/history_entry.dart';
 import '../models/operator.dart';
 import '../models/queue_feedback.dart';
+import '../services/history_export.dart';
 import '../services/history_metrics.dart';
 import '../services/metrics_export.dart';
 import '../services/operator_metrics.dart';
@@ -35,12 +36,12 @@ class _MetricsScreenState extends State<MetricsScreen> {
   List<QueueHistoryInput> _data = const [];
   bool _exporting = false;
 
-  String get _baseName =>
+  String _baseName(DateTime now) =>
       'metricas-${switch (_period) {
         HistoryPeriod.today => 'hoje',
         HistoryPeriod.last7Days => '7dias',
         HistoryPeriod.all => 'tudo',
-      }}';
+      }}-${formatExportDateTime(now).substring(0, 10)}';
 
   MetricsReport _report(AppLocalizations l10n, List<QueueHistoryInput> data) =>
       buildMetricsReport(
@@ -66,11 +67,11 @@ class _MetricsScreenState extends State<MetricsScreen> {
     setState(() => _exporting = true);
     try {
       await action(report);
-    } on Exception {
+    } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context).exportError),
+          content: Text(AppLocalizations.of(context).exportMetricsError),
           backgroundColor: QioColors.error,
         ),
       );
@@ -84,7 +85,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
     final bytes = Uint8List.fromList(
       utf8.encode(buildMetricsCsv(l10n, report, generatedAt: DateTime.now())),
     );
-    final fileName = '$_baseName.csv';
+    final fileName = '${_baseName(DateTime.now())}.csv';
     await SharePlus.instance.share(
       ShareParams(
         files: [XFile.fromData(bytes, mimeType: 'text/csv', name: fileName)],
@@ -99,7 +100,10 @@ class _MetricsScreenState extends State<MetricsScreen> {
       report: report,
       generatedAt: DateTime.now(),
     );
-    await Printing.sharePdf(bytes: bytes, filename: '$_baseName.pdf');
+    await Printing.sharePdf(
+      bytes: bytes,
+      filename: '${_baseName(DateTime.now())}.pdf',
+    );
   });
 
   Future<List<QueueHistoryInput>> _load() async {

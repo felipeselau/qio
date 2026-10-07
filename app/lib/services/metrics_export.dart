@@ -298,10 +298,6 @@ Future<Uint8List> buildMetricsPdf({
             style: const pw.TextStyle(fontSize: 12),
           ),
           pw.Text(
-            '${l10n.csvScope}: ${_scopeLabel(l10n, report)}',
-            style: const pw.TextStyle(fontSize: 12),
-          ),
-          pw.Text(
             l10n.pdfGeneratedAt(formatExportDateTime(generatedAt)),
             style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
           ),
@@ -374,6 +370,11 @@ Future<Uint8List> buildMetricsPdf({
             ],
           ),
           _section(l10n.byOperatorTitle),
+          pw.Text(
+            '${l10n.csvScope}: ${_scopeLabel(l10n, report)}',
+            style: const pw.TextStyle(fontSize: 10),
+          ),
+          pw.SizedBox(height: 6),
           if (report.operators.isEmpty)
             pw.Text(l10n.noOperatorData)
           else

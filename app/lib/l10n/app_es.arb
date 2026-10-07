@@ -302,11 +302,11 @@
   "pushPromptNotNow": "Ahora no",
   "pushPromptEnable": "Activar",
   "pushDenied": "Permiso denegado. Activa las notificaciones en los ajustes del sistema.",
-  "byOperatorTitle": "Por atendente",
+  "byOperatorTitle": "Por agente",
   "operatorFilterAll": "Todas las filas",
   "ownerAttendant": "Dueño",
   "formerOperator": "ex operador",
-  "noOperatorData": "Ninguna atención por atendente en el período",
+  "noOperatorData": "Ninguna atención por agente en el período",
   "historyTruncatedWarning": "Mostrando solo los {limit} registros más recientes de una fila; las cifras pueden estar incompletas.",
   "@historyTruncatedWarning": {"placeholders": {"limit": {"type": "int"}}},
   "operatorCountsLine": "{served} atendidos · {noShow} no se presentaron",
@@ -316,7 +316,7 @@
   "operatorFilterLabel": "Filtrar por fila",
   "metricsPdfTitle": "Qio - Métricas de las filas",
   "csvPeriod": "período",
-  "csvScope": "alcance por atendente",
+  "csvScope": "alcance por agente",
   "csvGeneratedAt": "generado el",
   "csvMetric": "métrica",
   "csvValue": "valor",
@@ -333,5 +333,6 @@
   "csvAvgServiceMin": "atención promedio (min)",
   "csvAvgRating": "valoración promedio",
   "csvRatingCount": "cant. valoraciones",
-  "csvAttendant": "atendente"
+  "csvAttendant": "agente",
+  "exportMetricsError": "No se pudieron exportar las métricas."
 }
