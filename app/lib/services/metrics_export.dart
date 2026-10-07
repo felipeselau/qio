@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -35,6 +36,9 @@ class MetricsReport {
       skipsTotal: 0,
       skippedEntries: 0,
     ),
+    this.weekdays = const [],
+    this.heatmap = const [],
+    this.demandPeak,
   });
 
   final String? scopeLabel;
@@ -52,6 +56,9 @@ class MetricsReport {
   final int historyLimit;
   final WaitStats waitStats;
   final CallEffortStats callEffort;
+  final List<int> weekdays;
+  final List<List<int>> heatmap;
+  final DemandPeak? demandPeak;
 
   String operatorLabel(
     OperatorStats stats, {
@@ -80,6 +87,7 @@ MetricsReport buildMetricsReport({
   ];
   final all = [for (final p in perQueue) ...p.entries];
   final distribution = hourlyDistribution(all);
+  final heatmap = weekdayHourMatrix(all);
   final selected = data
       .where((d) => operatorQueueId == null || d.queue.id == operatorQueueId)
       .toList();
@@ -131,8 +139,26 @@ MetricsReport buildMetricsReport({
     scopeLabel: scopeLabel,
     waitStats: computeWaitStats(all),
     callEffort: computeCallEffort(all),
+    weekdays: weekdayDistribution(all),
+    heatmap: heatmap,
+    demandPeak: peakCell(heatmap),
   );
 }
+
+String weekdayLabel(String locale, int index) =>
+    DateFormat.E(locale).format(DateTime(2024, 1, 1 + index));
+
+String hourLabel(int h) => '${h.toString().padLeft(2, '0')}h';
+
+String demandPeakText(AppLocalizations l10n, String locale, DemandPeak peak) =>
+    l10n.demandPeakSummary(
+      weekdayLabel(locale, peak.weekday),
+      hourLabel(peak.hour),
+      hourLabel((peak.hour + 1) % 24),
+    );
+
+bool _hasDemand(MetricsReport report) =>
+    report.weekdays.length == 7 && report.heatmap.length == 7;
 
 String _num(double? v) => v == null ? '' : v.toStringAsFixed(1);
 
@@ -252,6 +278,23 @@ String buildMetricsCsv(
       [l10n.csvSkipsTotal, '${report.callEffort.skipsTotal}'],
       [l10n.csvSkippedEntries, '${report.callEffort.skippedEntries}'],
     ],
+    if (_hasDemand(report)) ...[
+      [
+        [l10n.weekdayDemandTitle],
+        [l10n.csvWeekday, l10n.csvArrivals],
+        for (var d = 0; d < 7; d++)
+          [weekdayLabel(l10n.localeName, d), '${report.weekdays[d]}'],
+      ],
+      [
+        [l10n.heatmapTitle],
+        [l10n.csvWeekday, for (var h = 0; h < 24; h++) '$h'],
+        for (var d = 0; d < 7; d++)
+          [
+            weekdayLabel(l10n.localeName, d),
+            for (var h = 0; h < 24; h++) '${report.heatmap[d][h]}',
+          ],
+      ],
+    ],
   ];
   final lines = <String>[];
   for (var i = 0; i < sections.length; i++) {
@@ -272,8 +315,6 @@ String _minutesLabel(AppLocalizations l10n, double? v) {
 String _ratingLabel(OperatorStats s) => s.feedback.average == null
     ? '-'
     : '${s.feedback.average!.toStringAsFixed(1)} (${s.feedback.count})';
-
-String _hourLabel(int h) => '${h.toString().padLeft(2, '0')}h';
 
 pw.Widget _section(String title) => pw.Padding(
   padding: const pw.EdgeInsets.only(top: 16, bottom: 6),
@@ -306,6 +347,80 @@ pw.Widget _metric(String label, String value) => pw.Column(
     ),
   ],
 );
+
+PdfColor _heatColor(int count, int max) {
+  if (count == 0 || max == 0) return PdfColors.grey200;
+  final level = (4 * count / max).ceil().clamp(1, 4);
+  final t = const [0.55, 0.7, 0.85, 1.0][level - 1];
+  double mix(double base) => 1 - (1 - base) * t;
+  return PdfColor(mix(0x25 / 255), mix(0x63 / 255), mix(0xEB / 255));
+}
+
+List<pw.Widget> _demandPdf(AppLocalizations l10n, MetricsReport report) {
+  final locale = l10n.localeName;
+  final peak = report.demandPeak;
+  var max = 0;
+  for (final row in report.heatmap) {
+    for (final c in row) {
+      if (c > max) max = c;
+    }
+  }
+  pw.Widget cell(String text, {PdfColor? color, bool bold = false}) =>
+      pw.Container(
+        height: 14,
+        color: color,
+        alignment: pw.Alignment.center,
+        child: pw.Text(
+          text,
+          style: pw.TextStyle(
+            fontSize: 7,
+            fontWeight: bold ? pw.FontWeight.bold : pw.FontWeight.normal,
+          ),
+        ),
+      );
+  return [
+    _section(l10n.weekdayDemandTitle),
+    _table(
+      [l10n.csvWeekday, l10n.csvArrivals],
+      [
+        for (var d = 0; d < 7; d++)
+          [weekdayLabel(locale, d), '${report.weekdays[d]}'],
+      ],
+    ),
+    _section(l10n.heatmapTitle),
+    if (peak != null)
+      pw.Text(
+        demandPeakText(l10n, locale, peak).replaceAll('\u2013', '-'),
+        style: const pw.TextStyle(fontSize: 10),
+      ),
+    pw.SizedBox(height: 6),
+    pw.Table(
+      columnWidths: {
+        0: const pw.FixedColumnWidth(34),
+        for (var h = 1; h <= 24; h++) h: const pw.FlexColumnWidth(),
+      },
+      children: [
+        pw.TableRow(
+          children: [
+            cell(''),
+            for (var h = 0; h < 24; h++) cell('$h', bold: true),
+          ],
+        ),
+        for (var d = 0; d < 7; d++)
+          pw.TableRow(
+            children: [
+              cell(weekdayLabel(locale, d), bold: true),
+              for (var h = 0; h < 24; h++)
+                cell(
+                  report.heatmap[d][h] == 0 ? '' : '${report.heatmap[d][h]}',
+                  color: _heatColor(report.heatmap[d][h], max),
+                ),
+            ],
+          ),
+      ],
+    ),
+  ];
+}
 
 Future<Uint8List> buildMetricsPdf({
   required AppLocalizations l10n,
@@ -376,7 +491,7 @@ Future<Uint8List> buildMetricsPdf({
           pw.Text(
             report.peaks.isEmpty
                 ? l10n.noPeakData
-                : l10n.peakHoursTop(report.peaks.map(_hourLabel).join(', ')),
+                : l10n.peakHoursTop(report.peaks.map(hourLabel).join(', ')),
             style: const pw.TextStyle(fontSize: 10),
           ),
           pw.SizedBox(height: 6),
@@ -385,7 +500,7 @@ Future<Uint8List> buildMetricsPdf({
             [
               for (var h = 0; h < report.distribution.length; h++)
                 if (report.distribution[h] > 0)
-                  [_hourLabel(h), '${report.distribution[h]}'],
+                  [hourLabel(h), '${report.distribution[h]}'],
             ],
           ),
           _section(l10n.mostActiveQueues),
@@ -487,6 +602,7 @@ Future<Uint8List> buildMetricsPdf({
             ),
           ],
         ],
+        if (_hasDemand(report)) ..._demandPdf(l10n, report),
       ],
     ),
   );

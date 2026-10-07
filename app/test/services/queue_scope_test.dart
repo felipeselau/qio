@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:qio_app/l10n/app_localizations.dart';
 import 'package:qio_app/models/history_entry.dart';
 import 'package:qio_app/models/queue.dart';
@@ -44,6 +45,8 @@ QueueGroup grp(String id) =>
     QueueGroup(id: id, name: 'G$id', createdAt: DateTime(2026));
 
 void main() {
+  setUpAll(initializeDateFormatting);
+
   final groups = [grp('g1'), grp('g2')];
   final data = [
     input(queue('a', groupId: 'g1'), [entry('1')]),

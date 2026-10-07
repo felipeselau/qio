@@ -144,3 +144,44 @@ List<QueueComparison> compareQueues(
   });
   return items;
 }
+
+List<int> weekdayDistribution(List<HistoryEntry> entries) {
+  final counts = List<int>.filled(7, 0);
+  for (final e in entries) {
+    counts[e.joinedAt.weekday - 1]++;
+  }
+  return counts;
+}
+
+List<List<int>> weekdayHourMatrix(List<HistoryEntry> entries) {
+  final matrix = [for (var d = 0; d < 7; d++) List<int>.filled(24, 0)];
+  for (final e in entries) {
+    matrix[e.joinedAt.weekday - 1][e.joinedAt.hour]++;
+  }
+  return matrix;
+}
+
+class DemandPeak {
+  const DemandPeak({
+    required this.weekday,
+    required this.hour,
+    required this.count,
+  });
+
+  final int weekday;
+  final int hour;
+  final int count;
+}
+
+DemandPeak? peakCell(List<List<int>> matrix) {
+  DemandPeak? best;
+  for (var d = 0; d < matrix.length; d++) {
+    for (var h = 0; h < matrix[d].length; h++) {
+      final c = matrix[d][h];
+      if (c > 0 && (best == null || c > best.count)) {
+        best = DemandPeak(weekday: d, hour: h, count: c);
+      }
+    }
+  }
+  return best;
+}
