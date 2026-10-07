@@ -25,7 +25,9 @@ import '../widgets/wait_effort_card.dart';
 import '../widgets/qio_responsive_body.dart';
 
 class MetricsScreen extends StatefulWidget {
-  const MetricsScreen({super.key});
+  const MetricsScreen({super.key, this.loader});
+
+  final Future<List<QueueHistoryInput>> Function()? loader;
 
   @override
   State<MetricsScreen> createState() => _MetricsScreenState();
@@ -109,6 +111,12 @@ class _MetricsScreenState extends State<MetricsScreen> {
   });
 
   Future<List<QueueHistoryInput>> _load() async {
+    final custom = widget.loader;
+    if (custom != null) {
+      final loaded = await custom();
+      if (mounted) setState(() => _data = loaded);
+      return loaded;
+    }
     final queues = await QueueService.instance.watchOwnerQueues().first;
     final result = await Future.wait([
       for (final q in queues)
