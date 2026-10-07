@@ -162,6 +162,17 @@ describe('Firestore rules', () => {
       await assertFails(updateDoc(doc(db(STRANGER), 'queues', QUEUE), { groupId: 'g1' }));
     });
 
+    it('create de fila com groupId válido passa e inválido é negado', async () => {
+      const base = { ownerId: OWNER, name: 'Nova', status: 'open' };
+      const q = (id) => doc(db(OWNER), 'queues', id);
+      await assertSucceeds(setDoc(q('n1'), { ...base, groupId: 'g1' }));
+      await assertSucceeds(setDoc(q('n2'), base));
+      await assertFails(setDoc(q('n3'), { ...base, groupId: 5 }));
+      await assertFails(setDoc(q('n4'), { ...base, groupId: '' }));
+      await assertFails(setDoc(q('n5'), { ...base, groupId: 'x'.repeat(41) }));
+      await assertFails(setDoc(doc(db(STRANGER), 'queues', 'n6'), { ...base, groupId: 'g1' }));
+    });
+
     it('groupId inválido na fila é negado', async () => {
       await assertFails(updateDoc(doc(db(OWNER), 'queues', QUEUE), { groupId: 5 }));
       await assertFails(updateDoc(doc(db(OWNER), 'queues', QUEUE), { groupId: 'x'.repeat(41) }));

@@ -1142,4 +1142,8 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get csvDataScope => 'alcance de las métricas';
+
+  @override
+  String get groupsUnavailable =>
+      'Grupos no disponibles. Actualiza la app o las reglas de Firestore.';
 }

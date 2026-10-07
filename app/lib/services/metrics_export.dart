@@ -4,28 +4,13 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../l10n/app_localizations.dart';
-import '../models/history_entry.dart';
-import '../models/operator.dart';
-import '../models/queue.dart';
-import '../models/queue_feedback.dart';
+import '../models/queue_history_input.dart';
 import 'history_export.dart';
 import 'history_metrics.dart';
 import 'operator_metrics.dart';
 import 'queue_analytics.dart';
 
-class QueueHistoryInput {
-  const QueueHistoryInput(
-    this.queue,
-    this.entries,
-    this.feedback,
-    this.operators,
-  );
-
-  final Queue queue;
-  final List<HistoryEntry> entries;
-  final List<QueueFeedback> feedback;
-  final List<QueueOperator> operators;
-}
+export '../models/queue_history_input.dart';
 
 class MetricsReport {
   const MetricsReport({

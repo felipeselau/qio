@@ -165,6 +165,51 @@ void main() {
     });
   });
 
+  group('compareQueues empty', () {
+    test('no queues yields no rows', () {
+      expect(
+        compareQueues(const [], period: HistoryPeriod.all, now: now),
+        isEmpty,
+      );
+    });
+  });
+
+  group('sanitizeScope', () {
+    test('keeps valid scopes', () {
+      expect(
+        sanitizeScope(const MetricsScope.queue('a'), data, groups),
+        const MetricsScope.queue('a'),
+      );
+      expect(
+        sanitizeScope(const MetricsScope.group('g1'), data, groups),
+        const MetricsScope.group('g1'),
+      );
+      expect(sanitizeScope(MetricsScope.all, data, groups), MetricsScope.all);
+    });
+
+    test('resets a queue that is no longer present', () {
+      expect(
+        sanitizeScope(const MetricsScope.queue('gone'), data, groups),
+        MetricsScope.all,
+      );
+      expect(
+        sanitizeScope(const MetricsScope.queue('a'), const [], groups),
+        MetricsScope.all,
+      );
+    });
+
+    test('resets a group that no longer exists', () {
+      expect(
+        sanitizeScope(const MetricsScope.group('gone'), data, groups),
+        MetricsScope.all,
+      );
+      expect(
+        sanitizeScope(const MetricsScope.group('g1'), data, const []),
+        MetricsScope.all,
+      );
+    });
+  });
+
   group('export scope label', () {
     final pt = lookupAppLocalizations(const Locale('pt'));
 

@@ -352,5 +352,6 @@
   "metricsScopeQueue": "Fila: {name}",
   "groupCompareTitle": "Comparación de filas del grupo",
   "groupCompareLine": "{total} atendimientos · espera {wait} · {rate}% no se presentaron · nota {rating}",
-  "csvDataScope": "alcance de las métricas"
+  "csvDataScope": "alcance de las métricas",
+  "groupsUnavailable": "Grupos no disponibles. Actualiza la app o las reglas de Firestore."
 }

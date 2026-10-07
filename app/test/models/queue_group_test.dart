@@ -66,6 +66,33 @@ void main() {
     });
   });
 
+  group('sortGroups empty', () {
+    test('returns an empty list', () {
+      expect(sortGroups(const []), isEmpty);
+    });
+  });
+
+  group('chunkList', () {
+    test('splits into batches of at most the limit, preserving order', () {
+      final items = List<int>.generate(1000, (i) => i);
+      final chunks = chunkList(items, groupBatchLimit);
+      expect(chunks.map((c) => c.length), [450, 450, 100]);
+      expect(chunks.expand((c) => c).toList(), items);
+    });
+
+    test('exact multiple and empty input', () {
+      expect(chunkList(List<int>.filled(900, 0), groupBatchLimit).length, 2);
+      expect(chunkList(<int>[], groupBatchLimit), isEmpty);
+      expect(chunkList([1, 2, 3], groupBatchLimit), [
+        [1, 2, 3],
+      ]);
+    });
+
+    test('limit stays below the Firestore batch cap', () {
+      expect(groupBatchLimit, lessThanOrEqualTo(450));
+    });
+  });
+
   group('throwGroupError', () {
     test('maps permission-denied to GroupPermissionDeniedException', () {
       expect(

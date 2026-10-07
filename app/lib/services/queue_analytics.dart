@@ -1,8 +1,8 @@
 import '../models/history_entry.dart';
 import '../models/queue_feedback.dart';
 import '../models/queue_group.dart';
+import '../models/queue_history_input.dart';
 import 'history_metrics.dart';
-import 'metrics_export.dart';
 
 List<int> hourlyDistribution(List<HistoryEntry> entries) {
   final counts = List<int>.filled(24, 0);
@@ -83,6 +83,21 @@ List<QueueHistoryInput> filterByScope(
         for (final d in data)
           if (d.queue.id == scope.id) d,
       ];
+  }
+}
+
+MetricsScope sanitizeScope(
+  MetricsScope scope,
+  List<QueueHistoryInput> data,
+  List<QueueGroup> groups,
+) {
+  switch (scope.kind) {
+    case MetricsScopeKind.all:
+      return scope;
+    case MetricsScopeKind.group:
+      return groups.any((g) => g.id == scope.id) ? scope : MetricsScope.all;
+    case MetricsScopeKind.queue:
+      return data.any((d) => d.queue.id == scope.id) ? scope : MetricsScope.all;
   }
 }
 

@@ -18,6 +18,13 @@ Never throwGroupError(Object error, StackTrace stack) {
   Error.throwWithStackTrace(error, stack);
 }
 
+const groupBatchLimit = 450;
+
+List<List<T>> chunkList<T>(List<T> items, int size) => [
+  for (var i = 0; i < items.length; i += size)
+    items.sublist(i, i + size > items.length ? items.length : i + size),
+];
+
 List<QueueGroup> sortGroups(Iterable<QueueGroup> groups) {
   final sorted = [...groups];
   sorted.sort((a, b) {
@@ -91,12 +98,14 @@ class GroupService {
           .where('ownerId', isEqualTo: _uid)
           .where('groupId', isEqualTo: groupId)
           .get();
-      final batch = _firestore.batch();
-      for (final q in queues.docs) {
-        batch.update(q.reference, {'groupId': FieldValue.delete()});
+      for (final chunk in chunkList(queues.docs, groupBatchLimit)) {
+        final batch = _firestore.batch();
+        for (final q in chunk) {
+          batch.update(q.reference, {'groupId': FieldValue.delete()});
+        }
+        await batch.commit();
       }
-      batch.delete(_groups.doc(groupId));
-      await batch.commit();
+      await _groups.doc(groupId).delete();
     } catch (e, s) {
       throwGroupError(e, s);
     }

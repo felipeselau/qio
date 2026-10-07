@@ -395,5 +395,6 @@
       "rating": {"type": "String"}
     }
   },
-  "csvDataScope": "escopo das métricas"
+  "csvDataScope": "escopo das métricas",
+  "groupsUnavailable": "Grupos indisponíveis. Atualize o app ou as regras do Firestore."
 }

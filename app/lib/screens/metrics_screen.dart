@@ -41,6 +41,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
   bool _exporting = false;
   MetricsScope _scope = MetricsScope.all;
   List<QueueGroup> _groups = const [];
+  bool _groupsUnavailable = false;
 
   String _baseName(DateTime now) =>
       'metricas-${switch (_period) {
@@ -173,17 +174,21 @@ class _MetricsScreenState extends State<MetricsScreen> {
         !result.any((d) => d.queue.id == _operatorQueueId)) {
       _operatorQueueId = null;
     }
-    final groups = await GroupService.instance.fetchGroups().catchError(
-      (_) => <QueueGroup>[],
-    );
-    if (_scope.kind == MetricsScopeKind.group &&
-        !groups.any((g) => g.id == _scope.id)) {
-      _scope = MetricsScope.all;
+    var groups = const <QueueGroup>[];
+    var groupsUnavailable = false;
+    try {
+      groups = await GroupService.instance.fetchGroups();
+    } on GroupPermissionDeniedException {
+      groupsUnavailable = true;
+    } on Exception {
+      groups = const [];
     }
+    _scope = sanitizeScope(_scope, result, groups);
     if (mounted) {
       setState(() {
         _data = result;
         _groups = groups;
+        _groupsUnavailable = groupsUnavailable;
       });
     }
     return result;
@@ -267,6 +272,8 @@ class _MetricsScreenState extends State<MetricsScreen> {
         ),
         const SizedBox(height: 8),
         _buildScopeSelector(l10n, data),
+        if (_groupsUnavailable)
+          Text(l10n.groupsUnavailable, style: QioTextStyles.caption),
         const SizedBox(height: 16),
         if (report.isEmpty)
           Padding(

@@ -2157,6 +2157,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'escopo das métricas'**
   String get csvDataScope;
+
+  /// No description provided for @groupsUnavailable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Grupos indisponíveis. Atualize o app ou as regras do Firestore.'**
+  String get groupsUnavailable;
 }
 
 class _AppLocalizationsDelegate
