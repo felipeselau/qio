@@ -1074,4 +1074,74 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get exportMetricsError => 'Não foi possível exportar as métricas.';
+
+  @override
+  String get waitDistributionTitle => 'Espera e chamadas';
+
+  @override
+  String get medianWait => 'Mediana';
+
+  @override
+  String get p90Wait => 'P90';
+
+  @override
+  String get waitBucketUnder5 => 'Menos de 5 min';
+
+  @override
+  String get waitBucket5to15 => '5–15 min';
+
+  @override
+  String get waitBucket15to30 => '15–30 min';
+
+  @override
+  String get waitBucketOver30 => 'Mais de 30 min';
+
+  @override
+  String get recallsTitle => 'Re-chamadas';
+
+  @override
+  String get skipsTitle => 'Movidos ao fim';
+
+  @override
+  String recallsStat(int entries, int total, int pct, int recalls) {
+    return '$entries entradas de $total ($pct%) · $recalls re-chamadas';
+  }
+
+  @override
+  String skipsStat(int entries, int total, int skips) {
+    return '$entries entradas de $total · $skips movidos ao fim';
+  }
+
+  @override
+  String get csvWaitSamples => 'amostras de espera';
+
+  @override
+  String get csvMedianWaitMin => 'mediana (min)';
+
+  @override
+  String get csvP90WaitMin => 'P90 (min)';
+
+  @override
+  String get csvWaitRange => 'faixa de espera';
+
+  @override
+  String get csvCalledEntries => 'entradas chamadas';
+
+  @override
+  String get csvRecallsTotal => 're-chamadas';
+
+  @override
+  String get csvRecalledEntries => 'entradas com re-chamada';
+
+  @override
+  String get csvRecallRatePct => 'entradas com re-chamada sobre chamadas (%)';
+
+  @override
+  String get csvSkipsTotal => 'movidos ao fim';
+
+  @override
+  String get csvSkippedEntries => 'entradas movidas ao fim';
+
+  @override
+  String get p90Insufficient => 'amostras insuficientes';
 }

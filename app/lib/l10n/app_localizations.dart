@@ -2049,6 +2049,138 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Não foi possível exportar as métricas.'**
   String get exportMetricsError;
+
+  /// No description provided for @waitDistributionTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Espera e chamadas'**
+  String get waitDistributionTitle;
+
+  /// No description provided for @medianWait.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mediana'**
+  String get medianWait;
+
+  /// No description provided for @p90Wait.
+  ///
+  /// In pt, this message translates to:
+  /// **'P90'**
+  String get p90Wait;
+
+  /// No description provided for @waitBucketUnder5.
+  ///
+  /// In pt, this message translates to:
+  /// **'Menos de 5 min'**
+  String get waitBucketUnder5;
+
+  /// No description provided for @waitBucket5to15.
+  ///
+  /// In pt, this message translates to:
+  /// **'5–15 min'**
+  String get waitBucket5to15;
+
+  /// No description provided for @waitBucket15to30.
+  ///
+  /// In pt, this message translates to:
+  /// **'15–30 min'**
+  String get waitBucket15to30;
+
+  /// No description provided for @waitBucketOver30.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mais de 30 min'**
+  String get waitBucketOver30;
+
+  /// No description provided for @recallsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Re-chamadas'**
+  String get recallsTitle;
+
+  /// No description provided for @skipsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Movidos ao fim'**
+  String get skipsTitle;
+
+  /// No description provided for @recallsStat.
+  ///
+  /// In pt, this message translates to:
+  /// **'{entries} entradas de {total} ({pct}%) · {recalls} re-chamadas'**
+  String recallsStat(int entries, int total, int pct, int recalls);
+
+  /// No description provided for @skipsStat.
+  ///
+  /// In pt, this message translates to:
+  /// **'{entries} entradas de {total} · {skips} movidos ao fim'**
+  String skipsStat(int entries, int total, int skips);
+
+  /// No description provided for @csvWaitSamples.
+  ///
+  /// In pt, this message translates to:
+  /// **'amostras de espera'**
+  String get csvWaitSamples;
+
+  /// No description provided for @csvMedianWaitMin.
+  ///
+  /// In pt, this message translates to:
+  /// **'mediana (min)'**
+  String get csvMedianWaitMin;
+
+  /// No description provided for @csvP90WaitMin.
+  ///
+  /// In pt, this message translates to:
+  /// **'P90 (min)'**
+  String get csvP90WaitMin;
+
+  /// No description provided for @csvWaitRange.
+  ///
+  /// In pt, this message translates to:
+  /// **'faixa de espera'**
+  String get csvWaitRange;
+
+  /// No description provided for @csvCalledEntries.
+  ///
+  /// In pt, this message translates to:
+  /// **'entradas chamadas'**
+  String get csvCalledEntries;
+
+  /// No description provided for @csvRecallsTotal.
+  ///
+  /// In pt, this message translates to:
+  /// **'re-chamadas'**
+  String get csvRecallsTotal;
+
+  /// No description provided for @csvRecalledEntries.
+  ///
+  /// In pt, this message translates to:
+  /// **'entradas com re-chamada'**
+  String get csvRecalledEntries;
+
+  /// No description provided for @csvRecallRatePct.
+  ///
+  /// In pt, this message translates to:
+  /// **'entradas com re-chamada sobre chamadas (%)'**
+  String get csvRecallRatePct;
+
+  /// No description provided for @csvSkipsTotal.
+  ///
+  /// In pt, this message translates to:
+  /// **'movidos ao fim'**
+  String get csvSkipsTotal;
+
+  /// No description provided for @csvSkippedEntries.
+  ///
+  /// In pt, this message translates to:
+  /// **'entradas movidas ao fim'**
+  String get csvSkippedEntries;
+
+  /// No description provided for @p90Insufficient.
+  ///
+  /// In pt, this message translates to:
+  /// **'amostras insuficientes'**
+  String get p90Insufficient;
 }
 
 class _AppLocalizationsDelegate
