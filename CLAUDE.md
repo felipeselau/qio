@@ -230,6 +230,47 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   release: versões desalinhadas de `firebase_core`/`firebase_auth` quebram a
   compilação Android.
 
+## Horário de funcionamento
+
+- `queues/{id}.schedule = {enabled, timezone, windows:[{days:[1..7 seg=1], open, close}]}`
+  (Firestore, só o dono escreve). `applyQueueSchedules` (a cada 5 min,
+  `functions/src/schedule.js`) aplica **apenas na virada** do horário
+  (`scheduleLastDesired`): ao abrir põe `open`, ao sair da janela põe `closed` e
+  grava `meta/opensAt` (ms). Mudança manual vale até a próxima virada. Editar a
+  agenda apaga `scheduleLastDesired` e a function reaplica na rodada seguinte.
+- Janela que passa da meia-noite é suportada (`close <= open`). O app usa fixo
+  `America/Sao_Paulo`. Requer Cloud Scheduler (Blaze); deploy:
+  `--only functions:applyQueueSchedules`.
+
+## Identidade da fila (cor e logo)
+
+- `queues/{id}.brandColor` (uma das 8 cores de `brand_palette.dart`) e `logoUrl`
+  espelhados em `meta/` (RTDB valida `#RRGGBB` e `logoUrl` só de
+  `https://firebasestorage.googleapis.com/`). O web (`safeBrandColor`/
+  `safeLogoUrl`) ignora qualquer outro valor, aplica `--brand` e mostra o logo,
+  com a inicial colorida como fallback.
+- Upload: `image_picker` (512 px, JPEG q85) → `queue-logos/{queueId}/logo.jpg`.
+  `storage.rules`: leitura pública, escrita só do dono (lê `ownerId` no
+  Firestore), < 300 KB, `image/png|jpeg|webp`, nome `logo.(png|jpg|webp)`.
+  O bucket `qio-app.firebasestorage.app` já existe e as rules estão publicadas;
+  rules testadas no emulator de Storage.
+
+## Push (dono e cliente)
+
+- **Dono:** o app registra o token em `owners/{uid}/devices/{token}`
+  (`PushService`, `{token, platform, lang, updatedAt}`; rules só do próprio uid)
+  depois do opt-in; `owners/{uid}.notifyNewEntries` (padrão ligado) desliga. Sair
+  da conta apaga o token. Só mobile. A function `onEntryJoined` avisa dono +
+  `operatorUids`, agrupa por idioma, usa `collapseKey/tag = queueId` e apaga
+  tokens inválidos (`functions/src/push.js`). Canal Android `qio_new_entries`
+  criado no `MainActivity`; permissão `POST_NOTIFICATIONS`; o toque abre o painel.
+- **Cliente (web):** o botão "Ativar aviso" na tela da senha pede a permissão e
+  grava `fcmToken` na entry; `joinQueue` grava `lang`; `onEntryCalled` e
+  `onQueueAdvanced` ("Você é o próximo", uma vez por `nextNotifiedAt`) enviam em
+  pt/en/es (`functions/src/webpush.js`). Precisa de `VITE_VAPID_KEY` no build
+  (variável do GitHub Actions + `web/.env.local`). iOS: só com a PWA instalada.
+  Detalhes em `docs/FCM.md`.
+
 ## Deep links
 
 - Android App Links para `https://qio.web.app/q/*` (`AndroidManifest.xml`,
