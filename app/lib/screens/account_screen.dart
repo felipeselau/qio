@@ -19,14 +19,24 @@ import '../widgets/qio_skeleton.dart';
 import '../widgets/qio_responsive_body.dart';
 
 class AccountScreen extends StatefulWidget {
-  const AccountScreen({super.key});
+  const AccountScreen({
+    super.key,
+    this.auth,
+    this.loadOwner,
+    this.loadQueueCount,
+  });
+
+  final AuthService? auth;
+  final Future<Map<String, dynamic>?> Function(String uid)? loadOwner;
+  final Future<int?> Function(String uid)? loadQueueCount;
 
   @override
   State<AccountScreen> createState() => _AccountScreenState();
 }
 
 class _AccountScreenState extends State<AccountScreen> {
-  final _user = AuthService.instance.currentUser;
+  late final AuthService _auth = widget.auth ?? AuthService.instance;
+  late final _user = _auth.currentUser;
   late final Future<Map<String, dynamic>?> _ownerFuture = _loadOwner();
   late final Future<int?> _countFuture = _loadCount();
   bool _signingOut = false;
@@ -35,6 +45,8 @@ class _AccountScreenState extends State<AccountScreen> {
     final uid = _user?.uid;
     if (uid == null) return null;
     try {
+      final custom = widget.loadOwner;
+      if (custom != null) return await custom(uid);
       final snap = await FirebaseFirestore.instance
           .collection('owners')
           .doc(uid)
@@ -49,6 +61,8 @@ class _AccountScreenState extends State<AccountScreen> {
     final uid = _user?.uid;
     if (uid == null) return null;
     try {
+      final custom = widget.loadQueueCount;
+      if (custom != null) return await custom(uid);
       final agg = await FirebaseFirestore.instance
           .collection('queues')
           .where('ownerId', isEqualTo: uid)
@@ -63,7 +77,7 @@ class _AccountScreenState extends State<AccountScreen> {
   Future<void> _signOut() async {
     setState(() => _signingOut = true);
     try {
-      await AuthService.instance.signOut();
+      await _auth.signOut();
       if (!mounted) return;
       Navigator.of(context).popUntil((route) => route.isFirst);
     } catch (_) {
