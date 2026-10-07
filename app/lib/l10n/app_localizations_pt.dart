@@ -1286,4 +1286,25 @@ class AppLocalizationsPt extends AppLocalizations {
   String trendSummary(String avg, String peakDay) {
     return 'Média de $avg por dia, pico em $peakDay';
   }
+
+  @override
+  String get csvDate => 'data';
+
+  @override
+  String get csvCompareTitle => 'Comparativo com o período anterior';
+
+  @override
+  String get csvCurrent => 'atual';
+
+  @override
+  String get csvPrevious => 'anterior';
+
+  @override
+  String get csvDeltaPct => 'variação (%)';
+
+  @override
+  String get csvDeltaPoints => 'variação (p.p.)';
+
+  @override
+  String get pdfVsPrevious => 'vs. anterior';
 }

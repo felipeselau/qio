@@ -2409,6 +2409,48 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Média de {avg} por dia, pico em {peakDay}'**
   String trendSummary(String avg, String peakDay);
+
+  /// No description provided for @csvDate.
+  ///
+  /// In pt, this message translates to:
+  /// **'data'**
+  String get csvDate;
+
+  /// No description provided for @csvCompareTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Comparativo com o período anterior'**
+  String get csvCompareTitle;
+
+  /// No description provided for @csvCurrent.
+  ///
+  /// In pt, this message translates to:
+  /// **'atual'**
+  String get csvCurrent;
+
+  /// No description provided for @csvPrevious.
+  ///
+  /// In pt, this message translates to:
+  /// **'anterior'**
+  String get csvPrevious;
+
+  /// No description provided for @csvDeltaPct.
+  ///
+  /// In pt, this message translates to:
+  /// **'variação (%)'**
+  String get csvDeltaPct;
+
+  /// No description provided for @csvDeltaPoints.
+  ///
+  /// In pt, this message translates to:
+  /// **'variação (p.p.)'**
+  String get csvDeltaPoints;
+
+  /// No description provided for @pdfVsPrevious.
+  ///
+  /// In pt, this message translates to:
+  /// **'vs. anterior'**
+  String get pdfVsPrevious;
 }
 
 class _AppLocalizationsDelegate

@@ -406,5 +406,12 @@
   "trendSeriesWait": "Average wait",
   "trendSeriesNoShow": "No-show",
   "trendSummary": "Average of {avg} per day, peak on {peakDay}",
-  "@trendSummary": {"placeholders": {"avg": {"type": "String"}, "peakDay": {"type": "String"}}}
+  "@trendSummary": {"placeholders": {"avg": {"type": "String"}, "peakDay": {"type": "String"}}},
+  "csvDate": "date",
+  "csvCompareTitle": "Comparison with the previous period",
+  "csvCurrent": "current",
+  "csvPrevious": "previous",
+  "csvDeltaPct": "change (%)",
+  "csvDeltaPoints": "change (pp)",
+  "pdfVsPrevious": "vs. previous"
 }
