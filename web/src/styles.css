@@ -181,7 +181,7 @@ a {
 }
 
 .btn-primary {
-  background: var(--primary);
+  background: var(--brand, var(--primary));
   color: var(--white);
 }
 
@@ -448,4 +448,23 @@ a {
 .notice-closed {
   background: rgba(239, 68, 68, 0.12);
   border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.queue-logo {
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 8px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.queue-logo-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand, var(--primary));
+  color: #fff;
+  font-size: 28px;
+  font-weight: 700;
 }

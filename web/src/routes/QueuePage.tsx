@@ -27,6 +27,32 @@ function formatOpening(ms: number, language: string): string {
   );
 }
 
+function QueueLogo({ meta }: { meta: QueueMeta | null }) {
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    setFailed(false);
+  }, [meta?.logoUrl]);
+  if (!meta) return null;
+  const initial = meta.name.trim().charAt(0).toUpperCase() || 'Q';
+  if (meta.logoUrl && !failed) {
+    return (
+      <img
+        className="queue-logo"
+        src={meta.logoUrl}
+        alt={meta.name}
+        referrerPolicy="no-referrer"
+        onError={() => setFailed(true)}
+      />
+    );
+  }
+  if (!meta.brandColor) return null;
+  return (
+    <div className="queue-logo queue-logo-fallback" aria-hidden="true">
+      {initial}
+    </div>
+  );
+}
+
 function StatusNotice({ meta }: { meta: QueueMeta | null }) {
   const { t, i18n } = useTranslation();
   if (!meta || meta.status === 'open') return null;
@@ -97,6 +123,16 @@ export default function QueuePage() {
     exists,
     failed,
   } = useQueue(queueId, entryId, authed);
+
+  const brandColor = meta?.brandColor ?? null;
+  useEffect(() => {
+    const root = document.documentElement;
+    if (brandColor) root.style.setProperty('--brand', brandColor);
+    else root.style.removeProperty('--brand');
+    return () => {
+      root.style.removeProperty('--brand');
+    };
+  }, [brandColor]);
 
   const [authFailed, setAuthFailed] = useState(false);
   useEffect(() => {
@@ -423,6 +459,7 @@ export default function QueuePage() {
       <div className="page fade-in" key="ticket">
         <div className="page-scroll">
           <div className="card" style={{ textAlign: 'center', padding: 24 }}>
+            <QueueLogo meta={meta} />
             <p
               style={{
                 fontSize: 12,
@@ -588,6 +625,7 @@ export default function QueuePage() {
     <div className="page fade-in" key="join">
       <div className="page-scroll">
         <div style={{ textAlign: 'center', marginBottom: 8 }}>
+          <QueueLogo meta={meta} />
           <h1 style={{ fontSize: 24, fontWeight: 700 }}>{meta?.name}</h1>
           <span
             className={`badge badge-${meta?.status ?? 'open'}`}

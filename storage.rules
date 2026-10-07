@@ -1,0 +1,15 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /queue-logos/{queueId}/{file} {
+      allow read: if true;
+      allow create, update: if request.auth != null
+        && firestore.get(/databases/(default)/documents/queues/$(queueId)).data.ownerId == request.auth.uid
+        && request.resource.size < 300 * 1024
+        && request.resource.contentType.matches('image/(png|jpeg|webp)')
+        && file.matches('logo\\.(png|jpg|webp)');
+      allow delete: if request.auth != null
+        && firestore.get(/databases/(default)/documents/queues/$(queueId)).data.ownerId == request.auth.uid;
+    }
+  }
+}

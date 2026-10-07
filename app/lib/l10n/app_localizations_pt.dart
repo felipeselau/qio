@@ -935,4 +935,23 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get linkForCustomers =>
       'Este link é para clientes. Abrindo no navegador.';
+
+  @override
+  String get brandTitle => 'Identidade da fila';
+
+  @override
+  String get brandSubtitle => 'Cor e logo na página do cliente';
+
+  @override
+  String get brandColorLabel => 'Cor';
+
+  @override
+  String get brandLogoLabel => 'Logo';
+
+  @override
+  String get brandChooseImage => 'Escolher imagem';
+
+  @override
+  String get brandError =>
+      'Não foi possível salvar. Verifique a conexão e tente de novo.';
 }

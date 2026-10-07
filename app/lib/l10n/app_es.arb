@@ -288,5 +288,11 @@
   "scheduleInvalidDays": "Elige al menos un día",
   "scheduleInvalidTime": "La apertura y el cierre deben ser distintos",
   "scheduleNote": "Hora de Brasilia. Si abres, pausas o cierras a mano, se mantiene hasta la próxima apertura o cierre del horario.",
-  "linkForCustomers": "Este enlace es para clientes. Abriendo en el navegador."
+  "linkForCustomers": "Este enlace es para clientes. Abriendo en el navegador.",
+  "brandTitle": "Identidad de la fila",
+  "brandSubtitle": "Color y logo en la página del cliente",
+  "brandColorLabel": "Color",
+  "brandLogoLabel": "Logo",
+  "brandChooseImage": "Elegir imagen",
+  "brandError": "No se pudo guardar. Revisa la conexión e inténtalo de nuevo."
 }

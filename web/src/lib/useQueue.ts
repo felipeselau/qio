@@ -14,6 +14,8 @@ export type QueueMeta = {
   statusMessage: string | null;
   resumeAt: number | null;
   opensAt: number | null;
+  brandColor: string | null;
+  logoUrl: string | null;
 };
 
 type PublicTicket = { ticket: number; status: string; order?: number };
@@ -29,6 +31,28 @@ export function positionInQueue(
     return e.order < myOrder || (e.order === myOrder && e.ticket < mine.ticket);
   }).length;
   return ahead + 1;
+}
+
+const BRAND_COLORS = [
+  '#2563EB',
+  '#0F766E',
+  '#047857',
+  '#7C3AED',
+  '#BE185D',
+  '#B91C1C',
+  '#C2410C',
+  '#334155',
+];
+
+export function safeBrandColor(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const hex = value.toUpperCase();
+  return BRAND_COLORS.includes(hex) ? hex : null;
+}
+
+export function safeLogoUrl(value: unknown): string | null {
+  if (typeof value !== 'string' || value.length > 600) return null;
+  return value.startsWith('https://firebasestorage.googleapis.com/') ? value : null;
 }
 
 export function isQueueFull(maxWaiting: number, waitingCount: number): boolean {
@@ -100,6 +124,8 @@ export function useQueue(
             statusMessage: val.statusMessage ?? null,
             resumeAt: typeof val.resumeAt === 'number' ? val.resumeAt : null,
             opensAt: typeof val.opensAt === 'number' ? val.opensAt : null,
+            brandColor: safeBrandColor(val.brandColor),
+            logoUrl: safeLogoUrl(val.logoUrl),
           });
         }
         setFailed(false);

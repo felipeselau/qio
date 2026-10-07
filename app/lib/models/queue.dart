@@ -55,6 +55,8 @@ class Queue {
     this.statusMessage,
     this.resumeAt,
     this.schedule,
+    this.brandColor,
+    this.logoUrl,
   });
 
   final String id;
@@ -70,6 +72,8 @@ class Queue {
   final String? statusMessage;
   final DateTime? resumeAt;
   final QueueSchedule? schedule;
+  final String? brandColor;
+  final String? logoUrl;
 
   bool get hasLimit => maxWaiting > 0;
 
@@ -92,6 +96,8 @@ class Queue {
           ? (data['resumeAt'] as Timestamp).toDate()
           : null,
       schedule: QueueSchedule.fromMap(data['schedule']),
+      brandColor: data['brandColor'] as String?,
+      logoUrl: data['logoUrl'] as String?,
     );
   }
 

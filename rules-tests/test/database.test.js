@@ -61,6 +61,25 @@ describe('RTDB rules', () => {
       }
     });
 
+    it('dono grava cor e logo válidos; rejeita valores fora do padrão', async () => {
+      await assertSucceeds(set(ref(rtdb(OWNER), path('meta/brandColor')), '#2563EB'));
+      await assertSucceeds(
+        set(ref(rtdb(OWNER), path('meta/logoUrl')), 'https://firebasestorage.googleapis.com/v0/b/x/o/queue-logos%2Fq1%2Flogo.png?alt=media'),
+      );
+      for (const bad of ['azul', '#12', '#GGGGGG', 'rgb(1,2,3)']) {
+        await assertFails(set(ref(rtdb(OWNER), path('meta/brandColor')), bad));
+      }
+      for (const bad of ['http://x.test/a.png', 'https://evil.example/pixel.png', 'javascript:alert(1)']) {
+        await assertFails(set(ref(rtdb(OWNER), path('meta/logoUrl')), bad));
+      }
+    });
+
+    it('operador, cliente e estranho não gravam cor nem logo', async () => {
+      for (const uid of [OPERATOR, 'client1', STRANGER]) {
+        await assertFails(set(ref(rtdb(uid), path('meta/brandColor')), '#2563EB'));
+      }
+    });
+
     it('rejeita limite negativo, fracionário ou acima de 1000', async () => {
       for (const v of [-1, 2.5, 1001, 'x']) {
         await assertFails(set(ref(rtdb(OWNER), path('meta/maxWaiting')), v));
