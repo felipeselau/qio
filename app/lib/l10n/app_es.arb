@@ -241,6 +241,8 @@
   "loadErrorBody": "No pudimos cargar tus datos. Revisa la conexión e inténtalo de nuevo.",
   "hapticsTitle": "Vibración",
   "hapticsSubtitle": "Vibrar al llamar, finalizar y confirmar acciones",
+  "analyticsTitle": "Ayudar a mejorar Qio",
+  "analyticsSubtitle": "Envía estadísticas anónimas de uso (sin nombres, teléfonos ni datos de clientes). Puedes desactivarlo cuando quieras.",
   "nobodyInQueueHint": "Cuando alguien entre por el código QR, aparecerá aquí.",
   "emptyHistoryHint": "Las atenciones finalizadas aparecen aquí.",
   "emptyMetricsHint": "Elige otro período o espera las primeras atenciones.",

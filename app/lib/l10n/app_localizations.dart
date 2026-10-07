@@ -1534,6 +1534,18 @@ abstract class AppLocalizations {
   /// **'Vibrar ao chamar, finalizar e confirmar ações'**
   String get hapticsSubtitle;
 
+  /// No description provided for @analyticsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ajudar a melhorar o Qio'**
+  String get analyticsTitle;
+
+  /// No description provided for @analyticsSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Envia estatísticas anônimas de uso (sem nomes, telefones ou dados de clientes). Você pode desativar quando quiser.'**
+  String get analyticsSubtitle;
+
   /// No description provided for @nobodyInQueueHint.
   ///
   /// In pt, this message translates to:

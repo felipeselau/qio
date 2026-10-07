@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../services/account_format.dart';
+import '../services/analytics_service.dart';
 import '../services/auth_service.dart';
 import '../services/haptics.dart';
 import '../services/push_service.dart';
@@ -187,7 +188,12 @@ class _AccountScreenState extends State<AccountScreen> {
         const _ThemeCard(),
         const SizedBox(height: 12),
         const _LanguageCard(),
-        if (!kIsWeb) ...[const SizedBox(height: 12), const _HapticsCard()],
+        if (!kIsWeb) ...[
+          const SizedBox(height: 12),
+          const _HapticsCard(),
+          const SizedBox(height: 12),
+          const _AnalyticsCard(),
+        ],
         const SizedBox(height: 24),
         QioButton(
           label: l10n.signOut,
@@ -321,6 +327,29 @@ class _HapticsCard extends StatelessWidget {
           subtitle: Text(l10n.hapticsSubtitle, style: QioTextStyles.caption),
           value: Haptics.instance.enabled,
           onChanged: Haptics.instance.setEnabled,
+        ),
+      ),
+    );
+  }
+}
+
+class _AnalyticsCard extends StatelessWidget {
+  const _AnalyticsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final controller = AnalyticsController.instance;
+    return QioCard(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: ListenableBuilder(
+        listenable: controller,
+        builder: (context, _) => SwitchListTile(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+          title: Text(l10n.analyticsTitle, style: QioTextStyles.bodyMedium),
+          subtitle: Text(l10n.analyticsSubtitle, style: QioTextStyles.caption),
+          value: !controller.optedOut,
+          onChanged: (v) => controller.setOptOut(!v),
         ),
       ),
     );
