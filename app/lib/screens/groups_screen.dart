@@ -11,6 +11,7 @@ import '../widgets/qio_card.dart';
 import '../widgets/qio_empty_state.dart';
 import '../widgets/qio_responsive_body.dart';
 import '../widgets/qio_skeleton.dart';
+import '../theme/qio_palette.dart';
 
 class GroupsScreen extends StatelessWidget {
   const GroupsScreen({super.key});
@@ -75,14 +76,14 @@ class GroupsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: QioColors.gray100,
+      backgroundColor: context.qio.gray100,
       appBar: AppBar(
-        backgroundColor: QioColors.surface,
+        backgroundColor: context.qio.surface,
         title: Text(
           l10n.groups,
-          style: QioTextStyles.heading2.copyWith(
+          style: context.qioText.heading2.copyWith(
             fontWeight: FontWeight.w700,
-            color: QioColors.textPrimary,
+            color: context.qio.textPrimary,
           ),
         ),
       ),
@@ -126,13 +127,13 @@ class GroupsScreen extends StatelessWidget {
                         children: [
                           Icon(
                             Icons.folder_outlined,
-                            color: QioColors.primaryText,
+                            color: context.qio.primaryText,
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
                               g.name,
-                              style: QioTextStyles.bodyMedium,
+                              style: context.qioText.bodyMedium,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
