@@ -16,6 +16,8 @@ import '../theme/qio_colors.dart';
 import '../widgets/queue_panel/queue_action_bar.dart';
 import '../widgets/queue_panel/panel_notices.dart';
 import '../widgets/queue_panel/queue_panel_title.dart';
+import '../widgets/queue_panel/queue_settings_actions.dart';
+import '../widgets/queue_panel/queue_settings_sections.dart';
 import '../widgets/queue_panel/queue_status_actions.dart';
 import '../widgets/queue_panel/status_message_dialog.dart';
 import '../widgets/queue_panel/delete_queue_dialog.dart';
@@ -176,6 +178,16 @@ class _QueuePanelScreenState extends State<QueuePanelScreen>
           ),
           centerTitle: true,
           actions: [
+            if (MediaQuery.sizeOf(context).width < kPanelWideBreakpoint)
+              QueueSettingsActions(
+                queueId: widget.queueId,
+                queueName: widget.queueName,
+                isOwner: widget.isOwner,
+                showQr: MediaQuery.sizeOf(context).width >= 360,
+                qrKey: _qrKey,
+                queues: _queues,
+                groups: widget.groups,
+              ),
             if (widget.isOwner)
               QueueStatusActions(
                 queueId: widget.queueId,
