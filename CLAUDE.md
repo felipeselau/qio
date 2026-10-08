@@ -45,6 +45,11 @@ os emulators `functions` e `auth` (`join-callable.test.js` chama a callable
 `joinQueue`), então rode `npm ci` em `functions/` antes. Roda com
 `--test-concurrency=1` (arquivos compartilham o mesmo namespace do RTDB). A porta
 5001 do emulator de functions precisa estar livre.
+`npm test` roda em duas passadas: `test:rules` (firestore+database+storage, sem
+functions) e `test:callable` (com functions, só `join-callable.test.js`). Os
+triggers (`syncPublicTicket` remove `entries/{id}` após `left`) reagiam tarde ao
+seed do teste seguinte e apagavam a entry (flake em `database.test.js`); não
+volte a subir functions junto das rules.
 
 Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
 `~/.claude/CLAUDE.md`). Não há testes em `web/`.
