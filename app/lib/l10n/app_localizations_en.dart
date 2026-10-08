@@ -1538,4 +1538,22 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tourHomeAccountBody =>
       'Find your account here, plus the option to join as an operator with an invite code.';
+
+  @override
+  String get quickQr => 'QR code';
+
+  @override
+  String quickPauseLabel(String name) {
+    return 'Pause queue $name';
+  }
+
+  @override
+  String quickReopenLabel(String name) {
+    return 'Reopen queue $name';
+  }
+
+  @override
+  String quickQrLabel(String name) {
+    return 'Show QR code for queue $name';
+  }
 }

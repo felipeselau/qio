@@ -1539,4 +1539,22 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get tourHomeAccountBody =>
       'Aqui ficam sua conta e a opção de entrar como operador com um código de convite.';
+
+  @override
+  String get quickQr => 'QR code';
+
+  @override
+  String quickPauseLabel(String name) {
+    return 'Pausar fila $name';
+  }
+
+  @override
+  String quickReopenLabel(String name) {
+    return 'Reabrir fila $name';
+  }
+
+  @override
+  String quickQrLabel(String name) {
+    return 'Mostrar QR code da fila $name';
+  }
 }

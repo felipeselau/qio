@@ -6,6 +6,7 @@ import 'package:qio_app/models/operator.dart';
 import 'package:qio_app/models/queue.dart';
 import 'package:qio_app/screens/home_screen.dart';
 import 'package:qio_app/screens/join_operator_screen.dart';
+import 'package:qio_app/screens/qr_poster_screen.dart';
 import 'package:qio_app/services/home_prompts.dart';
 
 import '../helpers/fake_auth.dart';
@@ -213,6 +214,105 @@ void main() {
     await tester.tap(find.text('Entrar como operador'));
     await tick(tester);
     expect(find.byType(JoinOperatorScreen), findsOneWidget);
+  });
+
+  group('quick actions', () {
+    FakeQueueService svc({QueueStatus status = QueueStatus.open}) =>
+        FakeQueueService(
+          ownerQueues: [fakeQueue('a', name: 'Padaria', status: status)],
+        );
+
+    testWidgets('pause asks for a message and then updates the status', (
+      tester,
+    ) async {
+      final queues = svc();
+      await pumpApp(tester, home(queues: queues));
+      await tick(tester);
+      await tester.tap(find.bySemanticsLabel('Pausar fila Padaria'));
+      await tester.pumpAndSettle();
+      expect(queues.calls.where((c) => c.startsWith('status')), isEmpty);
+      await tester.enterText(find.byType(TextField), 'Volto logo');
+      await tester.tap(
+        find.descendant(
+          of: find.byType(AlertDialog),
+          matching: find.text('Pausar'),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(queues.calls, contains('status:a:paused'));
+      expect(queues.lastStatusMessage, 'Volto logo');
+    });
+
+    testWidgets('cancelling the pause dialog changes nothing', (tester) async {
+      final queues = svc();
+      await pumpApp(tester, home(queues: queues));
+      await tick(tester);
+      await tester.tap(find.bySemanticsLabel('Pausar fila Padaria'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Cancelar'));
+      await tester.pumpAndSettle();
+      expect(queues.calls.where((c) => c.startsWith('status')), isEmpty);
+    });
+
+    testWidgets('reopen a paused queue is direct', (tester) async {
+      final queues = svc(status: QueueStatus.paused);
+      await pumpApp(tester, home(queues: queues));
+      await tick(tester);
+      await tester.tap(find.bySemanticsLabel('Reabrir fila Padaria'));
+      await tester.pumpAndSettle();
+      expect(queues.calls, contains('status:a:open'));
+    });
+
+    testWidgets('failure shows the described error', (tester) async {
+      final queues = svc(status: QueueStatus.closed)
+        ..statusError = TimeoutException('x');
+      await pumpApp(tester, home(queues: queues));
+      await tick(tester);
+      await tester.tap(find.bySemanticsLabel('Reabrir fila Padaria'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byType(SnackBar), findsOneWidget);
+      expect(
+        find.text('Sem conexão. Verifique a internet e tente novamente.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('qr action opens the poster screen', (tester) async {
+      await pumpApp(tester, home(queues: svc()));
+      await tick(tester);
+      await tester.tap(
+        find.bySemanticsLabel('Mostrar QR code da fila Padaria'),
+      );
+      await tester.pumpAndSettle();
+      expect(find.byType(QrPosterScreen), findsOneWidget);
+    });
+
+    testWidgets('quick actions meet tap target and label guidelines', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await pumpApp(tester, home(queues: svc()));
+      await tick(tester);
+      await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
+      await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
+      handle.dispose();
+    });
+
+    testWidgets('operator cards have no quick actions', (tester) async {
+      final queues = FakeQueueService(
+        queues: {'o1': fakeQueue('o1', name: 'Banco')},
+      );
+      final operators = FakeOperatorService(
+        operating: [
+          QueueOperator(uid: 'uid-1', queueId: 'o1', queueName: 'Banco'),
+        ],
+      );
+      await pumpApp(tester, home(queues: queues, operators: operators));
+      await tick(tester);
+      expect(find.text('Pausar'), findsNothing);
+      expect(find.text('QR code'), findsNothing);
+    });
   });
 
   group('startup prompts', () {

@@ -531,5 +531,12 @@
   "finishedNoShowUndo": "{name} marcado como não compareceu",
   "@finishedNoShowUndo": {"placeholders": {"name": {"type": "String"}}},
   "tourHomeAccountTitle": "Sua conta e convites",
-  "tourHomeAccountBody": "Aqui ficam sua conta e a opção de entrar como operador com um código de convite."
+  "tourHomeAccountBody": "Aqui ficam sua conta e a opção de entrar como operador com um código de convite.",
+  "quickQr": "QR code",
+  "quickPauseLabel": "Pausar fila {name}",
+  "@quickPauseLabel": {"placeholders": {"name": {"type": "String"}}},
+  "quickReopenLabel": "Reabrir fila {name}",
+  "@quickReopenLabel": {"placeholders": {"name": {"type": "String"}}},
+  "quickQrLabel": "Mostrar QR code da fila {name}",
+  "@quickQrLabel": {"placeholders": {"name": {"type": "String"}}}
 }

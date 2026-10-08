@@ -2829,6 +2829,30 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Aqui ficam sua conta e a opção de entrar como operador com um código de convite.'**
   String get tourHomeAccountBody;
+
+  /// No description provided for @quickQr.
+  ///
+  /// In pt, this message translates to:
+  /// **'QR code'**
+  String get quickQr;
+
+  /// No description provided for @quickPauseLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pausar fila {name}'**
+  String quickPauseLabel(String name);
+
+  /// No description provided for @quickReopenLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Reabrir fila {name}'**
+  String quickReopenLabel(String name);
+
+  /// No description provided for @quickQrLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostrar QR code da fila {name}'**
+  String quickQrLabel(String name);
 }
 
 class _AppLocalizationsDelegate

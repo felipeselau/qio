@@ -72,6 +72,7 @@ class FakeQueueService implements QueueService {
   Object? historyError;
   Object? callNextError;
   Object? finishError;
+  Object? statusError;
   Future<void>? finishGate;
   final List<String> calls = [];
 
@@ -154,8 +155,11 @@ class FakeQueueService implements QueueService {
     DateTime? resumeAt,
   }) async {
     calls.add('status:$queueId:${status.value}');
+    if (statusError != null) throw statusError!;
+    lastStatusMessage = message;
   }
 
+  String? lastStatusMessage;
   QueueMode? savedMode;
   List<QueueSlot>? savedSlots;
   QueueMode? createdMode;

@@ -1542,4 +1542,22 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get tourHomeAccountBody =>
       'Aquí están tu cuenta y la opción de entrar como operador con un código de invitación.';
+
+  @override
+  String get quickQr => 'Código QR';
+
+  @override
+  String quickPauseLabel(String name) {
+    return 'Pausar fila $name';
+  }
+
+  @override
+  String quickReopenLabel(String name) {
+    return 'Reabrir fila $name';
+  }
+
+  @override
+  String quickQrLabel(String name) {
+    return 'Mostrar código QR de la fila $name';
+  }
 }

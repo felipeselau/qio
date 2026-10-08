@@ -488,5 +488,12 @@
   "finishedNoShowUndo": "{name} marked as no-show",
   "@finishedNoShowUndo": {"placeholders": {"name": {"type": "String"}}},
   "tourHomeAccountTitle": "Your account and invites",
-  "tourHomeAccountBody": "Find your account here, plus the option to join as an operator with an invite code."
+  "tourHomeAccountBody": "Find your account here, plus the option to join as an operator with an invite code.",
+  "quickQr": "QR code",
+  "quickPauseLabel": "Pause queue {name}",
+  "@quickPauseLabel": {"placeholders": {"name": {"type": "String"}}},
+  "quickReopenLabel": "Reopen queue {name}",
+  "@quickReopenLabel": {"placeholders": {"name": {"type": "String"}}},
+  "quickQrLabel": "Show QR code for queue {name}",
+  "@quickQrLabel": {"placeholders": {"name": {"type": "String"}}}
 }
