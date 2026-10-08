@@ -26,6 +26,23 @@
           "brandColor": {
             ".validate": "newData.isString() && newData.val().matches(/^#[0-9A-Fa-f]{6}$/)"
           },
+          "mode": {
+            ".validate": "newData.isString() && (newData.val() === 'queue' || newData.val() === 'schedule')"
+          },
+          "slots": {
+            "$slotId": {
+              ".validate": "$slotId.matches(/^[A-Za-z0-9_-]{1,20}$/) && newData.hasChildren(['start', 'capacity'])",
+              "start": {
+                ".validate": "newData.isString() && newData.val().matches(/^([01][0-9]|2[0-3]):[0-5][0-9]$/)"
+              },
+              "capacity": {
+                ".validate": "newData.isNumber() && newData.val() >= 1 && newData.val() <= 50 && newData.val() % 1 === 0"
+              },
+              "$other": {
+                ".validate": false
+              }
+            }
+          },
           "logoUrl": {
             ".validate": "newData.isString() && newData.val().length <= 600 && newData.val().matches(/^https:\\/\\/firebasestorage\\.googleapis\\.com\\//)"
           }
@@ -40,7 +57,7 @@
           ],
           "$entryId": {
             ".read": "(root.child('owners').child($queueId).child('ownerUid').val() === auth.uid) || (root.child('queues').child($queueId).child('operatorUids').child(auth.uid).val() === true) || data.child('uid').val() === auth.uid",
-            ".write": "(data.child('uid').val() === auth.uid && (!newData.exists() || (newData.child('ticket').val() === data.child('ticket').val() && newData.child('name').val() === data.child('name').val() && newData.child('phone').val() === data.child('phone').val() && newData.child('joinedAt').val() === data.child('joinedAt').val() && newData.child('calledAt').val() === data.child('calledAt').val() && newData.child('operatorId').val() === data.child('operatorId').val() && newData.child('order').val() === data.child('order').val() && newData.child('recalls').val() === data.child('recalls').val() && newData.child('skips').val() === data.child('skips').val() && newData.child('recalledAt').val() === data.child('recalledAt').val() && newData.child('lang').val() === data.child('lang').val() && newData.child('nextNotifiedAt').val() === data.child('nextNotifiedAt').val() && newData.child('uid').val() === data.child('uid').val() && (newData.child('status').val() === data.child('status').val() || newData.child('status').val() === 'left')))) || (root.child('owners').child($queueId).child('ownerUid').val() === auth.uid) || (root.child('queues').child($queueId).child('operatorUids').child(auth.uid).val() === true)",
+            ".write": "(data.child('uid').val() === auth.uid && (!newData.exists() || (newData.child('ticket').val() === data.child('ticket').val() && newData.child('name').val() === data.child('name').val() && newData.child('phone').val() === data.child('phone').val() && newData.child('joinedAt').val() === data.child('joinedAt').val() && newData.child('calledAt').val() === data.child('calledAt').val() && newData.child('operatorId').val() === data.child('operatorId').val() && newData.child('order').val() === data.child('order').val() && newData.child('recalls').val() === data.child('recalls').val() && newData.child('skips').val() === data.child('skips').val() && newData.child('recalledAt').val() === data.child('recalledAt').val() && newData.child('lang').val() === data.child('lang').val() && newData.child('nextNotifiedAt').val() === data.child('nextNotifiedAt').val() && newData.child('slotId').val() === data.child('slotId').val() && newData.child('slotStart').val() === data.child('slotStart').val() && newData.child('uid').val() === data.child('uid').val() && (newData.child('status').val() === data.child('status').val() || newData.child('status').val() === 'left')))) || (root.child('owners').child($queueId).child('ownerUid').val() === auth.uid) || (root.child('queues').child($queueId).child('operatorUids').child(auth.uid).val() === true)",
             ".validate": "newData.hasChildren(['ticket', 'status', 'uid']) && (data.exists() || newData.child('name').exists())",
             "ticket": {
               ".validate": "newData.isNumber()"
@@ -85,6 +102,12 @@
               ".validate": "newData.isString() && (newData.val() === 'pt' || newData.val() === 'en' || newData.val() === 'es')"
             },
             "nextNotifiedAt": {
+              ".validate": "newData.isNumber()"
+            },
+            "slotId": {
+              ".validate": "newData.isString() && newData.val().matches(/^[A-Za-z0-9_-]{1,20}$/)"
+            },
+            "slotStart": {
               ".validate": "newData.isNumber()"
             },
             "$other": {

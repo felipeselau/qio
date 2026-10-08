@@ -54,6 +54,31 @@ service cloud.firestore {
         && request.resource.data.get('alertState', null) == resource.data.get('alertState', null);
     }
 
+    function validSlot(s) {
+      return s.start.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')
+        && s.capacity is int && s.capacity >= 1 && s.capacity <= 50;
+    }
+
+    function slotAt(slots, i) {
+      return slots.size() <= i || validSlot(slots[i]);
+    }
+
+    function validSlots(slots) {
+      return slots is list
+        && slots.size() <= 24
+        && slotAt(slots, 0) && slotAt(slots, 1) && slotAt(slots, 2) && slotAt(slots, 3)
+        && slotAt(slots, 4) && slotAt(slots, 5) && slotAt(slots, 6) && slotAt(slots, 7)
+        && slotAt(slots, 8) && slotAt(slots, 9) && slotAt(slots, 10) && slotAt(slots, 11)
+        && slotAt(slots, 12) && slotAt(slots, 13) && slotAt(slots, 14) && slotAt(slots, 15)
+        && slotAt(slots, 16) && slotAt(slots, 17) && slotAt(slots, 18) && slotAt(slots, 19)
+        && slotAt(slots, 20) && slotAt(slots, 21) && slotAt(slots, 22) && slotAt(slots, 23);
+    }
+
+    function scheduleModeOk(data) {
+      return (!('mode' in data) || data.mode in ['queue', 'schedule'])
+        && (!('slots' in data) || validSlots(data.slots));
+    }
+
     match /owners/{uid} {
       allow read, write: if request.auth != null && request.auth.uid == uid;
 
@@ -99,11 +124,13 @@ service cloud.firestore {
       allow create: if request.auth != null
         && request.resource.data.ownerId == request.auth.uid
         && validGroupId(request.resource.data)
-        && alertsOkOnCreate();
+        && alertsOkOnCreate()
+        && scheduleModeOk(request.resource.data);
       allow update: if request.auth != null
         && resource.data.ownerId == request.auth.uid
         && validGroupId(request.resource.data)
-        && alertsOk();
+        && alertsOk()
+        && scheduleModeOk(request.resource.data);
       allow delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
 
       match /history/{entryId} {

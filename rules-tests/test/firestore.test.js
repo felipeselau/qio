@@ -221,6 +221,53 @@ describe('Firestore rules', () => {
     });
   });
 
+  describe('modo agendado e slots', () => {
+    const queueRef = () => doc(db(OWNER), 'queues', QUEUE);
+    const slot = (n, start = '09:00', capacity = 2) => ({ id: `s${n}`, start, capacity });
+
+    it('dono grava modo e slots válidos', async () => {
+      await assertSucceeds(updateDoc(queueRef(), { mode: 'schedule', slots: [slot(1), slot(2, '10:30', 50)] }));
+      await assertSucceeds(updateDoc(queueRef(), { mode: 'queue', slots: [] }));
+    });
+
+    it('aceita exatamente 24 slots e nega 25', async () => {
+      const slots = Array.from({ length: 24 }, (_, i) => slot(i, `${String(i).padStart(2, '0')}:00`));
+      await assertSucceeds(updateDoc(queueRef(), { mode: 'schedule', slots }));
+      await assertFails(updateDoc(queueRef(), { mode: 'schedule', slots: [...slots, slot(24, '23:30')] }));
+    });
+
+    it('nega modo, horário, capacidade e campos inválidos', async () => {
+      await assertFails(updateDoc(queueRef(), { mode: 'agenda' }));
+      await assertFails(updateDoc(queueRef(), { mode: 1 }));
+      for (const bad of [
+        slot(1, '24:00'),
+        slot(1, '9:00'),
+        slot(1, '09:00', 0),
+        slot(1, '09:00', 51),
+        slot(1, '09:00', 1.5),
+        slot(1, '09:00', '2'),
+        { id: 's1', start: '09:00' },
+        { id: 's1', capacity: 2 },
+        'x',
+      ]) {
+        await assertFails(updateDoc(queueRef(), { mode: 'schedule', slots: [slot(0), bad] }));
+      }
+      await assertFails(updateDoc(queueRef(), { slots: 'x' }));
+    });
+
+    it('create da fila valida modo e slots', async () => {
+      const base = { ownerId: OWNER, name: 'Nova', status: 'open' };
+      await assertSucceeds(setDoc(doc(db(OWNER), 'queues', 'n1'), { ...base, mode: 'schedule', slots: [slot(1)] }));
+      await assertFails(setDoc(doc(db(OWNER), 'queues', 'n2'), { ...base, mode: 'schedule', slots: [slot(1, '99:99')] }));
+    });
+
+    it('operador e estranho não gravam modo nem slots', async () => {
+      for (const uid of [OPERATOR, STRANGER]) {
+        await assertFails(updateDoc(doc(db(uid), 'queues', QUEUE), { mode: 'schedule', slots: [slot(1)] }));
+      }
+    });
+  });
+
   describe('alertas', () => {
     const queueRef = () => doc(db(OWNER), 'queues', QUEUE);
     const valid = { enabled: true, maxWaitMin: 30, maxNoShowPct: 40, idleMin: 15, cooldownMin: 30 };

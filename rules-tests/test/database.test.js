@@ -80,6 +80,41 @@ describe('RTDB rules', () => {
       }
     });
 
+    it('dono grava modo e slots válidos', async () => {
+      await assertSucceeds(set(ref(rtdb(OWNER), path('meta/mode')), 'schedule'));
+      await assertSucceeds(
+        set(ref(rtdb(OWNER), path('meta/slots')), {
+          s1: { start: '09:00', capacity: 2 },
+          s2: { start: '23:59', capacity: 50 },
+        }),
+      );
+    });
+
+    it('rejeita modo, horário, capacidade e campos inválidos nos slots', async () => {
+      await assertFails(set(ref(rtdb(OWNER), path('meta/mode')), 'agenda'));
+      await assertFails(set(ref(rtdb(OWNER), path('meta/mode')), 1));
+      for (const bad of [
+        { start: '24:00', capacity: 1 },
+        { start: '9:00', capacity: 1 },
+        { start: '09:60', capacity: 1 },
+        { start: '09:00', capacity: 0 },
+        { start: '09:00', capacity: 51 },
+        { start: '09:00', capacity: 1.5 },
+        { start: '09:00' },
+        { start: '09:00', capacity: 1, extra: 1 },
+      ]) {
+        await assertFails(set(ref(rtdb(OWNER), path('meta/slots')), { s1: bad }));
+      }
+      await assertFails(set(ref(rtdb(OWNER), path('meta/slots')), { 'a b': { start: '09:00', capacity: 1 } }));
+    });
+
+    it('operador, cliente e estranho não gravam modo nem slots', async () => {
+      for (const uid of [OPERATOR, 'client1', STRANGER]) {
+        await assertFails(set(ref(rtdb(uid), path('meta/mode')), 'schedule'));
+        await assertFails(set(ref(rtdb(uid), path('meta/slots')), { s1: { start: '09:00', capacity: 1 } }));
+      }
+    });
+
     it('rejeita limite negativo, fracionário ou acima de 1000', async () => {
       for (const v of [-1, 2.5, 1001, 'x']) {
         await assertFails(set(ref(rtdb(OWNER), path('meta/maxWaiting')), v));
@@ -196,6 +231,22 @@ describe('RTDB rules', () => {
       await assertFails(update(ref(rtdb('client1'), path('entries/e1')), { lang: 'en' }));
       await assertFails(update(ref(rtdb('client1'), path('entries/e1')), { nextNotifiedAt: 9 }));
       await assertSucceeds(update(ref(rtdb('client1'), path('entries/e1')), { status: 'left' }));
+    });
+
+    it('cliente não altera slotId nem slotStart da própria entry', async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await update(ref(ctx.database(), path('entries/e1')), { slotId: 's1', slotStart: 1790000000000 });
+      });
+      await assertFails(update(ref(rtdb('client1'), path('entries/e1')), { slotId: 's2' }));
+      await assertFails(update(ref(rtdb('client1'), path('entries/e1')), { slotStart: 1 }));
+      await assertSucceeds(update(ref(rtdb('client1'), path('entries/e1')), { status: 'left' }));
+    });
+
+    it('slotId e slotStart inválidos são rejeitados', async () => {
+      await assertSucceeds(update(ref(rtdb(OPERATOR), path('entries/e1')), { slotId: 's1', slotStart: 5 }));
+      await assertFails(update(ref(rtdb(OPERATOR), path('entries/e1')), { slotId: 'a/b' }));
+      await assertFails(update(ref(rtdb(OPERATOR), path('entries/e1')), { slotId: 7 }));
+      await assertFails(update(ref(rtdb(OPERATOR), path('entries/e1')), { slotStart: 'x' }));
     });
 
     it('lang inválido é rejeitado', async () => {
