@@ -1591,4 +1591,63 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noQueuesMatch => 'No queues found';
+
+  @override
+  String get addPerson => 'Add person';
+
+  @override
+  String get addPersonTitle => 'Add person to the queue';
+
+  @override
+  String get addPersonHint =>
+      'For people at the counter who do not use the QR code.';
+
+  @override
+  String get manualPhoneLabel => 'Phone (optional)';
+
+  @override
+  String get manualPhoneInvalid => 'Use the format (00) 00000-0000';
+
+  @override
+  String get manualNameRequired => 'Enter a name up to 60 characters';
+
+  @override
+  String get manualSlotLabel => 'Time slot';
+
+  @override
+  String manualSlotOption(String time, int capacity) {
+    return '$time ($capacity spots)';
+  }
+
+  @override
+  String get manualSlotRequiredField => 'Choose a time slot';
+
+  @override
+  String get manualAddConfirm => 'Add';
+
+  @override
+  String manualAdded(String name, int ticket) {
+    return '$name joined the queue with ticket $ticket';
+  }
+
+  @override
+  String get manualBadge => 'Counter';
+
+  @override
+  String get manualAddQueueFull => 'The queue is full right now.';
+
+  @override
+  String get manualAddSlotFull => 'This time slot is full.';
+
+  @override
+  String get manualAddSlotRequired => 'Choose a valid time slot.';
+
+  @override
+  String get manualAddSlotPassed => 'This time slot has already passed.';
+
+  @override
+  String get manualAddNotOpen => 'The queue must be open to add people.';
+
+  @override
+  String get manualAddInvalid => 'Check the name and phone you entered.';
 }

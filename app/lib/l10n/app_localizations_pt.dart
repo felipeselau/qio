@@ -1592,4 +1592,63 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get noQueuesMatch => 'Nenhuma fila encontrada';
+
+  @override
+  String get addPerson => 'Adicionar pessoa';
+
+  @override
+  String get addPersonTitle => 'Adicionar pessoa à fila';
+
+  @override
+  String get addPersonHint => 'Para quem está no balcão e não usa o QR code.';
+
+  @override
+  String get manualPhoneLabel => 'Telefone (opcional)';
+
+  @override
+  String get manualPhoneInvalid => 'Use o formato (00) 00000-0000';
+
+  @override
+  String get manualNameRequired => 'Informe um nome com até 60 caracteres';
+
+  @override
+  String get manualSlotLabel => 'Horário';
+
+  @override
+  String manualSlotOption(String time, int capacity) {
+    return '$time ($capacity vagas)';
+  }
+
+  @override
+  String get manualSlotRequiredField => 'Escolha um horário';
+
+  @override
+  String get manualAddConfirm => 'Adicionar';
+
+  @override
+  String manualAdded(String name, int ticket) {
+    return '$name entrou na fila com a senha $ticket';
+  }
+
+  @override
+  String get manualBadge => 'Balcão';
+
+  @override
+  String get manualAddQueueFull => 'A fila está lotada no momento.';
+
+  @override
+  String get manualAddSlotFull => 'Este horário está lotado.';
+
+  @override
+  String get manualAddSlotRequired => 'Escolha um horário válido.';
+
+  @override
+  String get manualAddSlotPassed => 'Este horário já passou.';
+
+  @override
+  String get manualAddNotOpen =>
+      'A fila precisa estar aberta para adicionar pessoas.';
+
+  @override
+  String get manualAddInvalid => 'Confira o nome e o telefone informados.';
 }

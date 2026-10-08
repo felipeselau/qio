@@ -10,9 +10,11 @@ import '../services/deferred_action.dart';
 import '../services/entry_diff.dart';
 import '../services/group_service.dart';
 import '../services/haptics.dart';
+import '../services/manual_entry_service.dart';
 import '../services/operator_service.dart';
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
+import '../widgets/queue_panel/add_person_dialog.dart';
 import '../widgets/queue_panel/queue_action_bar.dart';
 import '../widgets/queue_panel/panel_notices.dart';
 import '../widgets/queue_panel/queue_panel_title.dart';
@@ -32,6 +34,7 @@ class QueuePanelScreen extends StatefulWidget {
     this.isOwner = true,
     this.queues,
     this.operators,
+    this.manualEntries,
     this.groups,
     this.showTour = true,
   });
@@ -41,6 +44,7 @@ class QueuePanelScreen extends StatefulWidget {
   final bool isOwner;
   final QueueService? queues;
   final OperatorService? operators;
+  final ManualEntryService? manualEntries;
   @visibleForTesting
   final GroupService? groups;
   @visibleForTesting
@@ -57,6 +61,8 @@ class _QueuePanelScreenState extends State<QueuePanelScreen>
   QueueService get _queues => widget.queues ?? QueueService.instance;
   OperatorService get _operators =>
       widget.operators ?? OperatorService.instance;
+  ManualEntryService get _manualEntries =>
+      widget.manualEntries ?? ManualEntryService.instance;
 
   bool _actionLoading = false;
   int _finishCount = 0;
@@ -188,6 +194,11 @@ class _QueuePanelScreenState extends State<QueuePanelScreen>
           ),
           centerTitle: true,
           actions: [
+            IconButton(
+              icon: const Icon(Icons.person_add_alt_1_outlined),
+              tooltip: AppLocalizations.of(context).addPerson,
+              onPressed: _addPerson,
+            ),
             if (!isPanelWide(MediaQuery.sizeOf(context).width))
               QueueSettingsActions(
                 queueId: widget.queueId,
@@ -287,6 +298,31 @@ class _QueuePanelScreenState extends State<QueuePanelScreen>
     } on Exception catch (e) {
       _showError(e);
     }
+  }
+
+  Future<void> _addPerson() async {
+    Queue? queue;
+    try {
+      queue = await _queues
+          .watchQueue(widget.queueId)
+          .first
+          .timeout(const Duration(seconds: 5));
+    } on Exception {
+      queue = null;
+    }
+    if (!mounted) return;
+    final result = await showAddPersonDialog(
+      context,
+      queueId: widget.queueId,
+      service: _manualEntries,
+      slots: queue?.slots ?? const [],
+      scheduled: queue?.isScheduled ?? false,
+    );
+    if (result == null || !mounted) return;
+    Haptics.instance.light();
+    _notify(
+      AppLocalizations.of(context).manualAdded(result.name, result.ticket),
+    );
   }
 
   Future<void> _moveToEnd(QueueEntry entry) async {

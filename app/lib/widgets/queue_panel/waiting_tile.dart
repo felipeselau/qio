@@ -40,14 +40,33 @@ class WaitingTile extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      entry.name,
-                      style: context.qioText.bodyMedium.copyWith(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: context.qio.textPrimary,
-                      ),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            entry.name,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.qioText.bodyMedium.copyWith(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: context.qio.textPrimary,
+                            ),
+                          ),
+                        ),
+                        if (entry.manual) ...[
+                          const SizedBox(width: 8),
+                          _CounterBadge(label: l10n.manualBadge),
+                        ],
+                      ],
                     ),
+                    if (entry.manual && (entry.phone ?? '').isNotEmpty)
+                      Text(
+                        entry.phone!,
+                        style: context.qioText.caption.copyWith(
+                          fontSize: 12,
+                          color: context.qio.gray700,
+                        ),
+                      ),
                     if (entry.slotStart != null)
                       Text(
                         l10n.waitTileSlot(
@@ -74,6 +93,31 @@ class WaitingTile extends StatelessWidget {
               ?trailing,
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CounterBadge extends StatelessWidget {
+  const _CounterBadge({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: context.qio.primaryText.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label,
+        style: context.qioText.caption.copyWith(
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+          color: context.qio.primaryText,
         ),
       ),
     );

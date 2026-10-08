@@ -294,6 +294,34 @@ conhecidas: `docs/qualidade.md`.
   funcionando. APK novo + rules antigas: só falta o endurecimento dos convites.
   As rules não quebram nenhum APK.
 
+## Entrada manual (balcão)
+
+- Callable `addManualEntry` (`functions/index.js`, lógica pura em
+  `functions/src/manual.js`, região us-central1) com `{queueId, name, phone?, slotId?}`.
+  Chamada só pelo app (botão "Adicionar pessoa" na AppBar do painel, dono e operador;
+  `ManualEntryService` + `add_person_dialog.dart`).
+- Autorização igual às rules do RTDB: `owners/{queueId}/ownerUid == uid` ou
+  `queues/{id}/operatorUids/{uid} == true`; senão `permission-denied`.
+- Mesma validação da `joinQueue` (nome 1–60, telefone vazio ou máscara BR),
+  `meta/status == 'open'` (pausada/fechada recusa com `failed-precondition`, igual ao
+  join), `maxWaiting` (`queue-full`) e, em fila `schedule`, `slotId` válido com
+  capacidade (`slot-required|slot-invalid|slot-passed|slot-full`). Ticket por transação
+  Admin em `tickets/{queueId}`. Sem rate limit nem checagem de telefone repetido.
+- A entry é criada por Admin com `manual: true`, **sem `uid` e sem `fcmToken`/`lang`**.
+  Rules: `manual` booleano permitido; o create exige `uid` **ou** `manual == true`; o
+  cliente não escreve em entry sem `uid` e `manual` é imutável para ele. Dono/operador
+  já tinham write total em `entries`.
+- `syncPublicTicket` espelha normalmente em `public/`; `onEntryJoined` ignora entries
+  manuais (não notifica quem acabou de adicionar). History/métricas não usam `uid`.
+  Sem cliente, não há `left`, push nem feedback.
+- `enforceAppCheck` fica **sempre `false`** nesta callable (o app Flutter não usa App
+  Check); ignora `ENFORCE_APP_CHECK`.
+- Deploy: functions (`addManualEntry`, `onEntryJoined`) → rules do RTDB → APK. Rules antes
+  das functions deixaria entries manuais sem criador; o APK antigo lê entry sem `uid`
+  como `''` e não mostra o selo.
+- Limitações: duas pessoas manuais com o mesmo nome/telefone são permitidas; limite de
+  fila pode passar em uma ou duas vagas sob concorrência (como no join).
+
 ## Operadores
 
 - **Convite**: `operatorInvites/{code}` (6 chars, validade padrão 24 h) é a fonte
