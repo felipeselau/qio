@@ -8,21 +8,46 @@ import '../../theme/qio_colors.dart';
 import '../../theme/qio_palette.dart';
 import '../onboarding_tour.dart';
 
-void showPanelTour(BuildContext context, GlobalKey qrKey, GlobalKey callKey) {
-  final l10n = AppLocalizations.of(context);
-  showOnboardingTour(context, OnboardingTour.panel, [
-    OnboardingStep(
-      key: qrKey,
-      title: l10n.tourPanelQrTitle,
-      body: l10n.tourPanelQrBody,
-    ),
+List<OnboardingStep> panelTourSteps(
+  AppLocalizations l10n,
+  GlobalKey qrKey,
+  GlobalKey settingsKey,
+  GlobalKey callKey,
+) {
+  final qrVisible = qrKey.currentContext != null;
+  return [
+    if (qrVisible)
+      OnboardingStep(
+        key: qrKey,
+        title: l10n.tourPanelQrTitle,
+        body: l10n.tourPanelQrBody,
+      )
+    else
+      OnboardingStep(
+        key: settingsKey,
+        title: l10n.tourPanelSettingsTitle,
+        body: l10n.tourPanelSettingsBody,
+      ),
     OnboardingStep(
       key: callKey,
       title: l10n.tourPanelCallTitle,
       body: l10n.tourPanelCallBody,
       above: true,
     ),
-  ]);
+  ];
+}
+
+void showPanelTour(
+  BuildContext context,
+  GlobalKey qrKey,
+  GlobalKey settingsKey,
+  GlobalKey callKey,
+) {
+  showOnboardingTour(
+    context,
+    OnboardingTour.panel,
+    panelTourSteps(AppLocalizations.of(context), qrKey, settingsKey, callKey),
+  );
 }
 
 void announceNewEntries(
@@ -88,4 +113,21 @@ class QueueBackButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return BackButton(color: context.qio.primaryText);
   }
+}
+
+Future<void> showQueueGoneDialog(BuildContext context) {
+  final l10n = AppLocalizations.of(context);
+  return showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => AlertDialog(
+      content: Text(l10n.queueGoneNotice),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: Text(l10n.ok),
+        ),
+      ],
+    ),
+  );
 }

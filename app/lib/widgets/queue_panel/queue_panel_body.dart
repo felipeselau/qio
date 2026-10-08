@@ -108,7 +108,7 @@ class QueuePanelBody extends StatelessWidget {
               builder: (context, constraints) => ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  if (constraints.maxWidth >= kPanelWideBreakpoint) ...[
+                  if (isPanelWide(constraints.maxWidth)) ...[
                     settings,
                     const SizedBox(height: 16),
                   ],
@@ -240,7 +240,7 @@ class QueuePanelBody extends StatelessWidget {
               ];
               return LayoutBuilder(
                 builder: (context, constraints) {
-                  if (constraints.maxWidth >= kPanelWideBreakpoint) {
+                  if (isPanelWide(constraints.maxWidth)) {
                     return Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

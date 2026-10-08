@@ -2835,6 +2835,30 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'QR code da fila'**
   String get queueQrShortcut;
+
+  /// No description provided for @queueQrTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'QR code'**
+  String get queueQrTitle;
+
+  /// No description provided for @queueGoneNotice.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esta fila não existe mais'**
+  String get queueGoneNotice;
+
+  /// No description provided for @tourPanelSettingsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'QR code e configurações'**
+  String get tourPanelSettingsTitle;
+
+  /// No description provided for @tourPanelSettingsBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Toque na engrenagem para ver o QR code e ajustar a fila.'**
+  String get tourPanelSettingsBody;
 }
 
 class _AppLocalizationsDelegate

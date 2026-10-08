@@ -430,6 +430,14 @@ class QueueService {
         .map((d) => Queue.fromDoc(d.id, d.data()!));
   }
 
+  Stream<bool> watchQueueExists(String queueId) {
+    return _firestore
+        .collection('queues')
+        .doc(queueId)
+        .snapshots()
+        .map((d) => d.exists && d.data() != null);
+  }
+
   Future<({Queue queue, bool isOwner})?> resolveAccess(String queueId) async {
     final uid = _uid;
     try {

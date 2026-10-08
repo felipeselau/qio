@@ -16,6 +16,13 @@ import 'queue_schedule_tile.dart';
 import 'slots_editor.dart';
 
 const kPanelWideBreakpoint = 900.0;
+const kPanelCompactBarBreakpoint = 420.0;
+
+bool isPanelWide(double width) => width >= kPanelWideBreakpoint;
+
+bool isPanelCompactBar(BuildContext context) =>
+    MediaQuery.sizeOf(context).width < kPanelCompactBarBreakpoint ||
+    MediaQuery.textScalerOf(context).scale(10) > 12;
 
 class QueueSettingsSections extends StatelessWidget {
   const QueueSettingsSections({

@@ -1546,4 +1546,17 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get queueQrShortcut => 'Código QR de la cola';
+
+  @override
+  String get queueQrTitle => 'Código QR';
+
+  @override
+  String get queueGoneNotice => 'Esta cola ya no existe';
+
+  @override
+  String get tourPanelSettingsTitle => 'Código QR y configuración';
+
+  @override
+  String get tourPanelSettingsBody =>
+      'Toca el engranaje para ver el código QR y ajustar la cola.';
 }

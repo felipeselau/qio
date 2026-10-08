@@ -12,23 +12,25 @@ class QueueSettingsActions extends StatelessWidget {
     required this.queueId,
     required this.queueName,
     required this.isOwner,
-    this.showQr = true,
     this.qrKey,
+    this.settingsKey,
     this.queues,
     this.groups,
+    this.onQueueGone,
   });
 
   final String queueId;
   final String queueName;
   final bool isOwner;
-  final bool showQr;
   final GlobalKey? qrKey;
+  final GlobalKey? settingsKey;
   final QueueService? queues;
   final GroupService? groups;
+  final VoidCallback? onQueueGone;
 
-  void _open(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
+  Future<void> _open(BuildContext context) async {
+    final exit = await Navigator.of(context).push<QueueSettingsExit>(
+      MaterialPageRoute<QueueSettingsExit>(
         builder: (_) => QueueSettingsScreen(
           queueId: queueId,
           queueName: queueName,
@@ -38,6 +40,7 @@ class QueueSettingsActions extends StatelessWidget {
         ),
       ),
     );
+    if (exit == QueueSettingsExit.queueGone) onQueueGone?.call();
   }
 
   @override
@@ -46,16 +49,16 @@ class QueueSettingsActions extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (showQr || !isOwner)
-          IconButton(
-            key: qrKey,
-            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-            icon: Icon(Icons.qr_code_2, color: context.qio.gray700),
-            tooltip: l10n.queueQrShortcut,
-            onPressed: () => _open(context),
-          ),
+        IconButton(
+          key: qrKey,
+          constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+          icon: Icon(Icons.qr_code_2, color: context.qio.gray700),
+          tooltip: l10n.queueQrShortcut,
+          onPressed: () => _open(context),
+        ),
         if (isOwner)
           IconButton(
+            key: settingsKey,
             constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
             icon: Icon(Icons.settings_outlined, color: context.qio.gray700),
             tooltip: l10n.queueSettingsTitle,

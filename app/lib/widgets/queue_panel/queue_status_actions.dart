@@ -14,12 +14,14 @@ class QueueStatusActions extends StatelessWidget {
     required this.queueName,
     required this.onStatus,
     this.queues,
+    this.compact = false,
   });
 
   final String queueId;
   final String queueName;
   final void Function(QueueStatus, StatusChange?) onStatus;
   final QueueService? queues;
+  final bool compact;
 
   Future<void> _change(BuildContext context, QueueStatus target) async {
     if (target == QueueStatus.open) {
@@ -30,8 +32,56 @@ class QueueStatusActions extends StatelessWidget {
     if (change != null) onStatus(target, change);
   }
 
+  void _openHistory(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => HistoryScreen(
+          queueId: queueId,
+          queueName: queueName,
+          queues: queues,
+        ),
+      ),
+    );
+  }
+
+  Widget _menu(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return StreamBuilder<Queue>(
+      stream: (queues ?? QueueService.instance).watchQueue(queueId),
+      builder: (context, snap) {
+        final status = snap.data?.status ?? QueueStatus.open;
+        return PopupMenuButton<String>(
+          tooltip: l10n.moreActions,
+          icon: Icon(Icons.more_vert, color: context.qio.gray700),
+          onSelected: (v) {
+            switch (v) {
+              case 'history':
+                _openHistory(context);
+              case 'reopen':
+                onStatus(QueueStatus.open, null);
+              case 'pause':
+                _change(context, QueueStatus.paused);
+              case 'close':
+                _change(context, QueueStatus.closed);
+            }
+          },
+          itemBuilder: (_) => [
+            PopupMenuItem(value: 'history', child: Text(l10n.historyTitle)),
+            if (status == QueueStatus.open)
+              PopupMenuItem(value: 'pause', child: Text(l10n.pause))
+            else
+              PopupMenuItem(value: 'reopen', child: Text(l10n.reopen)),
+            if (status != QueueStatus.closed)
+              PopupMenuItem(value: 'close', child: Text(l10n.close)),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (compact) return _menu(context);
     final l10n = AppLocalizations.of(context);
     return Row(
       mainAxisSize: MainAxisSize.min,

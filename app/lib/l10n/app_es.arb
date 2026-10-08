@@ -489,5 +489,9 @@
   "finishedNoShowUndo": "{name} marcado como no se presentó",
   "@finishedNoShowUndo": {"placeholders": {"name": {"type": "String"}}},
   "queueSettingsTitle": "Configuración de la cola",
-  "queueQrShortcut": "Código QR de la cola"
+  "queueQrShortcut": "Código QR de la cola",
+  "queueQrTitle": "Código QR",
+  "queueGoneNotice": "Esta cola ya no existe",
+  "tourPanelSettingsTitle": "Código QR y configuración",
+  "tourPanelSettingsBody": "Toca el engranaje para ver el código QR y ajustar la cola."
 }

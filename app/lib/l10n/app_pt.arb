@@ -537,5 +537,9 @@
   "finishedNoShowUndo": "{name} marcado como não compareceu",
   "@finishedNoShowUndo": {"placeholders": {"name": {"type": "String"}}},
   "queueSettingsTitle": "Configurações da fila",
-  "queueQrShortcut": "QR code da fila"
+  "queueQrShortcut": "QR code da fila",
+  "queueQrTitle": "QR code",
+  "queueGoneNotice": "Esta fila não existe mais",
+  "tourPanelSettingsTitle": "QR code e configurações",
+  "tourPanelSettingsBody": "Toque na engrenagem para ver o QR code e ajustar a fila."
 }
