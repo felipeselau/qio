@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:qio_app/theme/qio_colors.dart';
+import 'package:qio_app/theme/qio_palette.dart';
 import 'package:qio_app/widgets/qio_badge.dart';
 
 Widget wrap(Widget child) => MaterialApp(
@@ -21,7 +21,7 @@ void main() {
     );
 
     final text = tester.widget<Text>(find.text('Aberta'));
-    expect(text.style?.color, QioColors.statusOpenText);
+    expect(text.style?.color, QioPalette.light.statusOpenText);
   });
 
   testWidgets('paused badge uses accessible warning text color', (
@@ -32,7 +32,7 @@ void main() {
     );
 
     final text = tester.widget<Text>(find.text('Pausada'));
-    expect(text.style?.color, QioColors.statusPausedText);
+    expect(text.style?.color, QioPalette.light.statusPausedText);
   });
 
   testWidgets('closed badge uses accessible error text color', (tester) async {
@@ -41,6 +41,6 @@ void main() {
     );
 
     final text = tester.widget<Text>(find.text('Fechada'));
-    expect(text.style?.color, QioColors.statusClosedText);
+    expect(text.style?.color, QioPalette.light.statusClosedText);
   });
 }

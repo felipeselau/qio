@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qio_app/services/theme_controller.dart';
-import 'package:qio_app/theme/qio_colors.dart';
+import 'package:qio_app/theme/qio_palette.dart';
 import 'package:qio_app/theme/qio_theme.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
-  tearDown(() => QioColors.apply(Brightness.light));
 
   test('parse falls back to system', () {
     expect(ThemeController.parse(null), ThemeMode.system);
@@ -39,11 +38,12 @@ void main() {
   test('dark theme swaps surfaces and text', () {
     final light = QioTheme.forBrightness(Brightness.light);
     final lightSurface = light.colorScheme.surface;
-    final lightText = QioColors.textPrimary;
     final dark = QioTheme.forBrightness(Brightness.dark);
     expect(dark.brightness, Brightness.dark);
     expect(dark.colorScheme.surface, isNot(lightSurface));
-    expect(QioColors.textPrimary, isNot(lightText));
-    expect(QioColors.isDark, isTrue);
+    expect(
+      dark.extension<QioPalette>()!.textPrimary,
+      isNot(light.extension<QioPalette>()!.textPrimary),
+    );
   });
 }

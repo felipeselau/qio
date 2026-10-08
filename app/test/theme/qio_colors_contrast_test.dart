@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qio_app/theme/qio_colors.dart';
+import 'package:qio_app/theme/qio_palette.dart';
 
 double _channel(double c) =>
     c <= 0.03928 ? c / 12.92 : math.pow((c + 0.055) / 1.055, 2.4).toDouble();
@@ -22,11 +23,9 @@ Color _tint(Color fg, Color bg, [double alpha = 0.12]) =>
     Color.alphaBlend(fg.withValues(alpha: alpha), bg);
 
 void main() {
-  tearDown(() => QioColors.apply(Brightness.light));
-
   for (final brightness in Brightness.values) {
     group('contrast ${brightness.name}', () {
-      setUp(() => QioColors.apply(brightness));
+      final p = QioPalette.forBrightness(brightness);
 
       void expectAa(String name, Color fg, Color bg, [double min = 4.5]) {
         final ratio = contrast(fg, bg);
@@ -38,37 +37,28 @@ void main() {
       }
 
       test('text on surfaces', () {
-        for (final bg in [
-          QioColors.background,
-          QioColors.surface,
-          QioColors.card,
-          QioColors.gray100,
-        ]) {
-          expectAa('textPrimary', QioColors.textPrimary, bg);
-          expectAa('textSecondary', QioColors.textSecondary, bg);
-          expectAa('textHint', QioColors.textHint, bg);
-          expectAa('gray400', QioColors.gray400, bg);
-          expectAa('gray500', QioColors.gray500, bg);
-          expectAa('gray700', QioColors.gray700, bg);
-          expectAa('primaryText', QioColors.primaryText, bg);
+        for (final bg in [p.background, p.surface, p.card, p.gray100]) {
+          expectAa('textPrimary', p.textPrimary, bg);
+          expectAa('textSecondary', p.textSecondary, bg);
+          expectAa('textHint', p.textHint, bg);
+          expectAa('gray400', p.gray400, bg);
+          expectAa('gray500', p.gray500, bg);
+          expectAa('gray700', p.gray700, bg);
+          expectAa('primaryText', p.primaryText, bg);
         }
       });
 
       test('status text on tinted backgrounds', () {
-        for (final bg in [QioColors.surface, QioColors.card]) {
-          expectAa(
-            'open',
-            QioColors.statusOpenText,
-            _tint(QioColors.statusOpen, bg),
-          );
+        for (final bg in [p.surface, p.card]) {
+          expectAa('open', p.statusOpenText, _tint(QioColors.statusOpen, bg));
           expectAa(
             'paused',
-            QioColors.statusPausedText,
+            p.statusPausedText,
             _tint(QioColors.statusPaused, bg),
           );
           expectAa(
             'closed',
-            QioColors.statusClosedText,
+            p.statusClosedText,
             _tint(QioColors.statusClosed, bg),
           );
         }

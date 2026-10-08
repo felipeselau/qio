@@ -7,16 +7,16 @@ import 'qio_text_styles.dart';
 class QioTheme {
   QioTheme._();
 
-  static ThemeData get light => _build(Brightness.light);
+  static final ThemeData light = _build(Brightness.light);
 
-  static ThemeData get dark => _build(Brightness.dark);
+  static final ThemeData dark = _build(Brightness.dark);
 
-  static ThemeData forBrightness(Brightness b) => _build(b);
+  static ThemeData forBrightness(Brightness b) =>
+      b == Brightness.dark ? dark : light;
 
   static ThemeData _build(Brightness brightness) {
-    QioColors.apply(brightness);
     final p = QioPalette.forBrightness(brightness);
-    final t = QioText(p);
+    final t = QioTextStyles(p);
     final base = ThemeData(brightness: brightness, useMaterial3: true);
 
     return base.copyWith(
