@@ -88,6 +88,11 @@ void main() {
       expect(q.operatorInviteExpiresAt, isNull);
     });
 
+    test('parses groupId and defaults to null', () {
+      expect(Queue.fromDoc('g1', {'groupId': 'grp'}).groupId, 'grp');
+      expect(Queue.fromDoc('g2', {}).groupId, isNull);
+    });
+
     test('applies defaults for missing fields', () {
       final q = Queue.fromDoc('q3', {});
 

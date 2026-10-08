@@ -4,6 +4,7 @@ import '../l10n/app_localizations.dart';
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
+import '../widgets/group_picker.dart';
 import '../widgets/qio_button.dart';
 import '../widgets/qio_input.dart';
 import '../widgets/queue_panel/queue_limit_tile.dart';
@@ -24,6 +25,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
   final _timeCtrl = TextEditingController();
   final _limitCtrl = TextEditingController();
   bool _isLoading = false;
+  String? _groupId;
 
   bool get _dirty =>
       _nameCtrl.text.trim().isNotEmpty ||
@@ -83,6 +85,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
             : _descCtrl.text.trim(),
         avgServiceMin: int.tryParse(_timeCtrl.text.trim()) ?? 15,
         maxWaiting: int.tryParse(_limitCtrl.text.trim()) ?? 0,
+        groupId: _groupId,
       );
       if (mounted) {
         Navigator.of(context).pushReplacement(
@@ -193,6 +196,12 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
                       controller: _limitCtrl,
                       keyboardType: TextInputType.number,
                       validator: (v) => validateMaxWaiting(v, l10n),
+                    ),
+                    const SizedBox(height: 16),
+                    GroupPicker(
+                      value: _groupId,
+                      enabled: !_isLoading,
+                      onChanged: (id) => setState(() => _groupId = id),
                     ),
                     const SizedBox(height: 32),
                     QioButton(

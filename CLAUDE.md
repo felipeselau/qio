@@ -148,6 +148,23 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
 - App: `HistoryScreen` mostra média/contagem (respeitando os filtros) e `★ n` por
   atendimento. Deploy: `--only functions:submitFeedback` e depois `--only firestore:rules`.
 
+## Grupos de filas
+
+- Uma fila está em no máximo um grupo; máx. 20 grupos por dono (checado no app
+  em `GroupService.createGroup`, não nas rules). Fonte da verdade:
+  `queues/{id}.groupId` (Firestore); o grupo é `owners/{uid}/groups/{gid} =
+  {name (1–40), createdAt}`, só o dono lê/escreve. Operadores não veem grupos.
+- Excluir grupo = batch que apaga `groupId` das filas (`FieldValue.delete()`) e o
+  doc. `groupId` órfão (grupo inexistente) vale como "sem grupo" na leitura
+  (`resolveGroupId`).
+- `MetricsScreen` filtra por escopo (todas/grupo/fila) com `filterByScope`
+  (`queue_analytics.dart`) antes de `buildMetricsReport`; o comparativo entre
+  filas (`compareQueues`) só aparece no escopo de grupo. CSV/PDF levam o nome do
+  escopo (`MetricsReport.scopeLabel`) no cabeçalho e no nome do arquivo.
+- **Ordem de deploy**: rules do Firestore (`firebase deploy --only
+  firestore:rules`) → APK. APK novo com rules antigas recebe `permission-denied`
+  nas operações de grupo (o app mostra mensagem) e ao gravar `groupId`.
+
 ## Alertas operacionais
 
 - Opt-in por fila (desligado por padrão), só o dono recebe. Config em

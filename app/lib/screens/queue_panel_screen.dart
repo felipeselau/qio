@@ -7,6 +7,7 @@ import '../l10n/app_localizations.dart';
 import '../models/queue.dart';
 import '../models/queue_entry.dart';
 import '../services/entry_diff.dart';
+import '../services/group_service.dart';
 import '../services/haptics.dart';
 import '../services/onboarding_service.dart';
 import '../services/operator_service.dart';
@@ -29,6 +30,7 @@ class QueuePanelScreen extends StatefulWidget {
     this.isOwner = true,
     this.queues,
     this.operators,
+    this.groups,
     this.showTour = true,
   });
 
@@ -37,6 +39,8 @@ class QueuePanelScreen extends StatefulWidget {
   final bool isOwner;
   final QueueService? queues;
   final OperatorService? operators;
+  @visibleForTesting
+  final GroupService? groups;
   @visibleForTesting
   final bool showTour;
 
@@ -239,6 +243,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
           onMoveToEnd: _moveToEnd,
           onRecall: _recall,
           queues: _queues,
+          groups: widget.groups,
         ),
         bottomNavigationBar: QueueActionBar(
           queueId: widget.queueId,

@@ -352,6 +352,53 @@
   "csvRatingCount": "qtd notas",
   "csvAttendant": "atendente",
   "exportMetricsError": "Não foi possível exportar as métricas.",
+  "groups": "Grupos",
+  "groupNew": "Novo grupo…",
+  "groupRename": "Renomear grupo",
+  "groupDelete": "Excluir grupo",
+  "groupDeleteConfirm": "Excluir o grupo \"{name}\"? As filas dele ficam sem grupo.",
+  "@groupDeleteConfirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "groupNone": "Sem grupo",
+  "groupName": "Nome do grupo",
+  "groupLimitReached": "Limite de {max} grupos atingido.",
+  "@groupLimitReached": {
+    "placeholders": {
+      "max": {"type": "int"}
+    }
+  },
+  "groupLabel": "Grupo",
+  "groupsEmpty": "Nenhum grupo ainda. Crie um para organizar suas filas.",
+  "groupPermissionDenied": "Sem permissão para alterar grupos. Atualize o app e tente de novo.",
+  "metricsScopeLabel": "Escopo das métricas",
+  "metricsScopeAll": "Todas as filas",
+  "metricsScopeGroup": "Grupo: {name}",
+  "@metricsScopeGroup": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "metricsScopeQueue": "Fila: {name}",
+  "@metricsScopeQueue": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "groupCompareTitle": "Comparativo entre filas do grupo",
+  "groupCompareLine": "{total} atendimentos · espera {wait} · {rate}% não compareceram · nota {rating}",
+  "@groupCompareLine": {
+    "placeholders": {
+      "total": {"type": "int"},
+      "wait": {"type": "String"},
+      "rate": {"type": "int"},
+      "rating": {"type": "String"}
+    }
+  },
+  "csvDataScope": "escopo das métricas",
+  "groupsUnavailable": "Grupos indisponíveis. Atualize o app ou as regras do Firestore.",
   "alertsTitle": "Alertas operacionais",
   "alertsEnable": "Receber alertas desta fila",
   "alertsWaitLimit": "Espera estimada acima de",

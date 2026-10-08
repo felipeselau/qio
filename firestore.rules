@@ -23,6 +23,11 @@ service cloud.firestore {
         && (invite.data.expiresAt == null || invite.data.expiresAt > request.time);
     }
 
+    function validGroupId(data) {
+      return !('groupId' in data)
+        || (data.groupId is string && data.groupId.size() > 0 && data.groupId.size() <= 40);
+    }
+
     function validNullableInt(m, key, lo, hi) {
       return !(key in m) || m[key] == null || (m[key] is int && m[key] >= lo && m[key] <= hi);
     }
@@ -62,6 +67,17 @@ service cloud.firestore {
           && request.resource.data.token.size() > 0
           && request.resource.data.token.size() <= 4096;
       }
+
+      match /groups/{groupId} {
+        allow read, delete: if request.auth != null && request.auth.uid == uid;
+        allow create, update: if request.auth != null
+          && request.auth.uid == uid
+          && request.resource.data.keys().hasOnly(['name', 'createdAt'])
+          && request.resource.data.keys().hasAll(['name'])
+          && request.resource.data.name is string
+          && request.resource.data.name.size() >= 1
+          && request.resource.data.name.size() <= 40;
+      }
     }
 
     match /operatorInvites/{code} {
@@ -80,8 +96,14 @@ service cloud.firestore {
       allow get: if signedIn()
         && (resource.data.ownerId == request.auth.uid || isQueueOperator(queueId));
       allow list: if signedIn() && resource.data.ownerId == request.auth.uid;
-      allow create: if request.auth != null && request.resource.data.ownerId == request.auth.uid && alertsOkOnCreate();
-      allow update: if request.auth != null && resource.data.ownerId == request.auth.uid && alertsOk();
+      allow create: if request.auth != null
+        && request.resource.data.ownerId == request.auth.uid
+        && validGroupId(request.resource.data)
+        && alertsOkOnCreate();
+      allow update: if request.auth != null
+        && resource.data.ownerId == request.auth.uid
+        && validGroupId(request.resource.data)
+        && alertsOk();
       allow delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
 
       match /history/{entryId} {

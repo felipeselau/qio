@@ -1081,6 +1081,76 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportMetricsError => 'Couldn\'t export the metrics.';
 
   @override
+  String get groups => 'Groups';
+
+  @override
+  String get groupNew => 'New group…';
+
+  @override
+  String get groupRename => 'Rename group';
+
+  @override
+  String get groupDelete => 'Delete group';
+
+  @override
+  String groupDeleteConfirm(String name) {
+    return 'Delete the group \"$name\"? Its queues become ungrouped.';
+  }
+
+  @override
+  String get groupNone => 'No group';
+
+  @override
+  String get groupName => 'Group name';
+
+  @override
+  String groupLimitReached(int max) {
+    return 'Limit of $max groups reached.';
+  }
+
+  @override
+  String get groupLabel => 'Group';
+
+  @override
+  String get groupsEmpty =>
+      'No groups yet. Create one to organize your queues.';
+
+  @override
+  String get groupPermissionDenied =>
+      'No permission to change groups. Update the app and try again.';
+
+  @override
+  String get metricsScopeLabel => 'Metrics scope';
+
+  @override
+  String get metricsScopeAll => 'All queues';
+
+  @override
+  String metricsScopeGroup(String name) {
+    return 'Group: $name';
+  }
+
+  @override
+  String metricsScopeQueue(String name) {
+    return 'Queue: $name';
+  }
+
+  @override
+  String get groupCompareTitle => 'Queue comparison in the group';
+
+  @override
+  String groupCompareLine(int total, String wait, int rate, String rating) {
+    return '$total served · wait $wait · $rate% no-show · rating $rating';
+  }
+
+  @override
+  String get csvDataScope => 'metrics scope';
+
+  @override
+  String get groupsUnavailable =>
+      'Groups unavailable. Update the app or the Firestore rules.';
+
+  @override
   String get alertsTitle => 'Operational alerts';
 
   @override

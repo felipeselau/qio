@@ -5,29 +5,14 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../l10n/app_localizations.dart';
-import '../models/history_entry.dart';
-import '../models/operator.dart';
-import '../models/queue.dart';
-import '../models/queue_feedback.dart';
+import '../models/queue_history_input.dart';
 import 'history_export.dart';
 import 'history_metrics.dart';
 import 'metrics_trend.dart';
 import 'operator_metrics.dart';
 import 'queue_analytics.dart';
 
-class QueueHistoryInput {
-  const QueueHistoryInput(
-    this.queue,
-    this.entries,
-    this.feedback,
-    this.operators,
-  );
-
-  final Queue queue;
-  final List<HistoryEntry> entries;
-  final List<QueueFeedback> feedback;
-  final List<QueueOperator> operators;
-}
+export '../models/queue_history_input.dart';
 
 class MetricsReport {
   const MetricsReport({
@@ -43,6 +28,7 @@ class MetricsReport {
     required this.operatorNames,
     required this.truncated,
     required this.historyLimit,
+    this.scopeLabel,
     this.waitStats = const WaitStats(samples: 0, bucketCounts: [0, 0, 0, 0]),
     this.callEffort = const CallEffortStats(
       called: 0,
@@ -61,6 +47,7 @@ class MetricsReport {
     this.previousWaitStats,
   });
 
+  final String? scopeLabel;
   final HistoryPeriod period;
   final String? operatorQueueId;
   final String? operatorQueueName;
@@ -101,6 +88,7 @@ MetricsReport buildMetricsReport({
   required String unknownOperatorName,
   String? operatorQueueId,
   DateRange? customRange,
+  String? scopeLabel,
 }) {
   final perQueue = [
     for (final d in data)
@@ -203,6 +191,7 @@ MetricsReport buildMetricsReport({
     operatorNames: names,
     truncated: truncated,
     historyLimit: historyLimit,
+    scopeLabel: scopeLabel,
     waitStats: waitStats,
     callEffort: computeCallEffort(all),
     weekdays: weekdayDistribution(all),
@@ -260,6 +249,7 @@ String buildMetricsCsv(
     [
       [l10n.metricsPdfTitle],
       [l10n.csvPeriod, report.period.label(l10n)],
+      if (report.scopeLabel != null) [l10n.csvDataScope, report.scopeLabel!],
       [l10n.csvScope, _scopeLabel(l10n, report)],
       [l10n.csvGeneratedAt, formatExportDateTime(generatedAt)],
       if (report.truncated) [l10n.historyTruncatedWarning(report.historyLimit)],
@@ -631,6 +621,11 @@ Future<Uint8List> buildMetricsPdf({
             '${l10n.csvPeriod}: ${report.period.label(l10n)}',
             style: const pw.TextStyle(fontSize: 12),
           ),
+          if (report.scopeLabel != null)
+            pw.Text(
+              '${l10n.csvDataScope}: ${report.scopeLabel}',
+              style: const pw.TextStyle(fontSize: 12),
+            ),
           pw.Text(
             l10n.pdfGeneratedAt(formatExportDateTime(generatedAt)),
             style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),

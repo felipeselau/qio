@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/queue.dart';
 import '../../models/queue_entry.dart';
+import '../../services/group_service.dart';
 import '../../services/queue_service.dart';
 import '../../theme/qio_colors.dart';
 import '../../theme/qio_text_styles.dart';
@@ -10,6 +11,7 @@ import '../../widgets/qio_empty_state.dart';
 import '../../widgets/qio_responsive_body.dart';
 import '../../widgets/queue_panel/current_called_card.dart';
 import '../../widgets/queue_panel/waiting_tile.dart';
+import '../../widgets/queue_panel/queue_group_tile.dart';
 import '../../widgets/queue_panel/queue_limit_tile.dart';
 import '../../widgets/queue_panel/queue_brand_tile.dart';
 import '../../widgets/queue_panel/queue_schedule_tile.dart';
@@ -32,6 +34,7 @@ class QueuePanelBody extends StatelessWidget {
     required this.onMoveToEnd,
     required this.onRecall,
     this.queues,
+    this.groups,
   });
 
   final String queueId;
@@ -45,6 +48,7 @@ class QueuePanelBody extends StatelessWidget {
   final void Function(QueueEntry) onMoveToEnd;
   final void Function(QueueEntry) onRecall;
   final QueueService? queues;
+  final GroupService? groups;
 
   @override
   Widget build(BuildContext context) {
@@ -70,6 +74,12 @@ class QueuePanelBody extends StatelessWidget {
                   OperatorsTile(queueId: queueId),
                   const SizedBox(height: 16),
                   QueueLimitTile(queueId: queueId, maxWaiting: maxWaiting),
+                  const SizedBox(height: 16),
+                  QueueGroupTile(
+                    queueId: queueId,
+                    groupId: queueSnap.data?.groupId,
+                    groups: groups,
+                  ),
                   const SizedBox(height: 16),
                   QueueScheduleTile(queueId: queueId, schedule: schedule),
                   const SizedBox(height: 16),
@@ -140,6 +150,12 @@ class QueuePanelBody extends StatelessWidget {
                   OperatorsTile(queueId: queueId),
                   const SizedBox(height: 16),
                   QueueLimitTile(queueId: queueId, maxWaiting: maxWaiting),
+                  const SizedBox(height: 16),
+                  QueueGroupTile(
+                    queueId: queueId,
+                    groupId: queueSnap.data?.groupId,
+                    groups: groups,
+                  ),
                   const SizedBox(height: 16),
                   QueueScheduleTile(queueId: queueId, schedule: schedule),
                   const SizedBox(height: 16),

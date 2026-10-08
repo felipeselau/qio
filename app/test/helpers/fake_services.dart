@@ -5,6 +5,8 @@ import 'package:qio_app/models/operator.dart';
 import 'package:qio_app/models/queue.dart';
 import 'package:qio_app/models/queue_entry.dart';
 import 'package:qio_app/models/queue_feedback.dart';
+import 'package:qio_app/models/queue_group.dart';
+import 'package:qio_app/services/group_service.dart';
 import 'package:qio_app/services/operator_service.dart';
 import 'package:qio_app/services/queue_service.dart';
 
@@ -143,6 +145,27 @@ class FakeQueueService implements QueueService {
     DateTime? resumeAt,
   }) async {
     calls.add('status:$queueId:${status.value}');
+  }
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class FakeGroupService implements GroupService {
+  FakeGroupService({this.groups = const []});
+
+  List<QueueGroup> groups;
+  final List<String> calls = [];
+
+  @override
+  Stream<List<QueueGroup>> watchGroups() => Stream.value(groups);
+
+  @override
+  Future<List<QueueGroup>> fetchGroups() async => groups;
+
+  @override
+  Future<void> setQueueGroup(String queueId, String? groupId) async {
+    calls.add('setQueueGroup:$queueId:$groupId');
   }
 
   @override
