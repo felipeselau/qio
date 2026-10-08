@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/alerts_config.dart';
 import '../../screens/alerts_settings_screen.dart';
-import '../../theme/qio_colors.dart';
 import '../../theme/qio_text_styles.dart';
 import '../qio_card.dart';
+import '../../theme/qio_palette.dart';
 
 class AlertsTile extends StatelessWidget {
   const AlertsTile({super.key, required this.queueId, required this.config});
@@ -29,7 +29,7 @@ class AlertsTile extends StatelessWidget {
         children: [
           Icon(
             Icons.notifications_active_outlined,
-            color: QioColors.primaryText,
+            color: context.qio.primaryText,
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -38,18 +38,18 @@ class AlertsTile extends StatelessWidget {
               children: [
                 Text(
                   l10n.alertsTitle,
-                  style: QioTextStyles.bodyMedium.copyWith(
-                    color: QioColors.textPrimary,
+                  style: context.qioText.bodyMedium.copyWith(
+                    color: context.qio.textPrimary,
                   ),
                 ),
                 Text(
                   on ? l10n.alertsActive(c.activeRules) : l10n.alertsOff,
-                  style: QioTextStyles.caption,
+                  style: context.qioText.caption,
                 ),
               ],
             ),
           ),
-          Icon(Icons.chevron_right, size: 20, color: QioColors.gray500),
+          Icon(Icons.chevron_right, size: 20, color: context.qio.gray500),
         ],
       ),
     );

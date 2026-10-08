@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../services/haptics.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
+import '../theme/qio_palette.dart';
 
 enum QioButtonVariant {
   primary,
@@ -44,38 +45,40 @@ class QioButton extends StatelessWidget {
 
     switch (variant) {
       case QioButtonVariant.primary:
-        backgroundColor = isDisabled ? QioColors.gray300 : QioColors.primary;
+        backgroundColor = isDisabled ? context.qio.gray300 : QioColors.primary;
         foregroundColor = QioColors.textOnPrimary;
         borderColor = Colors.transparent;
       case QioButtonVariant.secondary:
-        backgroundColor = isDisabled ? QioColors.gray100 : QioColors.surface;
+        backgroundColor = isDisabled
+            ? context.qio.gray100
+            : context.qio.surface;
         foregroundColor = isDisabled
-            ? QioColors.gray400
-            : QioColors.primaryText;
-        borderColor = isDisabled ? QioColors.gray200 : QioColors.gray300;
+            ? context.qio.gray400
+            : context.qio.primaryText;
+        borderColor = isDisabled ? context.qio.gray200 : context.qio.gray300;
       case QioButtonVariant.ghost:
         backgroundColor = Colors.transparent;
         foregroundColor = isDisabled
-            ? QioColors.gray400
-            : QioColors.primaryText;
+            ? context.qio.gray400
+            : context.qio.primaryText;
         borderColor = Colors.transparent;
       case QioButtonVariant.danger:
         backgroundColor = isDisabled
-            ? QioColors.gray300
+            ? context.qio.gray300
             : QioColors.dangerStrong;
         foregroundColor = Colors.white;
         borderColor = Colors.transparent;
       case QioButtonVariant.successSoft:
         backgroundColor = QioColors.success.withValues(alpha: 0.12);
         foregroundColor = isDisabled
-            ? QioColors.gray400
-            : QioColors.statusOpenText;
+            ? context.qio.gray400
+            : context.qio.statusOpenText;
         borderColor = Colors.transparent;
       case QioButtonVariant.dangerSoft:
         backgroundColor = QioColors.error.withValues(alpha: 0.12);
         foregroundColor = isDisabled
-            ? QioColors.gray400
-            : QioColors.statusClosedText;
+            ? context.qio.gray400
+            : context.qio.statusClosedText;
         borderColor = Colors.transparent;
     }
 
@@ -101,7 +104,7 @@ class QioButton extends StatelessWidget {
                   child: Text(
                     label,
                     maxLines: 1,
-                    style: QioTextStyles.button.copyWith(
+                    style: context.qioText.button.copyWith(
                       color: foregroundColor,
                       fontSize: fontSize,
                     ),

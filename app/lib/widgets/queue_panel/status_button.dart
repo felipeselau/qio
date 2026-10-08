@@ -25,7 +25,7 @@ class StatusButton extends StatelessWidget {
         ),
         child: Text(
           label,
-          style: QioTextStyles.caption.copyWith(fontSize: 12, color: color),
+          style: context.qioText.caption.copyWith(fontSize: 12, color: color),
         ),
       ),
     );

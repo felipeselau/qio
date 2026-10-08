@@ -94,22 +94,22 @@ class _StepText extends StatelessWidget {
       children: [
         Text(
           AppLocalizations.of(context).stepOf(index, total),
-          style: QioTextStyles.caption.copyWith(color: Colors.white70),
+          style: context.qioText.caption.copyWith(color: Colors.white70),
         ),
         const SizedBox(height: 4),
         Text(
           step.title,
-          style: QioTextStyles.heading2.copyWith(color: Colors.white),
+          style: context.qioText.heading2.copyWith(color: Colors.white),
         ),
         const SizedBox(height: 8),
         Text(
           step.body,
-          style: QioTextStyles.body.copyWith(color: Colors.white),
+          style: context.qioText.body.copyWith(color: Colors.white),
         ),
         const SizedBox(height: 12),
         Text(
           AppLocalizations.of(context).tapToContinue,
-          style: QioTextStyles.caption.copyWith(color: Colors.white70),
+          style: context.qioText.caption.copyWith(color: Colors.white70),
         ),
       ],
     );

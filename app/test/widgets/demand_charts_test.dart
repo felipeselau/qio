@@ -5,7 +5,7 @@ import 'package:qio_app/l10n/app_localizations.dart';
 import 'package:qio_app/services/metrics_export.dart';
 import 'package:qio_app/services/history_metrics.dart';
 import 'package:qio_app/services/queue_analytics.dart';
-import 'package:qio_app/theme/qio_colors.dart';
+import 'package:qio_app/theme/qio_palette.dart';
 import 'package:qio_app/theme/qio_theme.dart';
 import 'package:qio_app/widgets/demand_charts.dart';
 
@@ -185,8 +185,7 @@ void main() {
       [1, 2, 3, 4, 4],
     );
     for (final b in [Brightness.light, Brightness.dark]) {
-      QioColors.apply(b);
-      final empty = QioColors.gray200;
+      final empty = QioPalette.forBrightness(b).gray200;
       final colors = [for (var l = 0; l <= 4; l++) heatColor(l, empty)];
       expect(colors.toSet().length, 5);
       expect(contrast(colors[1], empty), greaterThan(1.3));
@@ -197,6 +196,5 @@ void main() {
         );
       }
     }
-    QioColors.apply(Brightness.light);
   });
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
+import '../theme/qio_palette.dart';
 
 enum QioBadgeStatus { open, paused, closed }
 
@@ -21,14 +22,14 @@ class QioBadge extends StatelessWidget {
     }
   }
 
-  Color get _foregroundColor {
+  Color _foregroundColor(BuildContext context) {
     switch (status) {
       case QioBadgeStatus.open:
-        return QioColors.statusOpenText;
+        return context.qio.statusOpenText;
       case QioBadgeStatus.paused:
-        return QioColors.statusPausedText;
+        return context.qio.statusPausedText;
       case QioBadgeStatus.closed:
-        return QioColors.statusClosedText;
+        return context.qio.statusClosedText;
     }
   }
 
@@ -42,8 +43,8 @@ class QioBadge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: QioTextStyles.caption.copyWith(
-          color: _foregroundColor,
+        style: context.qioText.caption.copyWith(
+          color: _foregroundColor(context),
           fontWeight: FontWeight.w500,
         ),
       ),

@@ -6,6 +6,7 @@ import '../services/metrics_export.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
 import 'qio_card.dart';
+import '../theme/qio_palette.dart';
 
 const _levelMix = [0.55, 0.7, 0.85, 1.0];
 
@@ -42,7 +43,7 @@ class DemandCharts extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.weekdayDemandTitle, style: QioTextStyles.heading3),
+                Text(l10n.weekdayDemandTitle, style: context.qioText.heading3),
                 const SizedBox(height: 16),
                 _WeekdayChart(
                   counts: report.weekdays,
@@ -65,7 +66,7 @@ class DemandCharts extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.heatmapTitle, style: QioTextStyles.heading3),
+                Text(l10n.heatmapTitle, style: context.qioText.heading3),
                 const SizedBox(height: 16),
                 _HeatmapChart(
                   matrix: report.heatmap,
@@ -81,7 +82,7 @@ class DemandCharts extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 ExcludeSemantics(
-                  child: Text(summary, style: QioTextStyles.body),
+                  child: Text(summary, style: context.qioText.body),
                 ),
               ],
             ),
@@ -124,7 +125,7 @@ class _WeekdayChart extends StatelessWidget {
                           height: max == 0 ? 2 : 2 + 98 * counts[d] / max,
                           decoration: BoxDecoration(
                             color: counts[d] == 0
-                                ? QioColors.gray200
+                                ? context.qio.gray200
                                 : QioColors.primary,
                             borderRadius: BorderRadius.circular(2),
                           ),
@@ -144,7 +145,7 @@ class _WeekdayChart extends StatelessWidget {
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: QioTextStyles.caption,
+                      style: context.qioText.caption,
                     ),
                   ),
               ],
@@ -202,7 +203,7 @@ class _HeatmapChart extends StatelessWidget {
                                 right: h == 23 ? 0 : null,
                                 child: Text(
                                   hourLabel(h),
-                                  style: QioTextStyles.caption,
+                                  style: context.qioText.caption,
                                 ),
                               ),
                           ],
@@ -228,7 +229,7 @@ class _HeatmapChart extends StatelessWidget {
                             alignment: AlignmentDirectional.centerStart,
                             child: Text(
                               names[d],
-                              style: QioTextStyles.caption,
+                              style: context.qioText.caption,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -244,8 +245,8 @@ class _HeatmapChart extends StatelessWidget {
                   child: CustomPaint(
                     painter: _HeatmapPainter(
                       matrix: matrix,
-                      emptyColor: QioColors.gray200,
-                      borderColor: QioColors.gray300,
+                      emptyColor: context.qio.gray200,
+                      borderColor: context.qio.gray300,
                       textDirection: direction,
                       cellLabel: cellLabel,
                     ),
@@ -350,7 +351,7 @@ class _HeatmapLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final empty = QioColors.gray200;
+    final empty = context.qio.gray200;
     Widget swatch(int level) => Container(
       width: 14,
       height: 14,
@@ -358,7 +359,7 @@ class _HeatmapLegend extends StatelessWidget {
       decoration: BoxDecoration(
         color: heatColor(level, empty),
         borderRadius: BorderRadius.circular(2),
-        border: level == 0 ? Border.all(color: QioColors.gray300) : null,
+        border: level == 0 ? Border.all(color: context.qio.gray300) : null,
       ),
     );
     return ExcludeSemantics(
@@ -366,12 +367,12 @@ class _HeatmapLegend extends StatelessWidget {
         crossAxisAlignment: WrapCrossAlignment.center,
         spacing: 4,
         children: [
-          Text(less, style: QioTextStyles.caption),
+          Text(less, style: context.qioText.caption),
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [for (var l = 0; l <= 4; l++) swatch(l)],
           ),
-          Text(more, style: QioTextStyles.caption),
+          Text(more, style: context.qioText.caption),
         ],
       ),
     );

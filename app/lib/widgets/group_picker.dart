@@ -111,7 +111,7 @@ class GroupPicker extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.groupLabel, style: QioTextStyles.label),
+            Text(l10n.groupLabel, style: context.qioText.label),
             const SizedBox(height: 6),
             DropdownButtonFormField<String?>(
               key: ValueKey(selected),

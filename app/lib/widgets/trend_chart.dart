@@ -7,6 +7,7 @@ import '../l10n/app_localizations.dart';
 import '../services/metrics_trend.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
+import '../theme/qio_palette.dart';
 
 enum TrendLine { wait, noShow }
 
@@ -36,8 +37,8 @@ class _TrendChartState extends State<TrendChart> {
   TrendLine _line = TrendLine.wait;
 
   Color get _lineColor => _line == TrendLine.wait
-      ? QioColors.statusPausedText
-      : QioColors.statusClosedText;
+      ? context.qio.statusPausedText
+      : context.qio.statusClosedText;
 
   @override
   Widget build(BuildContext context) {
@@ -106,7 +107,7 @@ class _TrendChartState extends State<TrendChart> {
               totals: [for (final p in series) p.total],
               values: values,
               barColor: QioColors.primary,
-              emptyBarColor: QioColors.gray200,
+              emptyBarColor: context.qio.gray200,
               lineColor: _lineColor,
               summary: summary,
               dayLabels: dayLabels,
@@ -121,12 +122,12 @@ class _TrendChartState extends State<TrendChart> {
               children: [
                 Text(
                   dateFormat.format(series.first.day),
-                  style: QioTextStyles.caption,
+                  style: context.qioText.caption,
                 ),
                 if (series.length > 1)
                   Text(
                     dateFormat.format(series.last.day),
-                    style: QioTextStyles.caption,
+                    style: context.qioText.caption,
                   ),
               ],
             ),
@@ -149,7 +150,7 @@ class _TrendChartState extends State<TrendChart> {
           ],
         ),
         const SizedBox(height: 8),
-        ExcludeSemantics(child: Text(summary, style: QioTextStyles.body)),
+        ExcludeSemantics(child: Text(summary, style: context.qioText.body)),
       ],
     );
   }
@@ -175,7 +176,7 @@ class _Legend extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 6),
-        Flexible(child: Text(label, style: QioTextStyles.caption)),
+        Flexible(child: Text(label, style: context.qioText.caption)),
       ],
     );
   }

@@ -33,7 +33,7 @@ class QioAvatar extends StatelessWidget {
           child: Center(
             child: Text(
               initialsOf(name),
-              style: QioTextStyles.heading3.copyWith(
+              style: context.qioText.heading3.copyWith(
                 color: QioColors.primary,
                 fontSize: size * 0.4,
                 fontWeight: FontWeight.w600,

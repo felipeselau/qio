@@ -90,7 +90,7 @@ class _StatusMessageDialogState extends State<_StatusMessageDialog> {
             ),
             if (pausing) ...[
               const SizedBox(height: 12),
-              Text(l10n.resumeAtLabel, style: QioTextStyles.label),
+              Text(l10n.resumeAtLabel, style: context.qioText.label),
               Row(
                 children: [
                   TextButton.icon(

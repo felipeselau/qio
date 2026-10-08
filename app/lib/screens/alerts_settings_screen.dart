@@ -9,6 +9,7 @@ import '../theme/qio_text_styles.dart';
 import '../widgets/qio_button.dart';
 import '../widgets/qio_card.dart';
 import '../widgets/qio_responsive_body.dart';
+import '../theme/qio_palette.dart';
 
 class AlertsSettingsScreen extends StatefulWidget {
   const AlertsSettingsScreen({
@@ -89,12 +90,12 @@ class _AlertsSettingsScreenState extends State<AlertsSettingsScreen> {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: QioColors.surface,
+        backgroundColor: context.qio.surface,
         title: Text(
           l10n.alertsTitle,
-          style: QioTextStyles.heading2.copyWith(
+          style: context.qioText.heading2.copyWith(
             fontWeight: FontWeight.w700,
-            color: QioColors.textPrimary,
+            color: context.qio.textPrimary,
           ),
         ),
         centerTitle: true,
@@ -115,7 +116,7 @@ class _AlertsSettingsScreenState extends State<AlertsSettingsScreen> {
                     Expanded(
                       child: Text(
                         l10n.alertsPushOff,
-                        style: QioTextStyles.caption,
+                        style: context.qioText.caption,
                       ),
                     ),
                   ],
@@ -207,7 +208,7 @@ class _AlertsSettingsScreenState extends State<AlertsSettingsScreen> {
               ),
               if (!_canSave) ...[
                 const SizedBox(height: 12),
-                Text(l10n.alertsNoRule, style: QioTextStyles.caption),
+                Text(l10n.alertsNoRule, style: context.qioText.caption),
               ],
             ],
             const SizedBox(height: 24),

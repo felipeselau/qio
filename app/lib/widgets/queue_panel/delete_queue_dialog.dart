@@ -4,6 +4,7 @@ import '../../l10n/app_localizations.dart';
 import '../../theme/qio_colors.dart';
 import '../../theme/qio_text_styles.dart';
 import '../../widgets/qio_button.dart';
+import '../../theme/qio_palette.dart';
 
 Future<bool> confirmDeleteQueue(BuildContext context) async {
   final l10n = AppLocalizations.of(context);
@@ -31,18 +32,18 @@ Future<bool> confirmDeleteQueue(BuildContext context) async {
           const SizedBox(height: 16),
           Text(
             l10n.deleteQueueTitle,
-            style: QioTextStyles.heading2.copyWith(
+            style: context.qioText.heading2.copyWith(
               fontWeight: FontWeight.w700,
-              color: QioColors.textPrimary,
+              color: context.qio.textPrimary,
             ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
             l10n.deleteQueueBody,
-            style: QioTextStyles.body.copyWith(
+            style: context.qioText.body.copyWith(
               fontSize: 14,
-              color: QioColors.gray500,
+              color: context.qio.gray500,
             ),
             textAlign: TextAlign.center,
           ),
