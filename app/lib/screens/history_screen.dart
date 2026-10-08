@@ -18,6 +18,7 @@ import '../widgets/qio_card.dart';
 import '../widgets/qio_empty_state.dart';
 import '../widgets/qio_skeleton.dart';
 import '../widgets/qio_responsive_body.dart';
+import '../theme/qio_palette.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({
@@ -119,14 +120,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: QioColors.gray100,
+      backgroundColor: context.qio.gray100,
       appBar: AppBar(
-        backgroundColor: QioColors.surface,
+        backgroundColor: context.qio.surface,
         title: Text(
           l10n.historyTitle,
-          style: QioTextStyles.heading2.copyWith(
+          style: context.qioText.heading2.copyWith(
             fontWeight: FontWeight.w700,
-            color: QioColors.textPrimary,
+            color: context.qio.textPrimary,
           ),
         ),
         actions: [
@@ -192,7 +193,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     child: Center(
                       child: Text(
                         l10n.noHistoryInFilter,
-                        style: QioTextStyles.caption,
+                        style: context.qioText.caption,
                       ),
                     ),
                   )
@@ -325,9 +326,9 @@ class _Metric extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: QioTextStyles.label),
+          Text(label, style: context.qioText.label),
           const SizedBox(height: 4),
-          Text(value, style: QioTextStyles.heading2),
+          Text(value, style: context.qioText.heading2),
         ],
       ),
     );
@@ -346,13 +347,13 @@ class _HistoryTile extends StatelessWidget {
     final color = entry.isServed
         ? QioColors.success
         : entry.isLeft
-        ? QioColors.textSecondary
+        ? context.qio.textSecondary
         : QioColors.error;
     final textColor = entry.isServed
-        ? QioColors.statusOpenText
+        ? context.qio.statusOpenText
         : entry.isLeft
-        ? QioColors.textSecondary
-        : QioColors.statusClosedText;
+        ? context.qio.textSecondary
+        : context.qio.statusClosedText;
     final label = entry.isServed
         ? l10n.served
         : entry.isLeft
@@ -377,10 +378,10 @@ class _HistoryTile extends StatelessWidget {
                   children: [
                     Text(
                       l10n.ticketAndName(entry.ticket, entry.name),
-                      style: QioTextStyles.bodyMedium,
+                      style: context.qioText.bodyMedium,
                     ),
                     const SizedBox(height: 2),
-                    Text(subtitle, style: QioTextStyles.caption),
+                    Text(subtitle, style: context.qioText.caption),
                   ],
                 ),
               ),
@@ -395,7 +396,7 @@ class _HistoryTile extends StatelessWidget {
                 ),
                 child: Text(
                   label,
-                  style: QioTextStyles.caption.copyWith(
+                  style: context.qioText.caption.copyWith(
                     color: textColor,
                     fontWeight: FontWeight.w500,
                   ),
