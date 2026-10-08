@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:intl/intl.dart' show DateFormat, NumberFormat;
@@ -8,6 +9,8 @@ import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
 
 enum TrendLine { wait, noShow }
+
+const _maxSemanticDays = 31;
 
 String trendSummaryText(AppLocalizations l10n, List<DayPoint> series) {
   final stats = trendStats(series);
@@ -48,7 +51,34 @@ class _TrendChartState extends State<TrendChart> {
     final lineLabel = _line == TrendLine.wait
         ? l10n.trendSeriesWait
         : l10n.trendSeriesNoShow;
+    final toggleLabel = _line == TrendLine.wait
+        ? l10n.trendToggleWait
+        : l10n.trendToggleNoShow;
     final dateFormat = DateFormat.Md(l10n.localeName);
+    String lineValue(double? v) {
+      if (v == null) return '-';
+      if (_line == TrendLine.noShow) return '${v.round()}%';
+      return v < 1
+          ? l10n.durationLessThanMinute
+          : l10n.durationMinutes(v.round());
+    }
+
+    final maxTotal = series.fold<int>(0, (m, p) => p.total > m ? p.total : m);
+    final maxLine = values.fold<double?>(
+      null,
+      (m, v) => v == null ? m : (m == null || v > m ? v : m),
+    );
+    final dayLabels = series.length > _maxSemanticDays
+        ? const <String>[]
+        : [
+            for (var i = 0; i < series.length; i++)
+              l10n.trendDaySummary(
+                dateFormat.format(series[i].day),
+                series[i].total,
+                toggleLabel,
+                lineValue(values[i]),
+              ),
+          ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -57,11 +87,11 @@ class _TrendChartState extends State<TrendChart> {
           segments: [
             ButtonSegment(
               value: TrendLine.wait,
-              label: Text(l10n.trendSeriesWait),
+              label: Text(l10n.trendToggleWait),
             ),
             ButtonSegment(
               value: TrendLine.noShow,
-              label: Text(l10n.trendSeriesNoShow),
+              label: Text(l10n.trendToggleNoShow),
             ),
           ],
           selected: {_line},
@@ -79,6 +109,7 @@ class _TrendChartState extends State<TrendChart> {
               emptyBarColor: QioColors.gray200,
               lineColor: _lineColor,
               summary: summary,
+              dayLabels: dayLabels,
             ),
           ),
         ),
@@ -105,8 +136,16 @@ class _TrendChartState extends State<TrendChart> {
           spacing: 16,
           runSpacing: 4,
           children: [
-            _Legend(color: QioColors.primary, label: l10n.trendSeriesTotal),
-            _Legend(color: _lineColor, label: lineLabel),
+            _Legend(
+              color: QioColors.primary,
+              label: '${l10n.trendSeriesTotal} (${l10n.trendMax('$maxTotal')})',
+            ),
+            _Legend(
+              color: _lineColor,
+              label: maxLine == null
+                  ? lineLabel
+                  : '$lineLabel (${l10n.trendMax(lineValue(maxLine))})',
+            ),
           ],
         ),
         const SizedBox(height: 8),
@@ -136,7 +175,7 @@ class _Legend extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 6),
-        Text(label, style: QioTextStyles.caption),
+        Flexible(child: Text(label, style: QioTextStyles.caption)),
       ],
     );
   }
@@ -150,6 +189,7 @@ class _TrendPainter extends CustomPainter {
     required this.emptyBarColor,
     required this.lineColor,
     required this.summary,
+    required this.dayLabels,
   });
 
   final List<int> totals;
@@ -158,14 +198,15 @@ class _TrendPainter extends CustomPainter {
   final Color emptyBarColor;
   final Color lineColor;
   final String summary;
+  final List<String> dayLabels;
 
   @override
   void paint(Canvas canvas, Size size) {
     final n = totals.length;
     if (n == 0) return;
     final slot = size.width / n;
-    final gap = slot > 6 ? 2.0 : 0.5;
-    final barWidth = (slot - gap).clamp(1.0, 40.0);
+    final gap = slot > 6 ? 2.0 : slot * 0.15;
+    final barWidth = (slot - gap).clamp(0.5, 40.0);
     final maxTotal = totals.fold<int>(0, (m, v) => v > m ? v : m);
     final bar = Paint();
     for (var i = 0; i < n; i++) {
@@ -223,17 +264,35 @@ class _TrendPainter extends CustomPainter {
       old.lineColor != lineColor;
 
   @override
-  SemanticsBuilderCallback get semanticsBuilder =>
-      (size) => [
+  SemanticsBuilderCallback get semanticsBuilder => (size) {
+    final n = dayLabels.length;
+    return [
+      CustomPainterSemantics(
+        key: const ValueKey('summary'),
+        rect: Offset.zero & size,
+        properties: SemanticsProperties(
+          label: summary,
+          textDirection: TextDirection.ltr,
+        ),
+      ),
+      for (var i = 0; i < n; i++)
         CustomPainterSemantics(
-          rect: Offset.zero & size,
+          key: ValueKey(i),
+          rect: Rect.fromLTWH(
+            size.width / n * i,
+            0,
+            size.width / n,
+            size.height,
+          ),
           properties: SemanticsProperties(
-            label: summary,
+            label: dayLabels[i],
             textDirection: TextDirection.ltr,
           ),
         ),
-      ];
+    ];
+  };
 
   @override
-  bool shouldRebuildSemantics(_TrendPainter old) => old.summary != summary;
+  bool shouldRebuildSemantics(_TrendPainter old) =>
+      old.summary != summary || !listEquals(old.dayLabels, dayLabels);
 }

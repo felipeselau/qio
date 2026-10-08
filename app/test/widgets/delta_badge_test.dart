@@ -53,12 +53,19 @@ void main() {
     expect(colorOf(tester, '▲ 5 p.p.'), QioColors.statusClosedText);
   });
 
-  testWidgets('variação arredondada para zero é neutra', (tester) async {
+  testWidgets('variação pequena mantém uma casa decimal', (tester) async {
     await tester.pumpWidget(
       host(MetricKey.avgWait, const Delta(abs: 0.1, pct: 0.3)),
     );
-    expect(find.text('= igual'), findsOneWidget);
-    expect(colorOf(tester, '= igual'), QioColors.textSecondary);
+    expect(find.text('▲ 0,3%'), findsOneWidget);
+  });
+
+  testWidgets('zero exato é estável e neutro', (tester) async {
+    await tester.pumpWidget(
+      host(MetricKey.avgWait, const Delta(abs: 0, pct: 0)),
+    );
+    expect(find.text('= estável'), findsOneWidget);
+    expect(colorOf(tester, '= estável'), QioColors.textSecondary);
   });
 
   testWidgets('semântica descreve em palavras', (tester) async {

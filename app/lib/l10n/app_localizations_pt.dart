@@ -1244,20 +1244,20 @@ class AppLocalizationsPt extends AppLocalizations {
   String get periodCustom => 'Personalizado';
 
   @override
-  String deltaUp(int pct) {
+  String deltaUp(String pct) {
     return '▲ $pct%';
   }
 
   @override
-  String deltaDown(int pct) {
+  String deltaDown(String pct) {
     return '▼ $pct%';
   }
 
   @override
-  String get deltaSame => '= igual';
+  String get deltaSame => '= estável';
 
   @override
-  String deltaPoints(int pp) {
+  String deltaPoints(String pp) {
     return '$pp p.p.';
   }
 
@@ -1311,5 +1311,31 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String customRangeLimited(int days) {
     return 'Intervalo limitado a $days dias';
+  }
+
+  @override
+  String deltaPointsUp(String pp) {
+    return '▲ $pp p.p.';
+  }
+
+  @override
+  String deltaPointsDown(String pp) {
+    return '▼ $pp p.p.';
+  }
+
+  @override
+  String get trendToggleWait => 'Espera';
+
+  @override
+  String get trendToggleNoShow => 'No-show';
+
+  @override
+  String trendMax(String value) {
+    return 'máx. $value';
+  }
+
+  @override
+  String trendDaySummary(String day, int count, String series, String value) {
+    return '$day: $count atendimentos, $series $value';
   }
 }

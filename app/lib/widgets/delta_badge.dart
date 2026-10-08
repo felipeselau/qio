@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart' show NumberFormat;
 
 import '../l10n/app_localizations.dart';
 import '../services/metrics_trend.dart';
@@ -18,23 +19,24 @@ class DeltaBadge extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final points = metric == MetricKey.noShowRate;
     final value = points ? delta.abs : delta.pct ?? 0;
-    final rounded = value.abs().round();
+    final magnitude = value.abs();
     final up = value > 0;
-    final same = rounded == 0;
+    final same = value == 0;
+    final shown = magnitude >= 1
+        ? '${magnitude.round()}'
+        : NumberFormat('0.0', l10n.localeName).format(magnitude);
     final String text;
     final String spoken;
     if (same) {
       text = l10n.deltaSame;
       spoken = '${l10n.deltaSame} ${l10n.deltaVsPrevious}';
     } else {
-      final shown = points ? l10n.deltaPoints(rounded) : '$rounded%';
+      final spokenValue = points ? l10n.deltaPoints(shown) : '$shown%';
       text = points
-          ? '${up ? '▲' : '▼'} $shown'
-          : up
-          ? l10n.deltaUp(rounded)
-          : l10n.deltaDown(rounded);
+          ? (up ? l10n.deltaPointsUp(shown) : l10n.deltaPointsDown(shown))
+          : (up ? l10n.deltaUp(shown) : l10n.deltaDown(shown));
       spoken =
-          '${up ? l10n.deltaRose : l10n.deltaFell} $shown ${l10n.deltaVsPrevious}';
+          '${up ? l10n.deltaRose : l10n.deltaFell} $spokenValue ${l10n.deltaVsPrevious}';
     }
     final Color color;
     if (same) {

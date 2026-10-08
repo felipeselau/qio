@@ -2342,25 +2342,25 @@ abstract class AppLocalizations {
   ///
   /// In pt, this message translates to:
   /// **'▲ {pct}%'**
-  String deltaUp(int pct);
+  String deltaUp(String pct);
 
   /// No description provided for @deltaDown.
   ///
   /// In pt, this message translates to:
   /// **'▼ {pct}%'**
-  String deltaDown(int pct);
+  String deltaDown(String pct);
 
   /// No description provided for @deltaSame.
   ///
   /// In pt, this message translates to:
-  /// **'= igual'**
+  /// **'= estável'**
   String get deltaSame;
 
   /// No description provided for @deltaPoints.
   ///
   /// In pt, this message translates to:
   /// **'{pp} p.p.'**
-  String deltaPoints(int pp);
+  String deltaPoints(String pp);
 
   /// No description provided for @deltaRose.
   ///
@@ -2457,6 +2457,42 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Intervalo limitado a {days} dias'**
   String customRangeLimited(int days);
+
+  /// No description provided for @deltaPointsUp.
+  ///
+  /// In pt, this message translates to:
+  /// **'▲ {pp} p.p.'**
+  String deltaPointsUp(String pp);
+
+  /// No description provided for @deltaPointsDown.
+  ///
+  /// In pt, this message translates to:
+  /// **'▼ {pp} p.p.'**
+  String deltaPointsDown(String pp);
+
+  /// No description provided for @trendToggleWait.
+  ///
+  /// In pt, this message translates to:
+  /// **'Espera'**
+  String get trendToggleWait;
+
+  /// No description provided for @trendToggleNoShow.
+  ///
+  /// In pt, this message translates to:
+  /// **'No-show'**
+  String get trendToggleNoShow;
+
+  /// No description provided for @trendMax.
+  ///
+  /// In pt, this message translates to:
+  /// **'máx. {value}'**
+  String trendMax(String value);
+
+  /// No description provided for @trendDaySummary.
+  ///
+  /// In pt, this message translates to:
+  /// **'{day}: {count} atendimentos, {series} {value}'**
+  String trendDaySummary(String day, int count, String series, String value);
 }
 
 class _AppLocalizationsDelegate

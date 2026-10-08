@@ -4,12 +4,25 @@ import 'package:qio_app/l10n/app_localizations.dart';
 import 'package:qio_app/services/metrics_trend.dart';
 import 'package:qio_app/widgets/trend_chart.dart';
 
-Widget host(List<DayPoint> series) => MaterialApp(
-  locale: const Locale('pt'),
+Widget host(
+  List<DayPoint> series, {
+  Locale locale = const Locale('pt'),
+  double textScale = 1,
+}) => MaterialApp(
+  locale: locale,
   localizationsDelegates: AppLocalizations.localizationsDelegates,
   supportedLocales: AppLocalizations.supportedLocales,
+  builder: (context, child) => MediaQuery(
+    data: MediaQuery.of(
+      context,
+    ).copyWith(textScaler: TextScaler.linear(textScale)),
+    child: child!,
+  ),
   home: Scaffold(
-    body: SingleChildScrollView(child: TrendChart(series: series)),
+    body: SingleChildScrollView(
+      padding: const EdgeInsets.all(32),
+      child: TrendChart(series: series),
+    ),
   ),
 );
 
@@ -32,8 +45,8 @@ void main() {
   testWidgets('mostra resumo com média e dia de pico', (tester) async {
     await tester.pumpWidget(host(series));
     expect(find.text('Média de 2,0 por dia, pico em 03/10'), findsOneWidget);
-    expect(find.text('Espera média'), findsWidgets);
-    expect(find.text('Atendimentos por dia'), findsOneWidget);
+    expect(find.textContaining('Espera média'), findsOneWidget);
+    expect(find.textContaining('Atendimentos por dia'), findsOneWidget);
     expect(find.text('01/10'), findsOneWidget);
   });
 
@@ -51,9 +64,12 @@ void main() {
 
   testWidgets('alterna entre espera e no-show', (tester) async {
     await tester.pumpWidget(host(series));
-    await tester.tap(find.text('Não comparecimento'));
+    await tester.tap(find.text('No-show'));
     await tester.pump();
-    expect(find.text('Não comparecimento'), findsWidgets);
+    expect(
+      find.textContaining('Não comparecimento (máx. 25%)'),
+      findsOneWidget,
+    );
     expect(tester.takeException(), isNull);
   });
 
@@ -70,6 +86,65 @@ void main() {
     expect(find.text('Média de 3,0 por dia, pico em 05/10'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('legenda mostra o máximo das duas séries', (tester) async {
+    await tester.pumpWidget(host(series));
+    expect(find.text('Atendimentos por dia (máx. 4)'), findsOneWidget);
+    expect(find.text('Espera média (máx. 8 min)'), findsOneWidget);
+  });
+
+  testWidgets('semântica tem um item por dia', (tester) async {
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(host(series));
+    await tester.pump();
+    final tree = tester.getSemantics(find.byType(Scaffold)).toStringDeep();
+    expect(tree, contains('01/10: 2 atendimentos, Espera 5 min'));
+    expect(tree, contains('02/10: 0 atendimentos, Espera -'));
+    expect(tree, contains('03/10: 4 atendimentos, Espera 8 min'));
+    handle.dispose();
+  });
+
+  testWidgets('muitos dias não geram um item por dia nem erro', (tester) async {
+    final handle = tester.ensureSemantics();
+    final many = [for (var i = 0; i < 366; i++) point(1, i % 5, wait: 3)]
+        .indexed
+        .map(
+          (e) => DayPoint(
+            day: DateTime(2025, 10, 8 + e.$1),
+            total: e.$2.total,
+            served: e.$2.served,
+            noShow: 0,
+            noShowRate: 0,
+            avgWaitMin: 3,
+          ),
+        )
+        .toList();
+    await tester.pumpWidget(host(many));
+    await tester.pump();
+    final tree = tester.getSemantics(find.byType(Scaffold)).toStringDeep();
+    expect(tree, isNot(contains('atendimentos, Espera')));
+    expect(tester.takeException(), isNull);
+    handle.dispose();
+  });
+
+  for (final locale in ['pt', 'en', 'es']) {
+    testWidgets('320px com textScaler 1.5 sem overflow em $locale', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(320, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(
+        host(series, locale: Locale(locale), textScale: 1.5),
+      );
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.text('No-show'));
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   test('trendStats', () {
     final s = trendStats(series);
