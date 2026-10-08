@@ -364,10 +364,18 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   cache é risco. Banner via `useInstallPrompt.ts` (só aparece na fase `ticket`).
   O Chrome pode não disparar `beforeinstallprompt` sem SW com `fetch` handler
   cobrindo `/`; o menu "Instalar app" e o fluxo iOS funcionam só com o manifest.
-- `firebaseConfig` é duplicado em `web/src/firebase.ts` e
-  `web/public/firebase-messaging-sw.js` — mantenha os dois em sincronia.
-- URL de join: `https://qio.web.app/q/{queueId}` (hosting site `qio`). Duplicada em
-  `functions/index.js` e `app/lib/services/queue_service.dart`.
+- `firebaseConfig` tem fonte única em `web/src/firebaseConfig.ts` (`firebase.ts`
+  só acrescenta `measurementId` via env). O service worker é gerado: o plugin
+  `web/vite-plugins/swConfig.ts` renderiza
+  `web/vite-plugins/firebase-messaging-sw.template.js` (placeholder
+  `__FIREBASE_CONFIG__`) em `dist/firebase-messaging-sw.js` no build e o serve
+  no dev server. Não crie `web/public/firebase-messaging-sw.js`. Mudanças no
+  config valem para os dois só após novo build.
+- URL de join: `https://qio.web.app/q/{queueId}` (hosting site `qio`). Fonte por
+  módulo: `functions/src/urls.js` (`joinUrl`) e `app/lib/services/join_url.dart`
+  (`joinUrl`, `clientUrl`). `functions/test/urls.test.js` falha se host/path
+  divergirem entre os dois e o `AndroidManifest.xml` (App Links), ou se alguém
+  voltar a hardcodar o host nesses arquivos. O web não monta essa URL.
 - `web/src/lib/useQueue.ts`: listeners do RTDB só são anexados com `ready`
   (auth anônima concluída). Anexar antes faz a leitura ser negada e o `onValue`
   morre sem retry → spinner infinito no primeiro acesso pelo QR.

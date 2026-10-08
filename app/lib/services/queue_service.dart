@@ -16,6 +16,7 @@ import '../models/queue_slot.dart';
 import 'action_errors.dart';
 import 'analytics_service.dart';
 import 'finish_entry.dart';
+import 'join_url.dart';
 import 'mirror.dart';
 import 'operator_service.dart';
 
@@ -691,5 +692,5 @@ class QueueService {
     }
   }
 
-  String queueJoinUrl(String queueId) => 'https://qio.web.app/q/$queueId';
+  String queueJoinUrl(String queueId) => joinUrl(queueId);
 }
