@@ -51,6 +51,7 @@ void main() {
     expect(csvCell('a,b'), '"a,b"');
     expect(csvCell('say "hi"'), '"say ""hi"""');
     expect(csvCell('=SUM(A1)'), "'=SUM(A1)");
+    expect(csvCell('\u0001=SUM(A1)'), "'\u0001=SUM(A1)");
   });
 
   test('csv leaves missing dates and phone empty', () {

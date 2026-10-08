@@ -34,7 +34,9 @@ String formatExportDateTime(DateTime? d) {
 
 String csvCell(String value) {
   var v = value;
-  if (v.isNotEmpty && '=+-@\t\r'.contains(v[0])) v = "'$v";
+  if (v.isNotEmpty && (v.codeUnitAt(0) < 0x20 || '=+-@'.contains(v[0]))) {
+    v = "'$v";
+  }
   if (v.contains(RegExp(r'[",\n\r]'))) {
     v = '"${v.replaceAll('"', '""')}"';
   }

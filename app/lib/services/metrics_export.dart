@@ -255,7 +255,7 @@ String buildMetricsCsv(
   required DateTime generatedAt,
 }) {
   final m = report.metrics;
-  final sections = <List<List<String>>>[
+  final sections = <List<List<Object>>>[
     [
       [l10n.metricsPdfTitle],
       [l10n.csvPeriod, report.period.label(l10n)],
@@ -395,9 +395,9 @@ String buildMetricsCsv(
                 ? ''
                 : report.deltas[key]?.pct == null
                 ? ''
-                : '$_rawCell${_signed(report.deltas[key]!.pct!)}',
+                : _SignedCell(report.deltas[key]!.pct!),
             key == MetricKey.noShowRate && report.deltas[key] != null
-                ? '$_rawCell${_signed(report.deltas[key]!.abs)}'
+                ? _SignedCell(report.deltas[key]!.abs)
                 : '',
           ],
       ],
@@ -408,7 +408,7 @@ String buildMetricsCsv(
     for (final row in sections[i]) {
       lines.add(
         row
-            .map((c) => c.startsWith(_rawCell) ? c.substring(1) : csvCell(c))
+            .map((c) => c is _SignedCell ? c.text : csvCell(c as String))
             .join(','),
       );
     }
@@ -416,7 +416,13 @@ String buildMetricsCsv(
   return '\u{FEFF}${lines.join('\r\n')}\r\n';
 }
 
-const _rawCell = '\u0001';
+class _SignedCell {
+  const _SignedCell(this.value);
+
+  final double value;
+
+  String get text => _signed(value);
+}
 
 String _dayKey(DateTime d) =>
     '${d.year.toString().padLeft(4, '0')}-'

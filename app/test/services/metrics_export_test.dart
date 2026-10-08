@@ -623,6 +623,39 @@ void main() {
       expect(l[i + 2], '1,"A, ""B""",0,0,0.0');
     });
 
+    test('control-char prefixed names cannot bypass escaping', () {
+      for (final bad in [
+        '\u0001=HYPERLINK("x")',
+        '\u0001+1',
+        '=HYPERLINK("x")',
+      ]) {
+        final d = [
+          QueueHistoryInput(
+            queue('a', name: bad),
+            [served('1', calledBy: 'u1')],
+            const [],
+            [op('u1', bad)],
+          ),
+        ];
+        final r = report(d, period: HistoryPeriod.last7Days);
+        final csv = buildMetricsCsv(pt, r, generatedAt: at);
+        for (final line in csv.split('\r\n')) {
+          if (line.contains('HYPERLINK') || line.contains('\u0001+1')) {
+            expect(
+              line.startsWith('"\'') ||
+                  line.contains(",\"'") ||
+                  line.contains(",'") ||
+                  line.startsWith("'"),
+              isTrue,
+              reason: line,
+            );
+            expect(line, isNot(contains(',=')));
+            expect(line, isNot(contains(',\u0001')));
+          }
+        }
+      }
+    });
+
     test('operator names are protected too', () {
       final d = [
         QueueHistoryInput(
