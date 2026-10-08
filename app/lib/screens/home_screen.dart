@@ -12,6 +12,7 @@ import '../models/operator.dart';
 import '../models/queue.dart';
 import '../services/auth_service.dart';
 import '../services/deep_link.dart';
+import '../services/home_prompts.dart';
 import '../services/push_service.dart';
 import '../services/onboarding_service.dart';
 import '../services/operator_service.dart';
@@ -40,6 +41,7 @@ class HomeScreen extends StatefulWidget {
     this.queues,
     this.operators,
     this.enableIntegrations = true,
+    this.prompts,
   });
 
   final AuthService? auth;
@@ -47,6 +49,8 @@ class HomeScreen extends StatefulWidget {
   final OperatorService? operators;
   @visibleForTesting
   final bool enableIntegrations;
+  @visibleForTesting
+  final HomePrompts? prompts;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -64,10 +68,15 @@ class _HomeScreenState extends State<HomeScreen> {
   );
 
   StreamSubscription<Uri>? _linkSub;
+  HomePrompts? _prompts;
 
   @override
   void initState() {
     super.initState();
+    _prompts =
+        widget.prompts ??
+        (widget.enableIntegrations ? _defaultPrompts() : null);
+    if (_prompts != null) _controller.addListener(_onControllerChanged);
     if (!widget.enableIntegrations) return;
     final links = AppLinks();
     links.getInitialLink().then((uri) {
@@ -92,9 +101,24 @@ class _HomeScreenState extends State<HomeScreen> {
       final id = queueIdFromPush(m.data);
       if (id != null) _openQueue(id);
     });
-    if (await PushService.instance.shouldPrompt() && mounted) {
-      await _askForPush();
-    }
+  }
+
+  HomePrompts _defaultPrompts() => HomePrompts(
+    runTour: _runTour,
+    shouldPromptPush: () async =>
+        PushService.instance.supported &&
+        await PushService.instance.shouldPrompt(),
+    askPush: _askForPush,
+    canShowDialog: () => mounted && (ModalRoute.of(context)?.isCurrent ?? true),
+  );
+
+  void _onControllerChanged() {
+    if (_controller.isLoading || _controller.hasError) return;
+    final hasOwned = _controller.ownedQueues.isNotEmpty;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _prompts?.onQueues(hasOwned: hasOwned);
+    });
   }
 
   Future<void> _askForPush() async {
@@ -153,6 +177,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _controller.removeListener(_onControllerChanged);
     _linkSub?.cancel();
     _pushSub?.cancel();
     _controller.dispose();
@@ -162,36 +187,32 @@ class _HomeScreenState extends State<HomeScreen> {
   final _fabKey = GlobalKey();
   final _operatorKey = GlobalKey();
   final _firstQueueKey = GlobalKey();
-  bool _tourScheduled = false;
 
-  void _scheduleTour(bool hasOwned) {
-    if (_tourScheduled || !widget.enableIntegrations) return;
-    _tourScheduled = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final l10n = AppLocalizations.of(context);
-      showOnboardingTour(context, OnboardingTour.home, [
+  Future<void> _runTour() async {
+    if (!mounted) return;
+    final hasOwned = _controller.ownedQueues.isNotEmpty;
+    final l10n = AppLocalizations.of(context);
+    await showOnboardingTour(context, OnboardingTour.home, [
+      OnboardingStep(
+        key: _fabKey,
+        title: l10n.tourHomeFabTitle,
+        body: l10n.tourHomeFabBody,
+        shape: ShapeLightFocus.Circle,
+        above: true,
+      ),
+      if (hasOwned)
         OnboardingStep(
-          key: _fabKey,
-          title: l10n.tourHomeFabTitle,
-          body: l10n.tourHomeFabBody,
-          shape: ShapeLightFocus.Circle,
-          above: true,
+          key: _firstQueueKey,
+          title: l10n.tourHomeQueueTitle,
+          body: l10n.tourHomeQueueBody,
         ),
-        if (hasOwned)
-          OnboardingStep(
-            key: _firstQueueKey,
-            title: l10n.tourHomeQueueTitle,
-            body: l10n.tourHomeQueueBody,
-          ),
-        OnboardingStep(
-          key: _operatorKey,
-          title: l10n.tourHomeOperatorTitle,
-          body: l10n.tourHomeOperatorBody,
-          shape: ShapeLightFocus.Circle,
-        ),
-      ]);
-    });
+      OnboardingStep(
+        key: _operatorKey,
+        title: l10n.tourHomeOperatorTitle,
+        body: l10n.tourHomeOperatorBody,
+        shape: ShapeLightFocus.Circle,
+      ),
+    ]);
   }
 
   @override
@@ -266,7 +287,6 @@ class _HomeScreenState extends State<HomeScreen> {
               return QioErrorState(onRetry: _controller.retry);
             }
             if (_controller.isLoading) return const QioSkeletonList();
-            _scheduleTour(_controller.ownedQueues.isNotEmpty);
             return _buildBody(
               _controller.ownedQueues,
               _controller.operatingQueues,

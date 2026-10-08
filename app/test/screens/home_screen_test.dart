@@ -1,8 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qio_app/models/operator.dart';
 import 'package:qio_app/models/queue.dart';
 import 'package:qio_app/screens/home_screen.dart';
+import 'package:qio_app/services/home_prompts.dart';
 
 import '../helpers/fake_auth.dart';
 import '../helpers/fake_services.dart';
@@ -19,6 +22,33 @@ HomeScreen home({FakeQueueService? queues, FakeOperatorService? operators}) =>
       queues: queues ?? FakeQueueService(),
       operators: operators ?? FakeOperatorService(),
       enableIntegrations: false,
+    );
+
+class _Recorder {
+  final events = <String>[];
+  bool pushWanted = true;
+  bool dialogOpen = false;
+  Completer<void>? tourGate;
+
+  HomePrompts build() => HomePrompts(
+    runTour: () async {
+      events.add('tour:start');
+      await tourGate?.future;
+      events.add('tour:end');
+    },
+    shouldPromptPush: () async => pushWanted,
+    askPush: () async => events.add('push'),
+    canShowDialog: () => !dialogOpen,
+  );
+}
+
+HomeScreen homeWithPrompts(FakeQueueService queues, HomePrompts prompts) =>
+    HomeScreen(
+      auth: FakeAuthService(user: FakeUser(displayName: 'Maria')),
+      queues: queues,
+      operators: FakeOperatorService(),
+      enableIntegrations: false,
+      prompts: prompts,
     );
 
 void main() {
@@ -146,5 +176,43 @@ void main() {
     expect(find.text('My queues'), findsOneWidget);
     expect(find.text('Bakery'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  group('startup prompts', () {
+    testWidgets('tour runs first and push waits for it', (tester) async {
+      final rec = _Recorder()..tourGate = Completer<void>();
+      final queues = FakeQueueService(ownerQueues: [fakeQueue('a')]);
+      await pumpApp(tester, homeWithPrompts(queues, rec.build()));
+      await tick(tester);
+      expect(rec.events, ['tour:start']);
+      rec.tourGate!.complete();
+      await tick(tester);
+      expect(rec.events, ['tour:start', 'tour:end', 'push']);
+    });
+
+    testWidgets('push is not asked before the first queue exists', (
+      tester,
+    ) async {
+      final rec = _Recorder();
+      await pumpApp(tester, homeWithPrompts(FakeQueueService(), rec.build()));
+      await tick(tester);
+      expect(rec.events, ['tour:start', 'tour:end']);
+    });
+
+    testWidgets('push is skipped while another dialog is open', (tester) async {
+      final rec = _Recorder()..dialogOpen = true;
+      final queues = FakeQueueService(ownerQueues: [fakeQueue('a')]);
+      await pumpApp(tester, homeWithPrompts(queues, rec.build()));
+      await tick(tester);
+      expect(rec.events, ['tour:start', 'tour:end']);
+    });
+
+    testWidgets('push is not asked when already decided', (tester) async {
+      final rec = _Recorder()..pushWanted = false;
+      final queues = FakeQueueService(ownerQueues: [fakeQueue('a')]);
+      await pumpApp(tester, homeWithPrompts(queues, rec.build()));
+      await tick(tester);
+      expect(rec.events, ['tour:start', 'tour:end']);
+    });
   });
 }
