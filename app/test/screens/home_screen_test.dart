@@ -273,6 +273,50 @@ void main() {
       expect(await QueueSortPrefs.load(), QueueSort.waiting);
     });
 
+    testWidgets('saved waiting sort is applied after prefs load', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({QueueSortPrefs.key: 'waiting'});
+      await pumpApp(tester, home(queues: many()));
+      await tick(tester);
+      expect(
+        tester.getTopLeft(find.text('Zeta')).dy,
+        lessThan(tester.getTopLeft(find.text('Alfa')).dy),
+      );
+    });
+
+    testWidgets('clear button resets the search', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      await pumpApp(tester, home(queues: many()));
+      await tick(tester);
+      expect(find.byTooltip('Limpar'), findsNothing);
+      await tester.enterText(find.byType(TextField), 'alf');
+      await tick(tester);
+      await tester.tap(find.byTooltip('Limpar'));
+      await tick(tester);
+      expect(find.text('Beta'), findsOneWidget);
+    });
+
+    testWidgets('one waiting-count subscription per queue, cancelled on exit', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({QueueSortPrefs.key: 'waiting'});
+      final queues = many();
+      await pumpApp(tester, home(queues: queues));
+      await tick(tester);
+      expect(queues.waitingListens.values.every((v) => v == 1), isTrue);
+      expect(queues.waitingListens.length, 6);
+      await tester.enterText(find.byType(TextField), 'alf');
+      await tick(tester);
+      await tester.tap(find.byTooltip('Ordenar filas'));
+      await tick(tester);
+      await tester.tap(find.text('Nome'));
+      await tick(tester);
+      expect(queues.waitingListens.values.every((v) => v == 1), isTrue);
+      await tester.pumpWidget(const SizedBox());
+      expect(queues.waitingListens.values.every((v) => v == 0), isTrue);
+    });
+
     testWidgets('sort button meets the tap target size', (tester) async {
       SharedPreferences.setMockInitialValues({});
       await pumpApp(tester, home(queues: many()));
@@ -382,6 +426,24 @@ void main() {
     });
   });
 
+  testWidgets('app bar fits 320dp with 1.5 text scale in pt', (tester) async {
+    await pumpApp(
+      tester,
+      Builder(
+        builder: (context) => MediaQuery(
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: const TextScaler.linear(1.5)),
+          child: home(queues: FakeQueueService(ownerQueues: [fakeQueue('a')])),
+        ),
+      ),
+      size: const Size(320, 640),
+    );
+    await tick(tester);
+    expect(tester.takeException(), isNull);
+    expect(find.byTooltip('Minha conta'), findsOneWidget);
+  });
+
   group('startup prompts', () {
     testWidgets('tour runs first and push waits for it', (tester) async {
       final rec = _Recorder()..tourGate = Completer<void>();
@@ -403,12 +465,48 @@ void main() {
       expect(rec.events, ['tour:start', 'tour:end']);
     });
 
-    testWidgets('push is skipped while another dialog is open', (tester) async {
+    testWidgets('nothing is shown while another dialog is open', (
+      tester,
+    ) async {
       final rec = _Recorder()..dialogOpen = true;
       final queues = FakeQueueService(ownerQueues: [fakeQueue('a')]);
       await pumpApp(tester, homeWithPrompts(queues, rec.build()));
       await tick(tester);
+      expect(rec.events, isEmpty);
+    });
+
+    testWidgets('tour and push wait until the home route is current again', (
+      tester,
+    ) async {
+      final rec = _Recorder();
+      final queues = FakeQueueService(ownerQueues: [fakeQueue('a')]);
+      await pumpApp(tester, homeWithPrompts(queues, rec.build()));
+      final navigator = Navigator.of(tester.element(find.byType(HomeScreen)));
+      navigator.push(MaterialPageRoute<void>(builder: (_) => const Scaffold()));
+      await tick(tester);
+      expect(rec.events, isEmpty);
+      navigator.pop();
+      await tick(tester);
+      expect(rec.events, ['tour:start', 'tour:end', 'push']);
+    });
+
+    testWidgets('push asked after returning from the first queue creation', (
+      tester,
+    ) async {
+      final rec = _Recorder();
+      final queues = FakeQueueService();
+      await pumpApp(tester, homeWithPrompts(queues, rec.build()));
+      await tick(tester);
       expect(rec.events, ['tour:start', 'tour:end']);
+      final navigator = Navigator.of(tester.element(find.byType(HomeScreen)));
+      navigator.push(MaterialPageRoute<void>(builder: (_) => const Scaffold()));
+      await tick(tester);
+      queues.emitOwnerQueues([fakeQueue('a')]);
+      await tick(tester);
+      expect(rec.events, ['tour:start', 'tour:end']);
+      navigator.pop();
+      await tick(tester);
+      expect(rec.events, ['tour:start', 'tour:end', 'push']);
     });
 
     testWidgets('push is not asked when already decided', (tester) async {

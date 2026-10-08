@@ -312,6 +312,9 @@ conhecidas: `docs/qualidade.md`.
 - `callNext` reserva a entry por transação (`_claimEntry`) e avança
   `meta/serving` por transação (nunca volta). Histórico grava `calledBy` e
   `operatorId`; rule exige `operatorId == auth.uid` p/ operador.
+- Home do app: busca/ordenação (> 5 filas) valem só para as filas de dono; a
+  seção "Sou operador" não é filtrada nem ordenada. Cards de dono têm atalhos
+  de pausar/reabrir e QR; os de operador não.
 
 ## Fluxo de estados da entry
 

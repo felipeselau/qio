@@ -196,14 +196,7 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get tourHomeQueueBody =>
-      'Toque no cartão para ver o QR code e chamar as pessoas.';
-
-  @override
-  String get tourHomeOperatorTitle => 'Entrar como operador';
-
-  @override
-  String get tourHomeOperatorBody =>
-      'Recebeu um código de convite? Use aqui para ajudar em uma fila.';
+      'Toque no cartão para abrir o painel e chamar as pessoas. Pause ou mostre o QR code pelos atalhos do cartão.';
 
   @override
   String get emptyQueuesTitle => 'Nenhuma fila ainda';

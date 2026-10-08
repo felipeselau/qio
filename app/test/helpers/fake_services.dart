@@ -75,14 +75,23 @@ class FakeQueueService implements QueueService {
   Object? statusError;
   Future<void>? finishGate;
   final List<String> calls = [];
+  final Map<String, int> waitingListens = {};
 
   @override
   String get currentUid => uid;
 
   @override
-  Stream<List<Queue>> watchOwnerQueues() {
-    if (ownerQueuesError != null) return Stream.error(ownerQueuesError!);
-    return Stream.value(ownerQueues);
+  Stream<List<Queue>> watchOwnerQueues() async* {
+    if (ownerQueuesError != null) throw ownerQueuesError!;
+    yield ownerQueues;
+    yield* _ownerCtl.stream;
+  }
+
+  final _ownerCtl = StreamController<List<Queue>>.broadcast();
+
+  void emitOwnerQueues(List<Queue> queues) {
+    ownerQueues = queues;
+    _ownerCtl.add(queues);
   }
 
   @override
@@ -92,8 +101,19 @@ class FakeQueueService implements QueueService {
   }
 
   @override
-  Stream<int> watchWaitingCount(String queueId) =>
-      Stream.value(waitingCounts[queueId] ?? 0);
+  Stream<int> watchWaitingCount(String queueId) {
+    late final StreamController<int> controller;
+    controller = StreamController<int>(
+      onListen: () {
+        waitingListens[queueId] = (waitingListens[queueId] ?? 0) + 1;
+        controller.add(waitingCounts[queueId] ?? 0);
+      },
+      onCancel: () {
+        waitingListens[queueId] = (waitingListens[queueId] ?? 1) - 1;
+      },
+    );
+    return controller.stream;
+  }
 
   @override
   Stream<List<QueueEntry>> watchEntries(String queueId) =>

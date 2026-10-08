@@ -99,8 +99,13 @@ Future<void> showOnboardingTour(
     },
   );
 
-  tutorial.show(context: context);
-  navigator.push(backRoute);
+  try {
+    tutorial.show(context: context);
+    navigator.push(backRoute);
+  } catch (_) {
+    release();
+    rethrow;
+  }
   await finished.future;
 }
 

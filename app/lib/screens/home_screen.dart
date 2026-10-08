@@ -76,6 +76,7 @@ class _HomeScreenState extends State<HomeScreen> {
   StreamSubscription<Uri>? _linkSub;
   HomePrompts? _prompts;
   String _query = '';
+  final _searchController = TextEditingController();
   QueueSort _sort = QueueSort.name;
   final Map<String, int> _waiting = {};
   final Map<String, StreamSubscription<int>> _waitingSubs = {};
@@ -84,7 +85,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     QueueSortPrefs.load().then((sort) {
-      if (mounted) setState(() => _sort = sort);
+      if (!mounted) return;
+      setState(() => _sort = sort);
+      _syncWaitingSubs();
     });
     _controller.addListener(_syncWaitingSubs);
     _prompts =
@@ -123,15 +126,27 @@ class _HomeScreenState extends State<HomeScreen> {
         PushService.instance.supported &&
         await PushService.instance.shouldPrompt(),
     askPush: _askForPush,
-    canShowDialog: () => mounted && (ModalRoute.of(context)?.isCurrent ?? true),
+    canShowDialog: () => mounted,
   );
 
+  bool _wasCurrent = true;
+
+  bool _routeCurrent() => ModalRoute.of(context)?.isCurrent ?? true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final current = _routeCurrent();
+    final returned = current && !_wasCurrent;
+    _wasCurrent = current;
+    if (returned && _prompts != null) _onControllerChanged();
+  }
+
   void _syncWaitingSubs() {
-    final needed =
-        _sort == QueueSort.waiting &&
-            showQueueTools(_controller.ownedQueues.length)
-        ? _controller.ownedQueues.map((q) => q.id).toSet()
-        : <String>{};
+    final needed = {
+      ..._controller.ownedQueues.map((q) => q.id),
+      ..._controller.operatingQueues.map((o) => o.queueId),
+    };
     for (final id in _waitingSubs.keys.toList()) {
       if (!needed.contains(id)) {
         _waitingSubs.remove(id)?.cancel();
@@ -158,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final hasOwned = _controller.ownedQueues.isNotEmpty;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _prompts?.onQueues(hasOwned: hasOwned);
+      _prompts?.onQueues(hasOwned: hasOwned, routeFree: _routeCurrent);
     });
   }
 
@@ -220,6 +235,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _controller.removeListener(_onControllerChanged);
     _controller.removeListener(_syncWaitingSubs);
+    _searchController.dispose();
     for (final sub in _waitingSubs.values) {
       sub.cancel();
     }
@@ -411,17 +427,26 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
         for (final q in visible) ...[
-          _QueueCard(
-            key: q == visible.first ? _firstQueueKey : ValueKey(q.id),
-            queue: q,
-            isOwner: true,
-            queues: _queues,
+          SizedBox(
+            key: q == visible.first ? _firstQueueKey : null,
+            child: _QueueCard(
+              key: ValueKey(q.id),
+              queue: q,
+              isOwner: true,
+              waiting: _waiting[q.id] ?? 0,
+              queues: _queues,
+            ),
           ),
           const SizedBox(height: 16),
         ],
         if (operating.isNotEmpty) _sectionTitle(l10n.sectionOperator),
         for (final op in operating) ...[
-          _OperatorQueueCard(operator: op, queues: _queues),
+          _OperatorQueueCard(
+            key: ValueKey('op-${op.queueId}'),
+            operator: op,
+            waiting: _waiting[op.queueId] ?? 0,
+            queues: _queues,
+          ),
           const SizedBox(height: 16),
         ],
         if (requests.isNotEmpty) _sectionTitle(l10n.sectionRequests),
@@ -445,11 +470,22 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Expanded(
             child: TextField(
+              controller: _searchController,
               onChanged: (v) => setState(() => _query = v),
               textInputAction: TextInputAction.search,
               decoration: InputDecoration(
                 hintText: l10n.searchQueuesHint,
                 prefixIcon: const Icon(Icons.search),
+                suffixIcon: _query.isEmpty
+                    ? null
+                    : IconButton(
+                        tooltip: l10n.clear,
+                        icon: const Icon(Icons.close),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _query = '');
+                        },
+                      ),
                 isDense: false,
                 constraints: const BoxConstraints(minHeight: 48),
               ),
@@ -501,11 +537,13 @@ class _QueueCard extends StatefulWidget {
     super.key,
     required this.queue,
     required this.isOwner,
+    required this.waiting,
     required this.queues,
   });
 
   final Queue queue;
   final bool isOwner;
+  final int waiting;
   final QueueService queues;
 
   @override
@@ -611,18 +649,12 @@ class _QueueCardState extends State<_QueueCard> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    StreamBuilder<int>(
-                      stream: widget.queues.watchWaitingCount(q.id),
-                      builder: (context, snap) {
-                        final count = snap.data ?? 0;
-                        return Text(
-                          l10n.waitingCount(count),
-                          style: context.qioText.body.copyWith(
-                            fontSize: 14,
-                            color: context.qio.gray700,
-                          ),
-                        );
-                      },
+                    Text(
+                      l10n.waitingCount(widget.waiting),
+                      style: context.qioText.body.copyWith(
+                        fontSize: 14,
+                        color: context.qio.gray700,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -708,9 +740,15 @@ class _QuickAction extends StatelessWidget {
 }
 
 class _OperatorQueueCard extends StatefulWidget {
-  const _OperatorQueueCard({required this.operator, required this.queues});
+  const _OperatorQueueCard({
+    super.key,
+    required this.operator,
+    required this.waiting,
+    required this.queues,
+  });
 
   final QueueOperator operator;
+  final int waiting;
   final QueueService queues;
 
   @override
@@ -739,7 +777,12 @@ class _OperatorQueueCardState extends State<_OperatorQueueCard> {
             ),
           );
         }
-        return _QueueCard(queue: queue, isOwner: false, queues: widget.queues);
+        return _QueueCard(
+          queue: queue,
+          isOwner: false,
+          waiting: widget.waiting,
+          queues: widget.queues,
+        );
       },
     );
   }

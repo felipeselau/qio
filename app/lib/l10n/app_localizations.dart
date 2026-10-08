@@ -463,20 +463,8 @@ abstract class AppLocalizations {
   /// No description provided for @tourHomeQueueBody.
   ///
   /// In pt, this message translates to:
-  /// **'Toque no cartão para ver o QR code e chamar as pessoas.'**
+  /// **'Toque no cartão para abrir o painel e chamar as pessoas. Pause ou mostre o QR code pelos atalhos do cartão.'**
   String get tourHomeQueueBody;
-
-  /// No description provided for @tourHomeOperatorTitle.
-  ///
-  /// In pt, this message translates to:
-  /// **'Entrar como operador'**
-  String get tourHomeOperatorTitle;
-
-  /// No description provided for @tourHomeOperatorBody.
-  ///
-  /// In pt, this message translates to:
-  /// **'Recebeu um código de convite? Use aqui para ajudar em uma fila.'**
-  String get tourHomeOperatorBody;
 
   /// No description provided for @emptyQueuesTitle.
   ///

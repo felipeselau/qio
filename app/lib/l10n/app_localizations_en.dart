@@ -196,14 +196,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tourHomeQueueBody =>
-      'Tap the card to see the QR code and call people.';
-
-  @override
-  String get tourHomeOperatorTitle => 'Join as operator';
-
-  @override
-  String get tourHomeOperatorBody =>
-      'Got an invite code? Use it here to help run a queue.';
+      'Tap the card to open the panel and call people. Pause or show the QR code from the card shortcuts.';
 
   @override
   String get emptyQueuesTitle => 'No queues yet';
