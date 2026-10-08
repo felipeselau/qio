@@ -63,7 +63,7 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
   rules), `tickets/{queueId}` (contador de senha, incrementado por transação na
   callable `joinQueue`), `rateLimits/{queueId}/{uid}` (timestamps dos joins).
   Rules: `database.rules.json`.
-- Rules do RTDB validam `queues/{id}/entries/{entryId}`: `ticket` número, `status` ∈ waiting/called/served/no_show/left, `uid` imutável, `name` 1–60 chars e `phone` vazio ou `(DD) 9999-9999`/`(DD) 99999-9999` (os dois só são checados na criação ou quando mudam), campos fora de ticket/name/phone/uid/fcmToken/status/joinedAt/calledAt/operatorId são rejeitados. `.validate` não roda em `remove()`.
+- Rules do RTDB validam `queues/{id}/entries/{entryId}`: `ticket` número, `status` ∈ waiting/called/served/no_show/left, `uid` imutável, `name` 1–60 chars e `phone` vazio ou `(DD) 9999-9999`/`(DD) 99999-9999` (os dois só são checados na criação ou quando mudam), campos fora de ticket/name/phone/uid/fcmToken/status/joinedAt/calledAt/operatorId (mais os de ordem/push e `slotId`/`slotStart`) são rejeitados. `.validate` não roda em `remove()`.
 - O app faz **dual-write**: Firestore (fonte da verdade) + espelho no RTDB
   (`meta` + `owners/{queueId}`). `_ensureOwnerMirror` reconcilia antes de escritas;
   `_ensureOwnerMirrorIfOwner` fica em cache por sessão (`uid/queueId`).
@@ -109,6 +109,43 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
   usando `public/` (`useQueue.full`).
 - Pausar/fechar no app abre um diálogo com mensagem e horário de retorno; reabrir
   limpa os dois. Deploy: functions (`joinQueue`) antes das rules do RTDB.
+
+## Agendamento por horário (slots)
+
+- `queues/{id}.mode` (`'queue'` padrão | `'schedule'`) e `slots = [{id, start:'HH:mm',
+  capacity 1–50}]` (máx. 24, horários únicos, ids estáveis) no Firestore (fonte da verdade,
+  só o dono escreve). Espelho no RTDB: `meta/mode` e `meta/slots/{slotId} = {start,
+  capacity}` (dual-write em `QueueService.updateModeAndSlots`/`createQueue`). Os slots são
+  **diários** (repetem todo dia) e o fuso é fixo `America/Sao_Paulo`. Filas antigas e
+  entries antigas não têm `mode`/`slotId` e funcionam como sempre.
+- `joinQueue` (lógica pura em `functions/src/slots.js`): em `mode == 'schedule'`
+  `slotId` é obrigatório (`invalid-argument`, `details.reason == 'slot-required'`; slot
+  inexistente: `slot-invalid`). Aceita o slot até 15 min depois do início
+  (`SLOT_GRACE_MS`); depois disso `failed-precondition` + `slot-passed`. Conta entries
+  `waiting`/`called` com o mesmo `slotId` e o mesmo `slotStart` de hoje; lotado vira
+  `resource-exhausted` + `details.reason == 'slot-full'`. Quem já tem entry ativa recebe a
+  própria (antes dessas checagens). Grava `slotId`, `slotStart` (ms do slot de hoje) e
+  `order = slotStart`, então a ordem de espera `(order ?? joinedAt, ticket)` já cobre.
+  `public/{id}` ganha `slotId`. Modo `queue` ignora `slotId`. `maxWaiting` continua valendo.
+- Sem transação de contagem: joins simultâneos podem passar a capacidade em 1–2 vagas
+  (igual `maxWaiting`).
+- Rules: RTDB valida `meta/mode` e `meta/slots` (só dono; start `HH:mm`, capacity 1–50, id
+  `[A-Za-z0-9_-]{1,20}`), mas **não limita a 24** (RTDB rules não têm `numChildren`; a
+  function corta em 24 ao ler). `slotId`/`slotStart` da entry são imutáveis para o cliente
+  e há `.indexOn` em `slotId`. Firestore valida `mode`, `slots` (lista ≤ 24, `start`
+  `HH:mm`, `capacity` int 1–50); não valida chaves extras, `id` nem unicidade (estourava o
+  limite de 1000 expressões das rules) — o app valida tudo isso antes de gravar.
+- App: seletor de modo + lista de horários (`SlotsEditor`) na criação e no painel
+  (`QueueSlotsTile`); horário fora da janela de funcionamento só gera aviso no editor.
+  Painel mostra o horário em cada entry. Web: lista de horários na entrada (cheios e
+  passados desabilitados, contagem via `public/` por `slotId` + `order == slotStart`),
+  "Seu horário: HH:mm" na senha e sem estimativa de espera no modo schedule.
+- **Deploy**: functions (`joinQueue`) → hosting → rules do RTDB → rules do Firestore → APK.
+  Web antigo em modo schedule não envia `slotId` e recebe `slot-required`.
+- **Fora de escopo**: slots por data/calendário, filas separadas por slot, reagendamento
+  pelo cliente, lembrete 10 min antes (function agendada), recorrência por dia da semana e
+  integração com `applyQueueSchedules` (o horário de funcionamento continua mandando em
+  open/closed).
 
 ## Ordem da fila, chamar de novo e mover
 
