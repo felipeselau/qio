@@ -395,6 +395,21 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
 - Web: `web/public/` tem favicon, ícones PWA e `apple-touch-icon.png` gerados do
   mesmo kit.
 
+## Cores e tema (app)
+
+- Cores que mudam com o tema vêm de `QioPalette` (`ThemeExtension`, registrada em
+  `QioTheme.light/dark`): use `context.qio.surface`, `context.qio.gray500`,
+  `context.qio.textPrimary` etc. Estilos de texto: `context.qioText.body`
+  (`QioTextStyles`, já com a cor da paleta). Importe `theme/qio_palette.dart` e
+  `theme/qio_text_styles.dart`.
+- `QioColors` guarda só constantes independentes de tema (`primary*`, `secondary*`,
+  `error`, `warning`, `success`, `info`, `status*`, `*Strong`). Não há mais `apply`,
+  `isDark` nem rebuild forçado: `MaterialApp` usa `theme`/`darkTheme`/`themeMode`.
+- Nunca leia `context.qio` em `initState`, campo `final`/`late final` ou `static
+  const`: não reage à troca de tema. Leia em `build` (ou passe `context`). Para
+  saber o modo, use `Theme.of(context).brightness`. Em testes, `QioPalette.light`/
+  `QioPalette.dark` dão os valores esperados.
+
 ## Tooling (adaptado do OpenCode)
 
 O framework de agentes (product → builder → reviewer → advisor) e as regras de

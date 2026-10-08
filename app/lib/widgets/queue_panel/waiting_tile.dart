@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/queue_entry.dart';
 import '../../models/queue_slot.dart';
-import '../../theme/qio_colors.dart';
 import '../../theme/qio_text_styles.dart';
 import '../../widgets/qio_avatar.dart';
+import '../../theme/qio_palette.dart';
 
 class WaitingTile extends StatelessWidget {
   const WaitingTile({super.key, required this.entry, this.trailing});
@@ -22,7 +22,7 @@ class WaitingTile extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: QioColors.surface,
+            color: context.qio.surface,
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(
@@ -42,10 +42,10 @@ class WaitingTile extends StatelessWidget {
                   children: [
                     Text(
                       entry.name,
-                      style: QioTextStyles.bodyMedium.copyWith(
+                      style: context.qioText.bodyMedium.copyWith(
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
-                        color: QioColors.textPrimary,
+                        color: context.qio.textPrimary,
                       ),
                     ),
                     if (entry.slotStart != null)
@@ -55,17 +55,17 @@ class WaitingTile extends StatelessWidget {
                             entry.slotStart!.millisecondsSinceEpoch,
                           ),
                         ),
-                        style: QioTextStyles.caption.copyWith(
+                        style: context.qioText.caption.copyWith(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
-                          color: QioColors.primaryText,
+                          color: context.qio.primaryText,
                         ),
                       ),
                     Text(
                       l10n.waitTileSubtitle(entry.ticket, waitMin),
-                      style: QioTextStyles.caption.copyWith(
+                      style: context.qioText.caption.copyWith(
                         fontSize: 12,
-                        color: QioColors.gray400,
+                        color: context.qio.gray400,
                       ),
                     ),
                   ],

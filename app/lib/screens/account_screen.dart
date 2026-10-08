@@ -10,13 +10,13 @@ import '../services/haptics.dart';
 import '../services/push_service.dart';
 import '../services/locale_controller.dart';
 import '../services/theme_controller.dart';
-import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
 import '../widgets/qio_avatar.dart';
 import '../widgets/qio_button.dart';
 import '../widgets/qio_card.dart';
 import '../widgets/qio_skeleton.dart';
 import '../widgets/qio_responsive_body.dart';
+import '../theme/qio_palette.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({
@@ -109,14 +109,14 @@ class _AccountScreenState extends State<AccountScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: QioColors.gray100,
+      backgroundColor: context.qio.gray100,
       appBar: AppBar(
-        backgroundColor: QioColors.surface,
+        backgroundColor: context.qio.surface,
         title: Text(
           l10n.accountTitle,
-          style: QioTextStyles.heading2.copyWith(
+          style: context.qioText.heading2.copyWith(
             fontWeight: FontWeight.w700,
-            color: QioColors.textPrimary,
+            color: context.qio.textPrimary,
           ),
         ),
       ),
@@ -151,8 +151,8 @@ class _AccountScreenState extends State<AccountScreen> {
               Text(
                 name,
                 textAlign: TextAlign.center,
-                style: QioTextStyles.heading2.copyWith(
-                  color: QioColors.textPrimary,
+                style: context.qioText.heading2.copyWith(
+                  color: context.qio.textPrimary,
                 ),
               ),
               if (business.isNotEmpty) ...[
@@ -160,8 +160,8 @@ class _AccountScreenState extends State<AccountScreen> {
                 Text(
                   l10n.businessLine(business),
                   textAlign: TextAlign.center,
-                  style: QioTextStyles.body.copyWith(
-                    color: QioColors.textSecondary,
+                  style: context.qioText.body.copyWith(
+                    color: context.qio.textSecondary,
                   ),
                 ),
               ],
@@ -169,8 +169,8 @@ class _AccountScreenState extends State<AccountScreen> {
               Text(
                 _user?.email ?? '',
                 textAlign: TextAlign.center,
-                style: QioTextStyles.body.copyWith(
-                  color: QioColors.textSecondary,
+                style: context.qioText.body.copyWith(
+                  color: context.qio.textSecondary,
                 ),
               ),
             ],
@@ -230,12 +230,14 @@ class _AccountScreenState extends State<AccountScreen> {
       children: [
         Text(
           label,
-          style: QioTextStyles.body.copyWith(color: QioColors.textSecondary),
+          style: context.qioText.body.copyWith(
+            color: context.qio.textSecondary,
+          ),
         ),
         Text(
           value,
-          style: QioTextStyles.bodyMedium.copyWith(
-            color: QioColors.textPrimary,
+          style: context.qioText.bodyMedium.copyWith(
+            color: context.qio.textPrimary,
           ),
         ),
       ],
@@ -256,7 +258,7 @@ class _ThemeCard extends StatelessWidget {
         builder: (context, _) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.appearance, style: QioTextStyles.bodyMedium),
+            Text(l10n.appearance, style: context.qioText.bodyMedium),
             const SizedBox(height: 12),
             SizedBox(
               width: double.infinity,
@@ -306,7 +308,7 @@ class _LanguageCard extends StatelessWidget {
         builder: (context, _) => Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.languageTitle, style: QioTextStyles.bodyMedium),
+            Text(l10n.languageTitle, style: context.qioText.bodyMedium),
             const SizedBox(height: 12),
             Wrap(
               spacing: 8,
@@ -341,8 +343,8 @@ class _HapticsCard extends StatelessWidget {
         listenable: Haptics.instance,
         builder: (context, _) => SwitchListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-          title: Text(l10n.hapticsTitle, style: QioTextStyles.bodyMedium),
-          subtitle: Text(l10n.hapticsSubtitle, style: QioTextStyles.caption),
+          title: Text(l10n.hapticsTitle, style: context.qioText.bodyMedium),
+          subtitle: Text(l10n.hapticsSubtitle, style: context.qioText.caption),
           value: Haptics.instance.enabled,
           onChanged: Haptics.instance.setEnabled,
         ),
@@ -364,8 +366,11 @@ class _AnalyticsCard extends StatelessWidget {
         listenable: controller,
         builder: (context, _) => SwitchListTile(
           contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-          title: Text(l10n.analyticsTitle, style: QioTextStyles.bodyMedium),
-          subtitle: Text(l10n.analyticsSubtitle, style: QioTextStyles.caption),
+          title: Text(l10n.analyticsTitle, style: context.qioText.bodyMedium),
+          subtitle: Text(
+            l10n.analyticsSubtitle,
+            style: context.qioText.caption,
+          ),
           value: !controller.optedOut,
           onChanged: (v) => controller.setOptOut(!v),
         ),
@@ -427,8 +432,8 @@ class _PushCardState extends State<_PushCard> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: SwitchListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-        title: Text(l10n.pushTitle, style: QioTextStyles.bodyMedium),
-        subtitle: Text(l10n.pushSubtitle, style: QioTextStyles.caption),
+        title: Text(l10n.pushTitle, style: context.qioText.bodyMedium),
+        subtitle: Text(l10n.pushSubtitle, style: context.qioText.caption),
         value: _enabled ?? false,
         onChanged: _enabled == null || _busy ? null : _toggle,
       ),

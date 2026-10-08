@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../theme/qio_colors.dart';
 import 'qio_card.dart';
+import '../theme/qio_palette.dart';
 
 class QioSkeleton extends StatefulWidget {
   const QioSkeleton({super.key, this.width, this.height = 14, this.radius = 8});
@@ -52,7 +52,7 @@ class _QioSkeletonState extends State<QioSkeleton>
             width: widget.width,
             height: widget.height,
             decoration: BoxDecoration(
-              color: Color.lerp(QioColors.gray200, QioColors.gray300, t),
+              color: Color.lerp(context.qio.gray200, context.qio.gray300, t),
               borderRadius: BorderRadius.circular(widget.radius),
             ),
           );

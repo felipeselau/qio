@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
-import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
 import 'qio_button.dart';
+import '../theme/qio_palette.dart';
 
 class QioStateIllustration extends StatelessWidget {
   const QioStateIllustration({super.key, required this.icon, this.tone});
@@ -13,7 +13,7 @@ class QioStateIllustration extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = tone ?? QioColors.primaryText;
+    final color = tone ?? context.qio.primaryText;
     return ExcludeSemantics(
       child: SizedBox(
         width: 120,
@@ -97,15 +97,15 @@ class QioEmptyState extends StatelessWidget {
             SizedBox(height: compact ? 8 : 16),
             Text(
               title,
-              style: QioTextStyles.heading3,
+              style: context.qioText.heading3,
               textAlign: TextAlign.center,
             ),
             if (message != null) ...[
               const SizedBox(height: 8),
               Text(
                 message!,
-                style: QioTextStyles.body.copyWith(
-                  color: QioColors.textSecondary,
+                style: context.qioText.body.copyWith(
+                  color: context.qio.textSecondary,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -141,19 +141,19 @@ class QioErrorState extends StatelessWidget {
             children: [
               QioStateIllustration(
                 icon: Icons.cloud_off_outlined,
-                tone: QioColors.statusClosedText,
+                tone: context.qio.statusClosedText,
               ),
               const SizedBox(height: 16),
               Text(
                 title ?? l10n.loadErrorTitle,
-                style: QioTextStyles.heading3,
+                style: context.qioText.heading3,
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
                 message ?? l10n.loadErrorBody,
-                style: QioTextStyles.body.copyWith(
-                  color: QioColors.textSecondary,
+                style: context.qioText.body.copyWith(
+                  color: context.qio.textSecondary,
                 ),
                 textAlign: TextAlign.center,
               ),

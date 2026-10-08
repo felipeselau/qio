@@ -32,7 +32,7 @@ class GroupCompareSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(l10n.groupCompareTitle, style: QioTextStyles.heading3),
+        Text(l10n.groupCompareTitle, style: context.qioText.heading3),
         const SizedBox(height: 8),
         for (final r in rows)
           Padding(
@@ -46,9 +46,9 @@ class GroupCompareSection extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(r.name, style: QioTextStyles.bodyMedium),
+                        Text(r.name, style: context.qioText.bodyMedium),
                         const SizedBox(height: 2),
-                        Text(line(l10n, r), style: QioTextStyles.caption),
+                        Text(line(l10n, r), style: context.qioText.caption),
                       ],
                     ),
                   ),

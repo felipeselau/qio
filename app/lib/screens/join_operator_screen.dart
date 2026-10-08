@@ -11,6 +11,7 @@ import '../widgets/qio_input.dart';
 import 'queue_panel_screen.dart';
 import '../widgets/qio_skeleton.dart';
 import '../widgets/qio_responsive_body.dart';
+import '../theme/qio_palette.dart';
 
 class JoinOperatorScreen extends StatefulWidget {
   const JoinOperatorScreen({super.key, this.initialCode});
@@ -74,12 +75,12 @@ class _JoinOperatorScreenState extends State<JoinOperatorScreen> {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: QioColors.surface,
+        backgroundColor: context.qio.surface,
         title: Text(
           l10n.joinAsOperator,
-          style: QioTextStyles.heading2.copyWith(
+          style: context.qioText.heading2.copyWith(
             fontWeight: FontWeight.w700,
-            color: QioColors.textPrimary,
+            color: context.qio.textPrimary,
           ),
         ),
         centerTitle: true,
@@ -95,8 +96,8 @@ class _JoinOperatorScreenState extends State<JoinOperatorScreen> {
                 children: [
                   Text(
                     l10n.joinOperatorIntro,
-                    style: QioTextStyles.body.copyWith(
-                      color: QioColors.textSecondary,
+                    style: context.qioText.body.copyWith(
+                      color: context.qio.textSecondary,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -181,14 +182,14 @@ class _OperatorPendingScreenState extends State<OperatorPendingScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: QioColors.gray100,
+      backgroundColor: context.qio.gray100,
       appBar: AppBar(
-        backgroundColor: QioColors.surface,
+        backgroundColor: context.qio.surface,
         title: Text(
           widget.queueName,
-          style: QioTextStyles.heading2.copyWith(
+          style: context.qioText.heading2.copyWith(
             fontWeight: FontWeight.w700,
-            color: QioColors.textPrimary,
+            color: context.qio.textPrimary,
           ),
         ),
         centerTitle: true,
@@ -227,7 +228,7 @@ class _OperatorPendingScreenState extends State<OperatorPendingScreen> {
             ),
             null => (
               Icons.help_outline,
-              QioColors.gray400,
+              context.qio.gray400,
               l10n.requestNotFound,
               l10n.requestNotFoundBody,
             ),
@@ -243,14 +244,14 @@ class _OperatorPendingScreenState extends State<OperatorPendingScreen> {
                     const SizedBox(height: 16),
                     Text(
                       title,
-                      style: QioTextStyles.heading2,
+                      style: context.qioText.heading2,
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       subtitle,
-                      style: QioTextStyles.body.copyWith(
-                        color: QioColors.textSecondary,
+                      style: context.qioText.body.copyWith(
+                        color: context.qio.textSecondary,
                       ),
                       textAlign: TextAlign.center,
                     ),

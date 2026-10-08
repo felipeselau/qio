@@ -10,6 +10,7 @@ import '../theme/qio_text_styles.dart';
 import '../widgets/qio_button.dart';
 import '../widgets/qio_input.dart';
 import '../widgets/qio_responsive_body.dart';
+import '../theme/qio_palette.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key, this.auth});
@@ -132,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       Semantics(
                         label: 'Qio',
                         child: SvgPicture.asset(
-                          QioColors.isDark
+                          Theme.of(context).brightness == Brightness.dark
                               ? 'assets/brand/logo-dark.svg'
                               : 'assets/brand/logo.svg',
                           height: 72,
@@ -142,9 +143,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 8),
                       Text(
                         l10n.loginTagline,
-                        style: QioTextStyles.body.copyWith(
+                        style: context.qioText.body.copyWith(
                           fontSize: 16,
-                          color: QioColors.gray700,
+                          color: context.qio.gray700,
                         ),
                         textAlign: TextAlign.center,
                       ),
@@ -210,15 +211,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Divider(
                               height: 1,
                               thickness: 1,
-                              color: QioColors.gray100,
+                              color: context.qio.gray100,
                             ),
                           ),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             child: Text(
                               l10n.orSeparator,
-                              style: QioTextStyles.caption.copyWith(
-                                color: QioColors.gray400,
+                              style: context.qioText.caption.copyWith(
+                                color: context.qio.gray400,
                               ),
                             ),
                           ),
@@ -226,7 +227,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             child: Divider(
                               height: 1,
                               thickness: 1,
-                              color: QioColors.gray100,
+                              color: context.qio.gray100,
                             ),
                           ),
                         ],
@@ -246,9 +247,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           _isSignUp
                               ? l10n.haveAccountSignIn
                               : l10n.createAccount,
-                          style: QioTextStyles.body.copyWith(
+                          style: context.qioText.body.copyWith(
                             fontSize: 14,
-                            color: QioColors.primaryText,
+                            color: context.qio.primaryText,
                           ),
                         ),
                       ),

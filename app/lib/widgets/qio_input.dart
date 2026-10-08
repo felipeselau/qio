@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
-import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
+import '../theme/qio_palette.dart';
 
 class QioInput extends StatelessWidget {
   const QioInput({
@@ -47,7 +47,7 @@ class QioInput extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: QioTextStyles.label),
+        Text(label, style: context.qioText.label),
         const SizedBox(height: 6),
         TextFormField(
           controller: controller,
@@ -65,7 +65,7 @@ class QioInput extends StatelessWidget {
           decoration: InputDecoration(
             hintText: hint,
             prefixIcon: prefixIcon != null
-                ? Icon(prefixIcon, size: 20, color: QioColors.gray400)
+                ? Icon(prefixIcon, size: 20, color: context.qio.gray400)
                 : null,
             suffixIcon: suffixIcon,
           ),
@@ -122,7 +122,7 @@ class _QioPasswordInputState extends State<QioPasswordInput> {
         tooltip: _visible ? l10n.hidePassword : l10n.showPassword,
         icon: Icon(
           _visible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-          color: QioColors.gray500,
+          color: context.qio.gray500,
         ),
         onPressed: () => setState(() => _visible = !_visible),
       ),

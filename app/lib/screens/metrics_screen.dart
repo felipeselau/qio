@@ -30,6 +30,7 @@ import '../widgets/qio_skeleton.dart';
 import '../widgets/trend_chart.dart';
 import '../widgets/wait_effort_card.dart';
 import '../widgets/qio_responsive_body.dart';
+import '../theme/qio_palette.dart';
 
 class MetricsScreen extends StatefulWidget {
   const MetricsScreen({
@@ -288,14 +289,14 @@ class _MetricsScreenState extends State<MetricsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: QioColors.gray100,
+      backgroundColor: context.qio.gray100,
       appBar: AppBar(
-        backgroundColor: QioColors.surface,
+        backgroundColor: context.qio.surface,
         title: Text(
           l10n.metricsTitle,
-          style: QioTextStyles.heading2.copyWith(
+          style: context.qioText.heading2.copyWith(
             fontWeight: FontWeight.w700,
-            color: QioColors.textPrimary,
+            color: context.qio.textPrimary,
           ),
         ),
         actions: [
@@ -366,7 +367,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
         const SizedBox(height: 8),
         _buildScopeSelector(l10n, data),
         if (_groupsUnavailable)
-          Text(l10n.groupsUnavailable, style: QioTextStyles.caption),
+          Text(l10n.groupsUnavailable, style: context.qioText.caption),
         const SizedBox(height: 16),
         if (report.isEmpty)
           Padding(
@@ -417,7 +418,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       l10n.deltaVsPrevious,
-                      style: QioTextStyles.caption,
+                      style: context.qioText.caption,
                     ),
                   ),
                 ],
@@ -430,7 +431,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(l10n.trendTitle, style: QioTextStyles.heading3),
+                  Text(l10n.trendTitle, style: context.qioText.heading3),
                   const SizedBox(height: 12),
                   TrendChart(series: report.series),
                 ],
@@ -447,9 +448,9 @@ class _MetricsScreenState extends State<MetricsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.peakHoursTitle, style: QioTextStyles.heading3),
+                Text(l10n.peakHoursTitle, style: context.qioText.heading3),
                 const SizedBox(height: 4),
-                Text(l10n.peakHoursSubtitle, style: QioTextStyles.caption),
+                Text(l10n.peakHoursSubtitle, style: context.qioText.caption),
                 const SizedBox(height: 16),
                 _HourlyChart(
                   distribution: distribution,
@@ -470,13 +471,13 @@ class _MetricsScreenState extends State<MetricsScreen> {
                               .map((h) => '${h.toString().padLeft(2, '0')}h')
                               .join(', '),
                         ),
-                  style: QioTextStyles.body,
+                  style: context.qioText.body,
                 ),
               ],
             ),
           ),
           const SizedBox(height: 16),
-          Text(l10n.mostActiveQueues, style: QioTextStyles.heading3),
+          Text(l10n.mostActiveQueues, style: context.qioText.heading3),
           const SizedBox(height: 8),
           for (final r in ranking)
             Padding(
@@ -485,14 +486,14 @@ class _MetricsScreenState extends State<MetricsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(r.name, style: QioTextStyles.bodyMedium),
+                    Text(r.name, style: context.qioText.bodyMedium),
                     const SizedBox(height: 2),
                     Text(
                       l10n.queueActivityLine(
                         r.metrics.total,
                         (r.metrics.noShowRate * 100).round(),
                       ),
-                      style: QioTextStyles.caption,
+                      style: context.qioText.caption,
                     ),
                   ],
                 ),
@@ -562,7 +563,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(l10n.byOperatorTitle, style: QioTextStyles.heading3),
+        Text(l10n.byOperatorTitle, style: context.qioText.heading3),
         const SizedBox(height: 8),
         Semantics(
           label: l10n.operatorFilterLabel,
@@ -589,7 +590,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
             liveRegion: true,
             child: Text(
               l10n.historyTruncatedWarning(QueueService.historyFetchLimit),
-              style: QioTextStyles.caption,
+              style: context.qioText.caption,
             ),
           ),
         ],
@@ -597,7 +598,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
         if (merged.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Text(l10n.noOperatorData, style: QioTextStyles.body),
+            child: Text(l10n.noOperatorData, style: context.qioText.body),
           )
         else
           for (final s in merged)
@@ -647,10 +648,10 @@ class _OperatorRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: QioTextStyles.bodyMedium),
+                Text(name, style: context.qioText.bodyMedium),
                 const SizedBox(height: 2),
-                Text(counts, style: QioTextStyles.caption),
-                Text(detail, style: QioTextStyles.caption),
+                Text(counts, style: context.qioText.caption),
+                Text(detail, style: context.qioText.caption),
               ],
             ),
           ),
@@ -673,9 +674,9 @@ class _Stat extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: QioTextStyles.label),
+          Text(label, style: context.qioText.label),
           const SizedBox(height: 4),
-          Text(value, style: QioTextStyles.heading2),
+          Text(value, style: context.qioText.heading2),
           ?footer,
         ],
       ),
@@ -710,7 +711,7 @@ class _HourlyChart extends StatelessWidget {
                           height: max == 0 ? 2 : 2 + 98 * distribution[h] / max,
                           decoration: BoxDecoration(
                             color: distribution[h] == 0
-                                ? QioColors.gray200
+                                ? context.qio.gray200
                                 : QioColors.primary,
                             borderRadius: BorderRadius.circular(2),
                           ),
@@ -725,7 +726,7 @@ class _HourlyChart extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 for (final h in const [0, 6, 12, 18, 23])
-                  Text('${h}h', style: QioTextStyles.caption),
+                  Text('${h}h', style: context.qioText.caption),
               ],
             ),
           ],

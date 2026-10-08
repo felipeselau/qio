@@ -58,7 +58,7 @@ class QioApp extends StatefulWidget {
   State<QioApp> createState() => _QioAppState();
 }
 
-class _QioAppState extends State<QioApp> with WidgetsBindingObserver {
+class _QioAppState extends State<QioApp> {
   final _theme = ThemeController.instance;
   late final Stream<bool> _connection = QueueService.instance
       .watchConnection()
@@ -68,7 +68,6 @@ class _QioAppState extends State<QioApp> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _theme.addListener(_onThemeChanged);
     _locale.addListener(_onThemeChanged);
   }
@@ -77,28 +76,13 @@ class _QioAppState extends State<QioApp> with WidgetsBindingObserver {
   void dispose() {
     _theme.removeListener(_onThemeChanged);
     _locale.removeListener(_onThemeChanged);
-    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
-  @override
-  void didChangePlatformBrightness() => _onThemeChanged();
-
-  void _onThemeChanged() {
-    setState(() {});
-    void markDirty(Element e) {
-      e.markNeedsBuild();
-      e.visitChildren(markDirty);
-    }
-
-    WidgetsBinding.instance.rootElement?.visitChildren(markDirty);
-  }
+  void _onThemeChanged() => setState(() {});
 
   @override
   Widget build(BuildContext context) {
-    final brightness = _theme.resolve(
-      WidgetsBinding.instance.platformDispatcher.platformBrightness,
-    );
     return MaterialApp(
       title: 'Qio',
       locale: _locale.locale,
@@ -115,7 +99,9 @@ class _QioAppState extends State<QioApp> with WidgetsBindingObserver {
         connected: _connection,
         child: child ?? const SizedBox.shrink(),
       ),
-      theme: QioTheme.forBrightness(brightness),
+      theme: QioTheme.light,
+      darkTheme: QioTheme.dark,
+      themeMode: _theme.mode,
       home: StreamBuilder(
         stream: AuthService.instance.authStateChanges,
         builder: (context, snap) {

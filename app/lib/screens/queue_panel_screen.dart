@@ -21,6 +21,7 @@ import '../widgets/queue_panel/queue_status_actions.dart';
 import '../widgets/queue_panel/status_message_dialog.dart';
 import '../widgets/queue_panel/delete_queue_dialog.dart';
 import '../widgets/queue_panel/queue_panel_body.dart';
+import '../theme/qio_palette.dart';
 
 class QueuePanelScreen extends StatefulWidget {
   const QueuePanelScreen({
@@ -176,15 +177,15 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
     return PopScope(
       canPop: !(_actionLoading || _finishLoading || _deleteLoading),
       child: Scaffold(
-        backgroundColor: QioColors.gray100,
+        backgroundColor: context.qio.gray100,
         appBar: AppBar(
-          backgroundColor: QioColors.surface,
+          backgroundColor: context.qio.surface,
           leading: TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(
               '←',
-              style: QioTextStyles.heading3.copyWith(
-                color: QioColors.primaryText,
+              style: context.qioText.heading3.copyWith(
+                color: context.qio.primaryText,
               ),
             ),
           ),
@@ -201,9 +202,9 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                     child: Text(
                       widget.queueName,
                       maxLines: 1,
-                      style: QioTextStyles.heading3.copyWith(
+                      style: context.qioText.heading3.copyWith(
                         fontWeight: FontWeight.w700,
-                        color: QioColors.textPrimary,
+                        color: context.qio.textPrimary,
                       ),
                     ),
                   ),

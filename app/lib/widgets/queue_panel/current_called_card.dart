@@ -5,6 +5,7 @@ import '../../models/queue_slot.dart';
 import '../../theme/qio_colors.dart';
 import '../../theme/qio_text_styles.dart';
 import '../../widgets/qio_card.dart';
+import '../../theme/qio_palette.dart';
 
 class CurrentCalledCard extends StatelessWidget {
   const CurrentCalledCard({
@@ -27,11 +28,11 @@ class CurrentCalledCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 24),
           child: Column(
             children: [
-              Icon(Icons.person_search, size: 40, color: QioColors.gray300),
+              Icon(Icons.person_search, size: 40, color: context.qio.gray300),
               const SizedBox(height: 12),
-              Text(l10n.nobodyCalled, style: QioTextStyles.bodyMedium),
+              Text(l10n.nobodyCalled, style: context.qioText.bodyMedium),
               const SizedBox(height: 4),
-              Text(l10n.callNextHint, style: QioTextStyles.caption),
+              Text(l10n.callNextHint, style: context.qioText.caption),
             ],
           ),
         ),
@@ -55,7 +56,7 @@ class CurrentCalledCard extends StatelessWidget {
         children: [
           Text(
             l10n.callingNow,
-            style: QioTextStyles.label.copyWith(
+            style: context.qioText.label.copyWith(
               fontSize: 12,
               fontWeight: FontWeight.w500,
               color: Colors.white.withValues(alpha: 0.6),
@@ -65,7 +66,7 @@ class CurrentCalledCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             '#${e.ticket}',
-            style: QioTextStyles.ticket.copyWith(
+            style: context.qioText.ticket.copyWith(
               fontSize: 48,
               fontWeight: FontWeight.w800,
               color: Colors.white,
@@ -74,7 +75,7 @@ class CurrentCalledCard extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             e.name,
-            style: QioTextStyles.heading3.copyWith(
+            style: context.qioText.heading3.copyWith(
               fontSize: 18,
               fontWeight: FontWeight.w600,
               color: Colors.white,
@@ -86,7 +87,7 @@ class CurrentCalledCard extends StatelessWidget {
               l10n.waitTileSlot(
                 formatSlotStart(e.slotStart!.millisecondsSinceEpoch),
               ),
-              style: QioTextStyles.caption.copyWith(
+              style: context.qioText.caption.copyWith(
                 color: Colors.white.withValues(alpha: 0.85),
               ),
             ),
@@ -95,7 +96,7 @@ class CurrentCalledCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               l10n.calledTimes(e.recalls + 1),
-              style: QioTextStyles.caption.copyWith(
+              style: context.qioText.caption.copyWith(
                 color: Colors.white.withValues(alpha: 0.85),
               ),
             ),

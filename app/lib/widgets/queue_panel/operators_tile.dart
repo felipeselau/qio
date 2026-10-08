@@ -4,6 +4,7 @@ import '../../theme/qio_colors.dart';
 import '../../theme/qio_text_styles.dart';
 import '../../widgets/qio_card.dart';
 import '../../screens/operators_screen.dart';
+import '../../theme/qio_palette.dart';
 
 class OperatorsTile extends StatelessWidget {
   const OperatorsTile({super.key, required this.queueId});
@@ -24,12 +25,12 @@ class OperatorsTile extends StatelessWidget {
           Expanded(
             child: Text(
               l10n.operatorsAndInvites,
-              style: QioTextStyles.bodyMedium.copyWith(
-                color: QioColors.textPrimary,
+              style: context.qioText.bodyMedium.copyWith(
+                color: context.qio.textPrimary,
               ),
             ),
           ),
-          Icon(Icons.chevron_right, color: QioColors.gray400),
+          Icon(Icons.chevron_right, color: context.qio.gray400),
         ],
       ),
     );

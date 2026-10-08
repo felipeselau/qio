@@ -5,7 +5,6 @@ import '../../models/queue_slot.dart';
 import '../../models/queue_entry.dart';
 import '../../services/group_service.dart';
 import '../../services/queue_service.dart';
-import '../../theme/qio_colors.dart';
 import '../../theme/qio_text_styles.dart';
 import '../../widgets/qio_card.dart';
 import '../../widgets/qio_empty_state.dart';
@@ -21,6 +20,7 @@ import '../../widgets/queue_panel/slots_editor.dart';
 import '../../widgets/queue_panel/queue_qr_card.dart';
 import '../../widgets/queue_panel/operators_tile.dart';
 import 'animated_entry_list.dart';
+import '../../theme/qio_palette.dart';
 
 class QueuePanelBody extends StatelessWidget {
   const QueuePanelBody({
@@ -109,15 +109,15 @@ class QueuePanelBody extends StatelessWidget {
                       children: [
                         Text(
                           l10n.queueClosedTitle,
-                          style: QioTextStyles.heading3.copyWith(
+                          style: context.qioText.heading3.copyWith(
                             fontWeight: FontWeight.w600,
-                            color: QioColors.gray700,
+                            color: context.qio.gray700,
                           ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           l10n.noServiceInProgress,
-                          style: QioTextStyles.caption,
+                          style: context.qioText.caption,
                         ),
                       ],
                     ),
@@ -128,9 +128,9 @@ class QueuePanelBody extends StatelessWidget {
                   padding: const EdgeInsets.symmetric(vertical: 24),
                   child: Text(
                     isOwner ? l10n.closedOwnerHint : l10n.closedOperatorHint,
-                    style: QioTextStyles.body.copyWith(
+                    style: context.qioText.body.copyWith(
                       fontSize: 14,
-                      color: QioColors.gray400,
+                      color: context.qio.gray400,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -206,10 +206,10 @@ class QueuePanelBody extends StatelessWidget {
                 if (others.isNotEmpty) ...[
                   Text(
                     l10n.servingByOthers,
-                    style: QioTextStyles.label.copyWith(
+                    style: context.qioText.label.copyWith(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: QioColors.gray700,
+                      color: context.qio.gray700,
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -245,17 +245,17 @@ class QueuePanelBody extends StatelessWidget {
                       Expanded(
                         child: Text(
                           l10n.upNext,
-                          style: QioTextStyles.label.copyWith(
+                          style: context.qioText.label.copyWith(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: QioColors.gray700,
+                            color: context.qio.gray700,
                           ),
                         ),
                       ),
                       if (maxWaiting > 0)
                         Text(
                           l10n.waitingCounter(waiting.length, maxWaiting),
-                          style: QioTextStyles.caption,
+                          style: context.qioText.caption,
                         ),
                     ],
                   ),

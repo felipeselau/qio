@@ -5,6 +5,7 @@ import '../../models/queue_schedule.dart';
 import '../../models/queue_slot.dart';
 import '../../services/queue_service.dart';
 import '../../theme/qio_colors.dart';
+import '../../theme/qio_palette.dart';
 import '../../theme/qio_text_styles.dart';
 import '../qio_card.dart';
 import 'queue_schedule_tile.dart';
@@ -89,10 +90,10 @@ class SlotsEditor extends StatelessWidget {
       children: [
         Text(
           l10n.queueModeLabel,
-          style: QioTextStyles.label.copyWith(
+          style: context.qioText.label.copyWith(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: QioColors.gray700,
+            color: context.qio.gray700,
           ),
         ),
         const SizedBox(height: 8),
@@ -117,14 +118,14 @@ class SlotsEditor extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             l10n.slotsEditorTitle,
-            style: QioTextStyles.label.copyWith(
+            style: context.qioText.label.copyWith(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: QioColors.gray700,
+              color: context.qio.gray700,
             ),
           ),
           const SizedBox(height: 4),
-          Text(l10n.slotsEditorHint, style: QioTextStyles.caption),
+          Text(l10n.slotsEditorHint, style: context.qioText.caption),
           const SizedBox(height: 8),
           for (final slot in sorted)
             _SlotRow(
@@ -141,7 +142,7 @@ class SlotsEditor extends StatelessWidget {
               padding: const EdgeInsets.only(top: 4),
               child: Text(
                 slotsErrorText(error!, l10n),
-                style: QioTextStyles.caption.copyWith(color: QioColors.error),
+                style: context.qioText.caption.copyWith(color: QioColors.error),
               ),
             ),
           const SizedBox(height: 8),
@@ -194,8 +195,8 @@ class _SlotRow extends StatelessWidget {
                 icon: const Icon(Icons.access_time, size: 18),
                 label: Text(
                   slot.start,
-                  style: QioTextStyles.bodyMedium.copyWith(
-                    color: QioColors.textPrimary,
+                  style: context.qioText.bodyMedium.copyWith(
+                    color: context.qio.textPrimary,
                   ),
                 ),
               ),
@@ -209,7 +210,7 @@ class _SlotRow extends StatelessWidget {
               ),
               Text(
                 l10n.slotCapacity(slot.capacity),
-                style: QioTextStyles.caption,
+                style: context.qioText.caption,
               ),
               IconButton(
                 tooltip: '+',
@@ -228,7 +229,7 @@ class _SlotRow extends StatelessWidget {
           if (outside)
             Text(
               l10n.slotsOutsideSchedule(slot.start),
-              style: QioTextStyles.caption.copyWith(color: QioColors.warning),
+              style: context.qioText.caption.copyWith(color: QioColors.warning),
             ),
         ],
       ),
@@ -282,7 +283,7 @@ class QueueSlotsTile extends StatelessWidget {
       onTap: () => _edit(context),
       child: Row(
         children: [
-          Icon(Icons.event_available_outlined, color: QioColors.primaryText),
+          Icon(Icons.event_available_outlined, color: context.qio.primaryText),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -290,8 +291,8 @@ class QueueSlotsTile extends StatelessWidget {
               children: [
                 Text(
                   l10n.queueModeLabel,
-                  style: QioTextStyles.bodyMedium.copyWith(
-                    color: QioColors.textPrimary,
+                  style: context.qioText.bodyMedium.copyWith(
+                    color: context.qio.textPrimary,
                   ),
                 ),
                 Text(
@@ -299,12 +300,12 @@ class QueueSlotsTile extends StatelessWidget {
                       ? '${l10n.modeSchedule} · '
                             '${l10n.slotsTileSummary(slots.length)}'
                       : l10n.modeQueue,
-                  style: QioTextStyles.caption,
+                  style: context.qioText.caption,
                 ),
               ],
             ),
           ),
-          Icon(Icons.edit_outlined, size: 18, color: QioColors.gray500),
+          Icon(Icons.edit_outlined, size: 18, color: context.qio.gray500),
         ],
       ),
     );

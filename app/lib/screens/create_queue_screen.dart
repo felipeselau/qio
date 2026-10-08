@@ -12,6 +12,7 @@ import '../widgets/queue_panel/queue_limit_tile.dart';
 import '../widgets/queue_panel/slots_editor.dart';
 import '../widgets/qio_responsive_body.dart';
 import 'queue_panel_screen.dart';
+import '../theme/qio_palette.dart';
 
 class CreateQueueScreen extends StatefulWidget {
   const CreateQueueScreen({super.key});
@@ -130,12 +131,12 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          backgroundColor: QioColors.surface,
+          backgroundColor: context.qio.surface,
           leading: TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(
               l10n.backWithArrow,
-              style: QioTextStyles.body.copyWith(
+              style: context.qioText.body.copyWith(
                 fontSize: 16,
                 color: QioColors.primary,
               ),
@@ -144,9 +145,9 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
           leadingWidth: 100,
           title: Text(
             l10n.newQueue,
-            style: QioTextStyles.heading2.copyWith(
+            style: context.qioText.heading2.copyWith(
               fontWeight: FontWeight.w700,
-              color: QioColors.textPrimary,
+              color: context.qio.textPrimary,
             ),
           ),
           centerTitle: true,

@@ -14,6 +14,7 @@ import '../services/qr_style.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
 import '../widgets/qio_button.dart';
+import '../theme/qio_palette.dart';
 
 class QrPosterScreen extends StatefulWidget {
   const QrPosterScreen({
@@ -143,14 +144,14 @@ class _QrPosterScreenState extends State<QrPosterScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: QioColors.gray100,
+      backgroundColor: context.qio.gray100,
       appBar: AppBar(
-        backgroundColor: QioColors.surface,
+        backgroundColor: context.qio.surface,
         title: Text(
           l10n.posterTitle,
-          style: QioTextStyles.heading2.copyWith(
+          style: context.qioText.heading2.copyWith(
             fontWeight: FontWeight.w700,
-            color: QioColors.textPrimary,
+            color: context.qio.textPrimary,
           ),
         ),
       ),
@@ -167,7 +168,7 @@ class _QrPosterScreenState extends State<QrPosterScreen> {
                   Text(
                     widget.queueName,
                     textAlign: TextAlign.center,
-                    style: QioTextStyles.heading1.copyWith(
+                    style: context.qioText.heading1.copyWith(
                       fontWeight: FontWeight.w800,
                       color: Colors.black,
                     ),
@@ -190,7 +191,7 @@ class _QrPosterScreenState extends State<QrPosterScreen> {
                   const SizedBox(height: 24),
                   Text(
                     l10n.scanToJoin,
-                    style: QioTextStyles.body.copyWith(
+                    style: context.qioText.body.copyWith(
                       fontSize: 18,
                       color: Colors.black,
                     ),
@@ -198,7 +199,7 @@ class _QrPosterScreenState extends State<QrPosterScreen> {
                   const SizedBox(height: 8),
                   Text(
                     _displayUrl,
-                    style: QioTextStyles.caption.copyWith(
+                    style: context.qioText.caption.copyWith(
                       fontSize: 14,
                       color: Colors.black87,
                     ),
@@ -210,10 +211,10 @@ class _QrPosterScreenState extends State<QrPosterScreen> {
           const SizedBox(height: 24),
           Text(
             l10n.qrColor,
-            style: QioTextStyles.label.copyWith(
+            style: context.qioText.label.copyWith(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: QioColors.gray700,
+              color: context.qio.gray700,
             ),
           ),
           const SizedBox(height: 8),
