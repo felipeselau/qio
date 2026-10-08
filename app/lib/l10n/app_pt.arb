@@ -535,5 +535,7 @@
   "finishedServedUndo": "{name} marcado como atendido",
   "@finishedServedUndo": {"placeholders": {"name": {"type": "String"}}},
   "finishedNoShowUndo": "{name} marcado como não compareceu",
-  "@finishedNoShowUndo": {"placeholders": {"name": {"type": "String"}}}
+  "@finishedNoShowUndo": {"placeholders": {"name": {"type": "String"}}},
+  "queueSettingsTitle": "Configurações da fila",
+  "queueQrShortcut": "QR code da fila"
 }

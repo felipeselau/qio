@@ -1540,4 +1540,10 @@ class AppLocalizationsEs extends AppLocalizations {
   String finishedNoShowUndo(String name) {
     return '$name marcado como no se presentó';
   }
+
+  @override
+  String get queueSettingsTitle => 'Configuración de la cola';
+
+  @override
+  String get queueQrShortcut => 'Código QR de la cola';
 }

@@ -487,5 +487,7 @@
   "finishedServedUndo": "{name} marcado como atendido",
   "@finishedServedUndo": {"placeholders": {"name": {"type": "String"}}},
   "finishedNoShowUndo": "{name} marcado como no se presentó",
-  "@finishedNoShowUndo": {"placeholders": {"name": {"type": "String"}}}
+  "@finishedNoShowUndo": {"placeholders": {"name": {"type": "String"}}},
+  "queueSettingsTitle": "Configuración de la cola",
+  "queueQrShortcut": "Código QR de la cola"
 }

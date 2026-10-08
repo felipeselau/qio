@@ -487,5 +487,7 @@
   "finishedServedUndo": "{name} marked as served",
   "@finishedServedUndo": {"placeholders": {"name": {"type": "String"}}},
   "finishedNoShowUndo": "{name} marked as no-show",
-  "@finishedNoShowUndo": {"placeholders": {"name": {"type": "String"}}}
+  "@finishedNoShowUndo": {"placeholders": {"name": {"type": "String"}}},
+  "queueSettingsTitle": "Queue settings",
+  "queueQrShortcut": "Queue QR code"
 }

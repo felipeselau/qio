@@ -1537,4 +1537,10 @@ class AppLocalizationsPt extends AppLocalizations {
   String finishedNoShowUndo(String name) {
     return '$name marcado como não compareceu';
   }
+
+  @override
+  String get queueSettingsTitle => 'Configurações da fila';
+
+  @override
+  String get queueQrShortcut => 'QR code da fila';
 }

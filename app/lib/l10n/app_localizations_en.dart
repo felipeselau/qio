@@ -1536,4 +1536,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String finishedNoShowUndo(String name) {
     return '$name marked as no-show';
   }
+
+  @override
+  String get queueSettingsTitle => 'Queue settings';
+
+  @override
+  String get queueQrShortcut => 'Queue QR code';
 }

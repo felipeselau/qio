@@ -2823,6 +2823,18 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'{name} marcado como não compareceu'**
   String finishedNoShowUndo(String name);
+
+  /// No description provided for @queueSettingsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Configurações da fila'**
+  String get queueSettingsTitle;
+
+  /// No description provided for @queueQrShortcut.
+  ///
+  /// In pt, this message translates to:
+  /// **'QR code da fila'**
+  String get queueQrShortcut;
 }
 
 class _AppLocalizationsDelegate
