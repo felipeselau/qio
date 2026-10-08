@@ -1,17 +1,31 @@
-# qio_app
+# Qio — app do proprietário
 
-A new Flutter project.
+App Flutter (Android/iOS) para donos e operadores de fila. Versão atual em
+`pubspec.yaml`: 1.4.0+5. Visão geral e comandos do monorepo: [`../README.md`](../README.md) e
+[`../CLAUDE.md`](../CLAUDE.md).
 
-## Getting Started
+## Comandos
 
-This project is a starting point for a Flutter application.
+```bash
+flutter pub get
+flutter analyze lib test
+flutter test                                   # unidade, widget e goldens
+flutter test --coverage                        # gera coverage/lcov.info
+flutter test --update-goldens --tags golden    # regenera test/goldens
+flutter run
+```
 
-A few resources to get you started if this is your first Flutter project:
+Goldens (fonte Ahem, tolerância 0,5%) estão descritos em
+[`test/goldens/README.md`](test/goldens/README.md). Resultados de testes e
+cobertura: [`../docs/qualidade.md`](../docs/qualidade.md).
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Estrutura de `lib/`
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- `screens/` — telas (home, painel da fila, histórico, métricas, grupos, alertas, operadores, conta).
+- `services/` — acesso ao Firebase e lógica pura (métricas, exportação, analytics, push).
+- `models/`, `widgets/`, `controllers/`, `theme/` (`QioPalette`, `ThemeExtension`) e `l10n/` (pt, en, es).
+
+## Release
+
+`flutter build apk --release` exige `android/key.properties`; ver "Release do app"
+no [`../CLAUDE.md`](../CLAUDE.md).

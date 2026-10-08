@@ -1,32 +1,28 @@
-# React + TypeScript + Vite
+# Qio — página do cliente
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React 19 + TypeScript + Vite + Firebase JS SDK. É a página aberta pelo QR
+(`https://qio.web.app/q/{queueId}`): o cliente entra na fila pela callable
+`joinQueue`, acompanha a posição em tempo real e recebe o aviso de chamada.
+Visão geral do monorepo: [`../README.md`](../README.md) e [`../CLAUDE.md`](../CLAUDE.md).
 
-Currently, two official plugins are available:
+## Comandos
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm ci
+cp .env.example .env   # VITE_VAPID_KEY, VITE_RECAPTCHA_SITE_KEY, VITE_MEASUREMENT_ID (todas opcionais)
+npm run dev
+npm run build          # tsc -b && vite build (roda no CI)
+npm run lint           # oxlint
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Não há testes automatizados neste módulo; o CI roda apenas `npm run build`.
+
+## Variáveis de ambiente
+
+- `VITE_VAPID_KEY` — push em segundo plano (FCM); ver [`../docs/FCM.md`](../docs/FCM.md).
+- `VITE_RECAPTCHA_SITE_KEY` — App Check (reCAPTCHA Enterprise); ver [`../docs/APPCHECK.md`](../docs/APPCHECK.md).
+- `VITE_MEASUREMENT_ID` — Analytics com opt-out; ver [`../docs/monitoring.md`](../docs/monitoring.md).
+- `VITE_USE_EMULATORS` — usa os emulators locais (desliga App Check e Analytics).
+
+`src/firebase.ts` e `public/firebase-messaging-sw.js` duplicam o `firebaseConfig`;
+mantenha os dois em sincronia.

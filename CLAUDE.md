@@ -35,7 +35,7 @@ e no CI; mudança visual intencional exige regenerá-los no PR.
 ### functions/
 ```bash
 npm ci
-npm test           # node --test (lógica pura em lib/join.js)
+npm test           # node --test (lógica pura em src/*.js)
 ```
 
 ### rules-tests/
@@ -55,7 +55,8 @@ seed do teste seguinte e apagavam a entry (flake em `database.test.js`); não
 volte a subir functions junto das rules.
 
 Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
-`~/.claude/CLAUDE.md`). Não há testes em `web/`.
+`~/.claude/CLAUDE.md`). Não há testes em `web/`. Contagem de testes, cobertura e limitações
+conhecidas: `docs/qualidade.md`.
 
 ## Modelo de dados
 

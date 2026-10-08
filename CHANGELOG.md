@@ -2,6 +2,36 @@
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
+## [Não lançado]
+
+Mudanças em `main` depois da 1.4.0+5 (versão em `app/pubspec.yaml` ainda 1.4.0+5).
+
+### Adicionado
+- Métricas por atendente no painel gerencial (#124).
+- Exportação das métricas em CSV e PDF (#125).
+- Métricas de espera (mediana, P90 e faixas) e de re-chamadas (#126).
+- Alertas operacionais para o dono: espera alta, não comparecimento alto e fila
+  parada, com push e configuração por fila (function `evaluateQueueAlerts`, #127).
+- Monitoramento técnico (logging estruturado sem PII nas functions) e analytics
+  com opt-out no app e na web (#128, `docs/monitoring.md`).
+- Demanda por dia da semana e heatmap dia×hora (#129).
+- Grupos de filas e indicadores por grupo (#130).
+- Tendência diária e comparação com o período anterior nas métricas (#133).
+- App Check nas callables `joinQueue` e `submitFeedback` com log de chamadas,
+  debug token e flags de enforcement por callable (#134, `docs/APPCHECK.md`);
+  enforcement continua desligado (`ENFORCE_APP_CHECK=false`).
+- Agendamento por horário (slots diários, fuso `America/Sao_Paulo`): fila em modo
+  hora marcada, editor de horários no app e escolha de horário na web (#136).
+
+### Alterado
+- `QioColors` passou a ser um `ThemeExtension` (`QioPalette`) (#135).
+- Rules: aceitam `lang` e `nextNotifiedAt` na entry (#114).
+- Testes: widget tests das telas principais (#131), goldens das telas principais
+  em claro/escuro (#137) e rules rodando em duas passadas, sem functions na
+  primeira (#132).
+- Ajustes da auditoria da epic #97: voltar preditivo, tour, docs de VAPID,
+  contraste, fonte Inter na web e painel (#174).
+
 ## [1.4.0] - 2026-10-06 (teste)
 
 ### Adicionado
