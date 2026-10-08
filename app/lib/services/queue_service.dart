@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:cloud_firestore/cloud_firestore.dart' hide Query, Transaction;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -15,9 +16,9 @@ import '../models/queue_schedule.dart';
 import '../models/queue_slot.dart';
 import 'action_errors.dart';
 import 'analytics_service.dart';
+import 'delete_service.dart';
 import 'finish_entry.dart';
 import 'mirror.dart';
-import 'operator_service.dart';
 
 const maxQueuesPerOwner = 20;
 
@@ -34,6 +35,9 @@ class QueueService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseDatabase _rtdb = FirebaseDatabase.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  @visibleForTesting
+  DeleteService? deleteService;
 
   String get _uid => _auth.currentUser?.uid ?? '';
 
@@ -386,40 +390,8 @@ class QueueService {
     );
   }
 
-  Future<void> deleteQueue(String queueId) async {
-    await _ensureOwnerMirror(queueId);
-    final entriesSnap = await _rtdb.ref('queues/$queueId/entries').get();
-    final entries = entriesSnap.value as Map<dynamic, dynamic>?;
-    if (entries != null) {
-      for (final key in entries.keys) {
-        await _rtdb.ref('queues/$queueId/entries/$key').remove();
-      }
-    }
-    await _rtdb.ref('queues/$queueId/public').remove();
-    await _rtdb.ref('queues/$queueId/meta').remove();
-    await _rtdb.ref('tickets/$queueId').remove();
-    await OperatorService.instance.deleteOperatorData(queueId);
-    await _rtdb.ref('owners/$queueId').remove();
-    final historySnap = await _firestore
-        .collection('queues')
-        .doc(queueId)
-        .collection('history')
-        .get();
-    final feedbackSnap = await _firestore
-        .collection('queues')
-        .doc(queueId)
-        .collection('feedback')
-        .get();
-    final batch = _firestore.batch();
-    for (final doc in historySnap.docs) {
-      batch.delete(doc.reference);
-    }
-    for (final doc in feedbackSnap.docs) {
-      batch.delete(doc.reference);
-    }
-    batch.delete(_firestore.collection('queues').doc(queueId));
-    await batch.commit();
-  }
+  Future<void> deleteQueue(String queueId) =>
+      (deleteService ?? DeleteService.instance).deleteQueue(queueId);
 
   Stream<Queue> watchQueue(String queueId) {
     return _firestore

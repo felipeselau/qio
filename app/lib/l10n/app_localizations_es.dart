@@ -128,6 +128,49 @@ class AppLocalizationsEs extends AppLocalizations {
   String get signOutError => 'No se pudo cerrar la sesión.';
 
   @override
+  String get deleteAccountTitle => 'Eliminar mi cuenta';
+
+  @override
+  String get deleteAccountZone => 'Zona de riesgo';
+
+  @override
+  String get deleteAccountSubtitle =>
+      'Borra tu cuenta, filas, historial, valoraciones y dispositivos. No se puede deshacer.';
+
+  @override
+  String get deleteAccountWarning =>
+      'Todas tus filas, el historial de atenciones, las valoraciones, los grupos y tu cuenta se borrarán de forma permanente. Quien está en una fila tuya pierde su turno. Si eres operador de filas de otras personas, solo se quita tu vínculo.';
+
+  @override
+  String get deleteAccountConfirmLabel =>
+      'Escribe ELIMINAR o tu correo para confirmar';
+
+  @override
+  String get deleteAccountPasswordLabel => 'Contraseña actual';
+
+  @override
+  String get deleteAccountGoogleHint =>
+      'Confirmarás tu identidad con Google antes de eliminar.';
+
+  @override
+  String get deleteAccountConfirmButton => 'Eliminar definitivamente';
+
+  @override
+  String get deleteAccountProgress =>
+      'Eliminando tus datos. Esto puede tardar unos instantes.';
+
+  @override
+  String get deleteAccountReauthFailed =>
+      'No se pudo confirmar tu identidad. Revisa la contraseña e inténtalo de nuevo.';
+
+  @override
+  String get deleteAccountError =>
+      'La eliminación no terminó. Parte de los datos puede haberse borrado ya. Inténtalo de nuevo para completarla.';
+
+  @override
+  String get deleteAccountRetry => 'Reintentar';
+
+  @override
   String get appearance => 'Apariencia';
 
   @override

@@ -6,6 +6,8 @@ const { initializeApp } = require('firebase-admin/app');
 const { getMessaging } = require('firebase-admin/messaging');
 const { getDatabase } = require('firebase-admin/database');
 const { getFirestore, FieldValue, Timestamp } = require('firebase-admin/firestore');
+const { getAuth } = require('firebase-admin/auth');
+const { getStorage } = require('firebase-admin/storage');
 const {
   rateLimitFromEnv,
   normalizeName,
@@ -56,9 +58,11 @@ const {
   buildAlertPush,
   wantsAlertPush,
 } = require('./src/alerts');
+const logger = require('firebase-functions/logger');
 const { logError, logAppCheck } = require('./src/log');
 const { guarded } = require('./src/guard');
 const { isEnforced } = require('./src/appcheck');
+const { isSafeId, deleteOwnedQueue, deleteAccountData } = require('./src/delete');
 
 initializeApp();
 
@@ -334,6 +338,145 @@ exports.submitFeedback = onCall(
   }),
 );
 
+function logDelete(event, ctx) {
+  logger.info(event, { event, ...ctx });
+}
+
+function logoBucket() {
+  try {
+    return getStorage().bucket();
+  } catch (_) {
+    const project = process.env.GCLOUD_PROJECT;
+    return getStorage().bucket(`${project}.firebasestorage.app`);
+  }
+}
+
+function isNotFound(err) {
+  return err?.code === 404 || err?.code === 5 || err?.code === 'auth/user-not-found';
+}
+
+function deleteDeps() {
+  const firestore = getFirestore();
+  const db = getDatabase();
+  return {
+    getQueue: async (queueId) => {
+      const snap = await firestore.doc(`queues/${queueId}`).get();
+      return snap.exists ? snap.data() : null;
+    },
+    markDeleting: async (queueId) => {
+      await firestore.doc(`queues/${queueId}`).set(
+        { deleting: true, status: 'closed' },
+        { merge: true },
+      );
+      const metaSnap = await db.ref(`queues/${queueId}/meta`).get();
+      if (metaSnap.exists()) {
+        await db.ref(`queues/${queueId}/meta`).update({ status: 'closed', deleting: true });
+      }
+    },
+    removeRtdb: (path) => db.ref(path).remove(),
+    deleteSubcollections: async (queueId) => {
+      const collections = await firestore.doc(`queues/${queueId}`).listCollections();
+      for (const col of collections) {
+        await firestore.recursiveDelete(col);
+      }
+    },
+    inviteCodeOf: async (queueId) => {
+      const snap = await firestore.doc(`queues/${queueId}`).get();
+      const code = snap.exists ? snap.get('operatorInviteCode') : null;
+      return typeof code === 'string' && isSafeId(code) ? code : null;
+    },
+    deleteInvite: (code) => firestore.doc(`operatorInvites/${code}`).delete(),
+    deleteLogos: async (queueId) => {
+      try {
+        await logoBucket().deleteFiles({ prefix: `queue-logos/${queueId}/`, force: true });
+      } catch (err) {
+        if (!isNotFound(err)) throw err;
+      }
+    },
+    deleteQueueDoc: (queueId) => firestore.doc(`queues/${queueId}`).delete(),
+    listOwnedQueueIds: async (uid) => {
+      const snap = await firestore.collection('queues').where('ownerId', '==', uid).get();
+      return snap.docs.map((d) => d.id);
+    },
+    listOperatorLinks: async (uid) => {
+      const links = [];
+      for (const kind of ['operators', 'operatorRequests']) {
+        const snap = await firestore.collectionGroup(kind).where('uid', '==', uid).get();
+        for (const doc of snap.docs) {
+          const queueId = doc.ref.parent.parent?.id;
+          if (queueId) links.push({ kind, queueId, path: doc.ref.path });
+        }
+      }
+      return links;
+    },
+    removeOperatorLink: async (link, uid) => {
+      await firestore.doc(link.path).delete();
+      await db.ref(`queues/${link.queueId}/operatorUids/${uid}`).remove();
+    },
+    deleteOwnerData: async (uid) => {
+      await firestore.recursiveDelete(firestore.doc(`owners/${uid}`));
+    },
+    deleteAuthUser: async (uid) => {
+      try {
+        await getAuth().deleteUser(uid);
+      } catch (err) {
+        if (!isNotFound(err)) throw err;
+      }
+    },
+  };
+}
+
+exports.deleteQueue = onCall(
+  {
+    region: 'us-central1',
+    invoker: 'public',
+    timeoutSeconds: 540,
+    memory: '512MiB',
+    enforceAppCheck: isEnforced('deleteQueue'),
+  },
+  guarded('deleteQueue', async (request) => {
+    logAppCheck('deleteQueue', request);
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError('unauthenticated', 'Faça login para excluir a fila.');
+    }
+    const queueId = request.data?.queueId;
+    if (!isSafeId(queueId)) {
+      throw new HttpsError('invalid-argument', 'Fila inválida.');
+    }
+    const result = await deleteOwnedQueue(queueId, uid, deleteDeps(), logDelete);
+    if (result.forbidden) {
+      throw new HttpsError('permission-denied', 'Só o dono pode excluir a fila.');
+    }
+    return { ok: true, alreadyGone: result.alreadyGone };
+  }),
+);
+
+exports.deleteAccount = onCall(
+  {
+    region: 'us-central1',
+    invoker: 'public',
+    timeoutSeconds: 540,
+    memory: '512MiB',
+    enforceAppCheck: isEnforced('deleteAccount'),
+  },
+  guarded('deleteAccount', async (request) => {
+    logAppCheck('deleteAccount', request);
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError('unauthenticated', 'Faça login para excluir a conta.');
+    }
+    const result = await deleteAccountData(uid, deleteDeps(), logDelete);
+    if (!result.complete) {
+      throw new HttpsError('aborted', 'Exclusão parcial. Tente novamente.', {
+        reason: 'partial',
+        failures: result.failures,
+      });
+    }
+    return { ok: true, queuesDeleted: result.queuesDeleted };
+  }),
+);
+
 exports.syncPublicTicket = onValueWritten(
   {
     ref: 'queues/{queueId}/entries/{entryId}',
@@ -420,6 +563,7 @@ exports.applyQueueSchedules = onSchedule(
     for (const doc of snap.docs) {
       try {
         const data = doc.data();
+        if (data.deleting) continue;
         const metaRef = db.ref(`queues/${doc.id}/meta`);
         const meta = (await metaRef.once('value')).val();
         const plan = planScheduleChange(

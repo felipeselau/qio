@@ -1,6 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qio_app/screens/account_screen.dart';
+import 'package:qio_app/services/delete_service.dart';
 import 'package:qio_app/widgets/qio_button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -135,5 +137,128 @@ void main() {
     await tester.tap(find.widgetWithText(QioButton, 'Sair da conta'));
     await tick(tester);
     expect(find.text('Não foi possível sair da conta.'), findsOneWidget);
+  });
+
+  group('excluir minha conta', () {
+    late List<String> invoked;
+    Object? failWith;
+
+    DeleteService service() => DeleteService(
+      invoker: (name, data) async {
+        invoked.add(name);
+        final err = failWith;
+        if (err != null) throw err;
+        return {'ok': true};
+      },
+    );
+
+    setUp(() {
+      invoked = [];
+      failWith = null;
+    });
+
+    Future<void> open(WidgetTester tester, FakeAuthService auth) async {
+      await pumpApp(
+        tester,
+        AccountScreen(
+          auth: auth,
+          loadOwner: (_) async => null,
+          loadQueueCount: (_) async => 0,
+          deleteService: service(),
+        ),
+        size: tall,
+      );
+      await tick(tester);
+      final btn = find.widgetWithText(QioButton, 'Excluir minha conta');
+      await tester.ensureVisible(btn);
+      await tester.tap(btn);
+      await tick(tester);
+    }
+
+    Finder confirmButton() =>
+        find.widgetWithText(TextButton, 'Excluir definitivamente');
+
+    testWidgets('botão fica desabilitado sem confirmação e senha', (
+      tester,
+    ) async {
+      final auth = FakeAuthService(user: FakeUser());
+      await open(tester, auth);
+      expect(tester.widget<TextButton>(confirmButton()).onPressed, isNull);
+      await tester.enterText(find.byType(TextField).first, 'excluir');
+      await tester.pump();
+      expect(tester.widget<TextButton>(confirmButton()).onPressed, isNull);
+      await tester.enterText(find.byType(TextField).last, 'segredo');
+      await tester.pump();
+      expect(tester.widget<TextButton>(confirmButton()).onPressed, isNotNull);
+    });
+
+    testWidgets('aceita o e-mail, reautentica e chama a callable', (
+      tester,
+    ) async {
+      final auth = FakeAuthService(user: FakeUser(email: 'dono@qio.app'));
+      await open(tester, auth);
+      await tester.enterText(find.byType(TextField).first, 'DONO@qio.app');
+      await tester.enterText(find.byType(TextField).last, 'segredo');
+      await tester.pump();
+      await tester.tap(confirmButton());
+      await tick(tester);
+      expect(invoked, ['deleteAccount']);
+      expect(auth.calls, ['reauth:password:segredo', 'signOut']);
+    });
+
+    testWidgets('conta Google reautentica com Google', (tester) async {
+      final auth = FakeAuthService(user: FakeUser(), passwordProvider: false);
+      await open(tester, auth);
+      expect(find.byType(TextField), findsOneWidget);
+      await tester.enterText(find.byType(TextField), 'EXCLUIR');
+      await tester.pump();
+      await tester.tap(confirmButton());
+      await tick(tester);
+      expect(auth.calls, ['reauth:google', 'signOut']);
+      expect(invoked, ['deleteAccount']);
+    });
+
+    testWidgets('falha na reautenticação não chama a callable', (tester) async {
+      final auth = FakeAuthService(
+        user: FakeUser(),
+        reauthError: FirebaseAuthException(code: 'wrong-password'),
+      );
+      await open(tester, auth);
+      await tester.enterText(find.byType(TextField).first, 'EXCLUIR');
+      await tester.enterText(find.byType(TextField).last, 'errada');
+      await tester.pump();
+      await tester.tap(confirmButton());
+      await tick(tester);
+      expect(invoked, isEmpty);
+      expect(auth.calls, ['reauth:password:errada']);
+      expect(
+        find.textContaining('Não foi possível confirmar sua identidade'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('erro da callable mostra retry sem nova reautenticação', (
+      tester,
+    ) async {
+      final auth = FakeAuthService(user: FakeUser());
+      failWith = FirebaseException(
+        plugin: 'cloud_functions',
+        code: 'delete-incomplete',
+      );
+      await open(tester, auth);
+      await tester.enterText(find.byType(TextField).first, 'EXCLUIR');
+      await tester.enterText(find.byType(TextField).last, 'segredo');
+      await tester.pump();
+      await tester.tap(confirmButton());
+      await tick(tester);
+      expect(find.textContaining('A exclusão não terminou'), findsOneWidget);
+      expect(auth.calls, ['reauth:password:segredo']);
+
+      failWith = null;
+      await tester.tap(find.widgetWithText(TextButton, 'Tentar novamente'));
+      await tick(tester);
+      expect(invoked, ['deleteAccount', 'deleteAccount']);
+      expect(auth.calls, ['reauth:password:segredo', 'signOut']);
+    });
   });
 }

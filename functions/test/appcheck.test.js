@@ -59,4 +59,12 @@ describe('isEnforced', () => {
     assert.equal(isEnforced('joinQueue', { ENFORCE_APP_CHECK: '1' }), false);
     assert.equal(isEnforced('joinQueue', { ENFORCE_APP_CHECK: '' }), false);
   });
+
+  it('callables do app Flutter só ligam pela flag própria, nunca pela geral', () => {
+    const env = { ENFORCE_APP_CHECK: 'true' };
+    assert.equal(isEnforced('deleteQueue', env), false);
+    assert.equal(isEnforced('deleteAccount', env), false);
+    assert.equal(isEnforced('deleteQueue', { ENFORCE_APP_CHECK_DELETE: 'true' }), true);
+    assert.equal(isEnforced('deleteAccount', { ENFORCE_APP_CHECK_DELETE: 'true' }), true);
+  });
 });
