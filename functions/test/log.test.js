@@ -82,3 +82,29 @@ describe('logError', () => {
     assert.equal(payload.error.message, 'boom');
   });
 });
+
+describe('logAppCheck', () => {
+  const { appCheckStatus, logAppCheck } = require('../src/log');
+
+  it('appCheckStatus distingue presença do token validado', () => {
+    assert.equal(appCheckStatus({ app: { appId: 'x' } }), 'present');
+    assert.equal(appCheckStatus({}), 'absent');
+    assert.equal(appCheckStatus(undefined), 'absent');
+  });
+
+  it('grava só evento, callable e status, sem dados do request', () => {
+    const calls = [];
+    const logger = { info: (msg, payload) => calls.push({ msg, payload }) };
+    logAppCheck(
+      'joinQueue',
+      { app: { appId: 'x' }, data: { name: 'Ana', phone: '(11) 99999-9999' }, auth: { uid: 'u' } },
+      logger,
+    );
+    assert.deepEqual(calls, [
+      {
+        msg: 'appcheck',
+        payload: { event: 'appcheck', callable: 'joinQueue', appCheck: 'present' },
+      },
+    ]);
+  });
+});

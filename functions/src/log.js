@@ -54,4 +54,12 @@ function logError(event, err, ctx = {}, logger = defaultLogger) {
   logger.error(event, { ...scrub(ctx), event, error: describeError(err) });
 }
 
-module.exports = { logError, scrub };
+function appCheckStatus(request) {
+  return request && request.app ? 'present' : 'absent';
+}
+
+function logAppCheck(callable, request, logger = defaultLogger) {
+  logger.info('appcheck', { event: 'appcheck', callable, appCheck: appCheckStatus(request) });
+}
+
+module.exports = { logError, scrub, appCheckStatus, logAppCheck };

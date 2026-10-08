@@ -80,7 +80,8 @@
     "invalidArgument": "Dados inválidos. Confira nome e telefone.",
     "notFound": "Fila não encontrada.",
     "feedbackFailed": "Não foi possível enviar a avaliação. Tente novamente.",
-    "queueFull": "A fila está lotada no momento. Tente novamente em alguns minutos."
+    "queueFull": "A fila está lotada no momento. Tente novamente em alguns minutos.",
+    "securityCheckFailed": "Falha na verificação de segurança. Recarregue a página e tente novamente."
   },
   "push": {
     "called": "Sua senha foi chamada — dirija-se ao atendimento."

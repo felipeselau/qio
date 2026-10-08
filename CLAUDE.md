@@ -86,8 +86,10 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
   `waiting`/`called` e remove nos demais casos. `public` é legível por qualquer
   autenticado e não tem escrita por cliente. O web calcula posição a partir dele.
 - `ENFORCE_APP_CHECK` (`functions/.env`, commitado com `false`) liga
-  `enforceAppCheck` na callable. Só mude para `true` depois de ativar App Check no
-  web (`VITE_RECAPTCHA_SITE_KEY`) e registrar o app no console.
+  `enforceAppCheck` nas callables `joinQueue` e `submitFeedback` (nunca em RTDB/
+  Firestore). Só mude para `true` depois de ativar App Check no web
+  (`VITE_RECAPTCHA_SITE_KEY`), registrar o app no console e medir ≥95% das chamadas
+  com token por 3–7 dias. Passo a passo e rollback em `docs/APPCHECK.md`.
 - Backfill único do `public` para entries já existentes:
   `node functions/scripts/backfill-public.js` (credencial padrão do Admin SDK,
   ex. `GOOGLE_APPLICATION_CREDENTIALS`/`GOOGLE_CLOUD_PROJECT=qio-app`).
@@ -242,9 +244,10 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   App Check é opcional sem `VITE_RECAPTCHA_SITE_KEY`; usa **reCAPTCHA Enterprise**
   (Fraud Defense), não v3. A chave não aceita `localhost` e não roda com
   emulators. No CI, as chaves vêm de `vars.VITE_RECAPTCHA_SITE_KEY` e
-  `vars.VITE_VAPID_KEY` (GitHub → Actions → Variables). O app Flutter não usa App
+  `vars.VITE_VAPID_KEY` (GitHub → Actions → Variables). `VITE_APPCHECK_DEBUG_TOKEN`
+  (só `npm run dev`, ignorado em produção) habilita debug token. O app Flutter não usa App
   Check: APK fora da Play Store não passa no Play Integrity, então nunca ligue
-  enforcement em RTDB/Firestore, só na callable `joinQueue` (chamada só pela web).
+  enforcement em RTDB/Firestore, só nas callables `joinQueue` e `submitFeedback` (chamadas só pela web).
 - PWA instalável (`web/public/manifest.webmanifest` + ícones PNG) **sem cache
   offline e sem service worker próprio**: a fila é tempo real e bundle velho em
   cache é risco. Banner via `useInstallPrompt.ts` (só aparece na fase `ticket`).

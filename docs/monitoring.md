@@ -103,3 +103,26 @@ Nada abaixo foi feito pelo código. Projeto: `qio-app`.
 functions (`firebase deploy --only functions`) → hosting (push na `main`, com
 `VITE_MEASUREMENT_ID` configurada antes) → APK novo. As functions não dependem do web
 nem do app para o logging; o web e o app não dependem de mudanças de rules.
+
+## 4. App Check: métrica de chamadas com token
+
+`joinQueue` e `submitFeedback` registram, a cada chamada, um log `INFO` sem PII:
+`jsonPayload.event="appcheck"`, `jsonPayload.callable` e `jsonPayload.appCheck`
+(`present` quando `request.app` existe, `absent` caso contrário). Função em
+`functions/src/log.js` (`logAppCheck`).
+
+Filtros do Logs Explorer:
+
+- Todas as chamadas: `jsonPayload.event="appcheck"`
+- Sem token: `jsonPayload.event="appcheck" AND jsonPayload.appCheck="absent"`
+
+**Ação MANUAL (console)**: em Logging > Log-based metrics, criar duas métricas de contador
+(`appcheck_calls_total` com o primeiro filtro e `appcheck_calls_absent` com o segundo) e um
+alerta quando `absent / total` ficar acima de 5% após o rollout. O critério para ligar o
+enforcement (≥95% com token por 3 a 7 dias) está em `docs/APPCHECK.md`. Com o enforcement
+ligado, chamadas sem token são barradas antes do handler e não geram mais este log; use o
+erro `unauthenticated` nas métricas de callables.
+
+Atenção: `absent` mistura "sem token" e "token inválido" (`request.app` só existe com token
+válido). Após ligar o enforcement a métrica fica cega para as rejeições; acompanhe-as pela
+métrica de App Check do console (Firebase Console > App Check).
