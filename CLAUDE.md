@@ -274,6 +274,26 @@ conhecidas: `docs/qualidade.md`.
 - Deploy (Blaze + Cloud Scheduler): `--only functions:evaluateQueueAlerts` →
   `--only firestore:rules` → distribuir o APK.
 
+## Limites e validações
+
+- **Limite de filas por dono:** `maxQueuesPerOwner = 20` (`queue_service.dart`).
+  `QueueService.createQueue` conta as filas do dono (`count()`) no início e lança
+  `QueueLimitReached`; a tela de criação mostra `queueLimitReached` (pt/en/es).
+  Vale **só no cliente**: rules do Firestore não contam documentos, então um
+  cliente adulterado ainda passa do limite (contador/callable seria trabalho
+  futuro). `duplicateQueue` passa por `createQueue` e herda o limite; `queueErrorMessage`
+  (`queue_info_fields.dart`) traduz `QueueLimitReached` na criação e no duplicar.
+  Novos fluxos de criação devem chamar `ensureUnderQueueLimit`.
+- **Convites só para contas não anônimas:** `notAnonymous()` em `firestore.rules`
+  (`sign_in_provider != 'anonymous'`) é exigido para ler `operatorInvites/{code}`
+  e criar/recriar `operatorRequests/{uid}`. O app só autentica com e-mail/Google
+  (`auth_service.dart`), então o fluxo de operador não muda.
+- **Ordem de deploy:** indiferente. O limite de filas é só do cliente, então a
+  ordem das rules não afeta a mensagem. As rules só mudam o comportamento para
+  contas anônimas. APK antigo + rules novas: operador por e-mail/Google segue
+  funcionando. APK novo + rules antigas: só falta o endurecimento dos convites.
+  As rules não quebram nenhum APK.
+
 ## Operadores
 
 - **Convite**: `operatorInvites/{code}` (6 chars, validade padrão 24 h) é a fonte

@@ -369,6 +369,12 @@
       "max": {"type": "int"}
     }
   },
+  "queueLimitReached": "Limite de {max} filas atingido. Exclua uma fila para criar outra.",
+  "@queueLimitReached": {
+    "placeholders": {
+      "max": {"type": "int"}
+    }
+  },
   "groupLabel": "Grupo",
   "groupsEmpty": "Nenhum grupo ainda. Crie um para organizar suas filas.",
   "groupPermissionDenied": "Sem permissão para alterar grupos. Atualize o app e tente de novo.",

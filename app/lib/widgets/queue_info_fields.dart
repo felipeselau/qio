@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/queue_info.dart';
+import '../services/queue_service.dart';
 import 'qio_input.dart';
 
 String? queueInfoErrorText(QueueInfoError? error, AppLocalizations l10n) =>
@@ -14,6 +15,9 @@ String? queueInfoErrorText(QueueInfoError? error, AppLocalizations l10n) =>
     };
 
 String queueErrorMessage(Object error, AppLocalizations l10n) {
+  if (error is QueueLimitReached) {
+    return l10n.queueLimitReached(maxQueuesPerOwner);
+  }
   if (error is FormatException) {
     final info = QueueInfoError.values.asNameMap()[error.message];
     if (info != null) return queueInfoErrorText(info, l10n)!;
