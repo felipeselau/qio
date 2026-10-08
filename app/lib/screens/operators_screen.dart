@@ -13,6 +13,7 @@ import '../widgets/qio_avatar.dart';
 import '../widgets/qio_button.dart';
 import '../widgets/qio_card.dart';
 import '../widgets/qio_responsive_body.dart';
+import '../theme/qio_palette.dart';
 
 enum _Validity {
   hour(Duration(hours: 1)),
@@ -64,14 +65,14 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: QioColors.gray100,
+      backgroundColor: context.qio.gray100,
       appBar: AppBar(
-        backgroundColor: QioColors.surface,
+        backgroundColor: context.qio.surface,
         title: Text(
           l10n.operatorsTitle,
-          style: QioTextStyles.heading2.copyWith(
+          style: context.qioText.heading2.copyWith(
             fontWeight: FontWeight.w700,
-            color: QioColors.textPrimary,
+            color: context.qio.textPrimary,
           ),
         ),
         centerTitle: true,
@@ -123,10 +124,10 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
   Widget _sectionTitle(String text) {
     return Text(
       text,
-      style: QioTextStyles.label.copyWith(
+      style: context.qioText.label.copyWith(
         fontSize: 14,
         fontWeight: FontWeight.w600,
-        color: QioColors.gray700,
+        color: context.qio.gray700,
       ),
     );
   }
@@ -135,7 +136,7 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
     return QioCard(
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 12),
-        child: Center(child: Text(text, style: QioTextStyles.caption)),
+        child: Center(child: Text(text, style: context.qioText.caption)),
       ),
     );
   }
@@ -154,19 +155,19 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
         children: [
           Text(
             l10n.inviteCodeLabel,
-            style: QioTextStyles.heading3.copyWith(
+            style: context.qioText.heading3.copyWith(
               fontWeight: FontWeight.w600,
-              color: QioColors.textPrimary,
+              color: context.qio.textPrimary,
             ),
           ),
           const SizedBox(height: 4),
-          Text(l10n.inviteExplain, style: QioTextStyles.caption),
+          Text(l10n.inviteExplain, style: context.qioText.caption),
           const SizedBox(height: 16),
           if (active) ...[
             SelectableText(
               code,
               textAlign: TextAlign.center,
-              style: QioTextStyles.ticket.copyWith(
+              style: context.qioText.ticket.copyWith(
                 fontSize: 36,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 6,
@@ -179,7 +180,7 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
                   ? l10n.noExpiration
                   : l10n.validUntil(_formatDateTime(expiresAt)),
               textAlign: TextAlign.center,
-              style: QioTextStyles.caption,
+              style: context.qioText.caption,
             ),
             const SizedBox(height: 16),
             Row(
@@ -221,12 +222,12 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Text(
                   l10n.previousCodeExpired,
-                  style: QioTextStyles.caption.copyWith(
+                  style: context.qioText.caption.copyWith(
                     color: QioColors.warning,
                   ),
                 ),
               ),
-            Text(l10n.validity, style: QioTextStyles.label),
+            Text(l10n.validity, style: context.qioText.label),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -332,16 +333,16 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
             children: [
               Text(
                 label,
-                style: QioTextStyles.bodyMedium.copyWith(
+                style: context.qioText.bodyMedium.copyWith(
                   fontSize: 14,
-                  color: QioColors.textPrimary,
+                  color: context.qio.textPrimary,
                 ),
                 overflow: TextOverflow.ellipsis,
               ),
               if (email != null && email != label)
                 Text(
                   email,
-                  style: QioTextStyles.caption.copyWith(fontSize: 12),
+                  style: context.qioText.caption.copyWith(fontSize: 12),
                   overflow: TextOverflow.ellipsis,
                 ),
             ],
@@ -417,7 +418,7 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
             onPressed: () => Navigator.of(context).pop(true),
             child: Text(
               l10n.remove,
-              style: TextStyle(color: QioColors.statusClosedText),
+              style: TextStyle(color: context.qio.statusClosedText),
             ),
           ),
         ],
