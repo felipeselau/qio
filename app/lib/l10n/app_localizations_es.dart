@@ -1155,6 +1155,52 @@ class AppLocalizationsEs extends AppLocalizations {
       'Grupos no disponibles. Actualiza la app o las reglas de Firestore.';
 
   @override
+  String get alertsTitle => 'Alertas operativas';
+
+  @override
+  String get alertsEnable => 'Recibir alertas de esta fila';
+
+  @override
+  String get alertsWaitLimit => 'Espera estimada superior a';
+
+  @override
+  String get alertsNoShowLimit => 'Ausencias hoy a partir de';
+
+  @override
+  String get alertsIdleLimit => 'Fila detenida con gente esperando por más de';
+
+  @override
+  String get alertsCooldown => 'Intervalo mínimo entre alertas';
+
+  @override
+  String get alertsPushOff =>
+      'Las notificaciones están desactivadas. Actívalas para recibir alertas.';
+
+  @override
+  String get alertsOff => 'Desactivado';
+
+  @override
+  String alertsActive(int count) {
+    return '$count reglas activas';
+  }
+
+  @override
+  String alertsMinutes(int n) {
+    return '$n min';
+  }
+
+  @override
+  String alertsPercent(int n) {
+    return '$n%';
+  }
+
+  @override
+  String get alertsNoRule => 'Activa al menos una regla para recibir alertas.';
+
+  @override
+  String get alertsNotify => 'Recibir alertas en esta cuenta';
+
+  @override
   String get waitDistributionTitle => 'Espera y llamadas';
 
   @override

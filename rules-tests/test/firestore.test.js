@@ -221,6 +221,62 @@ describe('Firestore rules', () => {
     });
   });
 
+  describe('alertas', () => {
+    const queueRef = () => doc(db(OWNER), 'queues', QUEUE);
+    const valid = { enabled: true, maxWaitMin: 30, maxNoShowPct: 40, idleMin: 15, cooldownMin: 30 };
+
+    it('dono grava configuração válida', async () => {
+      await assertSucceeds(updateDoc(queueRef(), { alerts: valid }));
+    });
+
+    it('dono aceita limites nulos', async () => {
+      await assertSucceeds(
+        updateDoc(queueRef(), { alerts: { enabled: false, maxWaitMin: null, maxNoShowPct: null, idleMin: null } }),
+      );
+    });
+
+    it('não-dono não grava', async () => {
+      await assertFails(updateDoc(doc(db(STRANGER), 'queues', QUEUE), { alerts: valid }));
+      await assertFails(updateDoc(doc(db(OPERATOR), 'queues', QUEUE), { alerts: valid }));
+    });
+
+    it('nega limites fora do intervalo', async () => {
+      await assertFails(updateDoc(queueRef(), { alerts: { ...valid, maxWaitMin: 241 } }));
+      await assertFails(updateDoc(queueRef(), { alerts: { ...valid, maxWaitMin: 0 } }));
+      await assertFails(updateDoc(queueRef(), { alerts: { ...valid, maxNoShowPct: 101 } }));
+      await assertFails(updateDoc(queueRef(), { alerts: { ...valid, idleMin: 4 } }));
+      await assertFails(updateDoc(queueRef(), { alerts: { ...valid, cooldownMin: 1 } }));
+    });
+
+    it('nega tipos inválidos e campos extras', async () => {
+      await assertFails(updateDoc(queueRef(), { alerts: { ...valid, maxWaitMin: '30' } }));
+      await assertFails(updateDoc(queueRef(), { alerts: { ...valid, enabled: 'yes' } }));
+      await assertFails(updateDoc(queueRef(), { alerts: { ...valid, extra: 1 } }));
+    });
+
+    it('nega double no limite', async () => {
+      await assertFails(updateDoc(queueRef(), { alerts: { ...valid, maxWaitMin: 30.5 } }));
+    });
+
+    it('create da fila valida alerts e nega alertState', async () => {
+      const ref = doc(db(OWNER), 'queues', 'novaFila');
+      const base = { ownerId: OWNER, name: 'Nova', status: 'open' };
+      await assertSucceeds(setDoc(ref, { ...base, alerts: valid }));
+      const ref2 = doc(db(OWNER), 'queues', 'novaFila2');
+      await assertFails(setDoc(ref2, { ...base, alerts: { ...valid, maxWaitMin: 30.5 } }));
+      await assertFails(setDoc(ref2, { ...base, alertState: { waitAt: 123 } }));
+    });
+
+    it('dono grava notifyAlerts em owners/{uid}', async () => {
+      await assertSucceeds(setDoc(doc(db(OWNER), 'owners', OWNER), { notifyAlerts: false }, { merge: true }));
+      await assertFails(setDoc(doc(db(STRANGER), 'owners', OWNER), { notifyAlerts: false }, { merge: true }));
+    });
+
+    it('dono não escreve alertState', async () => {
+      await assertFails(updateDoc(queueRef(), { alertState: { waitAt: 1 } }));
+    });
+  });
+
   describe('histórico', () => {
     it('operador cria registro com o próprio operatorId', async () => {
       await assertSucceeds(setDoc(doc(db(OPERATOR), 'queues', QUEUE, 'history', 'h2'), historyEntry(OPERATOR)));
