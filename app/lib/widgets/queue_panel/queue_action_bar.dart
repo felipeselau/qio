@@ -3,8 +3,8 @@ import '../../l10n/app_localizations.dart';
 import '../../models/queue.dart';
 import '../../models/queue_entry.dart';
 import '../../services/queue_service.dart';
-import '../../theme/qio_colors.dart';
 import '../../widgets/qio_button.dart';
+import '../../theme/qio_palette.dart';
 
 class QueueActionBar extends StatelessWidget {
   const QueueActionBar({
@@ -42,7 +42,7 @@ class QueueActionBar extends StatelessWidget {
     final service = queues ?? QueueService.instance;
     return Container(
       decoration: BoxDecoration(
-        color: QioColors.surface,
+        color: context.qio.surface,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
