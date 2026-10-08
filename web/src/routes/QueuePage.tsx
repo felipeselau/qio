@@ -412,9 +412,11 @@ export default function QueuePage() {
 
   const registerToken = useCallback(() => {
     if (!entryId) return;
-    getFcmToken().then((token) => {
-      if (token) saveFcmToken(queueId, entryId, token).catch(() => {});
-    });
+    getFcmToken()
+      .then((token) => {
+        if (token) saveFcmToken(queueId, entryId, token).catch(() => {});
+      })
+      .catch(() => setPush('unavailable'));
   }, [entryId, queueId]);
 
   useEffect(() => {
@@ -445,8 +447,7 @@ export default function QueuePage() {
     try {
       const result = await requestPushPermission();
       setPush(result);
-      if (result === 'granted') registerToken();
-    } finally {
+      if (result === 'granted') registerToken();    } finally {
       setPushBusy(false);
     }
   }
@@ -715,9 +716,14 @@ export default function QueuePage() {
 
           <StatusNotice meta={meta} />
 
-          {push === 'ready' && (
+          {(push === 'ready' || push === 'unavailable') && (
             <section className="install-banner" role="region" aria-label={t('queue.pushTitle')}>
               <p>{t('queue.pushBody')}</p>
+              {push === 'unavailable' && (
+                <p className="muted" role="status">
+                  {t('queue.pushUnavailable')}
+                </p>
+              )}
               <div className="install-banner-actions">
                 <button
                   type="button"
