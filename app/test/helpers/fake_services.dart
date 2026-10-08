@@ -162,6 +162,7 @@ class FakeQueueService implements QueueService {
   String? lastStatusMessage;
   QueueMode? savedMode;
   List<QueueSlot>? savedSlots;
+  Object? createError;
   QueueMode? createdMode;
   List<QueueSlot>? createdSlots;
 
@@ -189,6 +190,8 @@ class FakeQueueService implements QueueService {
     String? brandColor,
     AlertsConfig? alerts,
   }) async {
+    final error = createError;
+    if (error != null) throw error;
     calls.add('create:$name:${mode.value}:${slots.length}');
     createdMode = mode;
     createdSlots = slots;

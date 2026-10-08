@@ -2104,6 +2104,12 @@ abstract class AppLocalizations {
   /// **'Limite de {max} grupos atingido.'**
   String groupLimitReached(int max);
 
+  /// No description provided for @queueLimitReached.
+  ///
+  /// In pt, this message translates to:
+  /// **'Limite de {max} filas atingido. Exclua uma fila para criar outra.'**
+  String queueLimitReached(int max);
+
   /// No description provided for @groupLabel.
   ///
   /// In pt, this message translates to:

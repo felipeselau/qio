@@ -1106,6 +1106,11 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String queueLimitReached(int max) {
+    return 'Limit of $max queues reached. Delete a queue to create another.';
+  }
+
+  @override
   String get groupLabel => 'Group';
 
   @override

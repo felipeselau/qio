@@ -19,6 +19,14 @@ import 'finish_entry.dart';
 import 'mirror.dart';
 import 'operator_service.dart';
 
+const maxQueuesPerOwner = 20;
+
+bool isQueueLimitReached(int count) => count >= maxQueuesPerOwner;
+
+class QueueLimitReached implements Exception {
+  const QueueLimitReached();
+}
+
 class QueueService {
   QueueService._();
   static final QueueService instance = QueueService._();
@@ -42,6 +50,17 @@ class QueueService {
         );
   }
 
+  Future<void> ensureUnderQueueLimit(String ownerId) async {
+    final owned = await _firestore
+        .collection('queues')
+        .where('ownerId', isEqualTo: ownerId)
+        .count()
+        .get();
+    if (isQueueLimitReached(owned.count ?? 0)) {
+      throw const QueueLimitReached();
+    }
+  }
+
   Future<Queue> createQueue({
     required String name,
     String? description,
@@ -54,6 +73,7 @@ class QueueService {
     String? brandColor,
     AlertsConfig? alerts,
   }) async {
+    await ensureUnderQueueLimit(_uid);
     final info = QueueInfo(
       name: name,
       description: description,

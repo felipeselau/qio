@@ -274,6 +274,26 @@ conhecidas: `docs/qualidade.md`.
 - Deploy (Blaze + Cloud Scheduler): `--only functions:evaluateQueueAlerts` →
   `--only firestore:rules` → distribuir o APK.
 
+## Limites e validações
+
+- **Limite de filas por dono:** `maxQueuesPerOwner = 20` (`queue_service.dart`).
+  `QueueService.createQueue` conta as filas do dono (`count()`) no início e lança
+  `QueueLimitReached`; a tela de criação mostra `queueLimitReached` (pt/en/es).
+  Vale **só no cliente**: rules do Firestore não contam documentos, então um
+  cliente adulterado ainda passa do limite (contador/callable seria trabalho
+  futuro). `duplicateQueue` passa por `createQueue` e herda o limite; `queueErrorMessage`
+  (`queue_info_fields.dart`) traduz `QueueLimitReached` na criação e no duplicar.
+  Novos fluxos de criação devem chamar `ensureUnderQueueLimit`.
+- **Convites só para contas não anônimas:** `notAnonymous()` em `firestore.rules`
+  (`sign_in_provider != 'anonymous'`) é exigido para ler `operatorInvites/{code}`
+  e criar/recriar `operatorRequests/{uid}`. O app só autentica com e-mail/Google
+  (`auth_service.dart`), então o fluxo de operador não muda.
+- **Ordem de deploy:** indiferente. O limite de filas é só do cliente, então a
+  ordem das rules não afeta a mensagem. As rules só mudam o comportamento para
+  contas anônimas. APK antigo + rules novas: operador por e-mail/Google segue
+  funcionando. APK novo + rules antigas: só falta o endurecimento dos convites.
+  As rules não quebram nenhum APK.
+
 ## Operadores
 
 - **Convite**: `operatorInvites/{code}` (6 chars, validade padrão 24 h) é a fonte
@@ -317,9 +337,17 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
 - Aviso ao dono quando alguém entra na fila (som + vibração + SnackBar) é
   in-app: `QueuePanelScreen` assina `watchEntries` e usa `entry_diff.dart`. Só
   funciona com o painel aberto; push com o app fechado é trabalho futuro.
-- `web/src/firebase.ts`: `getMessaging()` lança em navegadores sem suporte a FCM.
-  Use sempre `getMessagingSafe()` (lazy, retorna `null`). Nunca chame
-  `getMessaging` no topo de um módulo.
+- `web/src/lib/messaging.ts`: `getMessaging()` lança em navegadores sem suporte a
+  FCM. Use sempre `await getMessagingSafe()` (assíncrono, import dinâmico via
+  `messagingModule.ts`): `null` (em cache) = sem suporte; falha de rede ao baixar o
+  chunk rejeita com `MessagingLoadError` e não é cacheada (retry). Nunca importe
+  `firebase/messaging` estaticamente nem chame `getMessaging` no topo de um módulo.
+- A landing `/` carrega o bundle inteiro (Auth/Database/Functions/App Check): a
+  `QueuePage` não usa `React.lazy` porque o caminho do QR é o principal e o lazy
+  adicionaria uma ida e volta de rede nele.
+- Landing em `/` (`web/src/routes/Landing.tsx`); `*` mostra "link inválido" só
+  para caminhos desconhecidos. O link do app do dono só aparece se
+  `VITE_OWNER_APP_URL` (https) estiver definida.
 - FCM é **opcional**: sem `VITE_VAPID_KEY` o app funciona só com alerta na página.
   App Check é opcional sem `VITE_RECAPTCHA_SITE_KEY`; usa **reCAPTCHA Enterprise**
   (Fraud Defense), não v3. A chave não aceita `localhost` e não roda com

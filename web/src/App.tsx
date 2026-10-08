@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import QueuePage from './routes/QueuePage';
+import Landing from './routes/Landing';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from './lib/theme';
 import { useState } from 'react';
@@ -13,10 +14,10 @@ import { LANGUAGES, LANGUAGE_LABELS, setLanguage, type Language } from './i18n';
 function NotFound() {
   const { t } = useTranslation();
   return (
-    <div className="center-col">
+    <main className="center-col">
       <h1 style={{ fontSize: 20, fontWeight: 700 }}>{t('app.invalidLink')}</h1>
       <p className="muted">{t('app.invalidLinkHint')}</p>
-    </div>
+    </main>
   );
 }
 
@@ -72,6 +73,7 @@ export default function App() {
       </div>
       <BrowserRouter>
         <Routes>
+          <Route path="/" element={<Landing />} />
           <Route path="/q/:queueId" element={<QueuePage />} />
           <Route path="/c/:queueId" element={<QueuePage />} />
           <Route path="*" element={<NotFound />} />

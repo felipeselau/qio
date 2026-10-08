@@ -35,6 +35,14 @@ const historyEntry = (operatorId) => ({
 describe('Firestore rules', () => {
   let env;
   const db = (uid) => env.authenticatedContext(uid).firestore();
+  const anonDb = (uid) =>
+    env.authenticatedContext(uid, { firebase: { sign_in_provider: 'anonymous' } }).firestore();
+  const passwordDb = (uid) =>
+    env.authenticatedContext(uid, { firebase: { sign_in_provider: 'password' } }).firestore();
+  const noProviderDb = (uid) =>
+    env.authenticatedContext(uid, { firebase: undefined }).firestore();
+  const googleDb = (uid) =>
+    env.authenticatedContext(uid, { firebase: { sign_in_provider: 'google.com' } }).firestore();
 
   before(async () => {
     env = await setupEnv();
@@ -60,6 +68,12 @@ describe('Firestore rules', () => {
         queueId: QUEUE,
         code: 'VALID1',
         status: 'pending',
+      });
+      await setDoc(doc(fs, 'queues', QUEUE, 'operatorRequests', 'rejectedUser'), {
+        uid: 'rejectedUser',
+        queueId: QUEUE,
+        code: 'VALID1',
+        status: 'rejected',
       });
     });
   });
@@ -462,6 +476,26 @@ describe('Firestore rules', () => {
       await assertSucceeds(getDoc(doc(db(STRANGER), 'operatorInvites', 'VALID1')));
     });
 
+    it('usuário com provedor lê convite', async () => {
+      await assertSucceeds(getDoc(doc(googleDb(STRANGER), 'operatorInvites', 'VALID1')));
+    });
+
+    it('usuário anônimo não lê convite', async () => {
+      await assertFails(getDoc(doc(anonDb(STRANGER), 'operatorInvites', 'VALID1')));
+    });
+
+    it('usuário com provedor password lê convite', async () => {
+      await assertSucceeds(getDoc(doc(passwordDb(STRANGER), 'operatorInvites', 'VALID1')));
+    });
+
+    it('token sem a claim firebase não lê convite', async () => {
+      await assertFails(getDoc(doc(noProviderDb(STRANGER), 'operatorInvites', 'VALID1')));
+    });
+
+    it('anônimo não lista convites', async () => {
+      await assertFails(getDocs(collection(anonDb(STRANGER), 'operatorInvites')));
+    });
+
     it('estranho não cria convite para a fila de outro', async () => {
       await assertFails(
         setDoc(doc(db(STRANGER), 'operatorInvites', 'NEW001'), { queueId: QUEUE, ownerId: STRANGER, expiresAt: null }),
@@ -491,6 +525,34 @@ describe('Firestore rules', () => {
 
     it('pedido com convite válido é criado', async () => {
       await assertSucceeds(setDoc(requestDoc(STRANGER), request(STRANGER, 'VALID1')));
+    });
+
+    it('pedido de usuário com provedor é criado', async () => {
+      await assertSucceeds(setDoc(doc(googleDb(STRANGER), 'queues', QUEUE, 'operatorRequests', STRANGER), request(STRANGER, 'VALID1')));
+    });
+
+    it('pedido de usuário anônimo falha', async () => {
+      await assertFails(setDoc(doc(anonDb(STRANGER), 'queues', QUEUE, 'operatorRequests', STRANGER), request(STRANGER, 'VALID1')));
+    });
+
+    it('pedido de usuário password é criado', async () => {
+      await assertSucceeds(setDoc(doc(passwordDb(STRANGER), 'queues', QUEUE, 'operatorRequests', STRANGER), request(STRANGER, 'VALID1')));
+    });
+
+    it('pedido sem a claim firebase falha', async () => {
+      await assertFails(setDoc(doc(noProviderDb(STRANGER), 'queues', QUEUE, 'operatorRequests', STRANGER), request(STRANGER, 'VALID1')));
+    });
+
+    it('anônimo não refaz pedido já recusado', async () => {
+      await assertFails(
+        updateDoc(doc(anonDb('rejectedUser'), 'queues', QUEUE, 'operatorRequests', 'rejectedUser'), { status: 'pending' }),
+      );
+    });
+
+    it('usuário com provedor refaz o próprio pedido recusado', async () => {
+      await assertSucceeds(
+        updateDoc(doc(googleDb('rejectedUser'), 'queues', QUEUE, 'operatorRequests', 'rejectedUser'), { status: 'pending' }),
+      );
     });
 
     it('pedido com convite expirado falha', async () => {
