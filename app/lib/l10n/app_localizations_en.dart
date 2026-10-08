@@ -1531,6 +1531,25 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get queueSettingsTitle => 'Queue settings';
+
+  @override
+  String get queueQrShortcut => 'Queue QR code';
+
+  @override
+  String get queueQrTitle => 'QR code';
+
+  @override
+  String get queueGoneNotice => 'This queue no longer exists';
+
+  @override
+  String get tourPanelSettingsTitle => 'QR code and settings';
+
+  @override
+  String get tourPanelSettingsBody =>
+      'Tap the gear to see the QR code and adjust the queue.';
+
+  @override
   String get tourHomeAccountTitle => 'Your account and invites';
 
   @override

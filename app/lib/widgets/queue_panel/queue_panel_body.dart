@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/queue.dart';
-import '../../models/queue_slot.dart';
 import '../../models/queue_entry.dart';
 import '../../services/group_service.dart';
 import '../../services/queue_service.dart';
@@ -11,17 +10,8 @@ import '../../widgets/qio_empty_state.dart';
 import '../../widgets/qio_responsive_body.dart';
 import '../../widgets/queue_panel/current_called_card.dart';
 import '../../widgets/queue_panel/waiting_tile.dart';
-import '../../widgets/queue_panel/queue_group_tile.dart';
-import '../../widgets/queue_panel/queue_limit_tile.dart';
-import '../../widgets/queue_panel/queue_brand_tile.dart';
-import '../../widgets/queue_panel/queue_schedule_tile.dart';
-import '../../widgets/queue_panel/alerts_tile.dart';
-import '../../widgets/queue_panel/slots_editor.dart';
-import '../../widgets/queue_panel/queue_qr_card.dart';
-import '../../widgets/queue_panel/operators_tile.dart';
 import 'animated_entry_list.dart';
-import 'duplicate_queue_tile.dart';
-import 'edit_queue_tile.dart';
+import 'queue_settings_sections.dart';
 import '../../theme/qio_palette.dart';
 
 class QueuePanelBody extends StatelessWidget {
@@ -68,92 +58,63 @@ class QueuePanelBody extends StatelessWidget {
         builder: (context, queueSnap) {
           final status = queueSnap.data?.status ?? QueueStatus.open;
           final maxWaiting = queueSnap.data?.maxWaiting ?? 0;
-          final schedule = queueSnap.data?.schedule;
-          final alerts = queueSnap.data?.alerts;
+          final settings = QueueSettingsSections(
+            queueId: queueId,
+            queueName: queueName,
+            isOwner: isOwner,
+            queue: queueSnap.data,
+            joinUrl: joinUrl,
+            qrKey: qrKey,
+            queues: queues,
+            groups: groups,
+          );
           if (status == QueueStatus.closed) {
-            return ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                QueueQrCard(
-                  key: qrKey,
-                  queueName: queueSnap.data?.name ?? queueName,
-                  joinUrl: joinUrl,
+            final closedCard = [
+              QioCard(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: Column(
+                    children: [
+                      Text(
+                        l10n.queueClosedTitle,
+                        style: context.qioText.heading3.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: context.qio.gray700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.noServiceInProgress,
+                        style: context.qioText.caption,
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 16),
-                if (isOwner) ...[
-                  OperatorsTile(queueId: queueId),
-                  const SizedBox(height: 16),
-                  QueueLimitTile(queueId: queueId, maxWaiting: maxWaiting),
-                  const SizedBox(height: 16),
-                  QueueSlotsTile(
-                    queueId: queueId,
-                    mode: queueSnap.data?.mode ?? QueueMode.queue,
-                    slots: queueSnap.data?.slots ?? const [],
-                    schedule: schedule,
+              ),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Text(
+                  isOwner ? l10n.closedOwnerHint : l10n.closedOperatorHint,
+                  style: context.qioText.body.copyWith(
+                    fontSize: 14,
+                    color: context.qio.gray400,
                   ),
-                  const SizedBox(height: 16),
-                  QueueGroupTile(
-                    queueId: queueId,
-                    groupId: queueSnap.data?.groupId,
-                    groups: groups,
-                  ),
-                  const SizedBox(height: 16),
-                  QueueScheduleTile(queueId: queueId, schedule: schedule),
-                  const SizedBox(height: 16),
-                  AlertsTile(queueId: queueId, config: alerts),
-                  const SizedBox(height: 16),
-                  QueueBrandTile(
-                    queueId: queueId,
-                    queueName: queueSnap.data?.name ?? queueName,
-                    brandColor: queueSnap.data?.brandColor,
-                    logoUrl: queueSnap.data?.logoUrl,
-                  ),
-                  const SizedBox(height: 16),
-                  if (queueSnap.data case final queue?) ...[
-                    EditQueueTile(queue: queue, queues: queues),
-                    const SizedBox(height: 16),
-                    DuplicateQueueTile(
-                      queue: queue,
-                      queues: queues,
-                      groups: groups,
-                    ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            ];
+            return LayoutBuilder(
+              builder: (context, constraints) => ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  if (isPanelWide(constraints.maxWidth)) ...[
+                    settings,
                     const SizedBox(height: 16),
                   ],
+                  ...closedCard,
                 ],
-                QioCard(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 24),
-                    child: Column(
-                      children: [
-                        Text(
-                          l10n.queueClosedTitle,
-                          style: context.qioText.heading3.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: context.qio.gray700,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          l10n.noServiceInProgress,
-                          style: context.qioText.caption,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Text(
-                    isOwner ? l10n.closedOwnerHint : l10n.closedOperatorHint,
-                    style: context.qioText.body.copyWith(
-                      fontSize: 14,
-                      color: context.qio.gray400,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ],
+              ),
             );
           }
           return StreamBuilder<List<QueueEntry>>(
@@ -172,54 +133,6 @@ class QueuePanelBody extends StatelessWidget {
               final others = called.where((e) => !isMine(e)).toList();
               final current = mine.isNotEmpty ? mine.first : null;
 
-              final qrSection = <Widget>[
-                QueueQrCard(
-                  key: qrKey,
-                  queueName: queueSnap.data?.name ?? queueName,
-                  joinUrl: joinUrl,
-                ),
-                const SizedBox(height: 16),
-                if (isOwner) ...[
-                  OperatorsTile(queueId: queueId),
-                  const SizedBox(height: 16),
-                  QueueLimitTile(queueId: queueId, maxWaiting: maxWaiting),
-                  const SizedBox(height: 16),
-                  QueueSlotsTile(
-                    queueId: queueId,
-                    mode: queueSnap.data?.mode ?? QueueMode.queue,
-                    slots: queueSnap.data?.slots ?? const [],
-                    schedule: schedule,
-                  ),
-                  const SizedBox(height: 16),
-                  QueueGroupTile(
-                    queueId: queueId,
-                    groupId: queueSnap.data?.groupId,
-                    groups: groups,
-                  ),
-                  const SizedBox(height: 16),
-                  QueueScheduleTile(queueId: queueId, schedule: schedule),
-                  const SizedBox(height: 16),
-                  AlertsTile(queueId: queueId, config: alerts),
-                  const SizedBox(height: 16),
-                  QueueBrandTile(
-                    queueId: queueId,
-                    queueName: queueSnap.data?.name ?? queueName,
-                    brandColor: queueSnap.data?.brandColor,
-                    logoUrl: queueSnap.data?.logoUrl,
-                  ),
-                  const SizedBox(height: 16),
-                  if (queueSnap.data case final queue?) ...[
-                    EditQueueTile(queue: queue, queues: queues),
-                    const SizedBox(height: 16),
-                    DuplicateQueueTile(
-                      queue: queue,
-                      queues: queues,
-                      groups: groups,
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                ],
-              ];
               final queueSection = <Widget>[
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 250),
@@ -327,7 +240,7 @@ class QueuePanelBody extends StatelessWidget {
               ];
               return LayoutBuilder(
                 builder: (context, constraints) {
-                  if (constraints.maxWidth >= 900) {
+                  if (isPanelWide(constraints.maxWidth)) {
                     return Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -335,7 +248,7 @@ class QueuePanelBody extends StatelessWidget {
                           width: 400,
                           child: ListView(
                             padding: const EdgeInsets.all(16),
-                            children: qrSection,
+                            children: [settings],
                           ),
                         ),
                         Expanded(
@@ -349,7 +262,7 @@ class QueuePanelBody extends StatelessWidget {
                   }
                   return ListView(
                     padding: const EdgeInsets.all(16),
-                    children: [...qrSection, ...queueSection],
+                    children: queueSection,
                   );
                 },
               );

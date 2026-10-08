@@ -100,6 +100,12 @@ class FakeQueueService implements QueueService {
     return q == null ? const Stream.empty() : Stream.value(q);
   }
 
+  Stream<bool>? existsOverride;
+
+  @override
+  Stream<bool> watchQueueExists(String queueId) =>
+      existsOverride ?? Stream.value(queues.containsKey(queueId));
+
   @override
   Stream<int> watchWaitingCount(String queueId) {
     late final StreamController<int> controller;

@@ -1532,6 +1532,25 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String get queueSettingsTitle => 'Configurações da fila';
+
+  @override
+  String get queueQrShortcut => 'QR code da fila';
+
+  @override
+  String get queueQrTitle => 'QR code';
+
+  @override
+  String get queueGoneNotice => 'Esta fila não existe mais';
+
+  @override
+  String get tourPanelSettingsTitle => 'QR code e configurações';
+
+  @override
+  String get tourPanelSettingsBody =>
+      'Toque na engrenagem para ver o QR code e ajustar a fila.';
+
+  @override
   String get tourHomeAccountTitle => 'Sua conta e convites';
 
   @override

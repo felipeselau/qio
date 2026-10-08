@@ -201,6 +201,8 @@ void main() {
     );
     expect(find.text('Excluir fila'), findsOneWidget);
     expect(find.text('Chamar próximo'), findsNothing);
+    await tester.tap(find.byTooltip('Mais ações'));
+    await tick(tester);
     expect(find.text('Reabrir'), findsOneWidget);
   });
 
@@ -223,6 +225,8 @@ void main() {
     await pumpApp(tester, panel(queues), size: tall);
     await tick(tester);
     expect(find.text('Pausada'), findsOneWidget);
+    await tester.tap(find.byTooltip('Mais ações'));
+    await tick(tester);
     await tester.tap(find.text('Reabrir'));
     await tick(tester);
     expect(queues.calls, contains('status:q1:open'));

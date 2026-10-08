@@ -16,6 +16,8 @@ import '../theme/qio_colors.dart';
 import '../widgets/queue_panel/queue_action_bar.dart';
 import '../widgets/queue_panel/panel_notices.dart';
 import '../widgets/queue_panel/queue_panel_title.dart';
+import '../widgets/queue_panel/queue_settings_actions.dart';
+import '../widgets/queue_panel/queue_settings_sections.dart';
 import '../widgets/queue_panel/queue_status_actions.dart';
 import '../widgets/queue_panel/status_message_dialog.dart';
 import '../widgets/queue_panel/delete_queue_dialog.dart';
@@ -71,6 +73,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen>
   StreamSubscription<List<QueueEntry>>? _joinSub;
   Set<String>? _lastWaiting;
   final _qrKey = GlobalKey();
+  final _settingsKey = GlobalKey();
   final _callNextKey = GlobalKey();
 
   @override
@@ -99,7 +102,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen>
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         await Future<void>.delayed(const Duration(milliseconds: 600));
         if (!mounted) return;
-        showPanelTour(context, _qrKey, _callNextKey);
+        showPanelTour(context, _qrKey, _settingsKey, _callNextKey);
       });
     }
     _joinSub = _queues
@@ -152,7 +155,16 @@ class _QueuePanelScreenState extends State<QueuePanelScreen>
     _discardPending();
     await _accessSub?.cancel();
     if (!mounted) return;
+    final route = ModalRoute.of(context);
+    Navigator.of(context).popUntil((r) => r == route || r.isFirst);
     await showAccessEndedDialog(context);
+    if (mounted) Navigator.of(context).pop();
+  }
+
+  Future<void> _onQueueGone() async {
+    if (!mounted) return;
+    _discardPending();
+    await showQueueGoneDialog(context);
     if (mounted) Navigator.of(context).pop();
   }
 
@@ -176,12 +188,24 @@ class _QueuePanelScreenState extends State<QueuePanelScreen>
           ),
           centerTitle: true,
           actions: [
+            if (!isPanelWide(MediaQuery.sizeOf(context).width))
+              QueueSettingsActions(
+                queueId: widget.queueId,
+                queueName: widget.queueName,
+                isOwner: widget.isOwner,
+                qrKey: _qrKey,
+                settingsKey: _settingsKey,
+                queues: _queues,
+                groups: widget.groups,
+                onQueueGone: _onQueueGone,
+              ),
             if (widget.isOwner)
               QueueStatusActions(
                 queueId: widget.queueId,
                 queueName: widget.queueName,
                 onStatus: _updateStatus,
                 queues: _queues,
+                compact: isPanelCompactBar(context),
               ),
           ],
         ),
