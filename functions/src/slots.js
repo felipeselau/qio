@@ -30,7 +30,9 @@ function parseSlots(raw) {
     if (minutes === null || capacity === null) continue;
     slots.push({ id, start: value.start, capacity });
   }
-  return slots.sort((a, b) => minutesOf(a.start) - minutesOf(b.start));
+  return slots
+    .sort((a, b) => minutesOf(a.start) - minutesOf(b.start))
+    .slice(0, MAX_SLOTS);
 }
 
 function slotStartMs(now, start) {

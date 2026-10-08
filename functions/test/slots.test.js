@@ -48,6 +48,14 @@ describe('parseSlots', () => {
     ]);
   });
 
+  it('limita ao máximo de slots', () => {
+    const raw = {};
+    for (let i = 0; i < 30; i += 1) {
+      raw[`s${i}`] = { start: `${String(i % 24).padStart(2, '0')}:${i < 24 ? '00' : '30'}`, capacity: 1 };
+    }
+    assert.equal(parseSlots(raw).length, 24);
+  });
+
   it('retorna vazio sem dados', () => {
     assert.deepEqual(parseSlots(null), []);
     assert.deepEqual(parseSlots(undefined), []);

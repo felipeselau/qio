@@ -15,6 +15,14 @@ const {
 } = require('./src/join');
 const { historyFromLeftEntry } = require('./src/history');
 const { isQueueFull } = require('./src/capacity');
+const {
+  normalizeMode,
+  parseSlots,
+  slotStartMs,
+  isSlotBookable,
+  countSlotEntries,
+  isSlotFull,
+} = require('./src/slots');
 const { publicTicketFor, shouldRenotify } = require('./src/ticket');
 const { planScheduleChange } = require('./src/schedule');
 const {
@@ -119,6 +127,33 @@ function findActive(snap) {
   return found;
 }
 
+async function resolveSlot({ entriesRef, slots, slotId, now }) {
+  if (typeof slotId !== 'string' || !slotId) {
+    throw new HttpsError('invalid-argument', 'Escolha um horário.', {
+      reason: 'slot-required',
+    });
+  }
+  const slot = slots.find((s) => s.id === slotId);
+  if (!slot) {
+    throw new HttpsError('invalid-argument', 'Horário inválido.', {
+      reason: 'slot-invalid',
+    });
+  }
+  const slotStart = slotStartMs(now, slot.start);
+  if (!isSlotBookable(now, slotStart)) {
+    throw new HttpsError('failed-precondition', 'Horário já passou.', {
+      reason: 'slot-passed',
+    });
+  }
+  const snap = await entriesRef.orderByChild('slotId').equalTo(slotId).once('value');
+  if (isSlotFull(slot.capacity, countSlotEntries(snap.val(), slotId, slotStart))) {
+    throw new HttpsError('resource-exhausted', 'Horário lotado.', {
+      reason: 'slot-full',
+    });
+  }
+  return { slotId, slotStart, order: slotStart };
+}
+
 exports.joinQueue = onCall(
   {
     region: 'us-central1',
@@ -182,6 +217,16 @@ exports.joinQueue = onCall(
       }
     }
 
+    let slotFields = null;
+    if (normalizeMode(metaSnap.child('mode').val()) === 'schedule') {
+      slotFields = await resolveSlot({
+        entriesRef,
+        slots: parseSlots(metaSnap.child('slots').val()),
+        slotId: data.slotId,
+        now: Date.now(),
+      });
+    }
+
     const maxWaiting = metaSnap.child('maxWaiting').val();
     if (maxWaiting) {
       const waitingSnap = await entriesRef
@@ -227,6 +272,7 @@ exports.joinQueue = onCall(
       lang,
       status: 'waiting',
       joinedAt: Date.now(),
+      ...(slotFields ?? {}),
     });
 
     return { entryId: newRef.key, ticket, existing: false };

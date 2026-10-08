@@ -5,7 +5,9 @@ function orderOf(entry) {
 }
 
 function publicTicketFor(entry) {
-  return { ticket: entry.ticket, status: entry.status, order: orderOf(entry) };
+  const pub = { ticket: entry.ticket, status: entry.status, order: orderOf(entry) };
+  if (typeof entry.slotId === 'string' && entry.slotId) pub.slotId = entry.slotId;
+  return pub;
 }
 
 function shouldRenotify(before, after) {

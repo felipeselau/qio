@@ -53,7 +53,8 @@
             "status",
             "ticket",
             "uid",
-            "phone"
+            "phone",
+            "slotId"
           ],
           "$entryId": {
             ".read": "(root.child('owners').child($queueId).child('ownerUid').val() === auth.uid) || (root.child('queues').child($queueId).child('operatorUids').child(auth.uid).val() === true) || data.child('uid').val() === auth.uid",
