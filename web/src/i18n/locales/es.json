@@ -106,5 +106,14 @@
   },
   "push": {
     "called": "Tu turno fue llamado — dirígete a la atención."
+  },
+  "landing": {
+    "title": "Qio",
+    "tagline": "Fila presencial, sin instalar nada.",
+    "about": "Qio organiza la fila de espera del local directamente en tu celular. Entras desde el navegador, sigues tu posición en tiempo real y recibes el aviso cuando sea tu turno.",
+    "howTitle": "Cómo entrar en la fila",
+    "how": "Escanea el código QR del local o abre el enlace que compartió. No necesitas crear cuenta ni instalar nada.",
+    "ownerTitle": "¿Tienes un local?",
+    "ownerLink": "Descarga la app de Qio para crear tu fila"
   }
 }

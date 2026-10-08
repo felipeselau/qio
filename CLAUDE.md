@@ -318,8 +318,12 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   in-app: `QueuePanelScreen` assina `watchEntries` e usa `entry_diff.dart`. Só
   funciona com o painel aberto; push com o app fechado é trabalho futuro.
 - `web/src/firebase.ts`: `getMessaging()` lança em navegadores sem suporte a FCM.
-  Use sempre `getMessagingSafe()` (lazy, retorna `null`). Nunca chame
-  `getMessaging` no topo de um módulo.
+  Use sempre `await getMessagingSafe()` (assíncrono, import dinâmico de
+  `firebase/messaging`, retorna `null`). Nunca importe `firebase/messaging`
+  estaticamente nem chame `getMessaging` no topo de um módulo.
+- Landing em `/` (`web/src/routes/Landing.tsx`); `*` mostra "link inválido" só
+  para caminhos desconhecidos. O link do app do dono só aparece se
+  `VITE_OWNER_APP_URL` (https) estiver definida.
 - FCM é **opcional**: sem `VITE_VAPID_KEY` o app funciona só com alerta na página.
   App Check é opcional sem `VITE_RECAPTCHA_SITE_KEY`; usa **reCAPTCHA Enterprise**
   (Fraud Defense), não v3. A chave não aceita `localhost` e não roda com
