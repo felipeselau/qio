@@ -30,6 +30,7 @@ class QueuePanelBody extends StatelessWidget {
     required this.isOwner,
     required this.qrKey,
     required this.isMine,
+    this.hiddenIds = const {},
     required this.onServed,
     required this.onNoShow,
     required this.onCall,
@@ -44,6 +45,7 @@ class QueuePanelBody extends StatelessWidget {
   final bool isOwner;
   final GlobalKey qrKey;
   final bool Function(QueueEntry) isMine;
+  final Set<String> hiddenIds;
   final void Function(QueueEntry) onServed;
   final void Function(QueueEntry) onNoShow;
   final void Function(QueueEntry) onCall;
@@ -141,7 +143,9 @@ class QueuePanelBody extends StatelessWidget {
           return StreamBuilder<List<QueueEntry>>(
             stream: service.watchEntries(queueId),
             builder: (context, snap) {
-              final entries = snap.data ?? [];
+              final entries = (snap.data ?? [])
+                  .where((e) => !hiddenIds.contains(e.id))
+                  .toList();
               final waiting = entries
                   .where((e) => e.status == EntryStatus.waiting)
                   .toList();

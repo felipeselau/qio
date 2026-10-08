@@ -2709,6 +2709,42 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Quem já entrou neste horário continua na vaga antiga; as vagas ocupadas seguem contando.'**
   String get slotTimeChangeWarning;
+
+  /// No description provided for @actionErrorOffline.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem conexão. Verifique a internet e tente novamente.'**
+  String get actionErrorOffline;
+
+  /// No description provided for @actionErrorAccessEnded.
+  ///
+  /// In pt, this message translates to:
+  /// **'Acesso encerrado ou sem permissão para esta ação.'**
+  String get actionErrorAccessEnded;
+
+  /// No description provided for @actionErrorConflict.
+  ///
+  /// In pt, this message translates to:
+  /// **'A fila mudou. Tente de novo.'**
+  String get actionErrorConflict;
+
+  /// No description provided for @undo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desfazer'**
+  String get undo;
+
+  /// No description provided for @finishedServedUndo.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name} marcado como atendido'**
+  String finishedServedUndo(String name);
+
+  /// No description provided for @finishedNoShowUndo.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name} marcado como não compareceu'**
+  String finishedNoShowUndo(String name);
 }
 
 class _AppLocalizationsDelegate

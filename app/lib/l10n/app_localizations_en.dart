@@ -1469,4 +1469,28 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get slotTimeChangeWarning =>
       'People already in this slot keep their spot; taken spots still count.';
+
+  @override
+  String get actionErrorOffline =>
+      'No connection. Check your internet and try again.';
+
+  @override
+  String get actionErrorAccessEnded =>
+      'Access ended or no permission for this action.';
+
+  @override
+  String get actionErrorConflict => 'The queue changed. Please try again.';
+
+  @override
+  String get undo => 'Undo';
+
+  @override
+  String finishedServedUndo(String name) {
+    return '$name marked as served';
+  }
+
+  @override
+  String finishedNoShowUndo(String name) {
+    return '$name marked as no-show';
+  }
 }
