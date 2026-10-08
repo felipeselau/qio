@@ -402,7 +402,7 @@
   "deltaFell": "fell",
   "deltaVsPrevious": "vs. previous period",
   "trendTitle": "Daily trend",
-  "trendSeriesTotal": "Entries",
+  "trendSeriesTotal": "Entries per day",
   "trendSeriesWait": "Average wait",
   "trendSeriesNoShow": "No-show",
   "trendSummary": "Average of {avg} per day, peak on {peakDay}",
@@ -413,5 +413,7 @@
   "csvPrevious": "previous",
   "csvDeltaPct": "change (%)",
   "csvDeltaPoints": "change (pp)",
-  "pdfVsPrevious": "vs. previous"
+  "pdfVsPrevious": "vs. previous",
+  "customRangeLimited": "Range limited to {days} days",
+  "@customRangeLimited": {"placeholders": {"days": {"type": "int"}}}
 }

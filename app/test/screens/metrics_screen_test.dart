@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qio_app/screens/metrics_screen.dart';
 import 'package:qio_app/services/metrics_export.dart';
+import 'package:qio_app/widgets/delta_badge.dart';
+import 'package:qio_app/widgets/trend_chart.dart';
 
 import '../helpers/fake_services.dart';
 import '../helpers/pump_app.dart';
@@ -17,8 +19,20 @@ Finder chip(String label) => find.widgetWithText(ChoiceChip, label);
 
 final fixedNow = DateTime(2025, 6, 15, 12);
 
-MetricsScreen screen({Future<List<QueueHistoryInput>> Function()? loader}) =>
-    MetricsScreen(loader: loader ?? sample, clock: () => fixedNow);
+MetricsScreen screen({
+  Future<List<QueueHistoryInput>> Function()? loader,
+  Future<DateTimeRange?> Function(
+    BuildContext,
+    DateTimeRange?,
+    DateTime,
+    DateTime,
+  )?
+  rangePicker,
+}) => MetricsScreen(
+  loader: loader ?? sample,
+  clock: () => fixedNow,
+  rangePicker: rangePicker,
+);
 
 Future<List<QueueHistoryInput>> sample() async {
   final now = fixedNow;
@@ -167,6 +181,128 @@ void main() {
     );
     await tick(tester);
     expect(find.text('Metrics'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('7 days shows the trend chart', (tester) async {
+    await pumpApp(tester, screen(), size: tall);
+    await tick(tester);
+    expect(find.byType(TrendChart), findsOneWidget);
+    expect(find.byType(DeltaBadge), findsNothing);
+  });
+
+  testWidgets('all time has no chart and no deltas', (tester) async {
+    await pumpApp(tester, screen(), size: tall);
+    await tick(tester);
+    await tester.tap(chip('Tudo'));
+    await tick(tester);
+    expect(find.byType(TrendChart), findsNothing);
+    expect(find.byType(DeltaBadge), findsNothing);
+    expect(find.text('vs. período anterior'), findsNothing);
+  });
+
+  testWidgets('partial day compares with the same hours yesterday', (
+    tester,
+  ) async {
+    Future<List<QueueHistoryInput>> loader() async => [
+      QueueHistoryInput(
+        fakeQueue('a'),
+        [
+          fakeHistory('t1', 1, finishedAt: DateTime(2025, 6, 15, 9)),
+          fakeHistory('t2', 2, finishedAt: DateTime(2025, 6, 15, 10)),
+          fakeHistory('y1', 3, finishedAt: DateTime(2025, 6, 14, 9)),
+          fakeHistory('y2', 4, finishedAt: DateTime(2025, 6, 14, 18)),
+        ],
+        const [],
+        const [],
+      ),
+    ];
+    await pumpApp(tester, screen(loader: loader), size: tall);
+    await tick(tester);
+    await tester.tap(chip('Hoje'));
+    await tick(tester);
+    expect(find.text('▲ 100%'), findsOneWidget);
+    expect(find.text('vs. período anterior'), findsOneWidget);
+  });
+
+  testWidgets('custom picker: cancel keeps the period', (tester) async {
+    await pumpApp(
+      tester,
+      screen(rangePicker: (_, _, _, _) async => null),
+      size: tall,
+    );
+    await tick(tester);
+    await tester.tap(chip('Personalizado'));
+    await tick(tester);
+    expect(tester.widget<ChoiceChip>(chip('Personalizado')).selected, isFalse);
+    expect(tester.widget<ChoiceChip>(chip('7 dias')).selected, isTrue);
+  });
+
+  testWidgets('custom picker: chosen range filters the report', (tester) async {
+    DateTimeRange? initialSeen;
+    var calls = 0;
+    await pumpApp(
+      tester,
+      screen(
+        rangePicker: (_, initial, _, _) async {
+          calls++;
+          initialSeen = initial;
+          return DateTimeRange(
+            start: DateTime(2025, 5, 20),
+            end: DateTime(2025, 6, 15),
+          );
+        },
+      ),
+      size: tall,
+    );
+    await tick(tester);
+    await tester.tap(chip('Personalizado'));
+    await tick(tester);
+    expect(tester.widget<ChoiceChip>(chip('Personalizado')).selected, isTrue);
+    expect(find.text('1 (25%)'), findsOneWidget);
+    expect(find.byType(TrendChart), findsOneWidget);
+    expect(initialSeen, isNull);
+    await tester.tap(chip('Personalizado'));
+    await tick(tester);
+    expect(calls, 2);
+    expect(initialSeen!.start, DateTime(2025, 5, 20));
+    expect(initialSeen!.end, DateTime(2025, 6, 15));
+  });
+
+  testWidgets('custom picker: one day range', (tester) async {
+    await pumpApp(
+      tester,
+      screen(
+        rangePicker: (_, _, _, _) async => DateTimeRange(
+          start: DateTime(2025, 6, 15),
+          end: DateTime(2025, 6, 15),
+        ),
+      ),
+      size: tall,
+    );
+    await tick(tester);
+    await tester.tap(chip('Personalizado'));
+    await tick(tester);
+    expect(find.text('1 (33%)'), findsOneWidget);
+  });
+
+  testWidgets('custom picker: very long range is limited with a notice', (
+    tester,
+  ) async {
+    await pumpApp(
+      tester,
+      screen(
+        rangePicker: (_, _, _, _) async => DateTimeRange(
+          start: DateTime(2020, 1, 1),
+          end: DateTime(2025, 6, 15),
+        ),
+      ),
+      size: tall,
+    );
+    await tick(tester);
+    await tester.tap(chip('Personalizado'));
+    await tick(tester);
+    expect(find.text('Intervalo limitado a 366 dias'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 }

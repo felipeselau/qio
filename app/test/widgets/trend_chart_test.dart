@@ -33,7 +33,7 @@ void main() {
     await tester.pumpWidget(host(series));
     expect(find.text('Média de 2,0 por dia, pico em 03/10'), findsOneWidget);
     expect(find.text('Espera média'), findsWidgets);
-    expect(find.text('Atendimentos'), findsOneWidget);
+    expect(find.text('Atendimentos por dia'), findsOneWidget);
     expect(find.text('01/10'), findsOneWidget);
   });
 

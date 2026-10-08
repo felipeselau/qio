@@ -1,6 +1,8 @@
 import '../models/history_entry.dart';
 import 'history_metrics.dart';
 
+const maxCustomDays = 366;
+
 DateTime _dayStart(DateTime d) => DateTime(d.year, d.month, d.day);
 
 class DateRange {
@@ -22,6 +24,14 @@ class DateRange {
     return DateRange(DateTime(start.year, start.month, start.day - n), start);
   }
 
+  DateRange previousAligned(DateTime now) {
+    final prev = previous();
+    if (!contains(now)) return prev;
+    final elapsed = now.difference(start);
+    final cut = prev.start.add(elapsed);
+    return cut.isBefore(prev.end) ? DateRange(prev.start, cut) : prev;
+  }
+
   @override
   bool operator ==(Object other) =>
       other is DateRange && other.start == start && other.end == end;
@@ -31,6 +41,14 @@ class DateRange {
 
   @override
   String toString() => 'DateRange($start, $end)';
+}
+
+DateRange customRangeFromPicked(DateTime first, DateTime last) {
+  final a = _dayStart(first);
+  final b = _dayStart(last);
+  final start = a.isBefore(b) ? a : b;
+  final end = a.isBefore(b) ? b : a;
+  return DateRange(start, DateTime(end.year, end.month, end.day + 1));
 }
 
 DateRange? rangeFor(HistoryPeriod period, DateTime now, {DateRange? custom}) {
@@ -53,6 +71,9 @@ DateRange? rangeFor(HistoryPeriod period, DateTime now, {DateRange? custom}) {
         end = swap;
       }
       if (end == start) end = DateTime(end.year, end.month, end.day + 1);
+      if (DateRange(start, end).days > maxCustomDays) {
+        start = DateTime(end.year, end.month, end.day - maxCustomDays);
+      }
       return DateRange(start, end);
     case HistoryPeriod.all:
       return null;

@@ -78,6 +78,62 @@ void main() {
     });
   });
 
+  group('custom limits and aligned previous', () {
+    final now = DateTime(2026, 10, 7, 12);
+
+    test('custom longer than the limit keeps the end and is clamped', () {
+      final r = rangeFor(
+        HistoryPeriod.custom,
+        now,
+        custom: DateRange(DateTime(2020, 1, 1), DateTime(2026, 10, 8)),
+      )!;
+      expect(r.days, maxCustomDays);
+      expect(r.end, DateTime(2026, 10, 8));
+    });
+
+    test('custom exactly at the limit is untouched', () {
+      final custom = DateRange(DateTime(2025, 10, 7), DateTime(2026, 10, 8));
+      expect(custom.days, 366);
+      expect(rangeFor(HistoryPeriod.custom, now, custom: custom), custom);
+    });
+
+    test('picked range: inverted, single day and inclusive end', () {
+      expect(
+        customRangeFromPicked(DateTime(2026, 5, 10), DateTime(2026, 5, 3)),
+        DateRange(DateTime(2026, 5, 3), DateTime(2026, 5, 11)),
+      );
+      expect(
+        customRangeFromPicked(DateTime(2026, 5, 10, 8), DateTime(2026, 5, 10)),
+        DateRange(DateTime(2026, 5, 10), DateTime(2026, 5, 11)),
+      );
+    });
+
+    test('custom without a range yields no range', () {
+      expect(rangeFor(HistoryPeriod.custom, now), isNull);
+    });
+
+    test('today at noon compares with yesterday until noon', () {
+      final r = rangeFor(HistoryPeriod.today, now)!;
+      final p = r.previousAligned(now);
+      expect(p.start, DateTime(2026, 10, 6));
+      expect(p.end, DateTime(2026, 10, 6, 12));
+      expect(p.contains(DateTime(2026, 10, 6, 11, 59)), isTrue);
+      expect(p.contains(DateTime(2026, 10, 6, 12)), isFalse);
+    });
+
+    test('7 days is cut by the elapsed time', () {
+      final r = rangeFor(HistoryPeriod.last7Days, now)!;
+      final p = r.previousAligned(now);
+      expect(p.start, DateTime(2026, 9, 24));
+      expect(p.end, DateTime(2026, 9, 30, 12));
+    });
+
+    test('a finished period compares with the whole previous one', () {
+      final r = DateRange(DateTime(2026, 9, 1), DateTime(2026, 9, 8));
+      expect(r.previousAligned(now), r.previous());
+    });
+  });
+
   group('DateRange.previous', () {
     test('hoje em 1º de março não bissexto', () {
       final r = rangeFor(HistoryPeriod.today, DateTime(2026, 3, 1))!;

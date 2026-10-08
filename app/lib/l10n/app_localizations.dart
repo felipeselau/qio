@@ -2389,7 +2389,7 @@ abstract class AppLocalizations {
   /// No description provided for @trendSeriesTotal.
   ///
   /// In pt, this message translates to:
-  /// **'Atendimentos'**
+  /// **'Atendimentos por dia'**
   String get trendSeriesTotal;
 
   /// No description provided for @trendSeriesWait.
@@ -2451,6 +2451,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'vs. anterior'**
   String get pdfVsPrevious;
+
+  /// No description provided for @customRangeLimited.
+  ///
+  /// In pt, this message translates to:
+  /// **'Intervalo limitado a {days} dias'**
+  String customRangeLimited(int days);
 }
 
 class _AppLocalizationsDelegate

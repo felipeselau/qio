@@ -204,6 +204,13 @@ void main() {
       );
     });
 
+    test('personalizado sem faixa não vira tudo', () {
+      expect(
+        filterHistory(all, period: HistoryPeriod.custom, now: now),
+        isEmpty,
+      );
+    });
+
     test('tudo e combinação', () {
       expect(filterHistory(all, now: now).length, 4);
       expect(

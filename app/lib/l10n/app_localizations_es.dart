@@ -1276,7 +1276,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get trendTitle => 'Tendencia diaria';
 
   @override
-  String get trendSeriesTotal => 'Atenciones';
+  String get trendSeriesTotal => 'Atenciones por día';
 
   @override
   String get trendSeriesWait => 'Espera promedio';
@@ -1309,4 +1309,9 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get pdfVsPrevious => 'vs. anterior';
+
+  @override
+  String customRangeLimited(int days) {
+    return 'Intervalo limitado a $days días';
+  }
 }

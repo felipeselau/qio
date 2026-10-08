@@ -163,6 +163,7 @@ MetricsReport buildMetricsReport({
   var deltas = const <MetricKey, Delta>{};
   if (range != null && !truncated) {
     final prev = range.previous();
+    final window = range.previousAligned(now);
     final incomplete = data.any((d) {
       if (d.entries.length < historyLimit) return false;
       return d.entries.every((e) => !e.referenceTime.isBefore(prev.start));
@@ -170,7 +171,7 @@ MetricsReport buildMetricsReport({
     if (!incomplete) {
       final prevEntries = [
         for (final d in data)
-          ...d.entries.where((e) => prev.contains(e.referenceTime)),
+          ...d.entries.where((e) => window.contains(e.referenceTime)),
       ];
       previousMetrics = computeHistoryMetrics(prevEntries);
       previousWaitStats = computeWaitStats(prevEntries);

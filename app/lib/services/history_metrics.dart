@@ -63,6 +63,7 @@ List<HistoryEntry> filterHistory(
   required DateTime now,
   DateRange? custom,
 }) {
+  if (period == HistoryPeriod.custom && custom == null) return [];
   final range = rangeFor(period, now, custom: custom);
   return entries.where((e) {
     if (result != null && e.result != result) return false;

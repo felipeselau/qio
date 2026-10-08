@@ -28,12 +28,20 @@ import '../widgets/wait_effort_card.dart';
 import '../widgets/qio_responsive_body.dart';
 
 class MetricsScreen extends StatefulWidget {
-  const MetricsScreen({super.key, this.loader, this.clock});
+  const MetricsScreen({super.key, this.loader, this.clock, this.rangePicker});
 
   @visibleForTesting
   final Future<List<QueueHistoryInput>> Function()? loader;
   @visibleForTesting
   final DateTime Function()? clock;
+  @visibleForTesting
+  final Future<DateTimeRange?> Function(
+    BuildContext context,
+    DateTimeRange? initial,
+    DateTime first,
+    DateTime last,
+  )?
+  rangePicker;
 
   @override
   State<MetricsScreen> createState() => _MetricsScreenState();
@@ -55,31 +63,53 @@ class _MetricsScreenState extends State<MetricsScreen> {
       setState(() => _period = p);
       return;
     }
-    final now = DateTime.now();
-    final picked = await showDateRangePicker(
-      context: context,
-      firstDate: DateTime(now.year - 5),
-      lastDate: DateTime(now.year, now.month, now.day),
-      initialDateRange: _custom == null
-          ? null
-          : DateTimeRange(
-              start: _custom!.start,
-              end: DateTime(
-                _custom!.end.year,
-                _custom!.end.month,
-                _custom!.end.day - 1,
-              ),
+    final now = (widget.clock ?? DateTime.now)();
+    final today = DateTime(now.year, now.month, now.day);
+    final initial = _custom == null
+        ? null
+        : DateTimeRange(
+            start: _custom!.start,
+            end: DateTime(
+              _custom!.end.year,
+              _custom!.end.month,
+              _custom!.end.day - 1,
             ),
+          );
+    final picked = await (widget.rangePicker ?? _defaultRangePicker)(
+      context,
+      initial,
+      DateTime(today.year - 5, today.month, today.day),
+      today,
     );
     if (picked == null || !mounted) return;
-    setState(() {
-      _custom = DateRange(
-        picked.start,
-        DateTime(picked.end.year, picked.end.month, picked.end.day + 1),
+    final range = customRangeFromPicked(picked.start, picked.end);
+    final clamped = rangeFor(HistoryPeriod.custom, now, custom: range)!;
+    if (clamped != range) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).customRangeLimited(maxCustomDays),
+          ),
+        ),
       );
+    }
+    setState(() {
+      _custom = clamped;
       _period = HistoryPeriod.custom;
     });
   }
+
+  Future<DateTimeRange?> _defaultRangePicker(
+    BuildContext context,
+    DateTimeRange? initial,
+    DateTime first,
+    DateTime last,
+  ) => showDateRangePicker(
+    context: context,
+    firstDate: first,
+    lastDate: last,
+    initialDateRange: initial,
+  );
 
   MetricsReport _report(AppLocalizations l10n, List<QueueHistoryInput> data) =>
       buildMetricsReport(

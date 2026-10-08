@@ -1273,7 +1273,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trendTitle => 'Daily trend';
 
   @override
-  String get trendSeriesTotal => 'Entries';
+  String get trendSeriesTotal => 'Entries per day';
 
   @override
   String get trendSeriesWait => 'Average wait';
@@ -1306,4 +1306,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pdfVsPrevious => 'vs. previous';
+
+  @override
+  String customRangeLimited(int days) {
+    return 'Range limited to $days days';
+  }
 }

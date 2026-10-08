@@ -402,7 +402,7 @@
   "deltaFell": "bajó",
   "deltaVsPrevious": "vs. período anterior",
   "trendTitle": "Tendencia diaria",
-  "trendSeriesTotal": "Atenciones",
+  "trendSeriesTotal": "Atenciones por día",
   "trendSeriesWait": "Espera promedio",
   "trendSeriesNoShow": "No se presentó",
   "trendSummary": "Promedio de {avg} por día, pico el {peakDay}",
@@ -413,5 +413,7 @@
   "csvPrevious": "anterior",
   "csvDeltaPct": "variación (%)",
   "csvDeltaPoints": "variación (p.p.)",
-  "pdfVsPrevious": "vs. anterior"
+  "pdfVsPrevious": "vs. anterior",
+  "customRangeLimited": "Intervalo limitado a {days} días",
+  "@customRangeLimited": {"placeholders": {"days": {"type": "int"}}}
 }
