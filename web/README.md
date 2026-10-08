@@ -24,5 +24,5 @@ Não há testes automatizados neste módulo; o CI roda apenas `npm run build`.
 - `VITE_MEASUREMENT_ID` — Analytics com opt-out; ver [`../docs/monitoring.md`](../docs/monitoring.md).
 - `VITE_USE_EMULATORS` — usa os emulators locais (desliga App Check e Analytics).
 
-`src/firebase.ts` e `public/firebase-messaging-sw.js` duplicam o `firebaseConfig`;
-mantenha os dois em sincronia.
+O `firebaseConfig` fica em `src/firebaseConfig.ts`; o build gera
+`dist/firebase-messaging-sw.js` a partir de `vite-plugins/firebase-messaging-sw.template.js`.

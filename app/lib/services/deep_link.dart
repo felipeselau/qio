@@ -1,4 +1,6 @@
-const _hosts = {'qio.web.app', 'www.qio.web.app'};
+import 'join_url.dart';
+
+const _hosts = {joinHost, 'www.$joinHost'};
 final _idPattern = RegExp(r'^[A-Za-z0-9_-]{1,128}$');
 
 String? queueIdFromLink(Uri uri) {
@@ -9,5 +11,4 @@ String? queueIdFromLink(Uri uri) {
   return _idPattern.hasMatch(id) ? id : null;
 }
 
-Uri clientUrlForQueue(String queueId) =>
-    Uri.https('qio.web.app', '/c/$queueId');
+Uri clientUrlForQueue(String queueId) => clientUrl(queueId);
