@@ -488,6 +488,16 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   saber o modo, use `Theme.of(context).brightness`. Em testes, `QioPalette.light`/
   `QioPalette.dark` dão os valores esperados.
 
+## Backups e orçamento (ops)
+
+- Scripts em `ops/` (`backup-firestore.sh`, `backup-rtdb.sh`, `create-budget.sh`,
+  `restore-firestore-test.sh`), com `PROJECT`/`BUCKET`/`BILLING_ACCOUNT` por env e
+  `--dry-run` (só imprime). Estratégia, restauração e RPO/RTO em `docs/backup.md`.
+- Firestore é a fonte da verdade (backup diário 7d + semanal 8w); RTDB é espelho
+  (backup do console). Restore cria **banco novo**, nunca sobrescreve `(default)`.
+- Agentes não têm credenciais: nunca rodar esses scripts sem `--dry-run` contra
+  `qio-app`. As ações manuais do dono estão em `docs/backup.md` seção 7.
+
 ## Tooling (adaptado do OpenCode)
 
 O framework de agentes (product → builder → reviewer → advisor) e as regras de
