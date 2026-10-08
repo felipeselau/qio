@@ -45,3 +45,6 @@ rules-tests/node_modules/
 # Documentos de trabalho do TCC
 Claude outputs/
 *-debug.log
+
+# Backups locais do RTDB (contêm PII)
+backups/
