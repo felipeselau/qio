@@ -5,6 +5,7 @@ import '../services/history_metrics.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
 import 'qio_card.dart';
+import '../theme/qio_palette.dart';
 
 class WaitEffortCard extends StatelessWidget {
   const WaitEffortCard({
@@ -51,7 +52,7 @@ class WaitEffortCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.waitDistributionTitle, style: QioTextStyles.heading3),
+          Text(l10n.waitDistributionTitle, style: context.qioText.heading3),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -98,9 +99,9 @@ class _Line extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: QioTextStyles.label),
+        Text(label, style: context.qioText.label),
         const SizedBox(height: 2),
-        Text(value, style: QioTextStyles.body),
+        Text(value, style: context.qioText.body),
       ],
     );
   }
@@ -119,10 +120,10 @@ class _Stat extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: QioTextStyles.label),
+          Text(label, style: context.qioText.label),
           const SizedBox(height: 4),
-          Text(value, style: QioTextStyles.heading2),
-          if (hint != null) Text(hint!, style: QioTextStyles.caption),
+          Text(value, style: context.qioText.heading2),
+          if (hint != null) Text(hint!, style: context.qioText.caption),
         ],
       ),
     );
@@ -153,7 +154,7 @@ class _BucketBar extends StatelessWidget {
             children: [
               SizedBox(
                 width: 110,
-                child: Text(label, style: QioTextStyles.caption),
+                child: Text(label, style: context.qioText.caption),
               ),
               Expanded(
                 child: ClipRRect(
@@ -161,7 +162,7 @@ class _BucketBar extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: fraction,
                     minHeight: 10,
-                    backgroundColor: QioColors.gray200,
+                    backgroundColor: context.qio.gray200,
                     color: QioColors.primary,
                   ),
                 ),
@@ -172,7 +173,7 @@ class _BucketBar extends StatelessWidget {
                 child: Text(
                   text,
                   textAlign: TextAlign.end,
-                  style: QioTextStyles.caption,
+                  style: context.qioText.caption,
                 ),
               ),
             ],
