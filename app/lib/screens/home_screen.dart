@@ -32,17 +32,33 @@ import 'metrics_screen.dart';
 import 'queue_panel_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({
+    super.key,
+    this.auth,
+    this.queues,
+    this.operators,
+    this.enableIntegrations = true,
+  });
+
+  final AuthService? auth;
+  final QueueService? queues;
+  final OperatorService? operators;
+  @visibleForTesting
+  final bool enableIntegrations;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  QueueService get _queues => widget.queues ?? QueueService.instance;
+  OperatorService get _operators =>
+      widget.operators ?? OperatorService.instance;
+
   late final HomeController _controller = HomeController(
-    ownedSource: QueueService.instance.watchOwnerQueues,
-    operatingSource: OperatorService.instance.watchMyOperatorQueues,
-    requestsSource: OperatorService.instance.watchMyRequests,
+    ownedSource: _queues.watchOwnerQueues,
+    operatingSource: _operators.watchMyOperatorQueues,
+    requestsSource: _operators.watchMyRequests,
   );
 
   StreamSubscription<Uri>? _linkSub;
@@ -50,6 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    if (!widget.enableIntegrations) return;
     final links = AppLinks();
     links.getInitialLink().then((uri) {
       if (uri != null && mounted) _openLink(uri);
@@ -109,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _openQueue(String queueId) async {
-    final access = await QueueService.instance.resolveAccess(queueId);
+    final access = await _queues.resolveAccess(queueId);
     if (!mounted) return;
     if (access == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -146,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _tourScheduled = false;
 
   void _scheduleTour(bool hasOwned) {
-    if (_tourScheduled) return;
+    if (_tourScheduled || !widget.enableIntegrations) return;
     _tourScheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -178,7 +195,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final user = AuthService.instance.currentUser;
+    final user = (widget.auth ?? AuthService.instance).currentUser;
     return Scaffold(
       backgroundColor: QioColors.gray100,
       appBar: AppBar(
@@ -279,17 +296,18 @@ class _HomeScreenState extends State<HomeScreen> {
             key: q == owned.first ? _firstQueueKey : null,
             queue: q,
             isOwner: true,
+            queues: _queues,
           ),
           const SizedBox(height: 16),
         ],
         if (operating.isNotEmpty) _sectionTitle(l10n.sectionOperator),
         for (final op in operating) ...[
-          _OperatorQueueCard(operator: op),
+          _OperatorQueueCard(operator: op, queues: _queues),
           const SizedBox(height: 16),
         ],
         if (requests.isNotEmpty) _sectionTitle(l10n.sectionRequests),
         for (final r in requests) ...[
-          _RequestCard(request: r),
+          _RequestCard(request: r, operators: _operators),
           const SizedBox(height: 16),
         ],
       ],
@@ -312,10 +330,16 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class _QueueCard extends StatelessWidget {
-  const _QueueCard({super.key, required this.queue, required this.isOwner});
+  const _QueueCard({
+    super.key,
+    required this.queue,
+    required this.isOwner,
+    required this.queues,
+  });
 
   final Queue queue;
   final bool isOwner;
+  final QueueService queues;
 
   @override
   Widget build(BuildContext context) {
@@ -359,7 +383,7 @@ class _QueueCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             StreamBuilder<int>(
-              stream: QueueService.instance.watchWaitingCount(q.id),
+              stream: queues.watchWaitingCount(q.id),
               builder: (context, snap) {
                 final count = snap.data ?? 0;
                 return Text(
@@ -387,16 +411,17 @@ class _QueueCard extends StatelessWidget {
 }
 
 class _OperatorQueueCard extends StatefulWidget {
-  const _OperatorQueueCard({required this.operator});
+  const _OperatorQueueCard({required this.operator, required this.queues});
 
   final QueueOperator operator;
+  final QueueService queues;
 
   @override
   State<_OperatorQueueCard> createState() => _OperatorQueueCardState();
 }
 
 class _OperatorQueueCardState extends State<_OperatorQueueCard> {
-  late final Stream<Queue> _queueStream = QueueService.instance.watchQueue(
+  late final Stream<Queue> _queueStream = widget.queues.watchQueue(
     widget.operator.queueId,
   );
 
@@ -415,16 +440,17 @@ class _OperatorQueueCardState extends State<_OperatorQueueCard> {
             ),
           );
         }
-        return _QueueCard(queue: queue, isOwner: false);
+        return _QueueCard(queue: queue, isOwner: false, queues: widget.queues);
       },
     );
   }
 }
 
 class _RequestCard extends StatelessWidget {
-  const _RequestCard({required this.request});
+  const _RequestCard({required this.request, required this.operators});
 
   final OperatorRequest request;
+  final OperatorService operators;
 
   @override
   Widget build(BuildContext context) {
@@ -469,8 +495,7 @@ class _RequestCard extends StatelessWidget {
             IconButton(
               tooltip: l10n.dismiss,
               icon: Icon(Icons.close, color: QioColors.gray400),
-              onPressed: () =>
-                  OperatorService.instance.cancelMyRequest(request.queueId),
+              onPressed: () => operators.cancelMyRequest(request.queueId),
             ),
         ],
       ),

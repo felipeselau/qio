@@ -20,6 +20,7 @@ class QueueActionBar extends StatelessWidget {
     required this.onServed,
     required this.onNoShow,
     required this.onDelete,
+    this.queues,
   });
 
   final String queueId;
@@ -33,10 +34,12 @@ class QueueActionBar extends StatelessWidget {
   final void Function(QueueEntry) onServed;
   final void Function(QueueEntry) onNoShow;
   final VoidCallback onDelete;
+  final QueueService? queues;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final service = queues ?? QueueService.instance;
     return Container(
       decoration: BoxDecoration(
         color: QioColors.surface,
@@ -52,7 +55,7 @@ class QueueActionBar extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: StreamBuilder<Queue>(
-            stream: QueueService.instance.watchQueue(queueId),
+            stream: service.watchQueue(queueId),
             builder: (context, qSnap) {
               final status = qSnap.data?.status ?? QueueStatus.open;
               if (status == QueueStatus.closed) {
@@ -72,7 +75,7 @@ class QueueActionBar extends StatelessWidget {
                 );
               }
               return StreamBuilder<List<QueueEntry>>(
-                stream: QueueService.instance.watchEntries(queueId),
+                stream: service.watchEntries(queueId),
                 builder: (context, snap) {
                   final entries = snap.data ?? [];
                   final mine = entries

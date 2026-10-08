@@ -12,7 +12,9 @@ import '../widgets/qio_input.dart';
 import '../widgets/qio_responsive_body.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.auth});
+
+  final AuthService? auth;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -22,6 +24,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  AuthService get _auth => widget.auth ?? AuthService.instance;
   bool _isLoading = false;
   bool _isSignUp = false;
   final _nameCtrl = TextEditingController();
@@ -39,16 +42,13 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
     try {
       if (_isSignUp) {
-        await AuthService.instance.signUpWithEmail(
+        await _auth.signUpWithEmail(
           name: _nameCtrl.text.trim(),
           email: _emailCtrl.text.trim(),
           password: _passwordCtrl.text,
         );
       } else {
-        await AuthService.instance.signInWithEmail(
-          _emailCtrl.text.trim(),
-          _passwordCtrl.text,
-        );
+        await _auth.signInWithEmail(_emailCtrl.text.trim(), _passwordCtrl.text);
       }
     } on FirebaseAuthException catch (e) {
       if (mounted) _showAuthError(e.code);
@@ -68,7 +68,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
     setState(() => _isLoading = true);
     try {
-      await AuthService.instance.sendPasswordReset(email);
+      await _auth.sendPasswordReset(email);
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -92,7 +92,7 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _google() async {
     setState(() => _isLoading = true);
     try {
-      await AuthService.instance.signInWithGoogle();
+      await _auth.signInWithGoogle();
     } on FirebaseAuthException catch (e) {
       if (mounted) _showAuthError(e.code);
     } on Exception {
