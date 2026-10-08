@@ -172,9 +172,9 @@ void main() {
       CreateQueueScreen(queues: queues, groups: FakeGroupService()),
       size: tall,
     );
-    final fields = find.byType(TextFormField);
-    await tester.enterText(fields.at(0), 'Clínica');
-    await tester.enterText(fields.at(2), '15');
+    await tester.enterText(find.byType(TextFormField).first, 'Clínica');
+    await tester.tap(find.text('Opções avançadas'));
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Hora marcada'));
     await tester.tap(find.text('Hora marcada'));
     await tester.pump();

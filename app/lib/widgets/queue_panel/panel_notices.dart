@@ -6,7 +6,6 @@ import '../../models/queue_entry.dart';
 import '../../services/onboarding_service.dart';
 import '../../theme/qio_colors.dart';
 import '../../theme/qio_palette.dart';
-import '../../theme/qio_text_styles.dart';
 import '../onboarding_tour.dart';
 
 void showPanelTour(BuildContext context, GlobalKey qrKey, GlobalKey callKey) {
@@ -87,14 +86,6 @@ class QueueBackButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TextButton(
-      onPressed: () => Navigator.of(context).pop(),
-      child: Text(
-        '←',
-        style: context.qioText.heading3.copyWith(
-          color: context.qio.primaryText,
-        ),
-      ),
-    );
+    return BackButton(color: context.qio.primaryText);
   }
 }

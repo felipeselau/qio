@@ -164,6 +164,15 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
   no RTDB. O Firestore limita a 1000 expressões por avaliação e `validSlots` já consome quase
   tudo: cuidado ao somar checagens no `update` de `queues/{id}`. Deploy: rules antes do APK.
 
+## Criação de fila e botão voltar
+
+- `CreateQueueScreen` exige só o nome; descrição, tempo médio, limite, grupo e modo/slots
+  ficam em "Opções avançadas" (`ExpansionTile` com `maintainState`, reabre sozinho se um
+  campo avançado for inválido). Tempo médio vazio vira o default único
+  `defaultAvgServiceMin` (10, em `models/queue_info.dart`) dentro de `createQueue`.
+- Voltar do painel/criação/edição é `QueueBackButton` (`BackButton` do Material, tooltip e
+  semântica localizados, usa `maybePop` e portanto respeita o `PopScope`).
+
 ## Ordem da fila, chamar de novo e mover
 
 - A ordem de espera é `(order ?? joinedAt, ticket)`. "Mover para o fim" grava
