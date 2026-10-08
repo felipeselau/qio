@@ -80,6 +80,8 @@
     "rejoin": "Join again",
     "calledSince": "Called {{time}} ago",
     "calledWarning": "If you don't show up, your turn may be skipped.",
+    "aheadCount_one": "{{count}} person ahead",
+    "aheadCount_other": "{{count}} people ahead",
     "noQueueNow": "No line right now",
     "pausedNoJoin": "You can't join while the queue is paused."
   },

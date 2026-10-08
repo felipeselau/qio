@@ -15,16 +15,20 @@ function getContext(): AudioContext | null {
   return ctx;
 }
 
+function needsResume(audio: AudioContext): boolean {
+  return audio.state !== 'running' && audio.state !== 'closed';
+}
+
 export function unlockAudio(): void {
   const audio = getContext();
-  if (audio && audio.state === 'suspended') audio.resume().catch(() => {});
+  if (audio && needsResume(audio)) audio.resume().catch(() => {});
 }
 
 export function playAlertSound(): void {
   try {
     const audio = getContext();
     if (!audio) return;
-    if (audio.state === 'suspended') audio.resume().catch(() => {});
+    if (needsResume(audio)) audio.resume().catch(() => {});
     const osc = audio.createOscillator();
     const gain = audio.createGain();
     osc.connect(gain);

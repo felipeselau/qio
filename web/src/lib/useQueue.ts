@@ -2,6 +2,7 @@ import i18n from '../i18n';
 import { useCallback, useEffect, useState } from 'react';
 import { onValue, ref } from 'firebase/database';
 import { db } from '../firebase';
+import { effectiveAvgMin } from './format';
 import { parseSlots, type Slot } from './slots';
 
 export type QueueMeta = {
@@ -89,6 +90,7 @@ export type QueueState = {
   estimatedWaitMin: number | null;
   waitingCount: number;
   avgServiceMin: number;
+  publicReady: boolean;
   publicTickets: Record<string, PublicTicket>;
   full: boolean;
   loading: boolean;
@@ -163,9 +165,13 @@ export function useQueue(
   useEffect(() => {
     if (!ready) return;
     const publicRef = ref(db, `queues/${queueId}/public`);
-    const unsub = onValue(publicRef, (snap) => {
-      setPublicTickets(snap.val() ?? {});
-    });
+    const unsub = onValue(
+      publicRef,
+      (snap) => {
+        setPublicTickets(snap.val() ?? {});
+      },
+      () => {},
+    );
     return unsub;
   }, [queueId, ready, attempt]);
 
@@ -208,7 +214,7 @@ export function useQueue(
     if (myEntry.status === 'waiting') {
       position = positionInQueue(publicTickets, myEntry);
     }
-    const avg = meta?.avgServiceMinAuto ?? meta?.avgServiceMin ?? 10;
+    const avg = effectiveAvgMin(meta?.avgServiceMinAuto, meta?.avgServiceMin);
     if (position != null && meta?.mode !== 'schedule') estimatedWaitMin = position * avg;
   }
 
@@ -224,7 +230,8 @@ export function useQueue(
     position,
     estimatedWaitMin,
     waitingCount,
-    avgServiceMin: meta?.avgServiceMinAuto ?? meta?.avgServiceMin ?? 10,
+    avgServiceMin: effectiveAvgMin(meta?.avgServiceMinAuto, meta?.avgServiceMin),
+    publicReady: publicTickets !== null,
     publicTickets: (publicTickets ?? {}) as Record<string, PublicTicket>,
     full,
     loading,

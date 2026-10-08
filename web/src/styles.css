@@ -460,6 +460,22 @@ a {
   border: 1px solid rgba(239, 68, 68, 0.4);
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+[data-autofocus]:focus {
+  outline: none;
+}
+
 .wait-summary {
   text-align: center;
   font-size: 15px;

@@ -80,6 +80,8 @@
     "rejoin": "Entrar de novo",
     "calledSince": "Chamado há {{time}}",
     "calledWarning": "Se você não aparecer, sua vez pode passar.",
+    "aheadCount_one": "{{count}} pessoa na frente",
+    "aheadCount_other": "{{count}} pessoas na frente",
     "noQueueNow": "Sem fila agora",
     "pausedNoJoin": "Não é possível entrar enquanto a fila está em pausa."
   },

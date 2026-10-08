@@ -5,13 +5,16 @@ export function holdWakeLock(): () => void {
   const api = (navigator as unknown as { wakeLock?: WakeLockApi }).wakeLock;
   if (!api) return () => {};
   let sentinel: Sentinel | null = null;
+  let pending = false;
   let stopped = false;
 
   const acquire = () => {
-    if (stopped || sentinel || document.visibilityState !== 'visible') return;
+    if (stopped || sentinel || pending || document.visibilityState !== 'visible') return;
+    pending = true;
     api
       .request('screen')
       .then((lock) => {
+        pending = false;
         if (stopped) {
           lock.release().catch(() => {});
           return;
@@ -21,7 +24,9 @@ export function holdWakeLock(): () => void {
           if (sentinel === lock) sentinel = null;
         });
       })
-      .catch(() => {});
+      .catch(() => {
+        pending = false;
+      });
   };
 
   const onVisibility = () => {

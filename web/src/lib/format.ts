@@ -22,6 +22,17 @@ export function formatElapsed(totalSeconds: number): string {
   return `${minutes}:${String(seconds).padStart(2, '0')}`;
 }
 
+export function effectiveAvgMin(
+  auto: number | null | undefined,
+  manual: number | null | undefined,
+): number {
+  const valid = (n: number | null | undefined): n is number =>
+    typeof n === 'number' && Number.isFinite(n) && n > 0;
+  if (valid(auto)) return auto;
+  if (valid(manual)) return manual;
+  return 10;
+}
+
 export type WaitRange = { min: number; max: number };
 
 export function waitRange(position: number, avgMin: number): WaitRange | null {
