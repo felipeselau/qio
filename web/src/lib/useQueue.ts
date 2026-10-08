@@ -1,8 +1,18 @@
 import i18n from '../i18n';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { onValue, ref } from 'firebase/database';
 import { db } from '../firebase';
+import { effectiveAvgMin } from './format';
 import { parseSlots, type Slot } from './slots';
+import {
+  isQueueFull,
+  positionInQueue,
+  safeBrandColor,
+  safeLogoUrl,
+  type PublicTicket,
+} from './queueLogic';
+
+export { isQueueFull, positionInQueue, safeBrandColor, safeLogoUrl, type PublicTicket };
 
 export type QueueMeta = {
   name: string;
@@ -20,53 +30,6 @@ export type QueueMeta = {
   mode: 'queue' | 'schedule';
   slots: Slot[];
 };
-
-export type PublicTicket = {
-  ticket: number;
-  status: string;
-  order?: number;
-  slotId?: string;
-  slotStart?: number;
-};
-
-export function positionInQueue(
-  publicTickets: Record<string, PublicTicket>,
-  mine: { ticket: number; order?: number | null; joinedAt: number },
-): number {
-  const myOrder = mine.order ?? mine.joinedAt;
-  const ahead = Object.values(publicTickets).filter((e) => {
-    if (e.status !== 'waiting') return false;
-    if (typeof e.order !== 'number') return e.ticket < mine.ticket;
-    return e.order < myOrder || (e.order === myOrder && e.ticket < mine.ticket);
-  }).length;
-  return ahead + 1;
-}
-
-const BRAND_COLORS = [
-  '#2563EB',
-  '#0F766E',
-  '#047857',
-  '#7C3AED',
-  '#BE185D',
-  '#B91C1C',
-  '#C2410C',
-  '#334155',
-];
-
-export function safeBrandColor(value: unknown): string | null {
-  if (typeof value !== 'string') return null;
-  const hex = value.toUpperCase();
-  return BRAND_COLORS.includes(hex) ? hex : null;
-}
-
-export function safeLogoUrl(value: unknown): string | null {
-  if (typeof value !== 'string' || value.length > 600) return null;
-  return value.startsWith('https://firebasestorage.googleapis.com/') ? value : null;
-}
-
-export function isQueueFull(maxWaiting: number, waitingCount: number): boolean {
-  return maxWaiting > 0 && waitingCount >= maxWaiting;
-}
 
 export type EntryStatus = 'waiting' | 'called' | 'served' | 'no_show' | 'left';
 
@@ -88,11 +51,14 @@ export type QueueState = {
   position: number | null;
   estimatedWaitMin: number | null;
   waitingCount: number;
+  avgServiceMin: number;
+  publicReady: boolean;
   publicTickets: Record<string, PublicTicket>;
   full: boolean;
   loading: boolean;
   exists: boolean;
   failed: boolean;
+  retry: () => void;
 };
 
 export function useQueue(
@@ -107,6 +73,12 @@ export function useQueue(
   const [loading, setLoading] = useState(true);
   const [exists, setExists] = useState(true);
   const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const retry = useCallback(() => {
+    setFailed(false);
+    setLoading(true);
+    setAttempt((n) => n + 1);
+  }, []);
 
   // As regras da RTDB exigem auth != null para ler meta/public. Se o listener
   // for anexado antes do signInAnonymously terminar, a leitura é negada, o
@@ -150,16 +122,20 @@ export function useQueue(
       },
     );
     return unsub;
-  }, [queueId, ready]);
+  }, [queueId, ready, attempt]);
 
   useEffect(() => {
     if (!ready) return;
     const publicRef = ref(db, `queues/${queueId}/public`);
-    const unsub = onValue(publicRef, (snap) => {
-      setPublicTickets(snap.val() ?? {});
-    });
+    const unsub = onValue(
+      publicRef,
+      (snap) => {
+        setPublicTickets(snap.val() ?? {});
+      },
+      () => {},
+    );
     return unsub;
-  }, [queueId, ready]);
+  }, [queueId, ready, attempt]);
 
   useEffect(() => {
     if (!ready) return;
@@ -192,7 +168,7 @@ export function useQueue(
       setMyEntry(null);
     });
     return unsub;
-  }, [queueId, entryId, ready]);
+  }, [queueId, entryId, ready, attempt]);
 
   let position: number | null = null;
   let estimatedWaitMin: number | null = null;
@@ -200,7 +176,7 @@ export function useQueue(
     if (myEntry.status === 'waiting') {
       position = positionInQueue(publicTickets, myEntry);
     }
-    const avg = meta?.avgServiceMinAuto ?? meta?.avgServiceMin ?? 10;
+    const avg = effectiveAvgMin(meta?.avgServiceMinAuto, meta?.avgServiceMin);
     if (position != null && meta?.mode !== 'schedule') estimatedWaitMin = position * avg;
   }
 
@@ -216,10 +192,13 @@ export function useQueue(
     position,
     estimatedWaitMin,
     waitingCount,
+    avgServiceMin: effectiveAvgMin(meta?.avgServiceMinAuto, meta?.avgServiceMin),
+    publicReady: publicTickets !== null,
     publicTickets: (publicTickets ?? {}) as Record<string, PublicTicket>,
     full,
     loading,
     exists,
     failed,
+    retry,
   };
 }

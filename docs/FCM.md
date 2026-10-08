@@ -19,8 +19,10 @@
 
 O projeto está no plano **Blaze (pay-as-you-go)** desde 01/10/2026 (Cloud
 Functions não rodam no plano Spark grátis — `cloudbuild.googleapis.com` só
-habilita com billing) e as functions v2 (`joinQueue`, `syncPublicTicket`,
-`onEntryCalled`, `updateServiceEstimate`) estão publicadas. O custo esperado
+habilita com billing) e as functions v2 estão publicadas: `joinQueue`,
+`submitFeedback`, `syncPublicTicket`, `onEntryCalled`, `onEntryJoined`,
+`onQueueAdvanced`, `updateServiceEstimate`, `applyQueueSchedules` e
+`evaluateQueueAlerts` (lista em `functions/index.js`). O custo esperado
 fica dentro da cota gratuita no volume do TCC. A `VITE_VAPID_KEY` já está
 configurada (Actions variables e bundle publicado); falta só validar o push em
 segundo plano num aparelho real.
@@ -41,7 +43,7 @@ web: som + vibração + tela verde quando a senha é chamada).
   `queues/{queueId}/entries/{entryId}`, quando status vira `called` → envia FCM
   push com título "É a sua vez!" + senha + nome da fila (lido de `meta/name`),
   com `webpush.fcmOptions.link` apontando pra `https://qio.web.app/q/{queueId}`.
-  Requer `fcmToken` salvo na entry (o client web salva automaticamente).
+  Requer `fcmToken` salvo na entry (o client web salva depois que o cliente toca em **Ativar aviso**).
 - `functions/package.json` — node 22, firebase-admin ^13, firebase-functions ^6.
 - `web/public/firebase-messaging-sw.js` — service worker (compat CDN 12.17.0),
   mostra a notificação em background.

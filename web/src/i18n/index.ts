@@ -3,9 +3,9 @@ import { initReactI18next } from 'react-i18next';
 import pt from './locales/pt.json';
 import en from './locales/en.json';
 import es from './locales/es.json';
+import { LANGUAGES, resolveLanguage, type Language } from './resolveLanguage';
 
-export const LANGUAGES = ['pt', 'en', 'es'] as const;
-export type Language = (typeof LANGUAGES)[number];
+export { LANGUAGES, resolveLanguage, type Language };
 
 export const LANGUAGE_LABELS: Record<Language, string> = {
   pt: 'Português',
@@ -14,18 +14,6 @@ export const LANGUAGE_LABELS: Record<Language, string> = {
 };
 
 const KEY = 'qio:lang';
-
-export function resolveLanguage(
-  stored: string | null,
-  navigatorLanguages: readonly string[],
-): Language {
-  if (stored && (LANGUAGES as readonly string[]).includes(stored)) return stored as Language;
-  for (const raw of navigatorLanguages) {
-    const base = raw.toLowerCase().split('-')[0];
-    if ((LANGUAGES as readonly string[]).includes(base)) return base as Language;
-  }
-  return 'pt';
-}
 
 function storedLanguage(): string | null {
   try {

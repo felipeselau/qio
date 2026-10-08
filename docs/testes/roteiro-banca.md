@@ -10,8 +10,9 @@ aparece na tela.
 1. Aquecer as functions: 5 minutos antes, faça uma entrada de teste pela web
    (evita a partida a frio da `joinQueue`) e saia da fila em seguida.
 2. Conferir as functions publicadas: `firebase functions:list --project qio-app`
-   deve listar `joinQueue`, `syncPublicTicket`, `onEntryCalled` e
-   `updateServiceEstimate`.
+   deve listar `joinQueue`, `submitFeedback`, `syncPublicTicket`,
+   `onEntryCalled`, `onEntryJoined`, `onQueueAdvanced`, `updateServiceEstimate`,
+   `applyQueueSchedules` e `evaluateQueueAlerts`.
 3. Rate limit: o padrão é 3 entradas por usuário a cada 10 minutos
    (`JOIN_RATE_LIMIT_MAX=3`, `JOIN_RATE_LIMIT_WINDOW_MIN=10` em
    `functions/.env`). Se for repetir entradas, aumente `JOIN_RATE_LIMIT_MAX` e
@@ -64,12 +65,14 @@ Notas por passo:
 
 ## 4. O que dizer sobre as limitações
 
-- **App Check**: a web usa o provedor reCAPTCHA Enterprise, mas as requisições
-  ainda retornam 403 em produção (pendente). Por isso o enforcement não é
-  obrigatório e a proteção contra abuso fica nas rules do RTDB, na validação da
-  `joinQueue` e no rate limit.
-- **Push web**: a function `onEntryCalled` está publicada, mas o build da web
-  não tem `VITE_VAPID_KEY`; o cliente não registra token FCM. Com a aba aberta
+- **App Check**: a web usa o provedor reCAPTCHA Enterprise e o enforcement existe
+  só nas callables (`joinQueue`, `submitFeedback`), desligado por padrão
+  (`docs/APPCHECK.md`). A proteção contra abuso fica nas rules do RTDB, na
+  validação da `joinQueue` e no rate limit. O 403 observado em 30/09/2026 (chave
+  ausente no build) não foi reverificado.
+- **Push web**: a function `onEntryCalled` está publicada. Em 01/10/2026 o build
+  não tinha `VITE_VAPID_KEY`; `docs/FCM.md` registra a chave como configurada, mas
+  a entrega em aparelho real ainda não foi validada. Com a aba aberta
   o alerta aparece na página (som e vibração dependem do navegador). No iOS o
   push web só funciona com a página instalada na tela inicial (iOS 16.4+).
 - **Aviso ao dono**: o aviso de nova entrada só funciona com o painel aberto no
@@ -79,5 +82,5 @@ Notas por passo:
 - **Custo**: projeto no plano Blaze desde 01/10/2026; no volume do TCC o uso
   esperado fica dentro da cota gratuita.
 
-Os resultados de teste registrados estão em `casos-de-teste.md`; este roteiro
-não registra resultados.
+Os resultados de teste registrados estão em `casos-de-teste.md` e o quadro
+consolidado em `../qualidade.md`; este roteiro não registra resultados.

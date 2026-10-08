@@ -23,6 +23,7 @@ jobs:
           flutter-version: '3.44.3'
           cache: true
       - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed lib test
       - run: flutter analyze lib test
       - run: flutter test
       - if: failure()
@@ -45,11 +46,18 @@ jobs:
           cache: npm
           cache-dependency-path: web/package-lock.json
       - run: npm ci
+      - run: npm run lint
+      - run: npm test
       - run: npm run build
         env:
           VITE_RECAPTCHA_SITE_KEY: ${{ vars.VITE_RECAPTCHA_SITE_KEY }}
           VITE_VAPID_KEY: ${{ vars.VITE_VAPID_KEY }}
           VITE_MEASUREMENT_ID: ${{ vars.VITE_MEASUREMENT_ID }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: web-dist
+          path: web/dist
+          retention-days: 1
 
   functions:
     runs-on: ubuntu-latest
@@ -85,7 +93,7 @@ jobs:
       - run: npm ci
       - run: npm ci
         working-directory: functions
-      - run: npm install -g firebase-tools
+      - run: npm install -g firebase-tools@15.33.0
       - run: npm test
 
   deploy-hosting:
@@ -99,17 +107,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: web/package-lock.json
-      - run: npm ci
-        working-directory: web
-      - run: npm run build
-        working-directory: web
-        env:
-          VITE_RECAPTCHA_SITE_KEY: ${{ vars.VITE_RECAPTCHA_SITE_KEY }}
-          VITE_VAPID_KEY: ${{ vars.VITE_VAPID_KEY }}
-          VITE_MEASUREMENT_ID: ${{ vars.VITE_MEASUREMENT_ID }}
-      - run: npm install -g firebase-tools
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-dist
+          path: web/dist
+      - run: npm install -g firebase-tools@15.33.0
       - name: Skip notice
         if: env.FIREBASE_TOKEN == ''
         run: echo "::warning::FIREBASE_TOKEN não configurado; hosting não foi publicado."
