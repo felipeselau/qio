@@ -7,6 +7,7 @@ import '../../services/queue_service.dart';
 import '../../theme/qio_colors.dart';
 import '../../theme/qio_text_styles.dart';
 import '../qio_card.dart';
+import '../../theme/qio_palette.dart';
 
 List<(int, int)> compactDays(List<int> days) {
   final sorted = {...days}.where((d) => d >= 1 && d <= 7).toList()..sort();
@@ -88,7 +89,7 @@ class QueueScheduleTile extends StatelessWidget {
       onTap: () => _edit(context),
       child: Row(
         children: [
-          Icon(Icons.schedule, color: QioColors.primaryText),
+          Icon(Icons.schedule, color: context.qio.primaryText),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -96,8 +97,8 @@ class QueueScheduleTile extends StatelessWidget {
               children: [
                 Text(
                   l10n.scheduleTitle,
-                  style: QioTextStyles.bodyMedium.copyWith(
-                    color: QioColors.textPrimary,
+                  style: context.qioText.bodyMedium.copyWith(
+                    color: context.qio.textPrimary,
                   ),
                 ),
                 Text(
@@ -108,12 +109,12 @@ class QueueScheduleTile extends StatelessWidget {
                           w.open,
                           w.close,
                         ),
-                  style: QioTextStyles.caption,
+                  style: context.qioText.caption,
                 ),
               ],
             ),
           ),
-          Icon(Icons.edit_outlined, size: 18, color: QioColors.gray500),
+          Icon(Icons.edit_outlined, size: 18, color: context.qio.gray500),
         ],
       ),
     );
@@ -210,7 +211,7 @@ class _ScheduleDialogState extends State<_ScheduleDialog> {
               onChanged: (v) => setState(() => _enabled = v),
             ),
             if (_enabled) ...[
-              Text(l10n.scheduleDays, style: QioTextStyles.label),
+              Text(l10n.scheduleDays, style: context.qioText.label),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 6,
@@ -248,13 +249,13 @@ class _ScheduleDialogState extends State<_ScheduleDialog> {
                 const SizedBox(height: 8),
                 Text(
                   _error!,
-                  style: QioTextStyles.caption.copyWith(
-                    color: QioColors.statusClosedText,
+                  style: context.qioText.caption.copyWith(
+                    color: context.qio.statusClosedText,
                   ),
                 ),
               ],
               const SizedBox(height: 12),
-              Text(l10n.scheduleNote, style: QioTextStyles.caption),
+              Text(l10n.scheduleNote, style: context.qioText.caption),
             ],
           ],
         ),
