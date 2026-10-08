@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../l10n/app_localizations.dart';
 import '../models/queue.dart';
 import '../models/queue_entry.dart';
+import '../services/action_errors.dart';
 import '../services/entry_diff.dart';
 import '../services/group_service.dart';
 import '../services/haptics.dart';
@@ -275,7 +276,9 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(AppLocalizations.of(context).genericActionError),
+        content: Text(
+          describeActionError(e).message(AppLocalizations.of(context)),
+        ),
         backgroundColor: QioColors.error,
       ),
     );

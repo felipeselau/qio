@@ -466,5 +466,8 @@
   "@slotsTileSummary": {"placeholders": {"count": {"type": "int"}}},
   "waitTileSlot": "Horario {time}",
   "@waitTileSlot": {"placeholders": {"time": {"type": "String"}}},
-  "slotTimeChangeWarning": "Quienes ya entraron en este horario conservan su cupo; los cupos ocupados siguen contando."
+  "slotTimeChangeWarning": "Quienes ya entraron en este horario conservan su cupo; los cupos ocupados siguen contando.",
+  "actionErrorOffline": "Sin conexión. Revisa tu internet e inténtalo de nuevo.",
+  "actionErrorAccessEnded": "Acceso finalizado o sin permiso para esta acción.",
+  "actionErrorConflict": "La fila cambió. Inténtalo de nuevo."
 }

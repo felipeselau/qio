@@ -1470,4 +1470,15 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get slotTimeChangeWarning =>
       'Quem já entrou neste horário continua na vaga antiga; as vagas ocupadas seguem contando.';
+
+  @override
+  String get actionErrorOffline =>
+      'Sem conexão. Verifique a internet e tente novamente.';
+
+  @override
+  String get actionErrorAccessEnded =>
+      'Acesso encerrado ou sem permissão para esta ação.';
+
+  @override
+  String get actionErrorConflict => 'A fila mudou. Tente de novo.';
 }

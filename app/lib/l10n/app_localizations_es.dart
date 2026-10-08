@@ -1473,4 +1473,15 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get slotTimeChangeWarning =>
       'Quienes ya entraron en este horario conservan su cupo; los cupos ocupados siguen contando.';
+
+  @override
+  String get actionErrorOffline =>
+      'Sin conexión. Revisa tu internet e inténtalo de nuevo.';
+
+  @override
+  String get actionErrorAccessEnded =>
+      'Acceso finalizado o sin permiso para esta acción.';
+
+  @override
+  String get actionErrorConflict => 'La fila cambió. Inténtalo de nuevo.';
 }
