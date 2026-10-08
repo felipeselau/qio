@@ -1,10 +1,12 @@
 import 'dart:async';
 
+import 'package:qio_app/models/alerts_config.dart';
 import 'package:qio_app/models/history_entry.dart';
 import 'package:qio_app/models/operator.dart';
 import 'package:qio_app/models/queue.dart';
 import 'package:qio_app/models/queue_entry.dart';
 import 'package:qio_app/models/queue_feedback.dart';
+import 'package:qio_app/models/queue_schedule.dart';
 import 'package:qio_app/models/queue_slot.dart';
 import 'package:qio_app/models/queue_group.dart';
 import 'package:qio_app/services/group_service.dart';
@@ -174,16 +176,62 @@ class FakeQueueService implements QueueService {
   Future<Queue> createQueue({
     required String name,
     String? description,
-    int avgServiceMin = 10,
+    int? avgServiceMin,
     int maxWaiting = 0,
     String? groupId,
     QueueMode mode = QueueMode.queue,
     List<QueueSlot> slots = const [],
+    QueueSchedule? schedule,
+    String? brandColor,
+    AlertsConfig? alerts,
   }) async {
     calls.add('create:$name:${mode.value}:${slots.length}');
     createdMode = mode;
     createdSlots = slots;
+    createdArgs = (
+      name: name,
+      description: description,
+      avgServiceMin: avgServiceMin,
+      maxWaiting: maxWaiting,
+      groupId: groupId,
+    );
+    if (createResult != null) return createResult!;
     throw Exception('stop before navigation');
+  }
+
+  Queue? createResult;
+  ({
+    String name,
+    String? description,
+    int? avgServiceMin,
+    int maxWaiting,
+    String? groupId,
+  })?
+  createdArgs;
+  Object? updateInfoError;
+  Object? duplicateError;
+  Queue? duplicateResult;
+  String? duplicatedName;
+
+  @override
+  Future<void> updateQueueInfo(
+    String queueId, {
+    required String name,
+    String? description,
+    required int avgServiceMin,
+  }) async {
+    calls.add('info:$queueId:$name:${description ?? ''}:$avgServiceMin');
+    if (updateInfoError != null) throw updateInfoError!;
+  }
+
+  @override
+  Future<Queue> duplicateQueue(String queueId, {required String name}) async {
+    calls.add('duplicate:$queueId:$name');
+    duplicatedName = name;
+    if (duplicateError != null) throw duplicateError!;
+    final copy = duplicateResult ?? fakeQueue('copy', name: name);
+    queues[copy.id] = copy;
+    return copy;
   }
 
   @override

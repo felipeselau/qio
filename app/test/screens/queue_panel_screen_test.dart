@@ -11,7 +11,7 @@ import 'package:qio_app/widgets/qio_button.dart';
 import '../helpers/fake_services.dart';
 import '../helpers/pump_app.dart';
 
-const tall = Size(390, 1800);
+const tall = Size(390, 2600);
 
 Future<void> tick(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 300));

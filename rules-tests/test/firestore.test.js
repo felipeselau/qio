@@ -219,6 +219,59 @@ describe('Firestore rules', () => {
     it('dono altera status da fila', async () => {
       await assertSucceeds(updateDoc(doc(db(OWNER), 'queues', QUEUE), { status: 'paused' }));
     });
+
+    it('dono edita nome, descrição e tempo médio válidos', async () => {
+      const ref = doc(db(OWNER), 'queues', QUEUE);
+      await assertSucceeds(updateDoc(ref, { name: 'Novo nome', description: 'a'.repeat(300), avgServiceMin: 240 }));
+      await assertSucceeds(updateDoc(ref, { name: 'x'.repeat(60), description: null, avgServiceMin: 1 }));
+    });
+
+    it('nega nome, descrição e tempo médio inválidos', async () => {
+      const ref = doc(db(OWNER), 'queues', QUEUE);
+      for (const bad of [{ name: '' }, { name: 'x'.repeat(61) }, { name: 5 }]) {
+        await assertFails(updateDoc(ref, bad));
+      }
+      for (const bad of [{ description: 'a'.repeat(301) }, { description: 5 }]) {
+        await assertFails(updateDoc(ref, bad));
+      }
+      for (const bad of [{ avgServiceMin: 0 }, { avgServiceMin: 241 }, { avgServiceMin: 2.5 }, { avgServiceMin: '10' }]) {
+        await assertFails(updateDoc(ref, bad));
+      }
+    });
+
+    it('dado legado fora do limite não bloqueia outras atualizações', async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), 'queues', 'legacy'), { ownerId: OWNER, name: 'x'.repeat(80), status: 'open' });
+      });
+      await assertSucceeds(updateDoc(doc(db(OWNER), 'queues', 'legacy'), { status: 'paused' }));
+    });
+
+    it('valida cada campo só quando ele muda', async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), 'queues', 'legacy2'), { ownerId: OWNER, name: 'x'.repeat(80), status: 'open' });
+      });
+      const ref = doc(db(OWNER), 'queues', 'legacy2');
+      await assertSucceeds(updateDoc(ref, { description: 'nova' }));
+      await assertSucceeds(updateDoc(ref, { avgServiceMin: 20 }));
+      await assertSucceeds(updateDoc(ref, { description: 'outra', avgServiceMin: 30 }));
+      await assertFails(updateDoc(ref, { name: 'y'.repeat(61) }));
+      await assertSucceeds(updateDoc(ref, { name: 'curto' }));
+    });
+
+    it('operador e estranho não editam nome', async () => {
+      await assertFails(updateDoc(doc(db(OPERATOR), 'queues', QUEUE), { name: 'Hack' }));
+      await assertFails(updateDoc(doc(db(STRANGER), 'queues', QUEUE), { name: 'Hack' }));
+    });
+
+    it('create valida nome, descrição e tempo médio', async () => {
+      const base = { ownerId: OWNER, name: 'Nova', status: 'open' };
+      const q = (id) => doc(db(OWNER), 'queues', id);
+      await assertSucceeds(setDoc(q('i1'), { ...base, description: null, avgServiceMin: 10 }));
+      await assertFails(setDoc(q('i2'), { ...base, name: '' }));
+      await assertFails(setDoc(q('i3'), { ...base, name: 'x'.repeat(61) }));
+      await assertFails(setDoc(q('i4'), { ...base, description: 'a'.repeat(301) }));
+      await assertFails(setDoc(q('i5'), { ...base, avgServiceMin: 0 }));
+    });
   });
 
   describe('modo agendado e slots', () => {

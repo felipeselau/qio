@@ -151,6 +151,33 @@ conhecidas: `docs/qualidade.md`.
   integração com `applyQueueSchedules` (o horário de funcionamento continua mandando em
   open/closed).
 
+## Editar e duplicar fila
+
+- `QueueService.updateQueueInfo` (nome 1–60, descrição ≤300, tempo médio 1–240; validação
+  em `models/queue_info.dart`, erro `FormatException`) grava no Firestore e faz um único
+  `update` em `meta` do RTDB. O `queueId` (e o QR) não muda. Painel: tiles "Editar fila" e
+  "Duplicar fila" (só dono).
+- `duplicateQueue` cria fila nova `<nome> (cópia)` copiando descrição, tempo médio, limite,
+  grupo, modo/slots, horário de funcionamento, cor e alertas. Não copia entries, history,
+  operadores, logo, mensagem de status nem `alertState`.
+- Rules validam `name`/`description`/`avgServiceMin` no Firestore (create, e update só de cada
+  campo que mudou, para não travar docs legados) e em `meta/{name,description,avgServiceMin}`
+  no RTDB (valor legado inalterado passa). `updateQueueInfo` grava só os campos alterados,
+  RTDB primeiro e Firestore por último; `ensureMirror` repara divergência de
+  name/description/avgServiceMin no `meta` (normalizados por `QueueInfo.forMirror`: nome
+  truncado a 60 ou "Fila", descrição a 300, tempo fora de 1–240 vira o default). O tempo
+  manual só vale até existir `avgServiceMinAuto`. O Firestore limita a 1000 expressões por avaliação e `validSlots` já consome quase
+  tudo: cuidado ao somar checagens no `update` de `queues/{id}`. Deploy: rules antes do APK.
+
+## Criação de fila e botão voltar
+
+- `CreateQueueScreen` exige só o nome; descrição, tempo médio, limite, grupo e modo/slots
+  ficam em "Opções avançadas" (`ExpansionTile` com `maintainState`, reabre sozinho se um
+  campo avançado for inválido). Tempo médio vazio vira o default único
+  `defaultAvgServiceMin` (10, em `models/queue_info.dart`) dentro de `createQueue`.
+- Voltar do painel/criação/edição é `QueueBackButton` (`BackButton` do Material, tooltip e
+  semântica localizados, usa `maybePop` e portanto respeita o `PopScope`).
+
 ## Ordem da fila, chamar de novo e mover
 
 - A ordem de espera é `(order ?? joinedAt, ticket)`. "Mover para o fim" grava

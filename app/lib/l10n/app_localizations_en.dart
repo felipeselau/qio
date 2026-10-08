@@ -18,9 +18,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get back => 'Back';
 
   @override
-  String get backWithArrow => '← Back';
-
-  @override
   String get create => 'Create';
 
   @override
@@ -1469,6 +1466,47 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get slotTimeChangeWarning =>
       'People already in this slot keep their spot; taken spots still count.';
+
+  @override
+  String get editQueue => 'Edit queue';
+
+  @override
+  String get editQueueHint => 'Name, description and average time';
+
+  @override
+  String get queueUpdated => 'Queue updated';
+
+  @override
+  String get duplicateQueue => 'Duplicate queue';
+
+  @override
+  String get duplicateQueueHint =>
+      'Copies limit, hours, color, mode, group and alerts';
+
+  @override
+  String get duplicateQueueCopyWord => 'copy';
+
+  @override
+  String get queueDuplicated => 'Queue duplicated';
+
+  @override
+  String get advancedOptions => 'Advanced options';
+
+  @override
+  String get queueNameTooLong => 'At most 60 characters';
+
+  @override
+  String get descriptionTooLong => 'At most 300 characters';
+
+  @override
+  String get avgServiceInvalid => 'Enter 1 to 240 minutes';
+
+  @override
+  String get avgServiceAutoHint =>
+      'The manual time only applies until the automatic estimate exists, calculated from served customers.';
+
+  @override
+  String get savingQueue => 'Saving…';
 
   @override
   String get actionErrorOffline =>

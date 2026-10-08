@@ -32,7 +32,7 @@ class QueuePanelTitle extends StatelessWidget {
             FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
-                queueName,
+                snap.data?.name ?? queueName,
                 maxLines: 1,
                 style: context.qioText.heading3.copyWith(
                   fontWeight: FontWeight.w700,
