@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/queue.dart';
 import '../../models/queue_entry.dart';
+import '../../services/group_service.dart';
 import '../../services/queue_service.dart';
 import '../../theme/qio_colors.dart';
 import '../../theme/qio_text_styles.dart';
@@ -32,6 +33,8 @@ class QueuePanelBody extends StatelessWidget {
     required this.onCall,
     required this.onMoveToEnd,
     required this.onRecall,
+    this.queues,
+    this.groups,
   });
 
   final String queueId;
@@ -44,15 +47,18 @@ class QueuePanelBody extends StatelessWidget {
   final void Function(QueueEntry) onCall;
   final void Function(QueueEntry) onMoveToEnd;
   final void Function(QueueEntry) onRecall;
+  final QueueService? queues;
+  final GroupService? groups;
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final joinUrl = QueueService.instance.queueJoinUrl(queueId);
+    final service = queues ?? QueueService.instance;
+    final joinUrl = service.queueJoinUrl(queueId);
     return QioResponsiveBody(
       maxWidth: 1100,
       child: StreamBuilder<Queue>(
-        stream: QueueService.instance.watchQueue(queueId),
+        stream: service.watchQueue(queueId),
         builder: (context, queueSnap) {
           final status = queueSnap.data?.status ?? QueueStatus.open;
           final maxWaiting = queueSnap.data?.maxWaiting ?? 0;
@@ -72,6 +78,7 @@ class QueuePanelBody extends StatelessWidget {
                   QueueGroupTile(
                     queueId: queueId,
                     groupId: queueSnap.data?.groupId,
+                    groups: groups,
                   ),
                   const SizedBox(height: 16),
                   QueueScheduleTile(queueId: queueId, schedule: schedule),
@@ -123,7 +130,7 @@ class QueuePanelBody extends StatelessWidget {
             );
           }
           return StreamBuilder<List<QueueEntry>>(
-            stream: QueueService.instance.watchEntries(queueId),
+            stream: service.watchEntries(queueId),
             builder: (context, snap) {
               final entries = snap.data ?? [];
               final waiting = entries
@@ -147,6 +154,7 @@ class QueuePanelBody extends StatelessWidget {
                   QueueGroupTile(
                     queueId: queueId,
                     groupId: queueSnap.data?.groupId,
+                    groups: groups,
                   ),
                   const SizedBox(height: 16),
                   QueueScheduleTile(queueId: queueId, schedule: schedule),

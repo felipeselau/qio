@@ -9,14 +9,16 @@ class QueueGroupTile extends StatelessWidget {
     super.key,
     required this.queueId,
     required this.groupId,
+    this.groups,
   });
 
+  final GroupService? groups;
   final String queueId;
   final String? groupId;
 
   Future<void> _change(BuildContext context, String? id) async {
     try {
-      await GroupService.instance.setQueueGroup(queueId, id);
+      await (groups ?? GroupService.instance).setQueueGroup(queueId, id);
     } on Exception catch (e) {
       if (context.mounted) showGroupError(context, e);
     }
@@ -27,6 +29,7 @@ class QueueGroupTile extends StatelessWidget {
     return QioCard(
       child: GroupPicker(
         value: groupId,
+        groups: groups,
         onChanged: (id) => _change(context, id),
       ),
     );

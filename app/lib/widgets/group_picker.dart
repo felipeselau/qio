@@ -80,8 +80,10 @@ class GroupPicker extends StatelessWidget {
     required this.value,
     required this.onChanged,
     this.enabled = true,
+    this.groups,
   });
 
+  final GroupService? groups;
   final String? value;
   final ValueChanged<String?> onChanged;
   final bool enabled;
@@ -91,7 +93,7 @@ class GroupPicker extends StatelessWidget {
     final name = await showGroupNameDialog(context, title: l10n.groupNew);
     if (name == null || !context.mounted) return;
     try {
-      final group = await GroupService.instance.createGroup(name);
+      final group = await (groups ?? GroupService.instance).createGroup(name);
       onChanged(group.id);
     } on Exception catch (e) {
       if (context.mounted) showGroupError(context, e);
@@ -102,7 +104,7 @@ class GroupPicker extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return StreamBuilder<List<QueueGroup>>(
-      stream: GroupService.instance.watchGroups(),
+      stream: (groups ?? GroupService.instance).watchGroups(),
       builder: (context, snap) {
         final groups = snap.data ?? const <QueueGroup>[];
         final selected = groups.any((g) => g.id == value) ? value : null;

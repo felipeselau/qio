@@ -7,6 +7,7 @@ import '../l10n/app_localizations.dart';
 import '../models/queue.dart';
 import '../models/queue_entry.dart';
 import '../services/entry_diff.dart';
+import '../services/group_service.dart';
 import '../services/haptics.dart';
 import '../services/onboarding_service.dart';
 import '../services/operator_service.dart';
@@ -27,17 +28,31 @@ class QueuePanelScreen extends StatefulWidget {
     required this.queueId,
     required this.queueName,
     this.isOwner = true,
+    this.queues,
+    this.operators,
+    this.groups,
+    this.showTour = true,
   });
 
   final String queueId;
   final String queueName;
   final bool isOwner;
+  final QueueService? queues;
+  final OperatorService? operators;
+  @visibleForTesting
+  final GroupService? groups;
+  @visibleForTesting
+  final bool showTour;
 
   @override
   State<QueuePanelScreen> createState() => _QueuePanelScreenState();
 }
 
 class _QueuePanelScreenState extends State<QueuePanelScreen> {
+  QueueService get _queues => widget.queues ?? QueueService.instance;
+  OperatorService get _operators =>
+      widget.operators ?? OperatorService.instance;
+
   bool _actionLoading = false;
   bool _finishLoading = false;
   bool _deleteLoading = false;
@@ -51,7 +66,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
   @override
   void initState() {
     super.initState();
-    if (widget.isOwner) {
+    if (widget.isOwner && widget.showTour) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         await Future<void>.delayed(const Duration(milliseconds: 600));
         if (!mounted) return;
@@ -71,17 +86,17 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
         ]);
       });
     }
-    _joinSub = QueueService.instance
+    _joinSub = _queues
         .watchEntries(widget.queueId)
         .listen(_onEntries, onError: (_) {});
     if (widget.isOwner) {
       _repairMirror();
     } else {
-      _accessSub = OperatorService.instance
-          .watchIsOperator(widget.queueId)
-          .listen((isOperator) {
-            if (!isOperator) _onAccessLost();
-          });
+      _accessSub = _operators.watchIsOperator(widget.queueId).listen((
+        isOperator,
+      ) {
+        if (!isOperator) _onAccessLost();
+      });
     }
   }
 
@@ -106,7 +121,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
 
   Future<void> _repairMirror() async {
     try {
-      await QueueService.instance.ensureMirror(widget.queueId);
+      await _queues.ensureMirror(widget.queueId);
     } on Exception {
       if (!mounted) return;
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -152,10 +167,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
   }
 
   bool _isMine(QueueEntry e) {
-    return e.isHandledBy(
-      QueueService.instance.currentUid,
-      isOwner: widget.isOwner,
-    );
+    return e.isHandledBy(_queues.currentUid, isOwner: widget.isOwner);
   }
 
   @override
@@ -177,7 +189,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
             ),
           ),
           title: StreamBuilder<Queue>(
-            stream: QueueService.instance.watchQueue(widget.queueId),
+            stream: _queues.watchQueue(widget.queueId),
             builder: (context, snap) {
               final q = snap.data;
               final status = q?.status ?? QueueStatus.open;
@@ -215,6 +227,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                 queueId: widget.queueId,
                 queueName: widget.queueName,
                 onStatus: _updateStatus,
+                queues: _queues,
               ),
           ],
         ),
@@ -229,6 +242,8 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
           onCall: _callEntry,
           onMoveToEnd: _moveToEnd,
           onRecall: _recall,
+          queues: _queues,
+          groups: widget.groups,
         ),
         bottomNavigationBar: QueueActionBar(
           queueId: widget.queueId,
@@ -242,6 +257,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
           onServed: _markServed,
           onNoShow: _markNoShow,
           onDelete: _confirmDelete,
+          queues: _queues,
         ),
       ),
     );
@@ -250,7 +266,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
   Future<void> _callNext() async {
     setState(() => _actionLoading = true);
     try {
-      final next = await QueueService.instance.callNext(widget.queueId);
+      final next = await _queues.callNext(widget.queueId);
       Haptics.instance.medium();
       if (next == null && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -269,10 +285,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
 
   Future<void> _callEntry(QueueEntry entry) async {
     try {
-      final called = await QueueService.instance.callEntry(
-        widget.queueId,
-        entry,
-      );
+      final called = await _queues.callEntry(widget.queueId, entry);
       Haptics.instance.medium();
       if (called == null && mounted) {
         _notify(AppLocalizations.of(context).entryUnavailable);
@@ -284,7 +297,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
 
   Future<void> _moveToEnd(QueueEntry entry) async {
     try {
-      await QueueService.instance.moveEntryToEnd(widget.queueId, entry);
+      await _queues.moveEntryToEnd(widget.queueId, entry);
       Haptics.instance.light();
       if (mounted) {
         _notify(AppLocalizations.of(context).movedToEnd(entry.name));
@@ -296,7 +309,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
 
   Future<void> _recall(QueueEntry entry) async {
     try {
-      await QueueService.instance.recallEntry(widget.queueId, entry);
+      await _queues.recallEntry(widget.queueId, entry);
       Haptics.instance.medium();
       if (mounted) _notify(AppLocalizations.of(context).callResent);
     } on Exception catch (e) {
@@ -312,7 +325,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
 
   Future<void> _updateStatus(QueueStatus status, StatusChange? change) async {
     try {
-      await QueueService.instance.updateQueueStatus(
+      await _queues.updateQueueStatus(
         widget.queueId,
         status,
         message: change?.message,
@@ -326,7 +339,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
   Future<void> _markServed(QueueEntry entry) async {
     setState(() => _finishLoading = true);
     try {
-      await QueueService.instance.markServed(widget.queueId, entry);
+      await _queues.markServed(widget.queueId, entry);
       Haptics.instance.light();
     } on Exception catch (e) {
       _showError(e);
@@ -338,7 +351,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
   Future<void> _markNoShow(QueueEntry entry) async {
     setState(() => _finishLoading = true);
     try {
-      await QueueService.instance.markNoShow(widget.queueId, entry);
+      await _queues.markNoShow(widget.queueId, entry);
       Haptics.instance.heavy();
     } on Exception catch (e) {
       _showError(e);
@@ -362,7 +375,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
     if (!confirmed || !mounted) return;
     setState(() => _deleteLoading = true);
     try {
-      await QueueService.instance.deleteQueue(widget.queueId);
+      await _queues.deleteQueue(widget.queueId);
       if (mounted) Navigator.of(context).pop();
     } on Exception {
       if (mounted) {

@@ -29,7 +29,15 @@ import '../widgets/wait_effort_card.dart';
 import '../widgets/qio_responsive_body.dart';
 
 class MetricsScreen extends StatefulWidget {
-  const MetricsScreen({super.key});
+  const MetricsScreen({super.key, this.loader, this.clock, this.groupsLoader});
+
+  @visibleForTesting
+  final Future<List<QueueGroup>> Function()? groupsLoader;
+
+  @visibleForTesting
+  final Future<List<QueueHistoryInput>> Function()? loader;
+  @visibleForTesting
+  final DateTime Function()? clock;
 
   @override
   State<MetricsScreen> createState() => _MetricsScreenState();
@@ -92,7 +100,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
         data: filterByScope(data, _groups, _scope),
         scopeLabel: _scopeLabel(l10n),
         period: _period,
-        now: DateTime.now(),
+        now: (widget.clock ?? DateTime.now)(),
         historyLimit: QueueService.historyFetchLimit,
         unknownOperatorName: l10n.formerOperator,
         operatorQueueId: _operatorQueueId,
@@ -152,8 +160,42 @@ class _MetricsScreenState extends State<MetricsScreen> {
   });
 
   Future<List<QueueHistoryInput>> _load() async {
+    final result = widget.loader != null
+        ? await widget.loader!()
+        : await _loadFromServices();
+    if (_operatorQueueId != null &&
+        !result.any((d) => d.queue.id == _operatorQueueId)) {
+      _operatorQueueId = null;
+    }
+    var groups = const <QueueGroup>[];
+    var groupsUnavailable = false;
+    try {
+      groups = await _loadGroups();
+    } on GroupPermissionDeniedException {
+      groupsUnavailable = true;
+    } on Exception {
+      groups = const [];
+    }
+    _scope = sanitizeScope(_scope, result, groups);
+    if (mounted) {
+      setState(() {
+        _data = result;
+        _groups = groups;
+        _groupsUnavailable = groupsUnavailable;
+      });
+    }
+    return result;
+  }
+
+  Future<List<QueueGroup>> _loadGroups() async {
+    if (widget.groupsLoader != null) return widget.groupsLoader!();
+    if (widget.loader != null) return const [];
+    return GroupService.instance.fetchGroups();
+  }
+
+  Future<List<QueueHistoryInput>> _loadFromServices() async {
     final queues = await QueueService.instance.watchOwnerQueues().first;
-    final result = await Future.wait([
+    return Future.wait([
       for (final q in queues)
         Future.wait([
           QueueService.instance.fetchHistory(q.id),
@@ -172,28 +214,6 @@ class _MetricsScreenState extends State<MetricsScreen> {
           ),
         ),
     ]);
-    if (_operatorQueueId != null &&
-        !result.any((d) => d.queue.id == _operatorQueueId)) {
-      _operatorQueueId = null;
-    }
-    var groups = const <QueueGroup>[];
-    var groupsUnavailable = false;
-    try {
-      groups = await GroupService.instance.fetchGroups();
-    } on GroupPermissionDeniedException {
-      groupsUnavailable = true;
-    } on Exception {
-      groups = const [];
-    }
-    _scope = sanitizeScope(_scope, result, groups);
-    if (mounted) {
-      setState(() {
-        _data = result;
-        _groups = groups;
-        _groupsUnavailable = groupsUnavailable;
-      });
-    }
-    return result;
   }
 
   @override
