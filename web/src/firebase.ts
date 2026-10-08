@@ -3,7 +3,7 @@ import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-ch
 import { connectAuthEmulator, getAuth } from 'firebase/auth';
 import { connectDatabaseEmulator, getDatabase } from 'firebase/database';
 import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
-import { getMessaging, type Messaging } from 'firebase/messaging';
+import type { Messaging } from 'firebase/messaging';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAY29R07GlubY5lFmUriQ8qiVuiiWv7W6Y',
@@ -50,13 +50,16 @@ if (import.meta.env.VITE_USE_EMULATORS === 'true') {
 // (muitos webviews de apps, Safari iOS antigo). Como firebase.ts é importado
 // por toda a aplicação, chamá-lo no topo do módulo derrubaria a página inteira.
 // Resolvido de forma preguiçosa: retorna null quando não há suporte.
-let _messaging: Messaging | null | undefined;
-export function getMessagingSafe(): Messaging | null {
-  if (_messaging !== undefined) return _messaging;
-  try {
-    _messaging = getMessaging(app);
-  } catch {
-    _messaging = null;
-  }
+let _messaging: Promise<Messaging | null> | undefined;
+export function getMessagingSafe(): Promise<Messaging | null> {
+  if (_messaging) return _messaging;
+  _messaging = (async () => {
+    try {
+      const { getMessaging } = await import('firebase/messaging');
+      return getMessaging(app);
+    } catch {
+      return null;
+    }
+  })();
   return _messaging;
 }

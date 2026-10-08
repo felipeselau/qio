@@ -1,5 +1,4 @@
 import i18n from '../i18n';
-import { getToken, isSupported, onMessage } from 'firebase/messaging';
 import { getMessagingSafe } from '../firebase';
 
 const vapidKey = import.meta.env.VITE_VAPID_KEY as string | undefined;
@@ -10,6 +9,7 @@ export async function pushSupport(): Promise<PushSupport> {
   if (!vapidKey) return 'unsupported';
   if (typeof Notification === 'undefined') return 'unsupported';
   try {
+    const { isSupported } = await import('firebase/messaging');
     if (!(await isSupported())) return 'unsupported';
   } catch {
     return 'unsupported';
@@ -27,8 +27,9 @@ export async function requestPushPermission(): Promise<'granted' | 'denied'> {
 export async function getFcmToken(): Promise<string | null> {
   if (!vapidKey) return null;
   try {
+    const { getToken, isSupported } = await import('firebase/messaging');
     if (!(await isSupported())) return null;
-    const messaging = getMessagingSafe();
+    const messaging = await getMessagingSafe();
     if (!messaging) return null;
     const token = await getToken(messaging, { vapidKey });
     return token || null;
@@ -40,19 +41,27 @@ export async function getFcmToken(): Promise<string | null> {
 export function listenForMessages(onTurn: () => void): () => void {
   if (!vapidKey) return () => {};
   let unsub: (() => void) | null = null;
-  isSupported().then((supported) => {
-    if (!supported) return;
-    const messaging = getMessagingSafe();
-    if (!messaging) return;
-    unsub = onMessage(messaging, () => {
-      if (document.hidden) {
-        new Notification(i18n.t('queue.yourTurn'), {
-          body: i18n.t('push.called'),
-          icon: '/icon-192.png',
-        });
-        onTurn();
-      }
-    });
-  });
-  return () => unsub?.();
+  let cancelled = false;
+  void (async () => {
+    try {
+      const { isSupported, onMessage } = await import('firebase/messaging');
+      if (!(await isSupported())) return;
+      const messaging = await getMessagingSafe();
+      if (!messaging || cancelled) return;
+      unsub = onMessage(messaging, () => {
+        if (document.hidden) {
+          new Notification(i18n.t('queue.yourTurn'), {
+            body: i18n.t('push.called'),
+            icon: '/icon-192.png',
+          });
+          onTurn();
+        }
+      });
+    } catch {
+    }
+  })();
+  return () => {
+    cancelled = true;
+    unsub?.();
+  };
 }
