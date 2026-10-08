@@ -47,6 +47,17 @@ class QueueService {
         );
   }
 
+  Future<void> ensureUnderQueueLimit(String ownerId) async {
+    final owned = await _firestore
+        .collection('queues')
+        .where('ownerId', isEqualTo: ownerId)
+        .count()
+        .get();
+    if (isQueueLimitReached(owned.count ?? 0)) {
+      throw const QueueLimitReached();
+    }
+  }
+
   Future<Queue> createQueue({
     required String name,
     String? description,
@@ -56,14 +67,7 @@ class QueueService {
     QueueMode mode = QueueMode.queue,
     List<QueueSlot> slots = const [],
   }) async {
-    final owned = await _firestore
-        .collection('queues')
-        .where('ownerId', isEqualTo: _uid)
-        .count()
-        .get();
-    if (isQueueLimitReached(owned.count ?? 0)) {
-      throw const QueueLimitReached();
-    }
+    await ensureUnderQueueLimit(_uid);
     final now = DateTime.now();
     final docRef = await _firestore.collection('queues').add({
       'ownerId': _uid,

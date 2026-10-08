@@ -247,8 +247,11 @@ conhecidas: `docs/qualidade.md`.
   (`sign_in_provider != 'anonymous'`) é exigido para ler `operatorInvites/{code}`
   e criar/recriar `operatorRequests/{uid}`. O app só autentica com e-mail/Google
   (`auth_service.dart`), então o fluxo de operador não muda.
-- **Ordem de deploy:** rules (Firestore e RTDB) → APK. APK novo antes das rules
-  mostra a mensagem correta de limite.
+- **Ordem de deploy:** indiferente. O limite de filas é só do cliente, então a
+  ordem das rules não afeta a mensagem. As rules só mudam o comportamento para
+  contas anônimas. APK antigo + rules novas: operador por e-mail/Google segue
+  funcionando. APK novo + rules antigas: só falta o endurecimento dos convites.
+  As rules não quebram nenhum APK.
 
 ## Operadores
 
