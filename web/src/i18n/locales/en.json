@@ -66,7 +66,13 @@
     "pushBody": "Want a phone alert when it's your turn? It works even with the page closed.",
     "pushEnable": "Turn on alerts",
     "pushOn": "You will be notified when it's your turn.",
-    "pushDenied": "Alerts are blocked in the browser. The page still alerts you while it is open."
+    "pushDenied": "Alerts are blocked in the browser. The page still alerts you while it is open.",
+    "slotTitle": "Choose a time",
+    "slotFull": "Full",
+    "slotPast": "Closed",
+    "slotSpots": "{{count}} spots left",
+    "slotRequired": "Choose a time to join",
+    "yourSlot": "Your time: {{time}}"
   },
   "errors": {
     "nameRequired": "Enter your name",
@@ -81,7 +87,11 @@
     "notFound": "Queue not found.",
     "feedbackFailed": "Could not send your rating. Please try again.",
     "queueFull": "The queue is full right now. Please try again in a few minutes.",
-    "securityCheckFailed": "Security check failed. Reload the page and try again."
+    "securityCheckFailed": "Security check failed. Reload the page and try again.",
+    "slotFull": "This time is full. Choose another one.",
+    "slotRequired": "Choose a time to join the queue.",
+    "slotPassed": "This time has already passed. Choose another one.",
+    "reloadPage": "This queue now uses scheduled times. Reload the page to choose a time."
   },
   "push": {
     "called": "Your ticket was called — please go to the service desk."

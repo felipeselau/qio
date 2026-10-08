@@ -16,10 +16,18 @@ const JOIN_ERROR_KEYS: Record<string, string> = {
   'functions/unauthenticated': 'errors.securityCheckFailed',
 };
 
+const SLOT_ERROR_KEYS: Record<string, string> = {
+  'slot-full': 'errors.slotFull',
+  'slot-required': 'errors.reloadPage',
+  'slot-invalid': 'errors.reloadPage',
+  'slot-passed': 'errors.slotPassed',
+};
+
 export async function joinQueue(
   queueId: string,
   name: string,
   phone: string,
+  slotId?: string | null,
 ): Promise<JoinResult> {
   const uid = auth.currentUser?.uid;
   if (!uid) throw new Error(i18n.t('errors.notAuthenticated'));
@@ -27,16 +35,20 @@ export async function joinQueue(
   let result: JoinResult;
   try {
     const call = httpsCallable<
-      { queueId: string; name: string; phone: string; lang: string },
+      { queueId: string; name: string; phone: string; lang: string; slotId?: string },
       JoinResult
     >(functions, 'joinQueue');
-    result = (await call({ queueId, name, phone, lang: i18n.language })).data;
+    result = (
+      await call({ queueId, name, phone, lang: i18n.language, ...(slotId ? { slotId } : {}) })
+    ).data;
   } catch (err) {
     const e = err as { code?: string; details?: { reason?: string } } | null;
     const code = e?.code ?? '';
     if (code === 'functions/resource-exhausted' && e?.details?.reason === 'queue-full') {
       throw new Error(i18n.t('errors.queueFull'));
     }
+    const reasonKey = e?.details?.reason ? SLOT_ERROR_KEYS[e.details.reason] : undefined;
+    if (reasonKey) throw new Error(i18n.t(reasonKey));
     throw new Error(i18n.t(JOIN_ERROR_KEYS[code] ?? 'errors.joinFailed'));
   }
 

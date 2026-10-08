@@ -18,6 +18,25 @@ describe('publicTicketFor', () => {
   });
 });
 
+describe('publicTicketFor com slot', () => {
+  it('inclui slotId quando a entry tem horário', () => {
+    const pub = publicTicketFor({ ticket: 4, status: 'waiting', name: 'Ana', joinedAt: 9, order: 20, slotId: 's1', slotStart: 20 });
+    assert.deepEqual(pub, { ticket: 4, status: 'waiting', order: 20, slotId: 's1', slotStart: 20 });
+  });
+
+  it('order de mover para o fim não altera slotId nem slotStart', () => {
+    const pub = publicTicketFor({ ticket: 4, status: 'waiting', joinedAt: 9, order: 999, slotId: 's1', slotStart: 20 });
+    assert.equal(pub.slotId, 's1');
+    assert.equal(pub.slotStart, 20);
+    assert.equal(pub.order, 999);
+  });
+
+  it('ignora slotId inválido', () => {
+    const pub = publicTicketFor({ ticket: 4, status: 'waiting', joinedAt: 9, slotId: 5 });
+    assert.deepEqual(pub, { ticket: 4, status: 'waiting', order: 9 });
+  });
+});
+
 describe('shouldRenotify', () => {
   it('notifica na primeira chamada', () => {
     assert.equal(shouldRenotify({ status: 'waiting' }, { status: 'called' }), true);

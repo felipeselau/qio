@@ -66,7 +66,13 @@
     "pushBody": "¿Quieres un aviso en el celular cuando sea tu turno? Funciona incluso con la página cerrada.",
     "pushEnable": "Activar aviso",
     "pushOn": "Te avisaremos cuando sea tu turno.",
-    "pushDenied": "Los avisos están bloqueados en el navegador. La página sigue avisando mientras esté abierta."
+    "pushDenied": "Los avisos están bloqueados en el navegador. La página sigue avisando mientras esté abierta.",
+    "slotTitle": "Elige un horario",
+    "slotFull": "Completo",
+    "slotPast": "Cerrado",
+    "slotSpots": "{{count}} cupos libres",
+    "slotRequired": "Elige un horario para entrar",
+    "yourSlot": "Tu horario: {{time}}"
   },
   "errors": {
     "nameRequired": "Ingresa tu nombre",
@@ -81,7 +87,11 @@
     "notFound": "Fila no encontrada.",
     "feedbackFailed": "No se pudo enviar tu calificación. Inténtalo de nuevo.",
     "queueFull": "La fila está llena por ahora. Inténtalo de nuevo en unos minutos.",
-    "securityCheckFailed": "Falló la verificación de seguridad. Recarga la página e inténtalo de nuevo."
+    "securityCheckFailed": "Falló la verificación de seguridad. Recarga la página e inténtalo de nuevo.",
+    "slotFull": "Este horario está completo. Elige otro.",
+    "slotRequired": "Elige un horario para entrar en la fila.",
+    "slotPassed": "Este horario ya pasó. Elige otro.",
+    "reloadPage": "Esta fila ahora usa horarios marcados. Recarga la página para elegir un horario."
   },
   "push": {
     "called": "Tu turno fue llamado — dirígete a la atención."

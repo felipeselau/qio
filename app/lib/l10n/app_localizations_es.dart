@@ -1410,4 +1410,67 @@ class AppLocalizationsEs extends AppLocalizations {
   String trendDaySummary(String day, int count, String series, String value) {
     return '$day: $count atenciones, $series $value';
   }
+
+  @override
+  String get queueModeLabel => 'Modo de la fila';
+
+  @override
+  String get modeQueue => 'Por orden de llegada';
+
+  @override
+  String get modeSchedule => 'Hora marcada';
+
+  @override
+  String get slotsEditorTitle => 'Horarios';
+
+  @override
+  String get slotsEditorHint =>
+      'Zona horaria America/Sao_Paulo; se repiten todos los días';
+
+  @override
+  String get slotTime => 'Horario';
+
+  @override
+  String slotCapacity(int count) {
+    return 'Cupos: $count';
+  }
+
+  @override
+  String get addSlot => 'Agregar horario';
+
+  @override
+  String get removeSlot => 'Quitar horario';
+
+  @override
+  String get slotsRequired => 'Agrega al menos un horario';
+
+  @override
+  String get slotsDuplicate => 'Hay horarios repetidos';
+
+  @override
+  String slotsTooMany(int max) {
+    return 'Máximo $max horarios';
+  }
+
+  @override
+  String get slotsInvalid => 'Horario o cupos inválidos';
+
+  @override
+  String slotsOutsideSchedule(String time) {
+    return 'Fuera del horario de atención: $time';
+  }
+
+  @override
+  String slotsTileSummary(int count) {
+    return '$count horarios';
+  }
+
+  @override
+  String waitTileSlot(String time) {
+    return 'Horario $time';
+  }
+
+  @override
+  String get slotTimeChangeWarning =>
+      'Quienes ya entraron en este horario conservan su cupo; los cupos ocupados siguen contando.';
 }

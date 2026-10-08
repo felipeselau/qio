@@ -5,6 +5,7 @@ import 'package:qio_app/models/operator.dart';
 import 'package:qio_app/models/queue.dart';
 import 'package:qio_app/models/queue_entry.dart';
 import 'package:qio_app/models/queue_feedback.dart';
+import 'package:qio_app/models/queue_slot.dart';
 import 'package:qio_app/models/queue_group.dart';
 import 'package:qio_app/services/group_service.dart';
 import 'package:qio_app/services/operator_service.dart';
@@ -145,6 +146,38 @@ class FakeQueueService implements QueueService {
     DateTime? resumeAt,
   }) async {
     calls.add('status:$queueId:${status.value}');
+  }
+
+  QueueMode? savedMode;
+  List<QueueSlot>? savedSlots;
+  QueueMode? createdMode;
+  List<QueueSlot>? createdSlots;
+
+  @override
+  Future<void> updateModeAndSlots(
+    String queueId,
+    QueueMode mode,
+    List<QueueSlot> slots,
+  ) async {
+    calls.add('modeSlots:$queueId:${mode.value}:${slots.length}');
+    savedMode = mode;
+    savedSlots = slots;
+  }
+
+  @override
+  Future<Queue> createQueue({
+    required String name,
+    String? description,
+    int avgServiceMin = 10,
+    int maxWaiting = 0,
+    String? groupId,
+    QueueMode mode = QueueMode.queue,
+    List<QueueSlot> slots = const [],
+  }) async {
+    calls.add('create:$name:${mode.value}:${slots.length}');
+    createdMode = mode;
+    createdSlots = slots;
+    throw Exception('stop before navigation');
   }
 
   @override

@@ -15,6 +15,15 @@ const {
 } = require('./src/join');
 const { historyFromLeftEntry } = require('./src/history');
 const { isQueueFull } = require('./src/capacity');
+const {
+  normalizeMode,
+  parseSlots,
+  slotStartMs,
+  isSlotBookable,
+  countSlotEntries,
+  slotsFromDoc,
+  isSlotFull,
+} = require('./src/slots');
 const { publicTicketFor, shouldRenotify } = require('./src/ticket');
 const { planScheduleChange } = require('./src/schedule');
 const {
@@ -119,6 +128,33 @@ function findActive(snap) {
   return found;
 }
 
+async function resolveSlot({ entriesRef, slots, slotId, now }) {
+  if (typeof slotId !== 'string' || !slotId) {
+    throw new HttpsError('invalid-argument', 'Escolha um horário.', {
+      reason: 'slot-required',
+    });
+  }
+  const slot = slots.find((s) => s.id === slotId);
+  if (!slot) {
+    throw new HttpsError('invalid-argument', 'Horário inválido.', {
+      reason: 'slot-invalid',
+    });
+  }
+  const slotStart = slotStartMs(now, slot.start);
+  if (!isSlotBookable(now, slotStart)) {
+    throw new HttpsError('failed-precondition', 'Horário já passou.', {
+      reason: 'slot-passed',
+    });
+  }
+  const snap = await entriesRef.orderByChild('slotId').equalTo(slotId).once('value');
+  if (isSlotFull(slot.capacity, countSlotEntries(snap.val(), slotId))) {
+    throw new HttpsError('resource-exhausted', 'Horário lotado.', {
+      reason: 'slot-full',
+    });
+  }
+  return { slotId, slotStart, order: slotStart };
+}
+
 exports.joinQueue = onCall(
   {
     region: 'us-central1',
@@ -182,6 +218,25 @@ exports.joinQueue = onCall(
       }
     }
 
+    let mode = normalizeMode(metaSnap.child('mode').val());
+    let rawSlots = metaSnap.child('slots').val();
+    if (!metaSnap.child('mode').exists()) {
+      const queueDoc = await getFirestore().doc(`queues/${queueId}`).get();
+      if (queueDoc.exists && normalizeMode(queueDoc.get('mode')) === 'schedule') {
+        mode = 'schedule';
+        rawSlots = slotsFromDoc(queueDoc.get('slots'));
+      }
+    }
+    let slotFields = null;
+    if (mode === 'schedule') {
+      slotFields = await resolveSlot({
+        entriesRef,
+        slots: parseSlots(rawSlots),
+        slotId: data.slotId,
+        now: Date.now(),
+      });
+    }
+
     const maxWaiting = metaSnap.child('maxWaiting').val();
     if (maxWaiting) {
       const waitingSnap = await entriesRef
@@ -227,6 +282,7 @@ exports.joinQueue = onCall(
       lang,
       status: 'waiting',
       joinedAt: Date.now(),
+      ...(slotFields ?? {}),
     });
 
     return { entryId: newRef.key, ticket, existing: false };

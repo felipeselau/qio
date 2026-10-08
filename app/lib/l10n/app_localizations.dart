@@ -2607,6 +2607,108 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'{day}: {count} atendimentos, {series} {value}'**
   String trendDaySummary(String day, int count, String series, String value);
+
+  /// No description provided for @queueModeLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Modo da fila'**
+  String get queueModeLabel;
+
+  /// No description provided for @modeQueue.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fila por chegada'**
+  String get modeQueue;
+
+  /// No description provided for @modeSchedule.
+  ///
+  /// In pt, this message translates to:
+  /// **'Hora marcada'**
+  String get modeSchedule;
+
+  /// No description provided for @slotsEditorTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Horários'**
+  String get slotsEditorTitle;
+
+  /// No description provided for @slotsEditorHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fuso America/Sao_Paulo; repetem todo dia'**
+  String get slotsEditorHint;
+
+  /// No description provided for @slotTime.
+  ///
+  /// In pt, this message translates to:
+  /// **'Horário'**
+  String get slotTime;
+
+  /// No description provided for @slotCapacity.
+  ///
+  /// In pt, this message translates to:
+  /// **'Vagas: {count}'**
+  String slotCapacity(int count);
+
+  /// No description provided for @addSlot.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar horário'**
+  String get addSlot;
+
+  /// No description provided for @removeSlot.
+  ///
+  /// In pt, this message translates to:
+  /// **'Remover horário'**
+  String get removeSlot;
+
+  /// No description provided for @slotsRequired.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicione ao menos um horário'**
+  String get slotsRequired;
+
+  /// No description provided for @slotsDuplicate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Há horários repetidos'**
+  String get slotsDuplicate;
+
+  /// No description provided for @slotsTooMany.
+  ///
+  /// In pt, this message translates to:
+  /// **'No máximo {max} horários'**
+  String slotsTooMany(int max);
+
+  /// No description provided for @slotsInvalid.
+  ///
+  /// In pt, this message translates to:
+  /// **'Horário ou vagas inválidos'**
+  String get slotsInvalid;
+
+  /// No description provided for @slotsOutsideSchedule.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fora do horário de funcionamento: {time}'**
+  String slotsOutsideSchedule(String time);
+
+  /// No description provided for @slotsTileSummary.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count} horários'**
+  String slotsTileSummary(int count);
+
+  /// No description provided for @waitTileSlot.
+  ///
+  /// In pt, this message translates to:
+  /// **'Horário {time}'**
+  String waitTileSlot(String time);
+
+  /// No description provided for @slotTimeChangeWarning.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quem já entrou neste horário continua na vaga antiga; as vagas ocupadas seguem contando.'**
+  String get slotTimeChangeWarning;
 }
 
 class _AppLocalizationsDelegate

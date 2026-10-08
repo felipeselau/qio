@@ -294,6 +294,185 @@ describe('callable joinQueue com limite (emulador)', () => {
 });
 
 
+describe('callable joinQueue com slots (emulador)', () => {
+  let env;
+  let apps = [];
+  const adminDb = async (fn) => {
+    let result;
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      result = await fn(ctx.database());
+    });
+    return result;
+  };
+
+  const SP_OFFSET = 3 * 3600 * 1000;
+  const DAY = 86400000;
+  const todayStart = (start) => {
+    const [h, m] = start.split(':').map(Number);
+    const dayStart = Math.floor((Date.now() - SP_OFFSET) / DAY) * DAY + SP_OFFSET;
+    return dayStart + (h * 60 + m) * 60000;
+  };
+
+  async function newClient() {
+    const app = initializeApp({ projectId: 'demo-qio', apiKey: 'fake-key' }, `slot-${apps.length}`);
+    apps.push(app);
+    const auth = getAuth(app);
+    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+    const cred = await signInAnonymously(auth);
+    const functions = getFunctions(app);
+    connectFunctionsEmulator(functions, FUNCTIONS_HOST, Number(FUNCTIONS_PORT));
+    const call = httpsCallable(functions, 'joinQueue');
+    return { uid: cred.user.uid, join: async (data) => (await call(data)).data };
+  }
+
+  async function rejectsWith(promise, code, reason) {
+    await assert.rejects(promise, (err) => {
+      assert.equal(err.code, `functions/${code}`);
+      assert.equal(err.details?.reason, reason);
+      return true;
+    });
+  }
+
+  before(async () => {
+    env = await setupEnv();
+  });
+
+  after(async () => {
+    await Promise.all(apps.map((a) => deleteApp(a)));
+    await env.cleanup();
+  });
+
+  beforeEach(async () => {
+    await env.clearDatabase();
+    await env.clearFirestore();
+    await adminDb((db) =>
+      set(ref(db), {
+        owners: { [QUEUE]: { ownerUid: 'owner' } },
+        queues: {
+          [QUEUE]: {
+            meta: {
+              name: 'Clínica',
+              status: 'open',
+              serving: 0,
+              updatedAt: 0,
+              mode: 'schedule',
+              slots: {
+                late: { start: '23:59', capacity: 1 },
+                big: { start: '23:58', capacity: 3 },
+                past: { start: '00:00', capacity: 1 },
+              },
+            },
+          },
+        },
+      }),
+    );
+  });
+
+  it('exige slotId no modo schedule', async () => {
+    const a = await newClient();
+    await rejectsWith(a.join({ queueId: QUEUE, name: 'Ana', phone: '' }), 'invalid-argument', 'slot-required');
+  });
+
+  it('recusa slot inexistente', async () => {
+    const a = await newClient();
+    await rejectsWith(
+      a.join({ queueId: QUEUE, name: 'Ana', phone: '', slotId: 'nope' }),
+      'invalid-argument',
+      'slot-invalid',
+    );
+  });
+
+  it('entra no slot gravando slotId, slotStart e order', async () => {
+    const a = await newClient();
+    const res = await a.join({ queueId: QUEUE, name: 'Ana', phone: '', slotId: 'late' });
+    assert.equal(res.existing, false);
+    const entry = await adminDb(async (db) => (await get(ref(db, `queues/${QUEUE}/entries/${res.entryId}`))).val());
+    assert.equal(entry.slotId, 'late');
+    assert.equal(entry.slotStart, todayStart('23:59'));
+    assert.equal(entry.order, todayStart('23:59'));
+  });
+
+  it('recusa com slot-full quando a capacidade acaba', async () => {
+    const a = await newClient();
+    const b = await newClient();
+    await a.join({ queueId: QUEUE, name: 'Ana', phone: '', slotId: 'late' });
+    await assert.rejects(b.join({ queueId: QUEUE, name: 'Bia', phone: '', slotId: 'late' }), (err) => {
+      assert.equal(err.code, 'functions/resource-exhausted');
+      assert.equal(err.details?.reason, 'slot-full');
+      return true;
+    });
+    const ok = await b.join({ queueId: QUEUE, name: 'Bia', phone: '', slotId: 'big' });
+    assert.equal(ok.existing, false);
+  });
+
+  it('quem já tem entry ativa recebe a própria, mesmo sem slotId', async () => {
+    const a = await newClient();
+    const first = await a.join({ queueId: QUEUE, name: 'Ana', phone: '', slotId: 'late' });
+    const again = await a.join({ queueId: QUEUE, name: 'Ana', phone: '' });
+    assert.equal(again.existing, true);
+    assert.equal(again.entryId, first.entryId);
+  });
+
+  it('recusa horário que já passou', async () => {
+    const a = await newClient();
+    await rejectsWith(
+      a.join({ queueId: QUEUE, name: 'Ana', phone: '', slotId: 'past' }),
+      'failed-precondition',
+      'slot-passed',
+    );
+  });
+
+  it('editar o horário do slot com entries ativas não zera a contagem', async () => {
+    const a = await newClient();
+    const b = await newClient();
+    await a.join({ queueId: QUEUE, name: 'Ana', phone: '', slotId: 'late' });
+    await adminDb((db) => set(ref(db, `queues/${QUEUE}/meta/slots/late/start`), '23:57'));
+    await rejectsWith(
+      b.join({ queueId: QUEUE, name: 'Bia', phone: '', slotId: 'late' }),
+      'resource-exhausted',
+      'slot-full',
+    );
+  });
+
+  it('meta/mode ausente com doc do Firestore em schedule: falha fechado', async () => {
+    await adminDb((db) => set(ref(db, `queues/${QUEUE}/meta/mode`), null));
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'queues', QUEUE), {
+        ownerId: 'owner',
+        mode: 'schedule',
+        slots: [{ id: 'fs1', start: '23:59', capacity: 1 }],
+      });
+    });
+    const a = await newClient();
+    const b = await newClient();
+    await rejectsWith(a.join({ queueId: QUEUE, name: 'Ana', phone: '' }), 'invalid-argument', 'slot-required');
+    const res = await a.join({ queueId: QUEUE, name: 'Ana', phone: '', slotId: 'fs1' });
+    assert.equal(res.existing, false);
+    await rejectsWith(
+      b.join({ queueId: QUEUE, name: 'Bia', phone: '', slotId: 'fs1' }),
+      'resource-exhausted',
+      'slot-full',
+    );
+  });
+
+  it('modo queue ignora slotId', async () => {
+    await adminDb((db) => set(ref(db, `queues/${QUEUE}/meta/mode`), 'queue'));
+    const a = await newClient();
+    const res = await a.join({ queueId: QUEUE, name: 'Ana', phone: '', slotId: 'late' });
+    const entry = await adminDb(async (db) => (await get(ref(db, `queues/${QUEUE}/entries/${res.entryId}`))).val());
+    assert.equal(entry.slotId, undefined);
+    assert.equal(entry.order, undefined);
+  });
+
+  it('fila antiga sem mode funciona como queue', async () => {
+    await adminDb((db) => set(ref(db, `queues/${QUEUE}/meta/mode`), null));
+    const a = await newClient();
+    const res = await a.join({ queueId: QUEUE, name: 'Ana', phone: '' });
+    assert.equal(res.existing, false);
+  });
+});
+
+
 describe('callable submitFeedback (emulador)', () => {
   let env;
   let apps = [];

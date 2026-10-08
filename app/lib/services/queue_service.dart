@@ -11,6 +11,7 @@ import '../models/queue.dart';
 import '../models/queue_entry.dart';
 import '../models/queue_feedback.dart';
 import '../models/queue_schedule.dart';
+import '../models/queue_slot.dart';
 import 'analytics_service.dart';
 import 'mirror.dart';
 import 'operator_service.dart';
@@ -44,6 +45,8 @@ class QueueService {
     int avgServiceMin = 10,
     int maxWaiting = 0,
     String? groupId,
+    QueueMode mode = QueueMode.queue,
+    List<QueueSlot> slots = const [],
   }) async {
     final now = DateTime.now();
     final docRef = await _firestore.collection('queues').add({
@@ -54,6 +57,10 @@ class QueueService {
       'avgServiceMin': avgServiceMin,
       'maxWaiting': maxWaiting,
       'groupId': ?groupId,
+      if (mode == QueueMode.schedule) ...{
+        'mode': mode.value,
+        'slots': [for (final s in slots) s.toMap()],
+      },
       'createdAt': Timestamp.fromDate(now),
     });
 
@@ -68,6 +75,10 @@ class QueueService {
         'description': description,
         'avgServiceMin': avgServiceMin,
         'maxWaiting': maxWaiting,
+        if (mode == QueueMode.schedule) ...{
+          'mode': mode.value,
+          'slots': slotsMirror(slots),
+        },
         'updatedAt': ServerValue.timestamp,
       });
     } catch (_) {
@@ -87,6 +98,8 @@ class QueueService {
       avgServiceMin: avgServiceMin,
       createdAt: now,
       groupId: groupId,
+      mode: mode,
+      slots: slots,
     );
   }
 
@@ -112,27 +125,38 @@ class QueueService {
 
   Future<void> ensureMirror(String queueId) async {
     final ownerSnap = await _rtdb.ref('owners/$queueId').get();
-    final metaSnap = await _rtdb.ref('queues/$queueId/meta').get();
+    final metaRef = _rtdb.ref('queues/$queueId/meta');
+    final metaSnap = await metaRef.get();
     final owner = ownerSnap.value as Map<dynamic, dynamic>?;
     final meta = metaSnap.value as Map<dynamic, dynamic>?;
-    if (!mirrorNeedsRepair(owner, meta, _uid)) return;
 
     final doc = await _firestore.collection('queues').doc(queueId).get();
     final data = doc.data();
     if (data == null || data['ownerId'] != _uid) return;
+    final queue = Queue.fromDoc(queueId, data);
 
-    await _rtdb.ref('owners/$queueId').set({'ownerUid': _uid});
+    if (mirrorNeedsRepair(owner, meta, _uid)) {
+      await _rtdb.ref('owners/$queueId').set({'ownerUid': _uid});
+    }
     if (meta == null) {
-      final queue = Queue.fromDoc(queueId, data);
-      await _rtdb.ref('queues/$queueId/meta').set({
+      await metaRef.set({
         'nextTicket': 0,
         'serving': 0,
         'status': queue.status.value,
         'name': queue.name,
         'description': queue.description,
         'avgServiceMin': queue.avgServiceMin,
+        if (queue.isScheduled) ...{
+          'mode': queue.mode.value,
+          'slots': slotsMirror(queue.slots),
+        },
         'updatedAt': ServerValue.timestamp,
       });
+    } else {
+      final patch = mirrorModeSlotsPatch(meta, queue.mode, queue.slots);
+      if (patch != null) {
+        await metaRef.update({...patch, 'updatedAt': ServerValue.timestamp});
+      }
     }
     _mirrorChecked.add('$_uid/$queueId');
   }
@@ -231,6 +255,24 @@ class QueueService {
     await _ensureOwnerMirror(queueId);
     await _rtdb.ref('queues/$queueId/meta').update({
       'maxWaiting': maxWaiting,
+      'updatedAt': ServerValue.timestamp,
+    });
+  }
+
+  Future<void> updateModeAndSlots(
+    String queueId,
+    QueueMode mode,
+    List<QueueSlot> slots,
+  ) async {
+    final sorted = sortedSlots(slots);
+    await _firestore.collection('queues').doc(queueId).update({
+      'mode': mode.value,
+      'slots': [for (final s in sorted) s.toMap()],
+    });
+    await _ensureOwnerMirror(queueId);
+    await _rtdb.ref('queues/$queueId/meta').update({
+      'mode': mode.value,
+      'slots': slotsMirror(sorted),
       'updatedAt': ServerValue.timestamp,
     });
   }

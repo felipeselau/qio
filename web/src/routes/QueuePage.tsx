@@ -21,6 +21,7 @@ import {
 import { useQueue, type QueueMeta } from '../lib/useQueue';
 import { formatPhone, isValidPhone } from '../lib/format';
 import { useInstallPrompt } from '../lib/useInstallPrompt';
+import { formatSlotTime, isSlotFull, isSlotPast, slotTaken } from '../lib/slots';
 
 function formatOpening(ms: number, language: string): string {
   const date = new Date(ms);
@@ -99,8 +100,14 @@ type Phase =
 const MAX_COMMENT = 300;
 
 export default function QueuePage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { queueId = '' } = useParams();
+  const [slotId, setSlotId] = useState<string | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 30000);
+    return () => window.clearInterval(timer);
+  }, []);
   const [authed, setAuthed] = useState(false);
   const [entryId, setEntryId] = useState<string | null>(null);
   const [name, setName] = useState('');
@@ -124,11 +131,22 @@ export default function QueuePage() {
     myEntryResolved,
     position,
     estimatedWaitMin,
+    publicTickets,
     full,
     loading,
     exists,
     failed,
   } = useQueue(queueId, entryId, authed);
+
+  const scheduled = meta?.mode === 'schedule';
+  const slotOptions = (meta?.slots ?? []).map((slot) => {
+    const taken = slotTaken(publicTickets, slot);
+    const past = isSlotPast(slot.start, now);
+    const slotFull = isSlotFull(taken, slot);
+    return { slot, free: Math.max(slot.capacity - taken, 0), past, slotFull };
+  });
+  const selectedOption = slotOptions.find((o) => o.slot.id === slotId);
+  const selectedUnavailable = !!selectedOption && (selectedOption.past || selectedOption.slotFull);
 
   const brandColor = meta?.brandColor ?? null;
   useEffect(() => {
@@ -178,10 +196,19 @@ export default function QueuePage() {
       setError(t('errors.phoneInvalid'));
       return;
     }
+    if (scheduled && (!slotId || selectedUnavailable)) {
+      setError(t('queue.slotRequired'));
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
-      const result = await joinQueue(queueId, name.trim(), phone.trim());
+      const result = await joinQueue(
+        queueId,
+        name.trim(),
+        phone.trim(),
+        scheduled ? slotId : null,
+      );
       setEntryId(result.entryId);
     } catch (err: any) {
       setError(err?.message ?? t('errors.joinFailed'));
@@ -502,12 +529,18 @@ export default function QueuePage() {
             </p>
           </div>
 
+          {scheduled && myEntry.slotStart != null && (
+            <div className="card slot-time" role="status">
+              {t('queue.yourSlot', { time: formatSlotTime(myEntry.slotStart, i18n.language) })}
+            </div>
+          )}
+
           <div className="card" role="status" aria-live="polite">
             <div
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                marginBottom: 8,
+                marginBottom: scheduled ? 0 : 8,
               }}
             >
               <span style={{ fontSize: 14, color: 'var(--gray-dark)' }}>
@@ -523,21 +556,23 @@ export default function QueuePage() {
                 )}
               </span>
             </div>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-              }}
-            >
-              <span style={{ fontSize: 14, color: 'var(--gray-dark)' }}>
-                {t('queue.estimatedWait')}
-              </span>
-              <span style={{ fontSize: 14, fontWeight: 600 }}>
-                {estimatedWaitMin != null
-                  ? t('queue.estimatedWaitValue', { minutes: estimatedWaitMin })
-                  : '—'}
-              </span>
-            </div>
+            {!scheduled && (
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <span style={{ fontSize: 14, color: 'var(--gray-dark)' }}>
+                  {t('queue.estimatedWait')}
+                </span>
+                <span style={{ fontSize: 14, fontWeight: 600 }}>
+                  {estimatedWaitMin != null
+                    ? t('queue.estimatedWaitValue', { minutes: estimatedWaitMin })
+                    : '—'}
+                </span>
+              </div>
+            )}
           </div>
 
           <div
@@ -723,11 +758,51 @@ export default function QueuePage() {
               autoComplete="tel"
             />
           </div>
+          {scheduled && (
+            <fieldset className="slot-picker">
+              <legend>{t('queue.slotTitle')}</legend>
+              <div className="slot-list" role="radiogroup" aria-label={t('queue.slotTitle')}>
+                {slotOptions.map(({ slot, free, past, slotFull }) => {
+                  const unavailable = past || slotFull;
+                  return (
+                    <label
+                      key={slot.id}
+                      className={`slot-option${slotId === slot.id ? ' slot-option-on' : ''}${
+                        unavailable ? ' slot-option-off' : ''
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="slot"
+                        value={slot.id}
+                        checked={slotId === slot.id}
+                        disabled={unavailable}
+                        onChange={() => setSlotId(slot.id)}
+                      />
+                      <span className="slot-option-time">{slot.start}</span>
+                      <span className="slot-option-info">
+                        {past
+                          ? t('queue.slotPast')
+                          : slotFull
+                            ? t('queue.slotFull')
+                            : t('queue.slotSpots', { count: free })}
+                      </span>
+                    </label>
+                  );
+                })}
+              </div>
+            </fieldset>
+          )}
           {error && <p className="error-text" role="alert">{error}</p>}
           <button
             type="submit"
             className="btn btn-primary"
-            disabled={submitting || meta?.status !== 'open' || full}
+            disabled={
+              submitting ||
+              meta?.status !== 'open' ||
+              full ||
+              (scheduled && (!slotId || selectedUnavailable))
+            }
           >
             {submitting ? t('queue.joining') : t('queue.join')}
           </button>

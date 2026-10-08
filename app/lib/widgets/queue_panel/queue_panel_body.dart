@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/queue.dart';
+import '../../models/queue_slot.dart';
 import '../../models/queue_entry.dart';
 import '../../services/group_service.dart';
 import '../../services/queue_service.dart';
@@ -15,6 +16,7 @@ import '../../widgets/queue_panel/queue_limit_tile.dart';
 import '../../widgets/queue_panel/queue_brand_tile.dart';
 import '../../widgets/queue_panel/queue_schedule_tile.dart';
 import '../../widgets/queue_panel/alerts_tile.dart';
+import '../../widgets/queue_panel/slots_editor.dart';
 import '../../widgets/queue_panel/queue_qr_card.dart';
 import '../../widgets/queue_panel/operators_tile.dart';
 import 'animated_entry_list.dart';
@@ -74,6 +76,13 @@ class QueuePanelBody extends StatelessWidget {
                   OperatorsTile(queueId: queueId),
                   const SizedBox(height: 16),
                   QueueLimitTile(queueId: queueId, maxWaiting: maxWaiting),
+                  const SizedBox(height: 16),
+                  QueueSlotsTile(
+                    queueId: queueId,
+                    mode: queueSnap.data?.mode ?? QueueMode.queue,
+                    slots: queueSnap.data?.slots ?? const [],
+                    schedule: schedule,
+                  ),
                   const SizedBox(height: 16),
                   QueueGroupTile(
                     queueId: queueId,
@@ -150,6 +159,13 @@ class QueuePanelBody extends StatelessWidget {
                   OperatorsTile(queueId: queueId),
                   const SizedBox(height: 16),
                   QueueLimitTile(queueId: queueId, maxWaiting: maxWaiting),
+                  const SizedBox(height: 16),
+                  QueueSlotsTile(
+                    queueId: queueId,
+                    mode: queueSnap.data?.mode ?? QueueMode.queue,
+                    slots: queueSnap.data?.slots ?? const [],
+                    schedule: schedule,
+                  ),
                   const SizedBox(height: 16),
                   QueueGroupTile(
                     queueId: queueId,
