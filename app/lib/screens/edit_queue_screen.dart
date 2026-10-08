@@ -33,12 +33,58 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
   );
   bool _saving = false;
 
+  QueueInfo get _initial => QueueInfo(
+    name: widget.queue.name,
+    description: widget.queue.description,
+    avgServiceMin: widget.queue.avgServiceMin,
+  );
+
+  QueueInfo get _draft => QueueInfo(
+    name: _nameCtrl.text,
+    description: _descCtrl.text,
+    avgServiceMin: QueueInfo.parseAvgServiceMin(_timeCtrl.text) ?? 0,
+  );
+
+  bool get _dirty => _draft.changesFrom(_initial).isNotEmpty;
+
+  @override
+  void initState() {
+    super.initState();
+    for (final c in [_nameCtrl, _descCtrl, _timeCtrl]) {
+      c.addListener(() {
+        if (mounted) setState(() {});
+      });
+    }
+  }
+
   @override
   void dispose() {
     _nameCtrl.dispose();
     _descCtrl.dispose();
     _timeCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _confirmDiscard() async {
+    final l10n = AppLocalizations.of(context);
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.discardTitle),
+        content: Text(l10n.discardBody),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.keepEditing),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.discard),
+          ),
+        ],
+      ),
+    );
+    if (discard == true && mounted) Navigator.of(context).pop();
   }
 
   Future<void> _save() async {
@@ -56,10 +102,10 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
       );
       messenger.showSnackBar(SnackBar(content: Text(l10n.queueUpdated)));
       navigator.pop();
-    } on Exception {
+    } on Exception catch (e) {
       messenger.showSnackBar(
         SnackBar(
-          content: Text(l10n.genericActionError),
+          content: Text(queueErrorMessage(e, l10n)),
           backgroundColor: QioColors.error,
         ),
       );
@@ -71,7 +117,17 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return PopScope(
-      canPop: !_saving,
+      canPop: !_dirty && !_saving,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (_saving) {
+          ScaffoldMessenger.of(context)
+            ..hideCurrentSnackBar()
+            ..showSnackBar(SnackBar(content: Text(l10n.savingQueue)));
+          return;
+        }
+        _confirmDiscard();
+      },
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: context.qio.surface,
@@ -84,6 +140,12 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
             ),
           ),
           centerTitle: true,
+          bottom: _saving
+              ? const PreferredSize(
+                  preferredSize: Size.fromHeight(2),
+                  child: LinearProgressIndicator(minHeight: 2),
+                )
+              : null,
         ),
         body: QioResponsiveBody(
           child: SafeArea(
@@ -94,17 +156,28 @@ class _EditQueueScreenState extends State<EditQueueScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    QueueNameField(controller: _nameCtrl, enabled: !_saving),
+                    QueueNameField(
+                      controller: _nameCtrl,
+                      enabled: !_saving,
+                      initial: widget.queue.name,
+                    ),
                     const SizedBox(height: 24),
                     QueueDescriptionField(
                       controller: _descCtrl,
                       enabled: !_saving,
+                      initial: widget.queue.description,
                     ),
                     const SizedBox(height: 24),
                     QueueAvgServiceField(
                       controller: _timeCtrl,
                       required: true,
                       enabled: !_saving,
+                      initial: widget.queue.avgServiceMin,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.avgServiceAutoHint,
+                      style: context.qioText.caption,
                     ),
                     const SizedBox(height: 32),
                     QioButton(

@@ -46,6 +46,8 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
       _descCtrl.text.trim().isNotEmpty ||
       _timeCtrl.text.trim().isNotEmpty ||
       _limitCtrl.text.trim().isNotEmpty ||
+      _groupId != null ||
+      _slots.isNotEmpty ||
       _mode == QueueMode.schedule;
 
   @override
@@ -132,11 +134,11 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
           ),
         );
       }
-    } on Exception {
+    } on Exception catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context).genericActionError),
+            content: Text(queueErrorMessage(e, AppLocalizations.of(context))),
             backgroundColor: QioColors.error,
           ),
         );

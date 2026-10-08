@@ -18,9 +18,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get back => 'Back';
 
   @override
-  String get backWithArrow => '← Back';
-
-  @override
   String get create => 'Create';
 
   @override
@@ -1487,7 +1484,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Copies limit, hours, color, mode, group and alerts';
 
   @override
-  String get duplicateQueueSuffix => ' (copy)';
+  String get duplicateQueueCopyWord => 'copy';
 
   @override
   String get queueDuplicated => 'Queue duplicated';
@@ -1503,4 +1500,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get avgServiceInvalid => 'Enter 1 to 240 minutes';
+
+  @override
+  String get avgServiceAutoHint =>
+      'The manual time only applies until the automatic estimate exists, calculated from served customers.';
+
+  @override
+  String get savingQueue => 'Saving…';
 }

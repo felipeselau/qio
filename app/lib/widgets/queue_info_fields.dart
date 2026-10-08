@@ -13,15 +13,25 @@ String? queueInfoErrorText(QueueInfoError? error, AppLocalizations l10n) =>
       QueueInfoError.avgServiceInvalid => l10n.avgServiceInvalid,
     };
 
+String queueErrorMessage(Object error, AppLocalizations l10n) {
+  if (error is FormatException) {
+    final info = QueueInfoError.values.asNameMap()[error.message];
+    if (info != null) return queueInfoErrorText(info, l10n)!;
+  }
+  return l10n.genericActionError;
+}
+
 class QueueNameField extends StatelessWidget {
   const QueueNameField({
     super.key,
     required this.controller,
     this.enabled = true,
+    this.initial,
   });
 
   final TextEditingController controller;
   final bool enabled;
+  final String? initial;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +41,9 @@ class QueueNameField extends StatelessWidget {
       hint: l10n.queueNameHint,
       controller: controller,
       enabled: enabled,
-      validator: (v) => queueInfoErrorText(QueueInfo.validateName(v), l10n),
+      validator: (v) => initial != null && v?.trim() == initial!.trim()
+          ? null
+          : queueInfoErrorText(QueueInfo.validateName(v), l10n),
     );
   }
 }
@@ -41,10 +53,12 @@ class QueueDescriptionField extends StatelessWidget {
     super.key,
     required this.controller,
     this.enabled = true,
+    this.initial,
   });
 
   final TextEditingController controller;
   final bool enabled;
+  final String? initial;
 
   @override
   Widget build(BuildContext context) {
@@ -55,8 +69,9 @@ class QueueDescriptionField extends StatelessWidget {
       controller: controller,
       enabled: enabled,
       maxLines: 4,
-      validator: (v) =>
-          queueInfoErrorText(QueueInfo.validateDescription(v), l10n),
+      validator: (v) => (v?.trim() ?? '') == (initial?.trim() ?? '')
+          ? null
+          : queueInfoErrorText(QueueInfo.validateDescription(v), l10n),
     );
   }
 }
@@ -67,11 +82,13 @@ class QueueAvgServiceField extends StatelessWidget {
     required this.controller,
     this.required = false,
     this.enabled = true,
+    this.initial,
   });
 
   final TextEditingController controller;
   final bool required;
   final bool enabled;
+  final int? initial;
 
   @override
   Widget build(BuildContext context) {
@@ -84,6 +101,9 @@ class QueueAvgServiceField extends StatelessWidget {
       keyboardType: TextInputType.number,
       validator: (v) {
         if (!required && (v == null || v.trim().isEmpty)) return null;
+        if (initial != null && QueueInfo.parseAvgServiceMin(v) == initial) {
+          return null;
+        }
         return queueInfoErrorText(
           QueueInfo.validateAvgServiceMin(QueueInfo.parseAvgServiceMin(v)),
           l10n,

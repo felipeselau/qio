@@ -161,14 +161,19 @@ class QueueService {
     if (mirrorNeedsRepair(owner, meta, _uid)) {
       await _rtdb.ref('owners/$queueId').set({'ownerUid': _uid});
     }
+    final info = QueueInfo.forMirror(
+      name: queue.name,
+      description: queue.description,
+      avgServiceMin: queue.avgServiceMin,
+    );
     if (meta == null) {
       await metaRef.set({
         'nextTicket': 0,
         'serving': 0,
         'status': queue.status.value,
-        'name': queue.name,
-        'description': queue.description,
-        'avgServiceMin': queue.avgServiceMin,
+        'name': info.name,
+        'description': info.description,
+        'avgServiceMin': info.avgServiceMin,
         if (queue.isScheduled) ...{
           'mode': queue.mode.value,
           'slots': slotsMirror(queue.slots),
@@ -176,8 +181,11 @@ class QueueService {
         'updatedAt': ServerValue.timestamp,
       });
     } else {
-      final patch = mirrorModeSlotsPatch(meta, queue.mode, queue.slots);
-      if (patch != null) {
+      final patch = {
+        ...?mirrorModeSlotsPatch(meta, queue.mode, queue.slots),
+        ...?mirrorInfoPatch(meta, info),
+      };
+      if (patch.isNotEmpty) {
         await metaRef.update({...patch, 'updatedAt': ServerValue.timestamp});
       }
     }
@@ -306,20 +314,33 @@ class QueueService {
     String? description,
     required int avgServiceMin,
   }) async {
-    final info = QueueInfo(
+    final next = QueueInfo(
       name: name,
       description: description,
       avgServiceMin: avgServiceMin,
     );
-    final infoError = info.error;
+    final docRef = _firestore.collection('queues').doc(queueId);
+    final data = (await docRef.get()).data();
+    if (data == null || data['ownerId'] != _uid) {
+      throw StateError('not the owner of $queueId');
+    }
+    final current = Queue.fromDoc(queueId, data);
+    final changes = next.changesFrom(
+      QueueInfo(
+        name: current.name,
+        description: current.description,
+        avgServiceMin: current.avgServiceMin,
+      ),
+    );
+    if (changes.isEmpty) return;
+    final infoError = next.errorForChanges(changes);
     if (infoError != null) throw FormatException(infoError.name);
-    final fields = info.normalized().toFields();
-    await _firestore.collection('queues').doc(queueId).update(fields);
     await _ensureOwnerMirror(queueId);
     await _rtdb.ref('queues/$queueId/meta').update({
-      ...fields,
+      ...changes,
       'updatedAt': ServerValue.timestamp,
     });
+    await docRef.update(changes);
   }
 
   Future<Queue> duplicateQueue(String queueId, {required String name}) async {

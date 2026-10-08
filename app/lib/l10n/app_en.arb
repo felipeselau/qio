@@ -3,7 +3,6 @@
   "cancel": "Cancel",
   "ok": "OK",
   "back": "Back",
-  "backWithArrow": "← Back",
   "create": "Create",
   "remove": "Remove",
   "delete": "Delete",
@@ -472,11 +471,12 @@
   "queueUpdated": "Queue updated",
   "duplicateQueue": "Duplicate queue",
   "duplicateQueueHint": "Copies limit, hours, color, mode, group and alerts",
-  "duplicateQueueSuffix": " (copy)",
+  "duplicateQueueCopyWord": "copy",
   "queueDuplicated": "Queue duplicated",
   "advancedOptions": "Advanced options",
   "queueNameTooLong": "At most 60 characters",
   "descriptionTooLong": "At most 300 characters",
   "avgServiceInvalid": "Enter 1 to 240 minutes",
-  "back": "Back"
+  "avgServiceAutoHint": "The manual time only applies until the automatic estimate exists, calculated from served customers.",
+  "savingQueue": "Saving…"
 }

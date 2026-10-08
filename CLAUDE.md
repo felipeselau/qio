@@ -159,9 +159,13 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
 - `duplicateQueue` cria fila nova `<nome> (cópia)` copiando descrição, tempo médio, limite,
   grupo, modo/slots, horário de funcionamento, cor e alertas. Não copia entries, history,
   operadores, logo, mensagem de status nem `alertState`.
-- Rules validam `name`/`description`/`avgServiceMin` no Firestore (create, e update só quando
-  um dos três muda, para não travar docs legados) e em `meta/{name,description,avgServiceMin}`
-  no RTDB. O Firestore limita a 1000 expressões por avaliação e `validSlots` já consome quase
+- Rules validam `name`/`description`/`avgServiceMin` no Firestore (create, e update só de cada
+  campo que mudou, para não travar docs legados) e em `meta/{name,description,avgServiceMin}`
+  no RTDB (valor legado inalterado passa). `updateQueueInfo` grava só os campos alterados,
+  RTDB primeiro e Firestore por último; `ensureMirror` repara divergência de
+  name/description/avgServiceMin no `meta` (normalizados por `QueueInfo.forMirror`: nome
+  truncado a 60 ou "Fila", descrição a 300, tempo fora de 1–240 vira o default). O tempo
+  manual só vale até existir `avgServiceMinAuto`. O Firestore limita a 1000 expressões por avaliação e `validSlots` já consome quase
   tudo: cuidado ao somar checagens no `update` de `queues/{id}`. Deploy: rules antes do APK.
 
 ## Criação de fila e botão voltar

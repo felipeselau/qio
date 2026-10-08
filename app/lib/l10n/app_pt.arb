@@ -3,7 +3,6 @@
   "cancel": "Cancelar",
   "ok": "OK",
   "back": "Voltar",
-  "backWithArrow": "← Voltar",
   "create": "Criar",
   "remove": "Remover",
   "delete": "Excluir",
@@ -515,11 +514,12 @@
   "queueUpdated": "Fila atualizada",
   "duplicateQueue": "Duplicar fila",
   "duplicateQueueHint": "Copia limite, horário, cor, modo, grupo e alertas",
-  "duplicateQueueSuffix": " (cópia)",
+  "duplicateQueueCopyWord": "cópia",
   "queueDuplicated": "Fila duplicada",
   "advancedOptions": "Opções avançadas",
   "queueNameTooLong": "No máximo 60 caracteres",
   "descriptionTooLong": "No máximo 300 caracteres",
   "avgServiceInvalid": "Informe de 1 a 240 minutos",
-  "back": "Voltar"
+  "avgServiceAutoHint": "O tempo manual só vale até existir a estimativa automática, calculada a partir dos atendimentos.",
+  "savingQueue": "Salvando…"
 }

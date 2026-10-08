@@ -171,4 +171,88 @@ void main() {
     expect(find.byType(QueuePanelScreen), findsOneWidget);
     expect(find.byType(SnackBar), findsOneWidget);
   });
+
+  testWidgets('legacy long name does not block editing the average time', (
+    tester,
+  ) async {
+    final queues = FakeQueueService();
+    final legacy = Queue(
+      id: 'q1',
+      ownerId: 'uid-1',
+      name: 'x' * 80,
+      avgServiceMin: 7,
+      createdAt: DateTime(2025, 5, 20),
+    );
+    await pumpApp(
+      tester,
+      EditQueueScreen(queue: legacy, queues: queues),
+      size: tall,
+    );
+    await tester.enterText(find.byType(TextFormField).at(2), '9');
+    await tester.tap(find.text('Salvar'));
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('No máximo 60 caracteres'), findsNothing);
+    expect(queues.calls.single, endsWith(':9'));
+  });
+
+  testWidgets('shows the automatic estimate hint', (tester) async {
+    await pumpApp(
+      tester,
+      EditQueueScreen(queue: sample(), queues: FakeQueueService()),
+      size: tall,
+    );
+    expect(find.textContaining('estimativa automática'), findsOneWidget);
+  });
+
+  testWidgets('validation failure from the service shows the field message', (
+    tester,
+  ) async {
+    final queues = FakeQueueService()
+      ..updateInfoError = const FormatException('nameTooLong');
+    await pumpApp(
+      tester,
+      EditQueueScreen(queue: sample(), queues: queues),
+      size: tall,
+    );
+    await tester.tap(find.text('Salvar'));
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('No máximo 60 caracteres'), findsOneWidget);
+  });
+
+  testWidgets('unsaved changes ask before leaving', (tester) async {
+    await pumpApp(
+      tester,
+      Builder(
+        builder: (context) => TextButton(
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) =>
+                  EditQueueScreen(queue: sample(), queues: FakeQueueService()),
+            ),
+          ),
+          child: const Text('abrir'),
+        ),
+      ),
+      size: tall,
+    );
+    await tester.tap(find.text('abrir'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byTooltip('Voltar'));
+    await tester.pumpAndSettle();
+    expect(find.byType(EditQueueScreen), findsNothing);
+
+    await tester.tap(find.text('abrir'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextFormField).first, 'Outro');
+    await tester.pump();
+    await tester.tap(find.byTooltip('Voltar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Continuar editando'), findsOneWidget);
+    await tester.tap(find.text('Continuar editando'));
+    await tester.pumpAndSettle();
+    expect(find.byType(EditQueueScreen), findsOneWidget);
+  });
 }

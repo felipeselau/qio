@@ -18,9 +18,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get back => 'Voltar';
 
   @override
-  String get backWithArrow => '← Voltar';
-
-  @override
   String get create => 'Criar';
 
   @override
@@ -1488,7 +1485,7 @@ class AppLocalizationsPt extends AppLocalizations {
       'Copia limite, horário, cor, modo, grupo e alertas';
 
   @override
-  String get duplicateQueueSuffix => ' (cópia)';
+  String get duplicateQueueCopyWord => 'cópia';
 
   @override
   String get queueDuplicated => 'Fila duplicada';
@@ -1504,4 +1501,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get avgServiceInvalid => 'Informe de 1 a 240 minutos';
+
+  @override
+  String get avgServiceAutoHint =>
+      'O tempo manual só vale até existir a estimativa automática, calculada a partir dos atendimentos.';
+
+  @override
+  String get savingQueue => 'Salvando…';
 }

@@ -10,6 +10,7 @@ import '../../theme/qio_colors.dart';
 import '../../theme/qio_palette.dart';
 import '../../theme/qio_text_styles.dart';
 import '../qio_card.dart';
+import '../queue_info_fields.dart';
 
 class DuplicateQueueTile extends StatefulWidget {
   const DuplicateQueueTile({
@@ -43,7 +44,10 @@ class _DuplicateQueueTileState extends State<DuplicateQueueTile> {
     try {
       final copy = await service.duplicateQueue(
         widget.queue.id,
-        name: duplicateQueueName(widget.queue.name, l10n.duplicateQueueSuffix),
+        name: duplicateQueueName(
+          widget.queue.name,
+          l10n.duplicateQueueCopyWord,
+        ),
       );
       messenger.showSnackBar(SnackBar(content: Text(l10n.queueDuplicated)));
       await navigator.push(
@@ -58,10 +62,10 @@ class _DuplicateQueueTileState extends State<DuplicateQueueTile> {
               ),
         ),
       );
-    } on Exception {
+    } on Exception catch (e) {
       messenger.showSnackBar(
         SnackBar(
-          content: Text(l10n.genericActionError),
+          content: Text(queueErrorMessage(e, l10n)),
           backgroundColor: QioColors.error,
         ),
       );
