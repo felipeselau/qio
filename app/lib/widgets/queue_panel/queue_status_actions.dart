@@ -3,9 +3,9 @@ import 'status_message_dialog.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/queue.dart';
 import '../../services/queue_service.dart';
-import '../../theme/qio_colors.dart';
 import '../../widgets/queue_panel/status_button.dart';
 import '../../screens/history_screen.dart';
+import '../../theme/qio_palette.dart';
 
 class QueueStatusActions extends StatelessWidget {
   const QueueStatusActions({
@@ -37,7 +37,7 @@ class QueueStatusActions extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         IconButton(
-          icon: Icon(Icons.history, color: QioColors.gray700),
+          icon: Icon(Icons.history, color: context.qio.gray700),
           tooltip: l10n.historyTitle,
           onPressed: () => Navigator.of(context).push(
             MaterialPageRoute(
@@ -59,7 +59,7 @@ class QueueStatusActions extends StatelessWidget {
                 padding: const EdgeInsets.only(right: 12),
                 child: StatusButton(
                   label: l10n.reopen,
-                  color: QioColors.primaryText,
+                  color: context.qio.primaryText,
                   onPressed: () => onStatus(QueueStatus.open, null),
                 ),
               );
@@ -71,7 +71,7 @@ class QueueStatusActions extends StatelessWidget {
                   label: status == QueueStatus.paused
                       ? l10n.reopen
                       : l10n.pause,
-                  color: QioColors.statusPausedText,
+                  color: context.qio.statusPausedText,
                   onPressed: () => _change(
                     context,
                     status == QueueStatus.paused
@@ -82,7 +82,7 @@ class QueueStatusActions extends StatelessWidget {
                 const SizedBox(width: 8),
                 StatusButton(
                   label: l10n.close,
-                  color: QioColors.statusClosedText,
+                  color: context.qio.statusClosedText,
                   onPressed: () => _change(context, QueueStatus.closed),
                 ),
                 const SizedBox(width: 12),
