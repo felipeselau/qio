@@ -80,7 +80,8 @@
     "invalidArgument": "Datos inválidos. Revisa nombre y teléfono.",
     "notFound": "Fila no encontrada.",
     "feedbackFailed": "No se pudo enviar tu calificación. Inténtalo de nuevo.",
-    "queueFull": "La fila está llena por ahora. Inténtalo de nuevo en unos minutos."
+    "queueFull": "La fila está llena por ahora. Inténtalo de nuevo en unos minutos.",
+    "securityCheckFailed": "Falló la verificación de seguridad. Recarga la página e inténtalo de nuevo."
   },
   "push": {
     "called": "Tu turno fue llamado — dirígete a la atención."

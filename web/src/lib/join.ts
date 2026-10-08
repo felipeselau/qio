@@ -13,6 +13,7 @@ const JOIN_ERROR_KEYS: Record<string, string> = {
   'functions/failed-precondition': 'errors.failedPrecondition',
   'functions/invalid-argument': 'errors.invalidArgument',
   'functions/not-found': 'errors.notFound',
+  'functions/unauthenticated': 'errors.securityCheckFailed',
 };
 
 export async function joinQueue(
@@ -75,6 +76,7 @@ export async function submitFeedback(
   } catch (err) {
     const code = (err as { code?: string } | null)?.code ?? '';
     if (code === 'functions/failed-precondition') return;
+    if (code === 'functions/unauthenticated') throw new Error(i18n.t('errors.securityCheckFailed'));
     throw new Error(i18n.t('errors.feedbackFailed'));
   }
 }
