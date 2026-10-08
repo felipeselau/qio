@@ -4,4 +4,5 @@ const clientPathPrefix = '/c/';
 
 String joinUrl(String queueId) => 'https://$joinHost$joinPathPrefix$queueId';
 
-Uri clientUrl(String queueId) => Uri.https(joinHost, '$clientPathPrefix$queueId');
+Uri clientUrl(String queueId) =>
+    Uri.https(joinHost, '$clientPathPrefix$queueId');
