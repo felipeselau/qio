@@ -167,7 +167,14 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
 - "Atendido"/"Não compareceu" no app são adiados 5 s (SnackBar "Desfazer"); o
   flush ocorre ao agendar outra ação, chamar alguém, sair da tela ou pausar o
   app. Kill forçado dentro dos 5 s perde a ação pendente e a entry segue na fila
-  (seguro). `finishedAt` do history é o instante do toque (Timestamp do cliente).
+  (seguro). `finishedAt` segue `serverTimestamp`: o tempo de atendimento inclui até
+  ~5 s da janela de desfazer (viés pequeno e conhecido; as rules do history não
+  validam `finishedAt` e relógio de cliente distorceria ordenação/estimativa).
+- `_finishEntry`: `get` valida `called` → `_archiveEntry` → transação de status
+  (idempotente; `null` devolve `success(null)` p/ forçar round-trip com cache
+  frio) → `remove`. Archive falho deixa a entry `called` (repetível). Corrida
+  residual: outro operador finalizar com resultado diferente entre o `get` e a
+  transação. Timeout de 10 s vira "sem conexão" e a entry volta à lista.
 
 ## Estimativa de espera automática
 

@@ -70,7 +70,7 @@ class FakeQueueService implements QueueService {
   Object? historyError;
   Object? callNextError;
   Object? finishError;
-  final Map<String, DateTime?> finishedAts = {};
+  Future<void>? finishGate;
   final List<String> calls = [];
 
   @override
@@ -131,23 +131,15 @@ class FakeQueueService implements QueueService {
   }
 
   @override
-  Future<void> markServed(
-    String queueId,
-    QueueEntry entry, {
-    DateTime? finishedAt,
-  }) async {
-    finishedAts[entry.id] = finishedAt;
+  Future<void> markServed(String queueId, QueueEntry entry) async {
+    if (finishGate != null) await finishGate;
     if (finishError != null) throw finishError!;
     calls.add('served:${entry.id}');
   }
 
   @override
-  Future<void> markNoShow(
-    String queueId,
-    QueueEntry entry, {
-    DateTime? finishedAt,
-  }) async {
-    finishedAts[entry.id] = finishedAt;
+  Future<void> markNoShow(String queueId, QueueEntry entry) async {
+    if (finishGate != null) await finishGate;
     if (finishError != null) throw finishError!;
     calls.add('noShow:${entry.id}');
   }

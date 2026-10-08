@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qio_app/services/action_errors.dart';
@@ -31,9 +33,17 @@ void main() {
   test('maps concurrency failures to conflict', () {
     expect(describeActionError(fe('aborted')), ActionError.conflict);
     expect(
-      describeActionError(fe('failed-precondition')),
+      describeActionError(const EntryChangedException()),
       ActionError.conflict,
     );
+  });
+
+  test('failed-precondition from other sources stays generic', () {
+    expect(describeActionError(fe('failed-precondition')), ActionError.generic);
+  });
+
+  test('maps timeouts to offline', () {
+    expect(describeActionError(TimeoutException('x')), ActionError.offline);
   });
 
   test('maps everything else to generic', () {

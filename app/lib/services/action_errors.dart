@@ -1,10 +1,18 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 
 import '../l10n/app_localizations.dart';
 
+class EntryChangedException implements Exception {
+  const EntryChangedException();
+}
+
 enum ActionError { offline, accessEnded, conflict, generic }
 
 ActionError describeActionError(Object e) {
+  if (e is EntryChangedException) return ActionError.conflict;
+  if (e is TimeoutException) return ActionError.offline;
   if (e is FirebaseException) {
     switch (e.code) {
       case 'unavailable':
@@ -17,7 +25,6 @@ ActionError describeActionError(Object e) {
       case 'unauthenticated':
         return ActionError.accessEnded;
       case 'aborted':
-      case 'failed-precondition':
         return ActionError.conflict;
     }
   }

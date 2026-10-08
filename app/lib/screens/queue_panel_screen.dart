@@ -48,6 +48,8 @@ class QueuePanelScreen extends StatefulWidget {
   State<QueuePanelScreen> createState() => _QueuePanelScreenState();
 }
 
+const _finishTimeout = Duration(seconds: 10);
+
 class _QueuePanelScreenState extends State<QueuePanelScreen>
     with WidgetsBindingObserver {
   QueueService get _queues => widget.queues ?? QueueService.instance;
@@ -80,7 +82,12 @@ class _QueuePanelScreenState extends State<QueuePanelScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) return;
+    const flushing = {
+      AppLifecycleState.paused,
+      AppLifecycleState.hidden,
+      AppLifecycleState.detached,
+    };
+    if (!flushing.contains(state)) return;
     unawaited(_deferred.flushAll());
   }
 
@@ -310,13 +317,12 @@ class _QueuePanelScreenState extends State<QueuePanelScreen>
   void _deferFinish(QueueEntry entry, {required bool served}) {
     if (_deferred.isPending(entry.id) || _finishing.contains(entry.id)) return;
     if (_deferred.hasPending) unawaited(_deferred.flushAll());
-    final tappedAt = DateTime.now();
     final delay = MediaQuery.accessibleNavigationOf(context)
         ? _deferred.delay * 2
         : _deferred.delay;
     final scheduled = _deferred.schedule(entry.id, () {
       _hideSnackBar();
-      return _finish(entry, served: served, finishedAt: tappedAt);
+      return _finish(entry, served: served);
     }, delay: delay);
     if (!scheduled) return;
     _syncHidden();
@@ -345,20 +351,16 @@ class _QueuePanelScreenState extends State<QueuePanelScreen>
     if (mounted && !_disposing) _syncHidden();
   }
 
-  Future<void> _finish(
-    QueueEntry entry, {
-    required bool served,
-    required DateTime finishedAt,
-  }) async {
+  Future<void> _finish(QueueEntry entry, {required bool served}) async {
     _finishing.add(entry.id);
     _finishCount++;
     if (mounted && !_disposing) _syncHidden();
     try {
       if (served) {
-        await _queues.markServed(widget.queueId, entry, finishedAt: finishedAt);
+        await _queues.markServed(widget.queueId, entry).timeout(_finishTimeout);
         Haptics.instance.light();
       } else {
-        await _queues.markNoShow(widget.queueId, entry, finishedAt: finishedAt);
+        await _queues.markNoShow(widget.queueId, entry).timeout(_finishTimeout);
         Haptics.instance.heavy();
       }
     } catch (e, st) {

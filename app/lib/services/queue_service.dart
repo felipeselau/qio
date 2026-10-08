@@ -12,7 +12,9 @@ import '../models/queue_entry.dart';
 import '../models/queue_feedback.dart';
 import '../models/queue_schedule.dart';
 import '../models/queue_slot.dart';
+import 'action_errors.dart';
 import 'analytics_service.dart';
+import 'finish_entry.dart';
 import 'mirror.dart';
 import 'operator_service.dart';
 
@@ -512,68 +514,42 @@ class QueueService {
   Future<void> _finishEntry(
     String queueId,
     QueueEntry entry,
-    EntryStatus result, {
-    DateTime? finishedAt,
-  }) async {
-    final entriesRef = _rtdb.ref('queues/$queueId/entries');
-    final entryRef = entriesRef.child(entry.id);
+    EntryStatus result,
+  ) async {
+    final entryRef = _rtdb.ref('queues/$queueId/entries/${entry.id}');
     await _ensureOwnerMirrorIfOwner(queueId);
+    final check = checkFinishable((await entryRef.get()).value, result);
+    if (check == FinishCheck.gone) return;
+    if (check == FinishCheck.changed) throw const EntryChangedException();
+    await _archiveEntry(queueId, entry, result);
     final uid = _uid;
     final claim = await entryRef.runTransaction((current) {
-      if (current == null) return Transaction.abort();
-      final data = Map<Object?, Object?>.from(current as Map);
-      final status = data['status'];
-      if (status != EntryStatus.called.value && status != result.value) {
-        return Transaction.abort();
-      }
-      data['status'] = result.value;
-      data['operatorId'] = uid;
-      return Transaction.success(data);
+      if (current == null) return Transaction.success(null);
+      final next = finishedEntryData(current, result, uid);
+      return next == null ? Transaction.abort() : Transaction.success(next);
     }, applyLocally: false);
     if (!claim.committed) {
-      throw FirebaseException(
-        plugin: 'firebase_database',
-        code: 'failed-precondition',
-        message: 'entry is no longer called',
-      );
+      final after = checkFinishable(claim.snapshot.value, result);
+      if (after == FinishCheck.changed) throw const EntryChangedException();
+      if (after == FinishCheck.gone) return;
     }
-    await _archiveEntry(queueId, entry, result, finishedAt: finishedAt);
     await entryRef.remove();
   }
 
-  Future<void> markServed(
-    String queueId,
-    QueueEntry entry, {
-    DateTime? finishedAt,
-  }) async {
-    await _finishEntry(
-      queueId,
-      entry,
-      EntryStatus.served,
-      finishedAt: finishedAt,
-    );
+  Future<void> markServed(String queueId, QueueEntry entry) async {
+    await _finishEntry(queueId, entry, EntryStatus.served);
     unawaited(AnalyticsController.instance.service.entryServed(queueId));
   }
 
-  Future<void> markNoShow(
-    String queueId,
-    QueueEntry entry, {
-    DateTime? finishedAt,
-  }) async {
-    await _finishEntry(
-      queueId,
-      entry,
-      EntryStatus.noShow,
-      finishedAt: finishedAt,
-    );
+  Future<void> markNoShow(String queueId, QueueEntry entry) async {
+    await _finishEntry(queueId, entry, EntryStatus.noShow);
   }
 
   Future<void> _archiveEntry(
     String queueId,
     QueueEntry entry,
-    EntryStatus result, {
-    DateTime? finishedAt,
-  }) async {
+    EntryStatus result,
+  ) async {
     try {
       await _firestore
           .collection('queues')
@@ -591,9 +567,7 @@ class QueueService {
                 : null,
             'calledBy': entry.operatorId,
             'operatorId': _uid,
-            'finishedAt': finishedAt != null
-                ? Timestamp.fromDate(finishedAt)
-                : FieldValue.serverTimestamp(),
+            'finishedAt': FieldValue.serverTimestamp(),
             if (entry.recalls > 0) 'recalls': entry.recalls,
             if (entry.skips > 0) 'skips': entry.skips,
           });
