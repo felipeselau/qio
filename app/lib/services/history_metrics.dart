@@ -1,7 +1,8 @@
 import '../l10n/app_localizations.dart';
 import '../models/history_entry.dart';
+import 'metrics_trend.dart';
 
-enum HistoryPeriod { today, last7Days, all }
+enum HistoryPeriod { today, last7Days, last30Days, custom, all }
 
 extension HistoryPeriodX on HistoryPeriod {
   String label(AppLocalizations l10n) {
@@ -10,8 +11,27 @@ extension HistoryPeriodX on HistoryPeriod {
         return l10n.periodToday;
       case HistoryPeriod.last7Days:
         return l10n.period7Days;
+      case HistoryPeriod.last30Days:
+        return l10n.period30Days;
+      case HistoryPeriod.custom:
+        return l10n.periodCustom;
       case HistoryPeriod.all:
         return l10n.periodAll;
+    }
+  }
+
+  String get fileSlug {
+    switch (this) {
+      case HistoryPeriod.today:
+        return 'hoje';
+      case HistoryPeriod.last7Days:
+        return '7dias';
+      case HistoryPeriod.last30Days:
+        return '30dias';
+      case HistoryPeriod.custom:
+        return 'personalizado';
+      case HistoryPeriod.all:
+        return 'tudo';
     }
   }
 }
@@ -41,16 +61,13 @@ List<HistoryEntry> filterHistory(
   String? result,
   HistoryPeriod period = HistoryPeriod.all,
   required DateTime now,
+  DateRange? custom,
 }) {
-  final startOfToday = DateTime(now.year, now.month, now.day);
-  final cutoff = switch (period) {
-    HistoryPeriod.today => startOfToday,
-    HistoryPeriod.last7Days => now.subtract(const Duration(days: 7)),
-    HistoryPeriod.all => null,
-  };
+  if (period == HistoryPeriod.custom && custom == null) return [];
+  final range = rangeFor(period, now, custom: custom);
   return entries.where((e) {
     if (result != null && e.result != result) return false;
-    if (cutoff != null && e.referenceTime.isBefore(cutoff)) return false;
+    if (range != null && !range.contains(e.referenceTime)) return false;
     return true;
   }).toList();
 }

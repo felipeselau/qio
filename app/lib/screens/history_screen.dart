@@ -221,7 +221,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
         Wrap(
           spacing: 8,
           children: [
-            for (final p in HistoryPeriod.values)
+            for (final p in HistoryPeriod.values.where(
+              (p) => p != HistoryPeriod.custom,
+            ))
               ChoiceChip(
                 label: Text(p.label(l10n)),
                 selected: _period == p,

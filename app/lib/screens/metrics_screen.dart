@@ -14,6 +14,7 @@ import '../services/history_export.dart';
 import '../services/group_service.dart';
 import '../services/history_metrics.dart';
 import '../services/metrics_export.dart';
+import '../services/metrics_trend.dart';
 import '../services/operator_metrics.dart';
 import '../services/operator_service.dart';
 import '../services/queue_analytics.dart';
@@ -21,15 +22,23 @@ import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
 import '../widgets/demand_charts.dart';
+import '../widgets/delta_badge.dart';
 import '../widgets/group_compare_card.dart';
 import '../widgets/qio_card.dart';
 import '../widgets/qio_empty_state.dart';
 import '../widgets/qio_skeleton.dart';
+import '../widgets/trend_chart.dart';
 import '../widgets/wait_effort_card.dart';
 import '../widgets/qio_responsive_body.dart';
 
 class MetricsScreen extends StatefulWidget {
-  const MetricsScreen({super.key, this.loader, this.clock, this.groupsLoader});
+  const MetricsScreen({
+    super.key,
+    this.loader,
+    this.clock,
+    this.groupsLoader,
+    this.rangePicker,
+  });
 
   @visibleForTesting
   final Future<List<QueueGroup>> Function()? groupsLoader;
@@ -38,6 +47,14 @@ class MetricsScreen extends StatefulWidget {
   final Future<List<QueueHistoryInput>> Function()? loader;
   @visibleForTesting
   final DateTime Function()? clock;
+  @visibleForTesting
+  final Future<DateTimeRange?> Function(
+    BuildContext context,
+    DateTimeRange? initial,
+    DateTime first,
+    DateTime last,
+  )?
+  rangePicker;
 
   @override
   State<MetricsScreen> createState() => _MetricsScreenState();
@@ -46,6 +63,7 @@ class MetricsScreen extends StatefulWidget {
 class _MetricsScreenState extends State<MetricsScreen> {
   late Future<List<QueueHistoryInput>> _future = _load();
   HistoryPeriod _period = HistoryPeriod.last7Days;
+  DateRange? _custom;
   String? _operatorQueueId;
   List<QueueHistoryInput> _data = const [];
   bool _exporting = false;
@@ -54,11 +72,60 @@ class _MetricsScreenState extends State<MetricsScreen> {
   bool _groupsUnavailable = false;
 
   String _baseName(DateTime now) =>
-      'metricas-${switch (_period) {
-        HistoryPeriod.today => 'hoje',
-        HistoryPeriod.last7Days => '7dias',
-        HistoryPeriod.all => 'tudo',
-      }}${_scopeSlug()}-${formatExportDateTime(now).substring(0, 10)}';
+      'metricas-${_period.fileSlug}${_scopeSlug()}-${formatExportDateTime(now).substring(0, 10)}';
+
+  Future<void> _selectPeriod(HistoryPeriod p) async {
+    if (p != HistoryPeriod.custom) {
+      setState(() => _period = p);
+      return;
+    }
+    final now = (widget.clock ?? DateTime.now)();
+    final today = DateTime(now.year, now.month, now.day);
+    final initial = _custom == null
+        ? null
+        : DateTimeRange(
+            start: _custom!.start,
+            end: DateTime(
+              _custom!.end.year,
+              _custom!.end.month,
+              _custom!.end.day - 1,
+            ),
+          );
+    final picked = await (widget.rangePicker ?? _defaultRangePicker)(
+      context,
+      initial,
+      DateTime(today.year - 5, today.month, today.day),
+      today,
+    );
+    if (picked == null || !mounted) return;
+    final range = customRangeFromPicked(picked.start, picked.end);
+    final clamped = rangeFor(HistoryPeriod.custom, now, custom: range)!;
+    if (clamped != range) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context).customRangeLimited(maxCustomDays),
+          ),
+        ),
+      );
+    }
+    setState(() {
+      _custom = clamped;
+      _period = HistoryPeriod.custom;
+    });
+  }
+
+  Future<DateTimeRange?> _defaultRangePicker(
+    BuildContext context,
+    DateTimeRange? initial,
+    DateTime first,
+    DateTime last,
+  ) => showDateRangePicker(
+    context: context,
+    firstDate: first,
+    lastDate: last,
+    initialDateRange: initial,
+  );
 
   String? _scopeName() {
     switch (_scope.kind) {
@@ -104,6 +171,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
         historyLimit: QueueService.historyFetchLimit,
         unknownOperatorName: l10n.formerOperator,
         operatorQueueId: _operatorQueueId,
+        customRange: _custom,
       );
 
   Future<void> _export(
@@ -278,6 +346,9 @@ class _MetricsScreenState extends State<MetricsScreen> {
     final peaks = report.peaks;
     final ranking = report.ranking;
     final pct = (metrics.noShowRate * 100).round();
+    Widget? badge(MetricKey key) => report.deltas[key] == null
+        ? null
+        : DeltaBadge(metric: key, delta: report.deltas[key]!);
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -288,7 +359,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
               ChoiceChip(
                 label: Text(p.label(l10n)),
                 selected: _period == p,
-                onSelected: (_) => setState(() => _period = p),
+                onSelected: (_) => _selectPeriod(p),
               ),
           ],
         ),
@@ -313,10 +384,15 @@ class _MetricsScreenState extends State<MetricsScreen> {
               children: [
                 Row(
                   children: [
-                    _Stat(label: l10n.metricsTotal, value: '${metrics.total}'),
+                    _Stat(
+                      label: l10n.metricsTotal,
+                      value: '${metrics.total}',
+                      footer: badge(MetricKey.total),
+                    ),
                     _Stat(
                       label: l10n.noShowPlural,
                       value: '${metrics.noShow} ($pct%)',
+                      footer: badge(MetricKey.noShowRate),
                     ),
                   ],
                 ),
@@ -326,16 +402,41 @@ class _MetricsScreenState extends State<MetricsScreen> {
                     _Stat(
                       label: l10n.avgWait,
                       value: _minutes(l10n, metrics.avgWaitMin),
+                      footer: badge(MetricKey.avgWait),
                     ),
                     _Stat(
                       label: l10n.avgService,
                       value: _minutes(l10n, metrics.avgServiceMin),
+                      footer: badge(MetricKey.avgService),
                     ),
                   ],
                 ),
+                if (report.deltas.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      l10n.deltaVsPrevious,
+                      style: QioTextStyles.caption,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
+          if (report.series.isNotEmpty) ...[
+            const SizedBox(height: 16),
+            QioCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.trendTitle, style: QioTextStyles.heading3),
+                  const SizedBox(height: 12),
+                  TrendChart(series: report.series),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           WaitEffortCard(
             waitStats: report.waitStats,
@@ -560,10 +661,11 @@ class _OperatorRow extends StatelessWidget {
 }
 
 class _Stat extends StatelessWidget {
-  const _Stat({required this.label, required this.value});
+  const _Stat({required this.label, required this.value, this.footer});
 
   final String label;
   final String value;
+  final Widget? footer;
 
   @override
   Widget build(BuildContext context) {
@@ -574,6 +676,7 @@ class _Stat extends StatelessWidget {
           Text(label, style: QioTextStyles.label),
           const SizedBox(height: 4),
           Text(value, style: QioTextStyles.heading2),
+          ?footer,
         ],
       ),
     );

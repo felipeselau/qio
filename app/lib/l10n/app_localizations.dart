@@ -2439,6 +2439,174 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Chegadas por dia: {details}'**
   String weekdayChartSemantics(String details);
+
+  /// No description provided for @period30Days.
+  ///
+  /// In pt, this message translates to:
+  /// **'30 dias'**
+  String get period30Days;
+
+  /// No description provided for @periodCustom.
+  ///
+  /// In pt, this message translates to:
+  /// **'Personalizado'**
+  String get periodCustom;
+
+  /// No description provided for @deltaUp.
+  ///
+  /// In pt, this message translates to:
+  /// **'▲ {pct}%'**
+  String deltaUp(String pct);
+
+  /// No description provided for @deltaDown.
+  ///
+  /// In pt, this message translates to:
+  /// **'▼ {pct}%'**
+  String deltaDown(String pct);
+
+  /// No description provided for @deltaSame.
+  ///
+  /// In pt, this message translates to:
+  /// **'= estável'**
+  String get deltaSame;
+
+  /// No description provided for @deltaPoints.
+  ///
+  /// In pt, this message translates to:
+  /// **'{pp} p.p.'**
+  String deltaPoints(String pp);
+
+  /// No description provided for @deltaRose.
+  ///
+  /// In pt, this message translates to:
+  /// **'subiu'**
+  String get deltaRose;
+
+  /// No description provided for @deltaFell.
+  ///
+  /// In pt, this message translates to:
+  /// **'caiu'**
+  String get deltaFell;
+
+  /// No description provided for @deltaVsPrevious.
+  ///
+  /// In pt, this message translates to:
+  /// **'vs. período anterior'**
+  String get deltaVsPrevious;
+
+  /// No description provided for @trendTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tendência diária'**
+  String get trendTitle;
+
+  /// No description provided for @trendSeriesTotal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atendimentos por dia'**
+  String get trendSeriesTotal;
+
+  /// No description provided for @trendSeriesWait.
+  ///
+  /// In pt, this message translates to:
+  /// **'Espera média'**
+  String get trendSeriesWait;
+
+  /// No description provided for @trendSeriesNoShow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não comparecimento'**
+  String get trendSeriesNoShow;
+
+  /// No description provided for @trendSummary.
+  ///
+  /// In pt, this message translates to:
+  /// **'Média de {avg} por dia, pico em {peakDay}'**
+  String trendSummary(String avg, String peakDay);
+
+  /// No description provided for @csvDate.
+  ///
+  /// In pt, this message translates to:
+  /// **'data'**
+  String get csvDate;
+
+  /// No description provided for @csvCompareTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Comparativo com o período anterior'**
+  String get csvCompareTitle;
+
+  /// No description provided for @csvCurrent.
+  ///
+  /// In pt, this message translates to:
+  /// **'atual'**
+  String get csvCurrent;
+
+  /// No description provided for @csvPrevious.
+  ///
+  /// In pt, this message translates to:
+  /// **'anterior'**
+  String get csvPrevious;
+
+  /// No description provided for @csvDeltaPct.
+  ///
+  /// In pt, this message translates to:
+  /// **'variação (%)'**
+  String get csvDeltaPct;
+
+  /// No description provided for @csvDeltaPoints.
+  ///
+  /// In pt, this message translates to:
+  /// **'variação (p.p.)'**
+  String get csvDeltaPoints;
+
+  /// No description provided for @pdfVsPrevious.
+  ///
+  /// In pt, this message translates to:
+  /// **'vs. anterior'**
+  String get pdfVsPrevious;
+
+  /// No description provided for @customRangeLimited.
+  ///
+  /// In pt, this message translates to:
+  /// **'Intervalo limitado a {days} dias'**
+  String customRangeLimited(int days);
+
+  /// No description provided for @deltaPointsUp.
+  ///
+  /// In pt, this message translates to:
+  /// **'▲ {pp} p.p.'**
+  String deltaPointsUp(String pp);
+
+  /// No description provided for @deltaPointsDown.
+  ///
+  /// In pt, this message translates to:
+  /// **'▼ {pp} p.p.'**
+  String deltaPointsDown(String pp);
+
+  /// No description provided for @trendToggleWait.
+  ///
+  /// In pt, this message translates to:
+  /// **'Espera'**
+  String get trendToggleWait;
+
+  /// No description provided for @trendToggleNoShow.
+  ///
+  /// In pt, this message translates to:
+  /// **'No-show'**
+  String get trendToggleNoShow;
+
+  /// No description provided for @trendMax.
+  ///
+  /// In pt, this message translates to:
+  /// **'máx. {value}'**
+  String trendMax(String value);
+
+  /// No description provided for @trendDaySummary.
+  ///
+  /// In pt, this message translates to:
+  /// **'{day}: {count} atendimentos, {series} {value}'**
+  String trendDaySummary(String day, int count, String series, String value);
 }
 
 class _AppLocalizationsDelegate

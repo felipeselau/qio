@@ -8,6 +8,7 @@ import '../l10n/app_localizations.dart';
 import '../models/queue_history_input.dart';
 import 'history_export.dart';
 import 'history_metrics.dart';
+import 'metrics_trend.dart';
 import 'operator_metrics.dart';
 import 'queue_analytics.dart';
 
@@ -39,6 +40,11 @@ class MetricsReport {
     this.weekdays = const [],
     this.heatmap = const [],
     this.demandPeak,
+    this.range,
+    this.series = const [],
+    this.previousMetrics,
+    this.deltas = const {},
+    this.previousWaitStats,
   });
 
   final String? scopeLabel;
@@ -59,6 +65,11 @@ class MetricsReport {
   final List<int> weekdays;
   final List<List<int>> heatmap;
   final DemandPeak? demandPeak;
+  final DateRange? range;
+  final List<DayPoint> series;
+  final HistoryMetrics? previousMetrics;
+  final Map<MetricKey, Delta> deltas;
+  final WaitStats? previousWaitStats;
 
   String operatorLabel(
     OperatorStats stats, {
@@ -76,13 +87,19 @@ MetricsReport buildMetricsReport({
   required int historyLimit,
   required String unknownOperatorName,
   String? operatorQueueId,
+  DateRange? customRange,
   String? scopeLabel,
 }) {
   final perQueue = [
     for (final d in data)
       (
         queue: d.queue,
-        entries: filterHistory(d.entries, period: period, now: now),
+        entries: filterHistory(
+          d.entries,
+          period: period,
+          now: now,
+          custom: customRange,
+        ),
       ),
   ];
   final all = [for (final p in perQueue) ...p.entries];
@@ -96,7 +113,12 @@ MetricsReport buildMetricsReport({
     final oldest = d.entries.reduce(
       (a, b) => a.referenceTime.isBefore(b.referenceTime) ? a : b,
     );
-    return filterHistory([oldest], period: period, now: now).isNotEmpty;
+    return filterHistory(
+      [oldest],
+      period: period,
+      now: now,
+      custom: customRange,
+    ).isNotEmpty;
   });
   final names = <String, String>{
     for (final d in data)
@@ -105,7 +127,12 @@ MetricsReport buildMetricsReport({
   final operators = computeOperatorMetrics(
     [
       for (final d in selected)
-        ...filterHistory(d.entries, period: period, now: now),
+        ...filterHistory(
+          d.entries,
+          period: period,
+          now: now,
+          custom: customRange,
+        ),
     ],
     ownerUids: {for (final d in selected) d.queue.ownerId},
     feedback: [for (final d in selected) ...d.feedback],
@@ -116,12 +143,40 @@ MetricsReport buildMetricsReport({
   for (final d in data) {
     if (d.queue.id == operatorQueueId) queueName = d.queue.name;
   }
+  final range = rangeFor(period, now, custom: customRange);
+  final metrics = computeHistoryMetrics(all);
+  final waitStats = computeWaitStats(all);
+  HistoryMetrics? previousMetrics;
+  WaitStats? previousWaitStats;
+  var deltas = const <MetricKey, Delta>{};
+  if (range != null && !truncated) {
+    final prev = range.previous();
+    final window = range.previousAligned(now);
+    final incomplete = data.any((d) {
+      if (d.entries.length < historyLimit) return false;
+      return d.entries.every((e) => !e.referenceTime.isBefore(prev.start));
+    });
+    if (!incomplete) {
+      final prevEntries = [
+        for (final d in data)
+          ...d.entries.where((e) => window.contains(e.referenceTime)),
+      ];
+      previousMetrics = computeHistoryMetrics(prevEntries);
+      previousWaitStats = computeWaitStats(prevEntries);
+      deltas = compare(
+        metrics,
+        previousMetrics,
+        curWait: waitStats,
+        prevWait: previousWaitStats,
+      );
+    }
+  }
   return MetricsReport(
     period: period,
     operatorQueueId: operatorQueueId,
     operatorQueueName: queueName,
     isEmpty: all.isEmpty,
-    metrics: computeHistoryMetrics(all),
+    metrics: metrics,
     distribution: distribution,
     peaks: peakHours(distribution),
     ranking: rankByActivity([
@@ -137,11 +192,16 @@ MetricsReport buildMetricsReport({
     truncated: truncated,
     historyLimit: historyLimit,
     scopeLabel: scopeLabel,
-    waitStats: computeWaitStats(all),
+    waitStats: waitStats,
     callEffort: computeCallEffort(all),
     weekdays: weekdayDistribution(all),
     heatmap: heatmap,
     demandPeak: peakCell(heatmap),
+    range: range,
+    series: range == null ? const [] : dailySeries(all, range),
+    previousMetrics: previousMetrics,
+    deltas: deltas,
+    previousWaitStats: previousWaitStats,
   );
 }
 
@@ -185,7 +245,7 @@ String buildMetricsCsv(
   required DateTime generatedAt,
 }) {
   final m = report.metrics;
-  final sections = <List<List<String>>>[
+  final sections = <List<List<Object>>>[
     [
       [l10n.metricsPdfTitle],
       [l10n.csvPeriod, report.period.label(l10n)],
@@ -295,15 +355,123 @@ String buildMetricsCsv(
           ],
       ],
     ],
+    if (report.series.isNotEmpty)
+      [
+        [l10n.trendTitle],
+        [
+          l10n.csvDate,
+          l10n.csvServed,
+          l10n.csvNoShow,
+          l10n.csvNoShowRatePct,
+          l10n.csvAvgWaitMin,
+        ],
+        ..._dailyRows(report),
+      ],
+    if (_hasComparison(report))
+      [
+        [l10n.csvCompareTitle],
+        [
+          l10n.csvMetric,
+          l10n.csvCurrent,
+          l10n.csvPrevious,
+          l10n.csvDeltaPct,
+          l10n.csvDeltaPoints,
+        ],
+        for (final (key, label, cur, prev) in _compareRows(l10n, report))
+          [
+            label,
+            cur,
+            prev,
+            key == MetricKey.noShowRate
+                ? ''
+                : report.deltas[key]?.pct == null
+                ? ''
+                : _SignedCell(report.deltas[key]!.pct!),
+            key == MetricKey.noShowRate && report.deltas[key] != null
+                ? _SignedCell(report.deltas[key]!.abs)
+                : '',
+          ],
+      ],
   ];
   final lines = <String>[];
   for (var i = 0; i < sections.length; i++) {
     if (i > 0) lines.add('');
     for (final row in sections[i]) {
-      lines.add(row.map(csvCell).join(','));
+      lines.add(
+        row
+            .map((c) => c is _SignedCell ? c.text : csvCell(c as String))
+            .join(','),
+      );
     }
   }
   return '\u{FEFF}${lines.join('\r\n')}\r\n';
+}
+
+class _SignedCell {
+  const _SignedCell(this.value);
+
+  final double value;
+
+  String get text => _signed(value);
+}
+
+String _dayKey(DateTime d) =>
+    '${d.year.toString().padLeft(4, '0')}-'
+    '${d.month.toString().padLeft(2, '0')}-'
+    '${d.day.toString().padLeft(2, '0')}';
+
+String _signed(double v) => '${v > 0 ? '+' : ''}${v.toStringAsFixed(1)}';
+
+bool _hasComparison(MetricsReport report) =>
+    report.previousMetrics != null && report.previousMetrics!.total > 0;
+
+List<List<String>> _dailyRows(MetricsReport report) => [
+  for (final p in report.series)
+    [
+      _dayKey(p.day),
+      '${p.served}',
+      '${p.noShow}',
+      _num(p.noShowRate * 100),
+      _num(p.avgWaitMin),
+    ],
+];
+
+List<(MetricKey, String, String, String)> _compareRows(
+  AppLocalizations l10n,
+  MetricsReport report,
+) {
+  final m = report.metrics;
+  final p = report.previousMetrics!;
+  final cw = report.waitStats;
+  final pw = report.previousWaitStats;
+  return [
+    (MetricKey.total, l10n.csvTotal, '${m.total}', '${p.total}'),
+    (
+      MetricKey.noShowRate,
+      l10n.csvNoShowRatePct,
+      _num(m.noShowRate * 100),
+      _num(p.noShowRate * 100),
+    ),
+    (
+      MetricKey.avgWait,
+      l10n.csvAvgWaitMin,
+      _num(m.avgWaitMin),
+      _num(p.avgWaitMin),
+    ),
+    (
+      MetricKey.avgService,
+      l10n.csvAvgServiceMin,
+      _num(m.avgServiceMin),
+      _num(p.avgServiceMin),
+    ),
+    (
+      MetricKey.waitMedian,
+      l10n.csvMedianWaitMin,
+      _num(cw.medianMin),
+      _num(pw?.medianMin),
+    ),
+    (MetricKey.waitP90, l10n.csvP90WaitMin, _num(cw.p90Min), _num(pw?.p90Min)),
+  ];
 }
 
 String _minutesLabel(AppLocalizations l10n, double? v) {
@@ -315,6 +483,13 @@ String _minutesLabel(AppLocalizations l10n, double? v) {
 String _ratingLabel(OperatorStats s) => s.feedback.average == null
     ? '-'
     : '${s.feedback.average!.toStringAsFixed(1)} (${s.feedback.count})';
+
+String _pdfDelta(MetricKey key, Delta? d) {
+  if (d == null) return '-';
+  if (key == MetricKey.noShowRate) return '${_signed(d.abs)} p.p.';
+  if (d.pct == null) return '-';
+  return '${_signed(d.pct!)}%';
+}
 
 pw.Widget _section(String title) => pw.Padding(
   padding: const pw.EdgeInsets.only(top: 16, bottom: 6),
@@ -603,6 +778,37 @@ Future<Uint8List> buildMetricsPdf({
           ],
         ],
         if (_hasDemand(report)) ..._demandPdf(l10n, report),
+        if (!report.isEmpty && _hasComparison(report)) ...[
+          _section(l10n.csvCompareTitle),
+          _table(
+            [
+              l10n.csvMetric,
+              l10n.csvCurrent,
+              l10n.csvPrevious,
+              l10n.pdfVsPrevious,
+            ],
+            [
+              for (final (key, label, cur, prev) in _compareRows(l10n, report))
+                [label, cur, prev, _pdfDelta(key, report.deltas[key])],
+            ],
+          ),
+        ],
+        if (!report.isEmpty && report.series.isNotEmpty) ...[
+          _section(l10n.trendTitle),
+          _table(
+            [
+              l10n.csvDate,
+              l10n.csvServed,
+              l10n.csvNoShow,
+              l10n.csvNoShowRatePct,
+              l10n.csvAvgWaitMin,
+            ],
+            [
+              for (final row in _dailyRows(report))
+                [for (final c in row) c.isEmpty ? '-' : c],
+            ],
+          ),
+        ],
       ],
     ),
   );

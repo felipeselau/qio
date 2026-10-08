@@ -1305,4 +1305,106 @@ class AppLocalizationsEn extends AppLocalizations {
   String weekdayChartSemantics(String details) {
     return 'Arrivals per day: $details';
   }
+
+  @override
+  String get period30Days => '30 days';
+
+  @override
+  String get periodCustom => 'Custom';
+
+  @override
+  String deltaUp(String pct) {
+    return '▲ $pct%';
+  }
+
+  @override
+  String deltaDown(String pct) {
+    return '▼ $pct%';
+  }
+
+  @override
+  String get deltaSame => '= stable';
+
+  @override
+  String deltaPoints(String pp) {
+    return '$pp pp';
+  }
+
+  @override
+  String get deltaRose => 'rose';
+
+  @override
+  String get deltaFell => 'fell';
+
+  @override
+  String get deltaVsPrevious => 'vs. previous period';
+
+  @override
+  String get trendTitle => 'Daily trend';
+
+  @override
+  String get trendSeriesTotal => 'Entries per day';
+
+  @override
+  String get trendSeriesWait => 'Average wait';
+
+  @override
+  String get trendSeriesNoShow => 'No-show';
+
+  @override
+  String trendSummary(String avg, String peakDay) {
+    return 'Average of $avg per day, peak on $peakDay';
+  }
+
+  @override
+  String get csvDate => 'date';
+
+  @override
+  String get csvCompareTitle => 'Comparison with the previous period';
+
+  @override
+  String get csvCurrent => 'current';
+
+  @override
+  String get csvPrevious => 'previous';
+
+  @override
+  String get csvDeltaPct => 'change (%)';
+
+  @override
+  String get csvDeltaPoints => 'change (pp)';
+
+  @override
+  String get pdfVsPrevious => 'vs. previous';
+
+  @override
+  String customRangeLimited(int days) {
+    return 'Range limited to $days days';
+  }
+
+  @override
+  String deltaPointsUp(String pp) {
+    return '▲ $pp pp';
+  }
+
+  @override
+  String deltaPointsDown(String pp) {
+    return '▼ $pp pp';
+  }
+
+  @override
+  String get trendToggleWait => 'Wait';
+
+  @override
+  String get trendToggleNoShow => 'No-show';
+
+  @override
+  String trendMax(String value) {
+    return 'max $value';
+  }
+
+  @override
+  String trendDaySummary(String day, int count, String series, String value) {
+    return '$day: $count entries, $series $value';
+  }
 }

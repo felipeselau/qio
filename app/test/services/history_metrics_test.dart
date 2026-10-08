@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:qio_app/l10n/app_localizations.dart';
 import 'package:qio_app/models/history_entry.dart';
 import 'package:qio_app/services/history_metrics.dart';
+import 'package:qio_app/services/metrics_trend.dart';
 
 HistoryEntry entry({
   String id = 'a',
@@ -174,6 +175,42 @@ void main() {
       );
     });
 
+    test('7 dias usa dias de calendário', () {
+      final edgeIn = entry(id: 'in', joinedAt: DateTime(2026, 5, 4));
+      final edgeOut = entry(id: 'out', joinedAt: DateTime(2026, 5, 3, 23, 59));
+      expect(
+        ids(
+          filterHistory(
+            [edgeIn, edgeOut],
+            period: HistoryPeriod.last7Days,
+            now: now,
+          ),
+        ),
+        ['in'],
+      );
+    });
+
+    test('personalizado filtra pela faixa', () {
+      expect(
+        ids(
+          filterHistory(
+            all,
+            period: HistoryPeriod.custom,
+            now: now,
+            custom: DateRange(DateTime(2026, 5, 7), DateTime(2026, 5, 8)),
+          ),
+        ),
+        ['three'],
+      );
+    });
+
+    test('personalizado sem faixa não vira tudo', () {
+      expect(
+        filterHistory(all, period: HistoryPeriod.custom, now: now),
+        isEmpty,
+      );
+    });
+
     test('tudo e combinação', () {
       expect(filterHistory(all, now: now).length, 4);
       expect(
@@ -194,6 +231,10 @@ void main() {
       expect(HistoryPeriod.today.label(pt), 'Hoje');
       expect(HistoryPeriod.last7Days.label(pt), '7 dias');
       expect(HistoryPeriod.all.label(pt), 'Tudo');
+      expect(HistoryPeriod.last30Days.label(pt), '30 dias');
+      expect(HistoryPeriod.custom.label(pt), 'Personalizado');
+      expect(HistoryPeriod.last30Days.fileSlug, '30dias');
+      expect(HistoryPeriod.custom.fileSlug, 'personalizado');
       final en = lookupAppLocalizations(const Locale('en'));
       expect(HistoryPeriod.last7Days.label(en), '7 days');
     });

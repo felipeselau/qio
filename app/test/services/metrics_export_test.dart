@@ -9,6 +9,7 @@ import 'package:qio_app/models/queue.dart';
 import 'package:qio_app/models/queue_feedback.dart';
 import 'package:qio_app/services/history_metrics.dart';
 import 'package:qio_app/services/metrics_export.dart';
+import 'package:qio_app/services/metrics_trend.dart';
 
 final now = DateTime(2026, 10, 7, 12);
 
@@ -190,6 +191,101 @@ void main() {
       expect(report(data, limit: 2, queueId: 'b').truncated, isFalse);
     });
 
+    test('trend: no previous for period all', () {
+      final data = [
+        QueueHistoryInput(queue('a'), [served('1')], const [], const []),
+      ];
+      final r = report(data);
+      expect(r.range, isNull);
+      expect(r.series, isEmpty);
+      expect(r.previousMetrics, isNull);
+      expect(r.deltas, isEmpty);
+    });
+
+    test('trend: series fills every day and deltas compare periods', () {
+      final data = [
+        QueueHistoryInput(
+          queue('a'),
+          [
+            served('1'),
+            served('2'),
+            served('3', joinedAt: DateTime(2026, 9, 28, 9)),
+          ],
+          const [],
+          const [],
+        ),
+      ];
+      final r = report(data, period: HistoryPeriod.last7Days);
+      expect(r.series.length, 7);
+      expect(r.series.last.total, 2);
+      expect(r.series.first.total, 0);
+      expect(r.previousMetrics!.total, 1);
+      expect(r.deltas[MetricKey.total]!.pct, 100);
+    });
+
+    test('trend: deltas vanish when previous period is empty', () {
+      final data = [
+        QueueHistoryInput(queue('a'), [served('1')], const [], const []),
+      ];
+      final r = report(data, period: HistoryPeriod.last7Days);
+      expect(r.previousMetrics!.total, 0);
+      expect(r.deltas, isEmpty);
+    });
+
+    test('trend: no comparison when history is truncated', () {
+      final data = [
+        QueueHistoryInput(
+          queue('a'),
+          [served('1'), served('2')],
+          const [],
+          const [],
+        ),
+      ];
+      final r = report(data, period: HistoryPeriod.last7Days, limit: 2);
+      expect(r.truncated, isTrue);
+      expect(r.previousMetrics, isNull);
+      expect(r.deltas, isEmpty);
+    });
+
+    test(
+      'trend: no comparison when fetched history starts inside previous',
+      () {
+        final data = [
+          QueueHistoryInput(
+            queue('a'),
+            [served('1'), served('2', joinedAt: DateTime(2026, 9, 29, 9))],
+            const [],
+            const [],
+          ),
+        ];
+        final r = report(data, period: HistoryPeriod.last7Days, limit: 2);
+        expect(r.truncated, isFalse);
+        expect(r.previousMetrics, isNull);
+      },
+    );
+
+    test('custom range drives the report', () {
+      final data = [
+        QueueHistoryInput(
+          queue('a'),
+          [served('1'), served('2', joinedAt: DateTime(2026, 10, 3, 9))],
+          const [],
+          const [],
+        ),
+      ];
+      final r = buildMetricsReport(
+        data: data,
+        period: HistoryPeriod.custom,
+        now: now,
+        historyLimit: 500,
+        unknownOperatorName: 'ex',
+        customRange: DateRange(DateTime(2026, 10, 3), DateTime(2026, 10, 4)),
+      );
+      expect(r.metrics.total, 1);
+      expect(r.series.length, 1);
+      expect(r.range!.days, 1);
+    });
+
     test('empty data', () {
       final r = report([
         QueueHistoryInput(queue('a'), const [], const [], const []),
@@ -345,6 +441,90 @@ void main() {
       expect(lines(en, report(withEffort)).contains('Wait and calls'), isTrue);
     });
 
+    group('trend sections', () {
+      final trendData = [
+        QueueHistoryInput(
+          queue('a'),
+          [
+            served('1'),
+            served('2', result: 'no_show'),
+            served('3', joinedAt: DateTime(2026, 10, 3, 9)),
+            served('p', joinedAt: DateTime(2026, 9, 28, 9)),
+          ],
+          const [],
+          const [],
+        ),
+      ];
+      final r = report(trendData, period: HistoryPeriod.last7Days);
+
+      test('period all has no new sections', () {
+        final l = lines(pt, report(trendData));
+        expect(l.contains('Tendência diária'), isFalse);
+        expect(l.contains('Comparativo com o período anterior'), isFalse);
+      });
+
+      test(
+        'daily rows include zero days, appended after existing sections',
+        () {
+          final l = lines(pt, r);
+          final i = l.indexOf('Tendência diária');
+          expect(i, greaterThan(l.indexOf('Espera e chamadas')));
+          expect(
+            l[i + 1],
+            'data,atendidos,não compareceram,'
+            'taxa de não comparecimento (%),espera média (min)',
+          );
+          expect(l.sublist(i + 2, i + 9), [
+            '2026-10-01,0,0,0.0,',
+            '2026-10-02,0,0,0.0,',
+            '2026-10-03,1,0,0.0,5.0',
+            '2026-10-04,0,0,0.0,',
+            '2026-10-05,0,0,0.0,',
+            '2026-10-06,0,0,0.0,',
+            '2026-10-07,1,1,50.0,5.0',
+          ]);
+        },
+      );
+
+      test('comparison rows carry current, previous and delta', () {
+        final l = lines(pt, r);
+        final i = l.indexOf('Comparativo com o período anterior');
+        expect(i, greaterThan(l.indexOf('Tendência diária')));
+        expect(l[i + 1], 'métrica,atual,anterior,variação (%),variação (p.p.)');
+        expect(l[i + 2], 'total,3,1,+200.0,');
+        expect(l[i + 3], 'taxa de não comparecimento (%),33.3,0.0,,+33.3');
+      });
+
+      test('no comparison section without previous data', () {
+        final only = [
+          QueueHistoryInput(queue('a'), [served('1')], const [], const []),
+        ];
+        final l = lines(pt, report(only, period: HistoryPeriod.last7Days));
+        expect(l.contains('Tendência diária'), isTrue);
+        expect(l.contains('Comparativo com o período anterior'), isFalse);
+      });
+
+      test('new labels exist in every locale', () {
+        for (final l10n in [pt, en, es]) {
+          final labels = [
+            l10n.trendTitle,
+            l10n.csvDate,
+            l10n.csvCompareTitle,
+            l10n.csvCurrent,
+            l10n.csvPrevious,
+            l10n.csvDeltaPct,
+            l10n.csvDeltaPoints,
+            l10n.pdfVsPrevious,
+          ];
+          for (final s in labels) {
+            expect(s, isNotEmpty);
+            expect(s.contains('★'), isFalse);
+            expect(s.contains('—'), isFalse);
+          }
+        }
+      });
+    });
+
     test('fractional median is rounded to one decimal', () {
       HistoryEntry w(String id, int sec) => HistoryEntry(
         id: id,
@@ -441,6 +621,39 @@ void main() {
       final l = lines(pt, report(d));
       final i = l.indexOf('Filas mais ativas');
       expect(l[i + 2], '1,"A, ""B""",0,0,0.0');
+    });
+
+    test('control-char prefixed names cannot bypass escaping', () {
+      for (final bad in [
+        '\u0001=HYPERLINK("x")',
+        '\u0001+1',
+        '=HYPERLINK("x")',
+      ]) {
+        final d = [
+          QueueHistoryInput(
+            queue('a', name: bad),
+            [served('1', calledBy: 'u1')],
+            const [],
+            [op('u1', bad)],
+          ),
+        ];
+        final r = report(d, period: HistoryPeriod.last7Days);
+        final csv = buildMetricsCsv(pt, r, generatedAt: at);
+        for (final line in csv.split('\r\n')) {
+          if (line.contains('HYPERLINK') || line.contains('\u0001+1')) {
+            expect(
+              line.startsWith('"\'') ||
+                  line.contains(",\"'") ||
+                  line.contains(",'") ||
+                  line.startsWith("'"),
+              isTrue,
+              reason: line,
+            );
+            expect(line, isNot(contains(',=')));
+            expect(line, isNot(contains(',\u0001')));
+          }
+        }
+      }
     });
 
     test('operator names are protected too', () {
@@ -608,6 +821,26 @@ void main() {
           truncated: false,
           historyLimit: 500,
         ),
+        generatedAt: DateTime(2026, 10, 7),
+      );
+      expect(String.fromCharCodes(bytes.take(4)), '%PDF');
+    });
+
+    test('builds with trend and comparison sections', () async {
+      final bytes = await buildMetricsPdf(
+        l10n: pt,
+        report: report([
+          QueueHistoryInput(
+            queue('a'),
+            [
+              served('1'),
+              served('2', result: 'no_show'),
+              served('p', joinedAt: DateTime(2026, 9, 28, 9)),
+            ],
+            const [],
+            const [],
+          ),
+        ], period: HistoryPeriod.last7Days),
         generatedAt: DateTime(2026, 10, 7),
       );
       expect(String.fromCharCodes(bytes.take(4)), '%PDF');

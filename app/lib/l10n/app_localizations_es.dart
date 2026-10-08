@@ -1308,4 +1308,106 @@ class AppLocalizationsEs extends AppLocalizations {
   String weekdayChartSemantics(String details) {
     return 'Llegadas por día: $details';
   }
+
+  @override
+  String get period30Days => '30 días';
+
+  @override
+  String get periodCustom => 'Personalizado';
+
+  @override
+  String deltaUp(String pct) {
+    return '▲ $pct%';
+  }
+
+  @override
+  String deltaDown(String pct) {
+    return '▼ $pct%';
+  }
+
+  @override
+  String get deltaSame => '= estable';
+
+  @override
+  String deltaPoints(String pp) {
+    return '$pp p.p.';
+  }
+
+  @override
+  String get deltaRose => 'subió';
+
+  @override
+  String get deltaFell => 'bajó';
+
+  @override
+  String get deltaVsPrevious => 'vs. período anterior';
+
+  @override
+  String get trendTitle => 'Tendencia diaria';
+
+  @override
+  String get trendSeriesTotal => 'Atenciones por día';
+
+  @override
+  String get trendSeriesWait => 'Espera promedio';
+
+  @override
+  String get trendSeriesNoShow => 'No se presentó';
+
+  @override
+  String trendSummary(String avg, String peakDay) {
+    return 'Promedio de $avg por día, pico el $peakDay';
+  }
+
+  @override
+  String get csvDate => 'fecha';
+
+  @override
+  String get csvCompareTitle => 'Comparativo con el período anterior';
+
+  @override
+  String get csvCurrent => 'actual';
+
+  @override
+  String get csvPrevious => 'anterior';
+
+  @override
+  String get csvDeltaPct => 'variación (%)';
+
+  @override
+  String get csvDeltaPoints => 'variación (p.p.)';
+
+  @override
+  String get pdfVsPrevious => 'vs. anterior';
+
+  @override
+  String customRangeLimited(int days) {
+    return 'Intervalo limitado a $days días';
+  }
+
+  @override
+  String deltaPointsUp(String pp) {
+    return '▲ $pp p.p.';
+  }
+
+  @override
+  String deltaPointsDown(String pp) {
+    return '▼ $pp p.p.';
+  }
+
+  @override
+  String get trendToggleWait => 'Espera';
+
+  @override
+  String get trendToggleNoShow => 'No-show';
+
+  @override
+  String trendMax(String value) {
+    return 'máx. $value';
+  }
+
+  @override
+  String trendDaySummary(String day, int count, String series, String value) {
+    return '$day: $count atenciones, $series $value';
+  }
 }
