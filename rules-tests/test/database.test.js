@@ -144,6 +144,21 @@ describe('RTDB rules', () => {
       }
     });
 
+    it('valor legado inalterado passa e valor novo inválido não', async () => {
+      const long = 'x'.repeat(80);
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await set(ref(ctx.database(), path('meta/name')), long);
+        await set(ref(ctx.database(), path('meta/description')), 'd'.repeat(400));
+        await set(ref(ctx.database(), path('meta/avgServiceMin')), 500);
+      });
+      await assertSucceeds(set(ref(rtdb(OWNER), path('meta/name')), long));
+      await assertSucceeds(set(ref(rtdb(OWNER), path('meta/description')), 'd'.repeat(400)));
+      await assertSucceeds(set(ref(rtdb(OWNER), path('meta/avgServiceMin')), 500));
+      await assertFails(set(ref(rtdb(OWNER), path('meta/name')), 'y'.repeat(81)));
+      await assertFails(set(ref(rtdb(OWNER), path('meta/avgServiceMin')), 501));
+      await assertSucceeds(set(ref(rtdb(OWNER), path('meta/name')), 'curto'));
+    });
+
     it('operador, cliente e estranho não gravam nome nem tempo médio', async () => {
       for (const uid of [OPERATOR, 'client1', STRANGER]) {
         await assertFails(set(ref(rtdb(uid), path('meta/name')), 'Hack'));

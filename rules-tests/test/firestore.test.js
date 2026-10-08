@@ -246,6 +246,18 @@ describe('Firestore rules', () => {
       await assertSucceeds(updateDoc(doc(db(OWNER), 'queues', 'legacy'), { status: 'paused' }));
     });
 
+    it('valida cada campo só quando ele muda', async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), 'queues', 'legacy2'), { ownerId: OWNER, name: 'x'.repeat(80), status: 'open' });
+      });
+      const ref = doc(db(OWNER), 'queues', 'legacy2');
+      await assertSucceeds(updateDoc(ref, { description: 'nova' }));
+      await assertSucceeds(updateDoc(ref, { avgServiceMin: 20 }));
+      await assertSucceeds(updateDoc(ref, { description: 'outra', avgServiceMin: 30 }));
+      await assertFails(updateDoc(ref, { name: 'y'.repeat(61) }));
+      await assertSucceeds(updateDoc(ref, { name: 'curto' }));
+    });
+
     it('operador e estranho não editam nome', async () => {
       await assertFails(updateDoc(doc(db(OPERATOR), 'queues', QUEUE), { name: 'Hack' }));
       await assertFails(updateDoc(doc(db(STRANGER), 'queues', QUEUE), { name: 'Hack' }));
