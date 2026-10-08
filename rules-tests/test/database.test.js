@@ -290,6 +290,55 @@ describe('RTDB rules', () => {
       await assertFails(update(ref(rtdb(OPERATOR), path('entries/e1')), { slotStart: 'x' }));
     });
 
+    it('entry manual sem uid: dono e operador gravam, cliente não', async () => {
+      const manual = { ticket: 5, status: 'waiting', name: 'Balcão Bia', phone: '', joinedAt: 1, manual: true };
+      await assertSucceeds(set(ref(rtdb(OWNER), path('entries/m1')), manual));
+      await assertSucceeds(set(ref(rtdb(OPERATOR), path('entries/m2')), manual));
+      await assertFails(set(ref(rtdb(STRANGER), path('entries/m3')), manual));
+      await assertFails(set(ref(rtdb('client1'), path('entries/m4')), manual));
+    });
+
+    it('entry sem uid e sem manual é rejeitada', async () => {
+      await assertFails(
+        set(ref(rtdb(OWNER), path('entries/m5')), { ticket: 5, status: 'waiting', name: 'X', phone: '', joinedAt: 1 }),
+      );
+    });
+
+    it('manual só aceita booleano', async () => {
+      await assertFails(
+        set(ref(rtdb(OWNER), path('entries/m6')), { ticket: 5, status: 'waiting', name: 'X', manual: 'sim' }),
+      );
+    });
+
+    it('operador chama e finaliza entry manual', async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await set(ref(ctx.database(), path('entries/m1')), {
+          ticket: 5, status: 'waiting', name: 'Bia', phone: '', joinedAt: 1, manual: true,
+        });
+      });
+      await assertSucceeds(update(ref(rtdb(OPERATOR), path('entries/m1')), { status: 'called', operatorId: OPERATOR }));
+      await assertSucceeds(update(ref(rtdb(OPERATOR), path('entries/m1')), { status: 'served' }));
+      await assertSucceeds(remove(ref(rtdb(OPERATOR), path('entries/m1'))));
+    });
+
+    it('cliente não marca a própria entry como manual nem remove a marca', async () => {
+      await assertFails(update(ref(rtdb('client1'), path('entries/e1')), { manual: true }));
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await update(ref(ctx.database(), path('entries/e1')), { manual: true });
+      });
+      await assertFails(update(ref(rtdb('client1'), path('entries/e1')), { manual: false }));
+      await assertSucceeds(update(ref(rtdb('client1'), path('entries/e1')), { status: 'left' }));
+    });
+
+    it('cliente não lê entry manual', async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await set(ref(ctx.database(), path('entries/m1')), {
+          ticket: 5, status: 'waiting', name: 'Bia', phone: '', joinedAt: 1, manual: true,
+        });
+      });
+      await assertFails(get(ref(rtdb('client1'), path('entries/m1'))));
+    });
+
     it('lang inválido é rejeitado', async () => {
       await assertFails(update(ref(rtdb(OPERATOR), path('entries/e1')), { lang: 'klingon' }));
     });
