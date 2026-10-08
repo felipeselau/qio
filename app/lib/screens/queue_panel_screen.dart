@@ -48,17 +48,22 @@ class QueuePanelScreen extends StatefulWidget {
   State<QueuePanelScreen> createState() => _QueuePanelScreenState();
 }
 
-class _QueuePanelScreenState extends State<QueuePanelScreen> {
+class _QueuePanelScreenState extends State<QueuePanelScreen>
+    with WidgetsBindingObserver {
   QueueService get _queues => widget.queues ?? QueueService.instance;
   OperatorService get _operators =>
       widget.operators ?? OperatorService.instance;
 
   bool _actionLoading = false;
-  bool _finishLoading = false;
+  int _finishCount = 0;
+  bool get _finishLoading => _finishCount > 0;
   bool _deleteLoading = false;
-  final _deferred = DeferredActions<String>();
+  late final _deferred = DeferredActions<String>(onError: _reportError);
+  final Set<String> _finishing = {};
   Set<String> _hidden = const {};
   bool _disposing = false;
+  ScaffoldMessengerState? _messenger;
+  AppLocalizations? _l10n;
   StreamSubscription<bool>? _accessSub;
   bool _accessLost = false;
   StreamSubscription<List<QueueEntry>>? _joinSub;
@@ -67,8 +72,22 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
   final _callNextKey = GlobalKey();
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _messenger = ScaffoldMessenger.of(context);
+    _l10n = AppLocalizations.of(context);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) return;
+    unawaited(_deferred.flushAll());
+  }
+
+  @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     if (widget.isOwner && widget.showTour) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         await Future<void>.delayed(const Duration(milliseconds: 600));
@@ -111,7 +130,9 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _disposing = true;
+    _hideSnackBar();
     unawaited(_deferred.flushAll());
     _accessSub?.cancel();
     _joinSub?.cancel();
@@ -121,6 +142,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
   Future<void> _onAccessLost() async {
     if (_accessLost || !mounted) return;
     _accessLost = true;
+    _discardPending();
     await _accessSub?.cancel();
     if (!mounted) return;
     await showAccessEndedDialog(context);
@@ -190,7 +212,26 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
     );
   }
 
+  void _discardPending() {
+    _deferred.cancelAll();
+    _hideSnackBar();
+    if (mounted && !_disposing) _syncHidden();
+  }
+
+  void _hideSnackBar() {
+    final messenger = _messenger;
+    if (messenger != null && messenger.mounted) {
+      messenger.hideCurrentSnackBar();
+    }
+  }
+
+  void _syncHidden() {
+    setState(() => _hidden = {..._deferred.pendingKeys, ..._finishing});
+  }
+
   Future<void> _callNext() async {
+    await _deferred.flushAll();
+    if (!mounted) return;
     setState(() => _actionLoading = true);
     try {
       final next = await _queues.callNext(widget.queueId);
@@ -204,6 +245,8 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
   }
 
   Future<void> _callEntry(QueueEntry entry) async {
+    await _deferred.flushAll();
+    if (!mounted) return;
     try {
       final called = await _queues.callEntry(widget.queueId, entry);
       Haptics.instance.medium();
@@ -265,14 +308,20 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
   }
 
   void _deferFinish(QueueEntry entry, {required bool served}) {
-    final scheduled = _deferred.schedule(
-      entry.id,
-      () => _finish(entry, served: served),
-    );
+    if (_deferred.isPending(entry.id) || _finishing.contains(entry.id)) return;
+    if (_deferred.hasPending) unawaited(_deferred.flushAll());
+    final tappedAt = DateTime.now();
+    final delay = MediaQuery.accessibleNavigationOf(context)
+        ? _deferred.delay * 2
+        : _deferred.delay;
+    final scheduled = _deferred.schedule(entry.id, () {
+      _hideSnackBar();
+      return _finish(entry, served: served, finishedAt: tappedAt);
+    }, delay: delay);
     if (!scheduled) return;
-    setState(() => _hidden = _deferred.pendingKeys);
+    _syncHidden();
     final l10n = AppLocalizations.of(context);
-    ScaffoldMessenger.of(context)
+    _messenger!
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
@@ -281,7 +330,8 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
                 ? l10n.finishedServedUndo(entry.name)
                 : l10n.finishedNoShowUndo(entry.name),
           ),
-          duration: _deferred.delay,
+          duration: delay,
+          persist: false,
           action: SnackBarAction(
             label: l10n.undo,
             onPressed: () => _undoFinish(entry.id),
@@ -292,53 +342,59 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
 
   void _undoFinish(String id) {
     if (!_deferred.cancel(id)) return;
-    if (mounted) setState(() => _hidden = _deferred.pendingKeys);
+    if (mounted && !_disposing) _syncHidden();
   }
 
-  Future<void> _finish(QueueEntry entry, {required bool served}) async {
-    if (mounted && !_disposing) {
-      setState(() {
-        _hidden = {..._deferred.pendingKeys, entry.id};
-        _finishLoading = true;
-      });
-    }
+  Future<void> _finish(
+    QueueEntry entry, {
+    required bool served,
+    required DateTime finishedAt,
+  }) async {
+    _finishing.add(entry.id);
+    _finishCount++;
+    if (mounted && !_disposing) _syncHidden();
     try {
       if (served) {
-        await _queues.markServed(widget.queueId, entry);
+        await _queues.markServed(widget.queueId, entry, finishedAt: finishedAt);
         Haptics.instance.light();
       } else {
-        await _queues.markNoShow(widget.queueId, entry);
+        await _queues.markNoShow(widget.queueId, entry, finishedAt: finishedAt);
         Haptics.instance.heavy();
       }
-    } on Exception catch (e) {
-      _showError(e);
+    } catch (e, st) {
+      _reportError(e, st);
     } finally {
-      if (mounted && !_disposing) {
-        setState(() {
-          _hidden = _deferred.pendingKeys;
-          _finishLoading = false;
-        });
-      }
+      _finishing.remove(entry.id);
+      _finishCount--;
+      if (mounted && !_disposing) _syncHidden();
     }
+  }
+
+  void _reportError(Object e, StackTrace st) {
+    debugPrint('queue panel action failed: $e\n$st');
+    _showError(e);
   }
 
   void _showError(Object e) {
-    if (!mounted || _disposing) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(
-            describeActionError(e).message(AppLocalizations.of(context)),
+    final messenger = _messenger;
+    final l10n = _l10n;
+    if (messenger == null || l10n == null) return;
+    try {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(describeActionError(e).message(l10n)),
+            backgroundColor: QioColors.error,
           ),
-          backgroundColor: QioColors.error,
-        ),
-      );
+        );
+    } catch (_) {}
   }
 
   Future<void> _confirmDelete() async {
     final confirmed = await confirmDeleteQueue(context);
     if (!confirmed || !mounted) return;
+    _discardPending();
     setState(() => _deleteLoading = true);
     try {
       await _queues.deleteQueue(widget.queueId);

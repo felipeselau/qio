@@ -164,6 +164,11 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
   `skips` quando > 0 (permission-denied no history é engolido: faça o deploy das
   rules do Firestore antes de distribuir o APK novo).
 
+- "Atendido"/"Não compareceu" no app são adiados 5 s (SnackBar "Desfazer"); o
+  flush ocorre ao agendar outra ação, chamar alguém, sair da tela ou pausar o
+  app. Kill forçado dentro dos 5 s perde a ação pendente e a entry segue na fila
+  (seguro). `finishedAt` do history é o instante do toque (Timestamp do cliente).
+
 ## Estimativa de espera automática
 
 - `queues/{id}/meta/avgServiceMinAuto` (RTDB) é escrito só pela function

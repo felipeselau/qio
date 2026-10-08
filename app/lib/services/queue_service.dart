@@ -512,32 +512,68 @@ class QueueService {
   Future<void> _finishEntry(
     String queueId,
     QueueEntry entry,
-    EntryStatus result,
-  ) async {
+    EntryStatus result, {
+    DateTime? finishedAt,
+  }) async {
     final entriesRef = _rtdb.ref('queues/$queueId/entries');
+    final entryRef = entriesRef.child(entry.id);
     await _ensureOwnerMirrorIfOwner(queueId);
-    await _archiveEntry(queueId, entry, result);
-    await entriesRef.child(entry.id).update({
-      'status': result.value,
-      'operatorId': _uid,
-    });
-    await entriesRef.child(entry.id).remove();
+    final uid = _uid;
+    final claim = await entryRef.runTransaction((current) {
+      if (current == null) return Transaction.abort();
+      final data = Map<Object?, Object?>.from(current as Map);
+      final status = data['status'];
+      if (status != EntryStatus.called.value && status != result.value) {
+        return Transaction.abort();
+      }
+      data['status'] = result.value;
+      data['operatorId'] = uid;
+      return Transaction.success(data);
+    }, applyLocally: false);
+    if (!claim.committed) {
+      throw FirebaseException(
+        plugin: 'firebase_database',
+        code: 'failed-precondition',
+        message: 'entry is no longer called',
+      );
+    }
+    await _archiveEntry(queueId, entry, result, finishedAt: finishedAt);
+    await entryRef.remove();
   }
 
-  Future<void> markServed(String queueId, QueueEntry entry) async {
-    await _finishEntry(queueId, entry, EntryStatus.served);
+  Future<void> markServed(
+    String queueId,
+    QueueEntry entry, {
+    DateTime? finishedAt,
+  }) async {
+    await _finishEntry(
+      queueId,
+      entry,
+      EntryStatus.served,
+      finishedAt: finishedAt,
+    );
     unawaited(AnalyticsController.instance.service.entryServed(queueId));
   }
 
-  Future<void> markNoShow(String queueId, QueueEntry entry) async {
-    await _finishEntry(queueId, entry, EntryStatus.noShow);
+  Future<void> markNoShow(
+    String queueId,
+    QueueEntry entry, {
+    DateTime? finishedAt,
+  }) async {
+    await _finishEntry(
+      queueId,
+      entry,
+      EntryStatus.noShow,
+      finishedAt: finishedAt,
+    );
   }
 
   Future<void> _archiveEntry(
     String queueId,
     QueueEntry entry,
-    EntryStatus result,
-  ) async {
+    EntryStatus result, {
+    DateTime? finishedAt,
+  }) async {
     try {
       await _firestore
           .collection('queues')
@@ -555,7 +591,9 @@ class QueueService {
                 : null,
             'calledBy': entry.operatorId,
             'operatorId': _uid,
-            'finishedAt': FieldValue.serverTimestamp(),
+            'finishedAt': finishedAt != null
+                ? Timestamp.fromDate(finishedAt)
+                : FieldValue.serverTimestamp(),
             if (entry.recalls > 0) 'recalls': entry.recalls,
             if (entry.skips > 0) 'skips': entry.skips,
           });

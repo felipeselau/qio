@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qio_app/services/action_errors.dart';
 
@@ -12,6 +12,13 @@ void main() {
       describeActionError(fe('network-request-failed')),
       ActionError.offline,
     );
+    expect(describeActionError(fe('network-error')), ActionError.offline);
+    expect(describeActionError(fe('disconnected')), ActionError.offline);
+    expect(describeActionError(fe('deadline-exceeded')), ActionError.offline);
+  });
+
+  test('maps unauthenticated to accessEnded', () {
+    expect(describeActionError(fe('unauthenticated')), ActionError.accessEnded);
   });
 
   test('maps permission-denied to accessEnded', () {

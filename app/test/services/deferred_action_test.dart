@@ -91,4 +91,38 @@ void main() {
   test('uses the default 5 second delay', () {
     expect(DeferredActions<String>().delay, const Duration(seconds: 5));
   });
+
+  test('cancelAll drops everything without running', () {
+    actions.schedule('a', () => run('a'));
+    actions.schedule('b', () => run('b'));
+    actions.cancelAll();
+    expect(actions.hasPending, isFalse);
+    expect(timers.every((t) => t.cancelled), isTrue);
+    expect(ran, isEmpty);
+  });
+
+  test('errors go to onError and do not block other flushes', () async {
+    final errors = <Object>[];
+    final guarded = DeferredActions<String>(
+      timerFactory: (delay, cb) => FakeTimer(cb),
+      onError: (e, st) => errors.add(e),
+    );
+    guarded.schedule('a', () async => throw StateError('boom'));
+    guarded.schedule('b', () => run('b'));
+    await guarded.flushAll();
+    expect(errors, hasLength(1));
+    expect(ran, ['b']);
+  });
+
+  test('schedule accepts a custom delay', () {
+    Duration? used;
+    final custom = DeferredActions<String>(
+      timerFactory: (delay, cb) {
+        used = delay;
+        return FakeTimer(cb);
+      },
+    );
+    custom.schedule('a', () => run('a'), delay: const Duration(seconds: 10));
+    expect(used, const Duration(seconds: 10));
+  });
 }

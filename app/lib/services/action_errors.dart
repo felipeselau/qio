@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import '../l10n/app_localizations.dart';
 
@@ -9,8 +9,12 @@ ActionError describeActionError(Object e) {
     switch (e.code) {
       case 'unavailable':
       case 'network-request-failed':
+      case 'network-error':
+      case 'disconnected':
+      case 'deadline-exceeded':
         return ActionError.offline;
       case 'permission-denied':
+      case 'unauthenticated':
         return ActionError.accessEnded;
       case 'aborted':
       case 'failed-precondition':
