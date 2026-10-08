@@ -36,7 +36,27 @@ Future<void> showOnboardingTour(
 
   Future<void> done() => OnboardingService.instance.markCompleted(tour, uid);
 
-  TutorialCoachMark(
+  final navigator = Navigator.of(context);
+  late final TutorialCoachMark tutorial;
+  late final PageRoute<void> backRoute;
+
+  void release() {
+    if (backRoute.isActive) navigator.removeRoute(backRoute);
+  }
+
+  backRoute = PageRouteBuilder<void>(
+    opaque: false,
+    barrierDismissible: false,
+    pageBuilder: (_, _, _) => PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) tutorial.skip();
+      },
+      child: const SizedBox.shrink(),
+    ),
+  );
+
+  tutorial = TutorialCoachMark(
     targets: [
       for (var i = 0; i < visible.length; i++)
         TargetFocus(
@@ -64,15 +84,19 @@ Future<void> showOnboardingTour(
     opacityShadow: 0.85,
     textSkip: AppLocalizations.of(context).skip,
     paddingFocus: 6,
-    disableBackButton: true,
     onFinish: () {
       done();
+      release();
     },
     onSkip: () {
       done();
+      release();
       return true;
     },
-  ).show(context: context);
+  );
+
+  tutorial.show(context: context);
+  navigator.push(backRoute);
 }
 
 class _StepText extends StatelessWidget {

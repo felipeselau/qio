@@ -7,19 +7,20 @@ import 'package:qio_app/widgets/qio_empty_state.dart';
 import 'package:qio_app/widgets/qio_input.dart';
 import 'package:qio_app/widgets/qio_responsive_body.dart';
 
-Widget host(Widget child, {double textScale = 1}) => MaterialApp(
-  locale: const Locale('pt'),
-  localizationsDelegates: AppLocalizations.localizationsDelegates,
-  supportedLocales: AppLocalizations.supportedLocales,
-  theme: QioTheme.light,
-  builder: (context, c) => MediaQuery(
-    data: MediaQuery.of(
-      context,
-    ).copyWith(textScaler: TextScaler.linear(textScale)),
-    child: c!,
-  ),
-  home: Scaffold(body: SingleChildScrollView(child: child)),
-);
+Widget host(Widget child, {double textScale = 1, bool dark = false}) =>
+    MaterialApp(
+      locale: const Locale('pt'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      theme: dark ? QioTheme.dark : QioTheme.light,
+      builder: (context, c) => MediaQuery(
+        data: MediaQuery.of(
+          context,
+        ).copyWith(textScaler: TextScaler.linear(textScale)),
+        child: c!,
+      ),
+      home: Scaffold(body: SingleChildScrollView(child: child)),
+    );
 
 Widget gallery() => Column(
   children: [
@@ -62,6 +63,15 @@ void main() {
   ) async {
     final handle = tester.ensureSemantics();
     await tester.pumpWidget(host(gallery()));
+    await expectLater(tester, meetsGuideline(textContrastGuideline));
+    handle.dispose();
+  });
+
+  testWidgets('text contrast guideline passes in the dark theme', (
+    tester,
+  ) async {
+    final handle = tester.ensureSemantics();
+    await tester.pumpWidget(host(gallery(), dark: true));
     await expectLater(tester, meetsGuideline(textContrastGuideline));
     handle.dispose();
   });

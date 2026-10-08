@@ -113,6 +113,12 @@ void main() {
     await tester.tap(find.text('Esqueci a senha'));
     await settle(tester);
     expect(auth.calls, ['reset:a@b.com']);
+    expect(
+      find.text(
+        'Se houver uma conta com esse e-mail, enviamos um link para redefinir a senha.',
+      ),
+      findsOneWidget,
+    );
   });
 
   testWidgets('renders in English dark at 320 width', (tester) async {

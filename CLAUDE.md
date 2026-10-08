@@ -304,9 +304,10 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   se** `secrets.FIREBASE_TOKEN` existir; sem ele o job passa verde com um warning
   e o site **não** é atualizado. Confira o bundle publicado em `qio.web.app`.
   Functions e rules **não** têm deploy no CI.
-- Projeto no plano **Blaze** desde 01/10/2026; `onEntryCalled` publicada. Push
-  em segundo plano só funciona com `VITE_VAPID_KEY` no build da web (ainda não
-  configurada).
+- Projeto no plano **Blaze** desde 01/10/2026; `onEntryCalled` publicada. A
+  `VITE_VAPID_KEY` já está nas Actions variables e no bundle publicado. Falta o
+  teste manual do push em segundo plano (ação do dono, checklist em
+  `docs/FCM.md`).
 
 ## Release do app
 
