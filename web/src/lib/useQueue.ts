@@ -2,6 +2,7 @@ import i18n from '../i18n';
 import { useEffect, useState } from 'react';
 import { onValue, ref } from 'firebase/database';
 import { db } from '../firebase';
+import { parseSlots, type Slot } from './slots';
 
 export type QueueMeta = {
   name: string;
@@ -16,9 +17,16 @@ export type QueueMeta = {
   opensAt: number | null;
   brandColor: string | null;
   logoUrl: string | null;
+  mode: 'queue' | 'schedule';
+  slots: Slot[];
 };
 
-type PublicTicket = { ticket: number; status: string; order?: number };
+export type PublicTicket = {
+  ticket: number;
+  status: string;
+  order?: number;
+  slotId?: string;
+};
 
 export function positionInQueue(
   publicTickets: Record<string, PublicTicket>,
@@ -69,6 +77,7 @@ export type MyEntry = {
   order?: number | null;
   calledAt: number | null;
   recalledAt: number | null;
+  slotStart: number | null;
 };
 
 export type QueueState = {
@@ -78,6 +87,7 @@ export type QueueState = {
   position: number | null;
   estimatedWaitMin: number | null;
   waitingCount: number;
+  publicTickets: Record<string, PublicTicket>;
   full: boolean;
   loading: boolean;
   exists: boolean;
@@ -126,6 +136,8 @@ export function useQueue(
             opensAt: typeof val.opensAt === 'number' ? val.opensAt : null,
             brandColor: safeBrandColor(val.brandColor),
             logoUrl: safeLogoUrl(val.logoUrl),
+            mode: val.mode === 'schedule' ? 'schedule' : 'queue',
+            slots: parseSlots(val.slots),
           });
         }
         setFailed(false);
@@ -171,6 +183,7 @@ export function useQueue(
           calledAt: val.calledAt,
           recalledAt: typeof val.recalledAt === 'number' ? val.recalledAt : null,
           order: typeof val.order === 'number' ? val.order : null,
+          slotStart: typeof val.slotStart === 'number' ? val.slotStart : null,
         });
       }
     }, () => {
@@ -187,7 +200,7 @@ export function useQueue(
       position = positionInQueue(publicTickets, myEntry);
     }
     const avg = meta?.avgServiceMinAuto ?? meta?.avgServiceMin ?? 10;
-    if (position != null) estimatedWaitMin = position * avg;
+    if (position != null && meta?.mode !== 'schedule') estimatedWaitMin = position * avg;
   }
 
   const waitingCount = Object.values(publicTickets ?? {}).filter(
@@ -202,6 +215,7 @@ export function useQueue(
     position,
     estimatedWaitMin,
     waitingCount,
+    publicTickets: (publicTickets ?? {}) as Record<string, PublicTicket>,
     full,
     loading,
     exists,
