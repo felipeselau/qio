@@ -8,6 +8,7 @@ const {
   slotStartMs,
   isSlotBookable,
   countSlotEntries,
+  slotsFromDoc,
   isSlotFull,
 } = require('../src/slots');
 
@@ -99,9 +100,20 @@ describe('countSlotEntries / isSlotFull', () => {
     e6: null,
   };
 
-  it('conta só ativas do mesmo slot e dia', () => {
-    assert.equal(countSlotEntries(entries, 's1', 100), 2);
-    assert.equal(countSlotEntries(null, 's1', 100), 0);
+  it('conta ativas do slot independente do slotStart (editar horário não zera)', () => {
+    assert.equal(countSlotEntries(entries, 's1'), 3);
+    assert.equal(countSlotEntries(entries, 's2'), 1);
+    assert.equal(countSlotEntries(null, 's1'), 0);
+  });
+
+  it('slotsFromDoc converte a lista do Firestore em mapa por id', () => {
+    assert.deepEqual(slotsFromDoc([{ id: 'a', start: '09:00', capacity: 2 }, { start: 'x' }]), {
+      a: { start: '09:00', capacity: 2 },
+    });
+    assert.equal(slotsFromDoc(undefined), null);
+    assert.deepEqual(parseSlots(slotsFromDoc([{ id: 'a', start: '09:00', capacity: 2 }])), [
+      { id: 'a', start: '09:00', capacity: 2 },
+    ]);
   });
 
   it('lota quando alcança a capacidade', () => {

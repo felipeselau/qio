@@ -46,14 +46,25 @@ function isSlotBookable(now, slotStart) {
   return now <= slotStart + SLOT_GRACE_MS;
 }
 
-function countSlotEntries(entries, slotId, slotStart) {
+function countSlotEntries(entries, slotId) {
   let count = 0;
   for (const entry of Object.values(entries ?? {})) {
     if (!entry) continue;
     if (entry.status !== 'waiting' && entry.status !== 'called') continue;
-    if (entry.slotId === slotId && entry.slotStart === slotStart) count += 1;
+    if (entry.slotId === slotId) count += 1;
   }
   return count;
+}
+
+function slotsFromDoc(list) {
+  if (!Array.isArray(list)) return null;
+  const map = {};
+  for (const item of list) {
+    if (item && typeof item.id === 'string' && item.id) {
+      map[item.id] = { start: item.start, capacity: item.capacity };
+    }
+  }
+  return map;
 }
 
 function isSlotFull(capacity, count) {
@@ -72,5 +83,6 @@ module.exports = {
   slotStartMs,
   isSlotBookable,
   countSlotEntries,
+  slotsFromDoc,
   isSlotFull,
 };

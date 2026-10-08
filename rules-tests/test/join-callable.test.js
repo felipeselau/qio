@@ -344,6 +344,7 @@ describe('callable joinQueue com slots (emulador)', () => {
 
   beforeEach(async () => {
     await env.clearDatabase();
+    await env.clearFirestore();
     await adminDb((db) =>
       set(ref(db), {
         owners: { [QUEUE]: { ownerUid: 'owner' } },
@@ -418,6 +419,39 @@ describe('callable joinQueue com slots (emulador)', () => {
       a.join({ queueId: QUEUE, name: 'Ana', phone: '', slotId: 'past' }),
       'failed-precondition',
       'slot-passed',
+    );
+  });
+
+  it('editar o horário do slot com entries ativas não zera a contagem', async () => {
+    const a = await newClient();
+    const b = await newClient();
+    await a.join({ queueId: QUEUE, name: 'Ana', phone: '', slotId: 'late' });
+    await adminDb((db) => set(ref(db, `queues/${QUEUE}/meta/slots/late/start`), '23:57'));
+    await rejectsWith(
+      b.join({ queueId: QUEUE, name: 'Bia', phone: '', slotId: 'late' }),
+      'resource-exhausted',
+      'slot-full',
+    );
+  });
+
+  it('meta/mode ausente com doc do Firestore em schedule: falha fechado', async () => {
+    await adminDb((db) => set(ref(db, `queues/${QUEUE}/meta/mode`), null));
+    await env.withSecurityRulesDisabled(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'queues', QUEUE), {
+        ownerId: 'owner',
+        mode: 'schedule',
+        slots: [{ id: 'fs1', start: '23:59', capacity: 1 }],
+      });
+    });
+    const a = await newClient();
+    const b = await newClient();
+    await rejectsWith(a.join({ queueId: QUEUE, name: 'Ana', phone: '' }), 'invalid-argument', 'slot-required');
+    const res = await a.join({ queueId: QUEUE, name: 'Ana', phone: '', slotId: 'fs1' });
+    assert.equal(res.existing, false);
+    await rejectsWith(
+      b.join({ queueId: QUEUE, name: 'Bia', phone: '', slotId: 'fs1' }),
+      'resource-exhausted',
+      'slot-full',
     );
   });
 

@@ -21,6 +21,7 @@ const {
   slotStartMs,
   isSlotBookable,
   countSlotEntries,
+  slotsFromDoc,
   isSlotFull,
 } = require('./src/slots');
 const { publicTicketFor, shouldRenotify } = require('./src/ticket');
@@ -146,7 +147,7 @@ async function resolveSlot({ entriesRef, slots, slotId, now }) {
     });
   }
   const snap = await entriesRef.orderByChild('slotId').equalTo(slotId).once('value');
-  if (isSlotFull(slot.capacity, countSlotEntries(snap.val(), slotId, slotStart))) {
+  if (isSlotFull(slot.capacity, countSlotEntries(snap.val(), slotId))) {
     throw new HttpsError('resource-exhausted', 'Horário lotado.', {
       reason: 'slot-full',
     });
@@ -217,11 +218,20 @@ exports.joinQueue = onCall(
       }
     }
 
+    let mode = normalizeMode(metaSnap.child('mode').val());
+    let rawSlots = metaSnap.child('slots').val();
+    if (!metaSnap.child('mode').exists()) {
+      const queueDoc = await getFirestore().doc(`queues/${queueId}`).get();
+      if (queueDoc.exists && normalizeMode(queueDoc.get('mode')) === 'schedule') {
+        mode = 'schedule';
+        rawSlots = slotsFromDoc(queueDoc.get('slots'));
+      }
+    }
     let slotFields = null;
-    if (normalizeMode(metaSnap.child('mode').val()) === 'schedule') {
+    if (mode === 'schedule') {
       slotFields = await resolveSlot({
         entriesRef,
-        slots: parseSlots(metaSnap.child('slots').val()),
+        slots: parseSlots(rawSlots),
         slotId: data.slotId,
         now: Date.now(),
       });
