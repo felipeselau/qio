@@ -48,6 +48,8 @@ class QueueEntry {
     this.recalls = 0,
     this.skips = 0,
     this.recalledAt,
+    this.slotId,
+    this.slotStart,
   });
 
   final String id;
@@ -64,6 +66,8 @@ class QueueEntry {
   final int recalls;
   final int skips;
   final DateTime? recalledAt;
+  final String? slotId;
+  final DateTime? slotStart;
 
   int get sortOrder => order ?? joinedAt.millisecondsSinceEpoch;
 
@@ -97,6 +101,12 @@ class QueueEntry {
       recalledAt: data['recalledAt'] != null
           ? DateTime.fromMillisecondsSinceEpoch(
               (data['recalledAt'] as num).toInt(),
+            )
+          : null,
+      slotId: data['slotId'] as String?,
+      slotStart: data['slotStart'] is num
+          ? DateTime.fromMillisecondsSinceEpoch(
+              (data['slotStart'] as num).toInt(),
             )
           : null,
     );

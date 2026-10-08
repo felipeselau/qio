@@ -1407,4 +1407,62 @@ class AppLocalizationsEn extends AppLocalizations {
   String trendDaySummary(String day, int count, String series, String value) {
     return '$day: $count entries, $series $value';
   }
+
+  @override
+  String get queueModeLabel => 'Queue mode';
+
+  @override
+  String get modeQueue => 'First come, first served';
+
+  @override
+  String get modeSchedule => 'Scheduled time';
+
+  @override
+  String get slotsEditorTitle => 'Time slots';
+
+  @override
+  String get slotsEditorHint => 'Time zone America/Sao_Paulo; repeat every day';
+
+  @override
+  String get slotTime => 'Time';
+
+  @override
+  String slotCapacity(int count) {
+    return 'Spots: $count';
+  }
+
+  @override
+  String get addSlot => 'Add time slot';
+
+  @override
+  String get removeSlot => 'Remove time slot';
+
+  @override
+  String get slotsRequired => 'Add at least one time slot';
+
+  @override
+  String get slotsDuplicate => 'Some time slots are repeated';
+
+  @override
+  String slotsTooMany(int max) {
+    return 'At most $max time slots';
+  }
+
+  @override
+  String get slotsInvalid => 'Invalid time or spots';
+
+  @override
+  String slotsOutsideSchedule(String time) {
+    return 'Outside opening hours: $time';
+  }
+
+  @override
+  String slotsTileSummary(int count) {
+    return '$count time slots';
+  }
+
+  @override
+  String waitTileSlot(String time) {
+    return 'Slot $time';
+  }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
+import '../models/queue_slot.dart';
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
@@ -8,6 +9,7 @@ import '../widgets/group_picker.dart';
 import '../widgets/qio_button.dart';
 import '../widgets/qio_input.dart';
 import '../widgets/queue_panel/queue_limit_tile.dart';
+import '../widgets/queue_panel/slots_editor.dart';
 import '../widgets/qio_responsive_body.dart';
 import 'queue_panel_screen.dart';
 
@@ -26,12 +28,16 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
   final _limitCtrl = TextEditingController();
   bool _isLoading = false;
   String? _groupId;
+  QueueMode _mode = QueueMode.queue;
+  List<QueueSlot> _slots = [];
+  SlotsError? _slotsError;
 
   bool get _dirty =>
       _nameCtrl.text.trim().isNotEmpty ||
       _descCtrl.text.trim().isNotEmpty ||
       _timeCtrl.text.trim().isNotEmpty ||
-      _limitCtrl.text.trim().isNotEmpty;
+      _limitCtrl.text.trim().isNotEmpty ||
+      _mode == QueueMode.schedule;
 
   @override
   void initState() {
@@ -75,7 +81,10 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
   }
 
   Future<void> _create() async {
-    if (!_formKey.currentState!.validate()) return;
+    final formOk = _formKey.currentState!.validate();
+    final slotsError = validateSlots(_mode, _slots);
+    setState(() => _slotsError = slotsError);
+    if (!formOk || slotsError != null) return;
     setState(() => _isLoading = true);
     try {
       final queue = await QueueService.instance.createQueue(
@@ -86,6 +95,8 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
         avgServiceMin: int.tryParse(_timeCtrl.text.trim()) ?? 15,
         maxWaiting: int.tryParse(_limitCtrl.text.trim()) ?? 0,
         groupId: _groupId,
+        mode: _mode,
+        slots: sortedSlots(_slots),
       );
       if (mounted) {
         Navigator.of(context).pushReplacement(
@@ -202,6 +213,18 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
                       value: _groupId,
                       enabled: !_isLoading,
                       onChanged: (id) => setState(() => _groupId = id),
+                    ),
+                    const SizedBox(height: 16),
+                    SlotsEditor(
+                      mode: _mode,
+                      slots: _slots,
+                      error: _slotsError,
+                      enabled: !_isLoading,
+                      onChanged: (mode, slots) => setState(() {
+                        _mode = mode;
+                        _slots = slots;
+                        _slotsError = null;
+                      }),
                     ),
                     const SizedBox(height: 32),
                     QioButton(

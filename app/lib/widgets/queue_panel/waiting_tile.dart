@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/queue_entry.dart';
+import '../../models/queue_slot.dart';
 import '../../theme/qio_colors.dart';
 import '../../theme/qio_text_styles.dart';
 import '../../widgets/qio_avatar.dart';
@@ -47,6 +48,19 @@ class WaitingTile extends StatelessWidget {
                         color: QioColors.textPrimary,
                       ),
                     ),
+                    if (entry.slotStart != null)
+                      Text(
+                        l10n.waitTileSlot(
+                          formatSlotStart(
+                            entry.slotStart!.millisecondsSinceEpoch,
+                          ),
+                        ),
+                        style: QioTextStyles.caption.copyWith(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: QioColors.primaryText,
+                        ),
+                      ),
                     Text(
                       l10n.waitTileSubtitle(entry.ticket, waitMin),
                       style: QioTextStyles.caption.copyWith(

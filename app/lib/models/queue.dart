@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../l10n/app_localizations.dart';
 import 'alerts_config.dart';
 import 'queue_schedule.dart';
+import 'queue_slot.dart';
 
 enum QueueStatus { open, paused, closed }
 
@@ -60,6 +61,8 @@ class Queue {
     this.logoUrl,
     this.groupId,
     this.alerts,
+    this.mode = QueueMode.queue,
+    this.slots = const [],
   });
 
   final String id;
@@ -79,8 +82,12 @@ class Queue {
   final String? logoUrl;
   final String? groupId;
   final AlertsConfig? alerts;
+  final QueueMode mode;
+  final List<QueueSlot> slots;
 
   bool get hasLimit => maxWaiting > 0;
+
+  bool get isScheduled => mode == QueueMode.schedule;
 
   factory Queue.fromDoc(String id, Map<String, dynamic> data) {
     return Queue(
@@ -105,6 +112,8 @@ class Queue {
       logoUrl: data['logoUrl'] as String?,
       groupId: data['groupId'] as String?,
       alerts: AlertsConfig.fromMap(data['alerts']),
+      mode: QueueModeX.fromValue(data['mode'] as String?),
+      slots: QueueSlot.listFromRaw(data['slots']),
     );
   }
 

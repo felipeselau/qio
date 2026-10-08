@@ -1408,4 +1408,62 @@ class AppLocalizationsPt extends AppLocalizations {
   String trendDaySummary(String day, int count, String series, String value) {
     return '$day: $count atendimentos, $series $value';
   }
+
+  @override
+  String get queueModeLabel => 'Modo da fila';
+
+  @override
+  String get modeQueue => 'Fila por chegada';
+
+  @override
+  String get modeSchedule => 'Hora marcada';
+
+  @override
+  String get slotsEditorTitle => 'Horários';
+
+  @override
+  String get slotsEditorHint => 'Fuso America/Sao_Paulo; repetem todo dia';
+
+  @override
+  String get slotTime => 'Horário';
+
+  @override
+  String slotCapacity(int count) {
+    return 'Vagas: $count';
+  }
+
+  @override
+  String get addSlot => 'Adicionar horário';
+
+  @override
+  String get removeSlot => 'Remover horário';
+
+  @override
+  String get slotsRequired => 'Adicione ao menos um horário';
+
+  @override
+  String get slotsDuplicate => 'Há horários repetidos';
+
+  @override
+  String slotsTooMany(int max) {
+    return 'No máximo $max horários';
+  }
+
+  @override
+  String get slotsInvalid => 'Horário ou vagas inválidos';
+
+  @override
+  String slotsOutsideSchedule(String time) {
+    return 'Fora do horário de funcionamento: $time';
+  }
+
+  @override
+  String slotsTileSummary(int count) {
+    return '$count horários';
+  }
+
+  @override
+  String waitTileSlot(String time) {
+    return 'Horário $time';
+  }
 }

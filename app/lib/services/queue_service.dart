@@ -11,6 +11,7 @@ import '../models/queue.dart';
 import '../models/queue_entry.dart';
 import '../models/queue_feedback.dart';
 import '../models/queue_schedule.dart';
+import '../models/queue_slot.dart';
 import 'analytics_service.dart';
 import 'mirror.dart';
 import 'operator_service.dart';
@@ -44,6 +45,8 @@ class QueueService {
     int avgServiceMin = 10,
     int maxWaiting = 0,
     String? groupId,
+    QueueMode mode = QueueMode.queue,
+    List<QueueSlot> slots = const [],
   }) async {
     final now = DateTime.now();
     final docRef = await _firestore.collection('queues').add({
@@ -54,6 +57,10 @@ class QueueService {
       'avgServiceMin': avgServiceMin,
       'maxWaiting': maxWaiting,
       'groupId': ?groupId,
+      if (mode == QueueMode.schedule) ...{
+        'mode': mode.value,
+        'slots': [for (final s in slots) s.toMap()],
+      },
       'createdAt': Timestamp.fromDate(now),
     });
 
@@ -68,6 +75,10 @@ class QueueService {
         'description': description,
         'avgServiceMin': avgServiceMin,
         'maxWaiting': maxWaiting,
+        if (mode == QueueMode.schedule) ...{
+          'mode': mode.value,
+          'slots': slotsMirror(slots),
+        },
         'updatedAt': ServerValue.timestamp,
       });
     } catch (_) {
@@ -87,6 +98,8 @@ class QueueService {
       avgServiceMin: avgServiceMin,
       createdAt: now,
       groupId: groupId,
+      mode: mode,
+      slots: slots,
     );
   }
 
@@ -131,6 +144,10 @@ class QueueService {
         'name': queue.name,
         'description': queue.description,
         'avgServiceMin': queue.avgServiceMin,
+        if (queue.isScheduled) ...{
+          'mode': queue.mode.value,
+          'slots': slotsMirror(queue.slots),
+        },
         'updatedAt': ServerValue.timestamp,
       });
     }
@@ -231,6 +248,25 @@ class QueueService {
     await _ensureOwnerMirror(queueId);
     await _rtdb.ref('queues/$queueId/meta').update({
       'maxWaiting': maxWaiting,
+      'updatedAt': ServerValue.timestamp,
+    });
+  }
+
+  Future<void> updateModeAndSlots(
+    String queueId,
+    QueueMode mode,
+    List<QueueSlot> slots,
+  ) async {
+    final sorted = sortedSlots(slots);
+    await _firestore.collection('queues').doc(queueId).update({
+      'mode': mode.value,
+      'slots': [for (final s in sorted) s.toMap()],
+    });
+    await _ensureOwnerMirror(queueId);
+    final metaRef = _rtdb.ref('queues/$queueId/meta');
+    await metaRef.child('slots').set(slotsMirror(sorted));
+    await metaRef.update({
+      'mode': mode.value,
       'updatedAt': ServerValue.timestamp,
     });
   }

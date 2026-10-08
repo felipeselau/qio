@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/queue_entry.dart';
+import '../../models/queue_slot.dart';
 import '../../theme/qio_colors.dart';
 import '../../theme/qio_text_styles.dart';
 import '../../widgets/qio_card.dart';
@@ -79,6 +80,17 @@ class CurrentCalledCard extends StatelessWidget {
               color: Colors.white,
             ),
           ),
+          if (e.slotStart != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              l10n.waitTileSlot(
+                formatSlotStart(e.slotStart!.millisecondsSinceEpoch),
+              ),
+              style: QioTextStyles.caption.copyWith(
+                color: Colors.white.withValues(alpha: 0.85),
+              ),
+            ),
+          ],
           if (e.recalls > 0) ...[
             const SizedBox(height: 4),
             Text(
