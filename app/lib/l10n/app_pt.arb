@@ -515,5 +515,13 @@
   "@slotsTileSummary": {"placeholders": {"count": {"type": "int"}}},
   "waitTileSlot": "Horário {time}",
   "@waitTileSlot": {"placeholders": {"time": {"type": "String"}}},
-  "slotTimeChangeWarning": "Quem já entrou neste horário continua na vaga antiga; as vagas ocupadas seguem contando."
+  "slotTimeChangeWarning": "Quem já entrou neste horário continua na vaga antiga; as vagas ocupadas seguem contando.",
+  "actionErrorOffline": "Sem conexão. Verifique a internet e tente novamente.",
+  "actionErrorAccessEnded": "Acesso encerrado ou sem permissão para esta ação.",
+  "actionErrorConflict": "A fila mudou. Tente de novo.",
+  "undo": "Desfazer",
+  "finishedServedUndo": "{name} marcado como atendido",
+  "@finishedServedUndo": {"placeholders": {"name": {"type": "String"}}},
+  "finishedNoShowUndo": "{name} marcado como não compareceu",
+  "@finishedNoShowUndo": {"placeholders": {"name": {"type": "String"}}}
 }

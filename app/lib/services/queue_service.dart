@@ -12,7 +12,9 @@ import '../models/queue_entry.dart';
 import '../models/queue_feedback.dart';
 import '../models/queue_schedule.dart';
 import '../models/queue_slot.dart';
+import 'action_errors.dart';
 import 'analytics_service.dart';
+import 'finish_entry.dart';
 import 'mirror.dart';
 import 'operator_service.dart';
 
@@ -534,14 +536,24 @@ class QueueService {
     QueueEntry entry,
     EntryStatus result,
   ) async {
-    final entriesRef = _rtdb.ref('queues/$queueId/entries');
+    final entryRef = _rtdb.ref('queues/$queueId/entries/${entry.id}');
     await _ensureOwnerMirrorIfOwner(queueId);
+    final check = checkFinishable((await entryRef.get()).value, result);
+    if (check == FinishCheck.gone) return;
+    if (check == FinishCheck.changed) throw const EntryChangedException();
     await _archiveEntry(queueId, entry, result);
-    await entriesRef.child(entry.id).update({
-      'status': result.value,
-      'operatorId': _uid,
-    });
-    await entriesRef.child(entry.id).remove();
+    final uid = _uid;
+    final claim = await entryRef.runTransaction((current) {
+      if (current == null) return Transaction.success(null);
+      final next = finishedEntryData(current, result, uid);
+      return next == null ? Transaction.abort() : Transaction.success(next);
+    }, applyLocally: false);
+    if (!claim.committed) {
+      final after = checkFinishable(claim.snapshot.value, result);
+      if (after == FinishCheck.changed) throw const EntryChangedException();
+      if (after == FinishCheck.gone) return;
+    }
+    await entryRef.remove();
   }
 
   Future<void> markServed(String queueId, QueueEntry entry) async {
