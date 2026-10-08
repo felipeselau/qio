@@ -1,6 +1,7 @@
+import assert from 'node:assert/strict';
 import { after, before, beforeEach, describe, it } from 'node:test';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { get, ref, remove, set, update } from 'firebase/database';
+import { get, onValue, ref, remove, runTransaction, set, update } from 'firebase/database';
 import { OPERATOR, OWNER, QUEUE, STRANGER, setupEnv } from './helpers.js';
 
 describe('RTDB rules', () => {
@@ -508,6 +509,74 @@ describe('RTDB rules', () => {
 
     it('dono remove entry', async () => {
       await assertSucceeds(remove(ref(rtdb(OWNER), entryPath('e1'))));
+    });
+  });
+
+  describe('transação de finalização', () => {
+    const entryPath = (id) => path(`entries/${id}`);
+    const finish = (result, uid) => (current) => {
+      if (current === null) return null;
+      if (current.status !== 'called' && current.status !== result) return undefined;
+      return { ...current, status: result, operatorId: uid };
+    };
+
+    beforeEach(async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await update(ref(ctx.database(), entryPath('e1')), { status: 'called', operatorId: OPERATOR });
+      });
+    });
+
+    for (const [label, uid] of [['dono', OWNER], ['operador', OPERATOR]]) {
+      it(`${label} finaliza com cache frio (handler recebe null e é refeito)`, async () => {
+        const r = ref(rtdb(uid), entryPath('e1'));
+        const res = await assertSucceeds(runTransaction(r, finish('served', uid)));
+        assert.equal(res.committed, true);
+        assert.equal(res.snapshot.val().status, 'served');
+        assert.equal(res.snapshot.val().operatorId, uid);
+      });
+
+      it(`${label} finaliza com listener ativo`, async () => {
+        const r = ref(rtdb(uid), entryPath('e1'));
+        const off = onValue(r, () => {});
+        await get(r);
+        const res = await assertSucceeds(runTransaction(r, finish('no_show', uid)));
+        off();
+        assert.equal(res.committed, true);
+        assert.equal(res.snapshot.val().status, 'no_show');
+      });
+    }
+
+    it('status de destino já gravado é idempotente', async () => {
+      const r = ref(rtdb(OPERATOR), entryPath('e1'));
+      await assertSucceeds(runTransaction(r, finish('served', OPERATOR)));
+      const res = await assertSucceeds(runTransaction(r, finish('served', OPERATOR)));
+      assert.equal(res.snapshot.val().status, 'served');
+    });
+
+    it('resultado diferente do já gravado aborta sem alterar', async () => {
+      const r = ref(rtdb(OPERATOR), entryPath('e1'));
+      await assertSucceeds(runTransaction(r, finish('served', OPERATOR)));
+      const res = await assertSucceeds(runTransaction(r, finish('no_show', OPERATOR)));
+      assert.equal(res.committed, false);
+      assert.equal(res.snapshot.val().status, 'served');
+    });
+
+    it('entry inexistente termina com snapshot nulo', async () => {
+      const r = ref(rtdb(OPERATOR), entryPath('nope'));
+      const res = await runTransaction(r, finish('served', OPERATOR));
+      assert.equal(res.snapshot.val(), null);
+    });
+
+    it('estranho não finaliza', async () => {
+      const r = ref(rtdb(STRANGER), entryPath('e1'));
+      await assertFails(runTransaction(r, finish('served', STRANGER)));
+    });
+
+    it('campo desconhecido é negado', async () => {
+      const r = ref(rtdb(OPERATOR), entryPath('e1'));
+      await assertFails(
+        runTransaction(r, (current) => (current === null ? null : { ...current, status: 'served', hack: 1 })),
+      );
     });
   });
 });
