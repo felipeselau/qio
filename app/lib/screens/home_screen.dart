@@ -31,6 +31,7 @@ import 'groups_screen.dart';
 import 'join_operator_screen.dart';
 import 'metrics_screen.dart';
 import 'queue_panel_screen.dart';
+import '../theme/qio_palette.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -198,14 +199,14 @@ class _HomeScreenState extends State<HomeScreen> {
     final l10n = AppLocalizations.of(context);
     final user = (widget.auth ?? AuthService.instance).currentUser;
     return Scaffold(
-      backgroundColor: QioColors.gray100,
+      backgroundColor: context.qio.gray100,
       appBar: AppBar(
-        backgroundColor: QioColors.surface,
+        backgroundColor: context.qio.surface,
         title: Text(
           l10n.myQueues,
-          style: QioTextStyles.heading2.copyWith(
+          style: context.qioText.heading2.copyWith(
             fontWeight: FontWeight.w700,
-            color: QioColors.textPrimary,
+            color: context.qio.textPrimary,
           ),
         ),
         actions: [
@@ -335,10 +336,10 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
         text,
-        style: QioTextStyles.label.copyWith(
+        style: context.qioText.label.copyWith(
           fontSize: 14,
           fontWeight: FontWeight.w600,
-          color: QioColors.gray700,
+          color: context.qio.gray700,
         ),
       ),
     );
@@ -381,9 +382,9 @@ class _QueueCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     q.name,
-                    style: QioTextStyles.heading3.copyWith(
+                    style: context.qioText.heading3.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: QioColors.textPrimary,
+                      color: context.qio.textPrimary,
                     ),
                   ),
                 ),
@@ -404,9 +405,9 @@ class _QueueCard extends StatelessWidget {
                 final count = snap.data ?? 0;
                 return Text(
                   l10n.waitingCount(count),
-                  style: QioTextStyles.body.copyWith(
+                  style: context.qioText.body.copyWith(
                     fontSize: 14,
-                    color: QioColors.gray700,
+                    color: context.qio.gray700,
                   ),
                 );
               },
@@ -414,9 +415,9 @@ class _QueueCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               isOwner ? l10n.createdOn(q.createdAt) : l10n.youAreOperator,
-              style: QioTextStyles.caption.copyWith(
+              style: context.qioText.caption.copyWith(
                 fontSize: 12,
-                color: QioColors.gray400,
+                color: context.qio.gray400,
               ),
             ),
           ],
@@ -452,7 +453,9 @@ class _OperatorQueueCardState extends State<_OperatorQueueCard> {
             padding: const EdgeInsets.all(20),
             child: Text(
               widget.operator.queueName,
-              style: QioTextStyles.heading3.copyWith(color: QioColors.gray400),
+              style: context.qioText.heading3.copyWith(
+                color: context.qio.gray400,
+              ),
             ),
           );
         }
@@ -495,22 +498,22 @@ class _RequestCard extends StatelessWidget {
               children: [
                 Text(
                   request.queueName,
-                  style: QioTextStyles.bodyMedium.copyWith(
-                    color: QioColors.textPrimary,
+                  style: context.qioText.bodyMedium.copyWith(
+                    color: context.qio.textPrimary,
                   ),
                 ),
                 Text(switch (request.status) {
                   OperatorRequestStatus.removed => l10n.requestRemovedStatus,
                   OperatorRequestStatus.rejected => l10n.requestRejectedStatus,
                   _ => l10n.awaitingApproval,
-                }, style: QioTextStyles.caption.copyWith(fontSize: 12)),
+                }, style: context.qioText.caption.copyWith(fontSize: 12)),
               ],
             ),
           ),
           if (!pending)
             IconButton(
               tooltip: l10n.dismiss,
-              icon: Icon(Icons.close, color: QioColors.gray400),
+              icon: Icon(Icons.close, color: context.qio.gray400),
               onPressed: () => operators.cancelMyRequest(request.queueId),
             ),
         ],
