@@ -1484,4 +1484,17 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get actionErrorConflict => 'La fila cambió. Inténtalo de nuevo.';
+
+  @override
+  String get undo => 'Deshacer';
+
+  @override
+  String finishedServedUndo(String name) {
+    return '$name marcado como atendido';
+  }
+
+  @override
+  String finishedNoShowUndo(String name) {
+    return '$name marcado como no se presentó';
+  }
 }

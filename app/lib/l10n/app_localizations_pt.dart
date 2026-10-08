@@ -1481,4 +1481,17 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get actionErrorConflict => 'A fila mudou. Tente de novo.';
+
+  @override
+  String get undo => 'Desfazer';
+
+  @override
+  String finishedServedUndo(String name) {
+    return '$name marcado como atendido';
+  }
+
+  @override
+  String finishedNoShowUndo(String name) {
+    return '$name marcado como não compareceu';
+  }
 }

@@ -469,5 +469,10 @@
   "slotTimeChangeWarning": "Quienes ya entraron en este horario conservan su cupo; los cupos ocupados siguen contando.",
   "actionErrorOffline": "Sin conexión. Revisa tu internet e inténtalo de nuevo.",
   "actionErrorAccessEnded": "Acceso finalizado o sin permiso para esta acción.",
-  "actionErrorConflict": "La fila cambió. Inténtalo de nuevo."
+  "actionErrorConflict": "La fila cambió. Inténtalo de nuevo.",
+  "undo": "Deshacer",
+  "finishedServedUndo": "{name} marcado como atendido",
+  "@finishedServedUndo": {"placeholders": {"name": {"type": "String"}}},
+  "finishedNoShowUndo": "{name} marcado como no se presentó",
+  "@finishedNoShowUndo": {"placeholders": {"name": {"type": "String"}}}
 }

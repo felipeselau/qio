@@ -69,6 +69,7 @@ class FakeQueueService implements QueueService {
   Object? ownerQueuesError;
   Object? historyError;
   Object? callNextError;
+  Object? finishError;
   final List<String> calls = [];
 
   @override
@@ -130,11 +131,13 @@ class FakeQueueService implements QueueService {
 
   @override
   Future<void> markServed(String queueId, QueueEntry entry) async {
+    if (finishError != null) throw finishError!;
     calls.add('served:${entry.id}');
   }
 
   @override
   Future<void> markNoShow(String queueId, QueueEntry entry) async {
+    if (finishError != null) throw finishError!;
     calls.add('noShow:${entry.id}');
   }
 

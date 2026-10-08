@@ -6,6 +6,7 @@ import '../l10n/app_localizations.dart';
 import '../models/queue.dart';
 import '../models/queue_entry.dart';
 import '../services/action_errors.dart';
+import '../services/deferred_action.dart';
 import '../services/entry_diff.dart';
 import '../services/group_service.dart';
 import '../services/haptics.dart';
@@ -55,6 +56,9 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
   bool _actionLoading = false;
   bool _finishLoading = false;
   bool _deleteLoading = false;
+  final _deferred = DeferredActions<String>();
+  Set<String> _hidden = const {};
+  bool _disposing = false;
   StreamSubscription<bool>? _accessSub;
   bool _accessLost = false;
   StreamSubscription<List<QueueEntry>>? _joinSub;
@@ -107,6 +111,8 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
 
   @override
   void dispose() {
+    _disposing = true;
+    unawaited(_deferred.flushAll());
     _accessSub?.cancel();
     _joinSub?.cancel();
     super.dispose();
@@ -156,6 +162,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
           isOwner: widget.isOwner,
           qrKey: _qrKey,
           isMine: _isMine,
+          hiddenIds: _hidden,
           onServed: _markServed,
           onNoShow: _markNoShow,
           onCall: _callEntry,
@@ -172,6 +179,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
           finishLoading: _finishLoading,
           deleteLoading: _deleteLoading,
           isMine: _isMine,
+          hiddenIds: _hidden,
           onCallNext: _callNext,
           onServed: _markServed,
           onNoShow: _markNoShow,
@@ -248,40 +256,84 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
     }
   }
 
-  Future<void> _markServed(QueueEntry entry) async {
-    setState(() => _finishLoading = true);
-    try {
-      await _queues.markServed(widget.queueId, entry);
-      Haptics.instance.light();
-    } on Exception catch (e) {
-      _showError(e);
-    } finally {
-      if (mounted) setState(() => _finishLoading = false);
-    }
+  void _markServed(QueueEntry entry) {
+    _deferFinish(entry, served: true);
   }
 
-  Future<void> _markNoShow(QueueEntry entry) async {
-    setState(() => _finishLoading = true);
+  void _markNoShow(QueueEntry entry) {
+    _deferFinish(entry, served: false);
+  }
+
+  void _deferFinish(QueueEntry entry, {required bool served}) {
+    final scheduled = _deferred.schedule(
+      entry.id,
+      () => _finish(entry, served: served),
+    );
+    if (!scheduled) return;
+    setState(() => _hidden = _deferred.pendingKeys);
+    final l10n = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            served
+                ? l10n.finishedServedUndo(entry.name)
+                : l10n.finishedNoShowUndo(entry.name),
+          ),
+          duration: _deferred.delay,
+          action: SnackBarAction(
+            label: l10n.undo,
+            onPressed: () => _undoFinish(entry.id),
+          ),
+        ),
+      );
+  }
+
+  void _undoFinish(String id) {
+    if (!_deferred.cancel(id)) return;
+    if (mounted) setState(() => _hidden = _deferred.pendingKeys);
+  }
+
+  Future<void> _finish(QueueEntry entry, {required bool served}) async {
+    if (mounted && !_disposing) {
+      setState(() {
+        _hidden = {..._deferred.pendingKeys, entry.id};
+        _finishLoading = true;
+      });
+    }
     try {
-      await _queues.markNoShow(widget.queueId, entry);
-      Haptics.instance.heavy();
+      if (served) {
+        await _queues.markServed(widget.queueId, entry);
+        Haptics.instance.light();
+      } else {
+        await _queues.markNoShow(widget.queueId, entry);
+        Haptics.instance.heavy();
+      }
     } on Exception catch (e) {
       _showError(e);
     } finally {
-      if (mounted) setState(() => _finishLoading = false);
+      if (mounted && !_disposing) {
+        setState(() {
+          _hidden = _deferred.pendingKeys;
+          _finishLoading = false;
+        });
+      }
     }
   }
 
   void _showError(Object e) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          describeActionError(e).message(AppLocalizations.of(context)),
+    if (!mounted || _disposing) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            describeActionError(e).message(AppLocalizations.of(context)),
+          ),
+          backgroundColor: QioColors.error,
         ),
-        backgroundColor: QioColors.error,
-      ),
-    );
+      );
   }
 
   Future<void> _confirmDelete() async {

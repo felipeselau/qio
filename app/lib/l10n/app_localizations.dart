@@ -2727,6 +2727,24 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'A fila mudou. Tente de novo.'**
   String get actionErrorConflict;
+
+  /// No description provided for @undo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desfazer'**
+  String get undo;
+
+  /// No description provided for @finishedServedUndo.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name} marcado como atendido'**
+  String finishedServedUndo(String name);
+
+  /// No description provided for @finishedNoShowUndo.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name} marcado como não compareceu'**
+  String finishedNoShowUndo(String name);
 }
 
 class _AppLocalizationsDelegate

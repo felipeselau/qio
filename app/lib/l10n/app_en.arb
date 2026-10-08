@@ -469,5 +469,10 @@
   "slotTimeChangeWarning": "People already in this slot keep their spot; taken spots still count.",
   "actionErrorOffline": "No connection. Check your internet and try again.",
   "actionErrorAccessEnded": "Access ended or no permission for this action.",
-  "actionErrorConflict": "The queue changed. Please try again."
+  "actionErrorConflict": "The queue changed. Please try again.",
+  "undo": "Undo",
+  "finishedServedUndo": "{name} marked as served",
+  "@finishedServedUndo": {"placeholders": {"name": {"type": "String"}}},
+  "finishedNoShowUndo": "{name} marked as no-show",
+  "@finishedNoShowUndo": {"placeholders": {"name": {"type": "String"}}}
 }

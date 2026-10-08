@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qio_app/models/queue.dart';
@@ -104,7 +105,69 @@ void main() {
     expect(find.text('Chamar de novo'), findsOneWidget);
     await tester.tap(find.widgetWithText(QioButton, 'Atendido'));
     await tick(tester);
+    expect(queues.calls, isNot(contains('served:e1')));
+    expect(find.text('Ana marcado como atendido'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
     expect(queues.calls, contains('served:e1'));
+  });
+
+  testWidgets('undo cancels the pending served action', (tester) async {
+    final queues = service(
+      entries: [fakeEntry('e1', 1, name: 'Ana', status: EntryStatus.called)],
+    );
+    await pumpApp(tester, panel(queues), size: tall);
+    await tick(tester);
+    await tester.tap(find.widgetWithText(QioButton, 'Atendido'));
+    await tick(tester);
+    expect(find.text('CHAMANDO AGORA'), findsNothing);
+    await tester.tap(find.text('Desfazer'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(seconds: 6));
+    expect(queues.calls.where((c) => c.startsWith('served')), isEmpty);
+    expect(find.text('CHAMANDO AGORA'), findsOneWidget);
+  });
+
+  testWidgets('no-show also waits before archiving', (tester) async {
+    final queues = service(
+      entries: [fakeEntry('e1', 1, name: 'Ana', status: EntryStatus.called)],
+    );
+    await pumpApp(tester, panel(queues), size: tall);
+    await tick(tester);
+    await tester.tap(find.widgetWithText(QioButton, 'Não compareceu'));
+    await tick(tester);
+    expect(queues.calls, isNot(contains('noShow:e1')));
+    await tester.pump(const Duration(seconds: 5));
+    expect(queues.calls, contains('noShow:e1'));
+  });
+
+  testWidgets('leaving the screen flushes the pending action', (tester) async {
+    final queues = service(
+      entries: [fakeEntry('e1', 1, name: 'Ana', status: EntryStatus.called)],
+    );
+    await pumpApp(tester, panel(queues), size: tall);
+    await tick(tester);
+    await tester.tap(find.widgetWithText(QioButton, 'Atendido'));
+    await tick(tester);
+    expect(queues.calls, isNot(contains('served:e1')));
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
+    expect(queues.calls, contains('served:e1'));
+  });
+
+  testWidgets('finish failure shows the mapped error message', (tester) async {
+    final queues = service(
+      entries: [fakeEntry('e1', 1, name: 'Ana', status: EntryStatus.called)],
+    )..finishError = FirebaseException(plugin: 'test', code: 'unavailable');
+    await pumpApp(tester, panel(queues), size: tall);
+    await tick(tester);
+    await tester.tap(find.widgetWithText(QioButton, 'Atendido'));
+    await tick(tester);
+    await tester.pump(const Duration(seconds: 5));
+    await tick(tester);
+    expect(
+      find.text('Sem conexão. Verifique a internet e tente novamente.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('call next is disabled while an entry is being served', (
