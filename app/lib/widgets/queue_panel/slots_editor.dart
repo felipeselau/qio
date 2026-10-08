@@ -32,6 +32,7 @@ class SlotsEditor extends StatelessWidget {
     this.schedule,
     this.error,
     this.enabled = true,
+    this.initialSlots = const [],
   });
 
   final QueueMode mode;
@@ -40,6 +41,7 @@ class SlotsEditor extends StatelessWidget {
   final QueueSchedule? schedule;
   final SlotsError? error;
   final bool enabled;
+  final List<QueueSlot> initialSlots;
 
   Future<void> _add(BuildContext context) async {
     final picked = await showTimePicker(
@@ -97,22 +99,27 @@ class SlotsEditor extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        SegmentedButton<QueueMode>(
-          segments: [
-            ButtonSegment(
-              value: QueueMode.queue,
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            ChoiceChip(
               label: Text(l10n.modeQueue),
-              icon: const Icon(Icons.people_alt_outlined),
+              avatar: const Icon(Icons.people_alt_outlined, size: 18),
+              selected: mode == QueueMode.queue,
+              onSelected: enabled
+                  ? (_) => onChanged(QueueMode.queue, slots)
+                  : null,
             ),
-            ButtonSegment(
-              value: QueueMode.schedule,
+            ChoiceChip(
               label: Text(l10n.modeSchedule),
-              icon: const Icon(Icons.event_available_outlined),
+              avatar: const Icon(Icons.event_available_outlined, size: 18),
+              selected: mode == QueueMode.schedule,
+              onSelected: enabled
+                  ? (_) => onChanged(QueueMode.schedule, slots)
+                  : null,
             ),
           ],
-          selected: {mode},
-          showSelectedIcon: false,
-          onSelectionChanged: enabled ? (s) => onChanged(s.first, slots) : null,
         ),
         if (mode == QueueMode.schedule) ...[
           const SizedBox(height: 16),
@@ -136,6 +143,16 @@ class SlotsEditor extends StatelessWidget {
               onTime: () => _editTime(context, slot),
               onCapacity: (n) => _replace(slot.copyWith(capacity: n)),
               onRemove: () => _remove(slot),
+            ),
+          if (slotTimesChanged(initialSlots, slots))
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: Text(
+                l10n.slotTimeChangeWarning,
+                style: context.qioText.caption.copyWith(
+                  color: QioColors.warning,
+                ),
+              ),
             ),
           if (error != null)
             Padding(
@@ -188,7 +205,8 @@ class _SlotRow extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               TextButton.icon(
                 onPressed: enabled ? onTime : null,
@@ -200,7 +218,6 @@ class _SlotRow extends StatelessWidget {
                   ),
                 ),
               ),
-              const Spacer(),
               IconButton(
                 tooltip: '-',
                 onPressed: enabled && slot.capacity > 1
@@ -244,12 +261,14 @@ class QueueSlotsTile extends StatelessWidget {
     required this.mode,
     required this.slots,
     this.schedule,
+    this.queues,
   });
 
   final String queueId;
   final QueueMode mode;
   final List<QueueSlot> slots;
   final QueueSchedule? schedule;
+  final QueueService? queues;
 
   Future<void> _edit(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
@@ -260,7 +279,7 @@ class QueueSlotsTile extends StatelessWidget {
     );
     if (result == null || !context.mounted) return;
     try {
-      await QueueService.instance.updateModeAndSlots(
+      await (queues ?? QueueService.instance).updateModeAndSlots(
         queueId,
         result.$1,
         result.$2,
@@ -344,6 +363,7 @@ class _SlotsDialogState extends State<_SlotsDialog> {
             mode: _mode,
             slots: _slots,
             schedule: widget.schedule,
+            initialSlots: widget.slots,
             error: _error,
             onChanged: (mode, slots) => setState(() {
               _mode = mode;

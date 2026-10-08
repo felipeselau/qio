@@ -2703,6 +2703,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Horário {time}'**
   String waitTileSlot(String time);
+
+  /// No description provided for @slotTimeChangeWarning.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quem já entrou neste horário continua na vaga antiga; as vagas ocupadas seguem contando.'**
+  String get slotTimeChangeWarning;
 }
 
 class _AppLocalizationsDelegate

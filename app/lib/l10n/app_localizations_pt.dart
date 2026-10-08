@@ -1466,4 +1466,8 @@ class AppLocalizationsPt extends AppLocalizations {
   String waitTileSlot(String time) {
     return 'Horário $time';
   }
+
+  @override
+  String get slotTimeChangeWarning =>
+      'Quem já entrou neste horário continua na vaga antiga; as vagas ocupadas seguem contando.';
 }

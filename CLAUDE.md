@@ -122,7 +122,7 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
   `slotId` é obrigatório (`invalid-argument`, `details.reason == 'slot-required'`; slot
   inexistente: `slot-invalid`). Aceita o slot até 15 min depois do início
   (`SLOT_GRACE_MS`); depois disso `failed-precondition` + `slot-passed`. Conta entries
-  `waiting`/`called` com o mesmo `slotId` e o mesmo `slotStart` de hoje; lotado vira
+  `waiting`/`called` com o mesmo `slotId` (sem olhar `slotStart`: entries ativas só existem no dia; editar o horário de um slot não zera a contagem e o editor avisa); lotado vira
   `resource-exhausted` + `details.reason == 'slot-full'`. Quem já tem entry ativa recebe a
   própria (antes dessas checagens). Grava `slotId`, `slotStart` (ms do slot de hoje) e
   `order = slotStart`, então a ordem de espera `(order ?? joinedAt, ticket)` já cobre.
@@ -138,10 +138,10 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
 - App: seletor de modo + lista de horários (`SlotsEditor`) na criação e no painel
   (`QueueSlotsTile`); horário fora da janela de funcionamento só gera aviso no editor.
   Painel mostra o horário em cada entry. Web: lista de horários na entrada (cheios e
-  passados desabilitados, contagem via `public/` por `slotId` + `order == slotStart`),
+  passados desabilitados, contagem via `public/` por `slotId`),
   "Seu horário: HH:mm" na senha e sem estimativa de espera no modo schedule.
 - **Deploy**: functions (`joinQueue`) → hosting → rules do RTDB → rules do Firestore → APK.
-  Web antigo em modo schedule não envia `slotId` e recebe `slot-required`.
+  Web antigo em modo schedule não envia `slotId` e recebe `slot-required` (a web nova mostra "recarregue a página" nesse caso). Se `meta/mode` não existe, a `joinQueue` lê `mode`/`slots` do doc do Firestore (fail-closed); `ensureMirror` reconcilia `mode`/`slots` do RTDB com o Firestore.
 - **Fora de escopo**: slots por data/calendário, filas separadas por slot, reagendamento
   pelo cliente, lembrete 10 min antes (function agendada), recorrência por dia da semana e
   integração com `applyQueueSchedules` (o horário de funcionamento continua mandando em

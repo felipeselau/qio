@@ -465,5 +465,6 @@
   "slotsTileSummary": "{count} time slots",
   "@slotsTileSummary": {"placeholders": {"count": {"type": "int"}}},
   "waitTileSlot": "Slot {time}",
-  "@waitTileSlot": {"placeholders": {"time": {"type": "String"}}}
+  "@waitTileSlot": {"placeholders": {"time": {"type": "String"}}},
+  "slotTimeChangeWarning": "People already in this slot keep their spot; taken spots still count."
 }

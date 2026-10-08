@@ -465,5 +465,6 @@
   "slotsTileSummary": "{count} horarios",
   "@slotsTileSummary": {"placeholders": {"count": {"type": "int"}}},
   "waitTileSlot": "Horario {time}",
-  "@waitTileSlot": {"placeholders": {"time": {"type": "String"}}}
+  "@waitTileSlot": {"placeholders": {"time": {"type": "String"}}},
+  "slotTimeChangeWarning": "Quienes ya entraron en este horario conservan su cupo; los cupos ocupados siguen contando."
 }

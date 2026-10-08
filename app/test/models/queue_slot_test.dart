@@ -91,6 +91,44 @@ void main() {
     });
   });
 
+  group('validateSlots ids', () {
+    test('rejects malformed and repeated ids', () {
+      expect(
+        validateSlots(QueueMode.schedule, [slot('a b', '09:00')]),
+        SlotsError.invalid,
+      );
+      expect(
+        validateSlots(QueueMode.schedule, [slot('a' * 21, '09:00')]),
+        SlotsError.invalid,
+      );
+      expect(
+        validateSlots(QueueMode.schedule, [
+          slot('a', '09:00'),
+          slot('a', '10:00'),
+        ]),
+        SlotsError.invalid,
+      );
+      expect(
+        validateSlots(QueueMode.schedule, [slot('a_b-1', '09:00')]),
+        isNull,
+      );
+    });
+
+    test('slotTimesChanged detects edited start only for existing ids', () {
+      final before = [slot('a', '09:00'), slot('b', '10:00')];
+      expect(slotTimesChanged(before, before), isFalse);
+      expect(
+        slotTimesChanged(before, [slot('a', '09:30'), slot('b', '10:00')]),
+        isTrue,
+      );
+      expect(
+        slotTimesChanged(before, [...before, slot('c', '11:00')]),
+        isFalse,
+      );
+      expect(slotTimesChanged(before, [slot('b', '10:00', 5)]), isFalse);
+    });
+  });
+
   group('helpers', () {
     test('formatSlotStart renders Sao Paulo time', () {
       final ms = DateTime.utc(2026, 10, 7, 12, 30).millisecondsSinceEpoch;

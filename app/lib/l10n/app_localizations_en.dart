@@ -1465,4 +1465,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String waitTileSlot(String time) {
     return 'Slot $time';
   }
+
+  @override
+  String get slotTimeChangeWarning =>
+      'People already in this slot keep their spot; taken spots still count.';
 }

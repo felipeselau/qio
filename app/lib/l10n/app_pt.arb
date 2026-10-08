@@ -508,5 +508,6 @@
   "slotsTileSummary": "{count} horários",
   "@slotsTileSummary": {"placeholders": {"count": {"type": "int"}}},
   "waitTileSlot": "Horário {time}",
-  "@waitTileSlot": {"placeholders": {"time": {"type": "String"}}}
+  "@waitTileSlot": {"placeholders": {"time": {"type": "String"}}},
+  "slotTimeChangeWarning": "Quem já entrou neste horário continua na vaga antiga; as vagas ocupadas seguem contando."
 }

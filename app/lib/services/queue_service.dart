@@ -125,19 +125,21 @@ class QueueService {
 
   Future<void> ensureMirror(String queueId) async {
     final ownerSnap = await _rtdb.ref('owners/$queueId').get();
-    final metaSnap = await _rtdb.ref('queues/$queueId/meta').get();
+    final metaRef = _rtdb.ref('queues/$queueId/meta');
+    final metaSnap = await metaRef.get();
     final owner = ownerSnap.value as Map<dynamic, dynamic>?;
     final meta = metaSnap.value as Map<dynamic, dynamic>?;
-    if (!mirrorNeedsRepair(owner, meta, _uid)) return;
 
     final doc = await _firestore.collection('queues').doc(queueId).get();
     final data = doc.data();
     if (data == null || data['ownerId'] != _uid) return;
+    final queue = Queue.fromDoc(queueId, data);
 
-    await _rtdb.ref('owners/$queueId').set({'ownerUid': _uid});
+    if (mirrorNeedsRepair(owner, meta, _uid)) {
+      await _rtdb.ref('owners/$queueId').set({'ownerUid': _uid});
+    }
     if (meta == null) {
-      final queue = Queue.fromDoc(queueId, data);
-      await _rtdb.ref('queues/$queueId/meta').set({
+      await metaRef.set({
         'nextTicket': 0,
         'serving': 0,
         'status': queue.status.value,
@@ -150,6 +152,11 @@ class QueueService {
         },
         'updatedAt': ServerValue.timestamp,
       });
+    } else {
+      final patch = mirrorModeSlotsPatch(meta, queue.mode, queue.slots);
+      if (patch != null) {
+        await metaRef.update({...patch, 'updatedAt': ServerValue.timestamp});
+      }
     }
     _mirrorChecked.add('$_uid/$queueId');
   }
@@ -263,10 +270,9 @@ class QueueService {
       'slots': [for (final s in sorted) s.toMap()],
     });
     await _ensureOwnerMirror(queueId);
-    final metaRef = _rtdb.ref('queues/$queueId/meta');
-    await metaRef.child('slots').set(slotsMirror(sorted));
-    await metaRef.update({
+    await _rtdb.ref('queues/$queueId/meta').update({
       'mode': mode.value,
+      'slots': slotsMirror(sorted),
       'updatedAt': ServerValue.timestamp,
     });
   }

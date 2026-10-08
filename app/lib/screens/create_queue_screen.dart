@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/queue_slot.dart';
+import '../services/group_service.dart';
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
@@ -15,7 +16,10 @@ import 'queue_panel_screen.dart';
 import '../theme/qio_palette.dart';
 
 class CreateQueueScreen extends StatefulWidget {
-  const CreateQueueScreen({super.key});
+  const CreateQueueScreen({super.key, this.queues, this.groups});
+
+  final QueueService? queues;
+  final GroupService? groups;
 
   @override
   State<CreateQueueScreen> createState() => _CreateQueueScreenState();
@@ -88,7 +92,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
     if (!formOk || slotsError != null) return;
     setState(() => _isLoading = true);
     try {
-      final queue = await QueueService.instance.createQueue(
+      final queue = await (widget.queues ?? QueueService.instance).createQueue(
         name: _nameCtrl.text.trim(),
         description: _descCtrl.text.trim().isEmpty
             ? null
@@ -212,6 +216,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
                     const SizedBox(height: 16),
                     GroupPicker(
                       value: _groupId,
+                      groups: widget.groups,
                       enabled: !_isLoading,
                       onChanged: (id) => setState(() => _groupId = id),
                     ),

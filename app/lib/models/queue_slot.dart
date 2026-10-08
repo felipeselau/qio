@@ -5,6 +5,7 @@ import 'queue_schedule.dart';
 const int maxQueueSlots = 24;
 const int maxSlotCapacity = 50;
 final RegExp _slotTimeRe = RegExp(r'^([01]\d|2[0-3]):([0-5]\d)$');
+final RegExp _slotIdRe = RegExp(r'^[A-Za-z0-9_-]{1,20}$');
 const Duration _spOffset = Duration(hours: 3);
 
 enum QueueMode { queue, schedule }
@@ -60,6 +61,13 @@ class QueueSlot {
   }
 }
 
+bool slotTimesChanged(List<QueueSlot> initial, List<QueueSlot> current) {
+  final before = {for (final s in initial) s.id: s.start};
+  return current.any(
+    (s) => before.containsKey(s.id) && before[s.id] != s.start,
+  );
+}
+
 bool isValidSlotTime(String value) => _slotTimeRe.hasMatch(value);
 
 List<QueueSlot> sortedSlots(Iterable<QueueSlot> slots) =>
@@ -76,11 +84,13 @@ SlotsError? validateSlots(QueueMode mode, List<QueueSlot> slots) {
   if (slots.isEmpty) return SlotsError.required;
   if (slots.length > maxQueueSlots) return SlotsError.tooMany;
   final seen = <String>{};
+  final ids = <String>{};
   for (final s in slots) {
     if (!isValidSlotTime(s.start) ||
         s.capacity < 1 ||
         s.capacity > maxSlotCapacity ||
-        s.id.isEmpty) {
+        !_slotIdRe.hasMatch(s.id) ||
+        !ids.add(s.id)) {
       return SlotsError.invalid;
     }
     if (!seen.add(s.start)) return SlotsError.duplicate;
