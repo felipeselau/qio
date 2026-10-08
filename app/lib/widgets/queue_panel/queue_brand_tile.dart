@@ -7,6 +7,7 @@ import '../../services/queue_service.dart';
 import '../../theme/qio_colors.dart';
 import '../../theme/qio_text_styles.dart';
 import '../qio_card.dart';
+import '../../theme/qio_palette.dart';
 
 class QueueBrandTile extends StatelessWidget {
   const QueueBrandTile({
@@ -27,7 +28,7 @@ class QueueBrandTile extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final hex = isValidBrandHex(brandColor) ? brandColor! : null;
     final accent = hex == null
-        ? QioColors.primaryText
+        ? context.qio.primaryText
         : BrandColor(hex.toUpperCase(), '').color;
     return QioCard(
       onTap: () => showDialog<void>(
@@ -48,15 +49,15 @@ class QueueBrandTile extends StatelessWidget {
               children: [
                 Text(
                   l10n.brandTitle,
-                  style: QioTextStyles.bodyMedium.copyWith(
-                    color: QioColors.textPrimary,
+                  style: context.qioText.bodyMedium.copyWith(
+                    color: context.qio.textPrimary,
                   ),
                 ),
-                Text(l10n.brandSubtitle, style: QioTextStyles.caption),
+                Text(l10n.brandSubtitle, style: context.qioText.caption),
               ],
             ),
           ),
-          Icon(Icons.edit_outlined, size: 18, color: QioColors.gray500),
+          Icon(Icons.edit_outlined, size: 18, color: context.qio.gray500),
         ],
       ),
     );
@@ -86,7 +87,7 @@ class _LogoBadge extends StatelessWidget {
       decoration: BoxDecoration(color: color, shape: BoxShape.circle),
       child: Text(
         initial,
-        style: QioTextStyles.heading3.copyWith(
+        style: context.qioText.heading3.copyWith(
           color: Colors.white,
           fontSize: size * 0.45,
         ),
@@ -169,7 +170,7 @@ class _BrandDialogState extends State<_BrandDialog> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final accent = _color == null
-        ? QioColors.primaryText
+        ? context.qio.primaryText
         : BrandColor(_color!, '').color;
     return AlertDialog(
       title: Text(l10n.brandTitle),
@@ -178,7 +179,7 @@ class _BrandDialogState extends State<_BrandDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.brandColorLabel, style: QioTextStyles.label),
+            Text(l10n.brandColorLabel, style: context.qioText.label),
             const SizedBox(height: 8),
             Wrap(
               spacing: 10,
@@ -208,7 +209,7 @@ class _BrandDialogState extends State<_BrandDialog> {
               ],
             ),
             const SizedBox(height: 20),
-            Text(l10n.brandLogoLabel, style: QioTextStyles.label),
+            Text(l10n.brandLogoLabel, style: context.qioText.label),
             const SizedBox(height: 8),
             Row(
               children: [
