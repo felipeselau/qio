@@ -2853,6 +2853,42 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Mostrar QR code da fila {name}'**
   String quickQrLabel(String name);
+
+  /// No description provided for @searchQueuesHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Buscar fila pelo nome'**
+  String get searchQueuesHint;
+
+  /// No description provided for @sortQueues.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ordenar filas'**
+  String get sortQueues;
+
+  /// No description provided for @sortByName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nome'**
+  String get sortByName;
+
+  /// No description provided for @sortByRecent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mais recentes'**
+  String get sortByRecent;
+
+  /// No description provided for @sortByWaiting.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mais espera'**
+  String get sortByWaiting;
+
+  /// No description provided for @noQueuesMatch.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma fila encontrada'**
+  String get noQueuesMatch;
 }
 
 class _AppLocalizationsDelegate

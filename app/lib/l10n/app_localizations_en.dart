@@ -1556,4 +1556,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String quickQrLabel(String name) {
     return 'Show QR code for queue $name';
   }
+
+  @override
+  String get searchQueuesHint => 'Search queue by name';
+
+  @override
+  String get sortQueues => 'Sort queues';
+
+  @override
+  String get sortByName => 'Name';
+
+  @override
+  String get sortByRecent => 'Most recent';
+
+  @override
+  String get sortByWaiting => 'Longest wait';
+
+  @override
+  String get noQueuesMatch => 'No queues found';
 }

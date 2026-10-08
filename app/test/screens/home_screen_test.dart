@@ -8,6 +8,8 @@ import 'package:qio_app/screens/home_screen.dart';
 import 'package:qio_app/screens/join_operator_screen.dart';
 import 'package:qio_app/screens/qr_poster_screen.dart';
 import 'package:qio_app/services/home_prompts.dart';
+import 'package:qio_app/services/queue_sort.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../helpers/fake_auth.dart';
 import '../helpers/fake_services.dart';
@@ -214,6 +216,71 @@ void main() {
     await tester.tap(find.text('Entrar como operador'));
     await tick(tester);
     expect(find.byType(JoinOperatorScreen), findsOneWidget);
+  });
+
+  group('search and sort', () {
+    FakeQueueService many() => FakeQueueService(
+      ownerQueues: [
+        for (final n in ['Zeta', 'Alfa', 'Beta', 'Gama', 'Delta', 'Epsilon'])
+          fakeQueue(n, name: n),
+      ],
+      waitingCounts: {'Zeta': 9},
+    );
+
+    testWidgets('tools hidden with five queues or fewer', (tester) async {
+      final queues = FakeQueueService(
+        ownerQueues: [
+          for (final n in ['A', 'B', 'C', 'D', 'E']) fakeQueue(n, name: n),
+        ],
+      );
+      await pumpApp(tester, home(queues: queues));
+      await tick(tester);
+      expect(find.byType(TextField), findsNothing);
+    });
+
+    testWidgets('search filters and shows empty message', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      await pumpApp(tester, home(queues: many()));
+      await tick(tester);
+      expect(find.byType(TextField), findsOneWidget);
+      await tester.enterText(find.byType(TextField), 'alf');
+      await tick(tester);
+      expect(find.text('Alfa'), findsOneWidget);
+      expect(find.text('Zeta'), findsNothing);
+      await tester.enterText(find.byType(TextField), 'xyz');
+      await tick(tester);
+      expect(find.text('Nenhuma fila encontrada'), findsOneWidget);
+    });
+
+    testWidgets('sort by longest wait puts the busiest first and persists', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({});
+      await pumpApp(tester, home(queues: many()));
+      await tick(tester);
+      expect(
+        tester.getTopLeft(find.text('Alfa')).dy,
+        lessThan(tester.getTopLeft(find.text('Beta')).dy),
+      );
+      await tester.tap(find.byTooltip('Ordenar filas'));
+      await tick(tester);
+      await tester.tap(find.text('Mais espera'));
+      await tick(tester);
+      expect(
+        tester.getTopLeft(find.text('Zeta')).dy,
+        lessThan(tester.getTopLeft(find.text('Alfa')).dy),
+      );
+      expect(await QueueSortPrefs.load(), QueueSort.waiting);
+    });
+
+    testWidgets('sort button meets the tap target size', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      await pumpApp(tester, home(queues: many()));
+      await tick(tester);
+      final size = tester.getSize(find.byTooltip('Ordenar filas'));
+      expect(size.width, greaterThanOrEqualTo(48));
+      expect(size.height, greaterThanOrEqualTo(48));
+    });
   });
 
   group('quick actions', () {

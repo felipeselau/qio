@@ -15,6 +15,7 @@ import '../services/auth_service.dart';
 import '../services/deep_link.dart';
 import '../services/home_prompts.dart';
 import '../services/push_service.dart';
+import '../services/queue_sort.dart';
 import '../services/onboarding_service.dart';
 import '../services/operator_service.dart';
 import '../services/queue_service.dart';
@@ -74,10 +75,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   StreamSubscription<Uri>? _linkSub;
   HomePrompts? _prompts;
+  String _query = '';
+  QueueSort _sort = QueueSort.name;
+  final Map<String, int> _waiting = {};
+  final Map<String, StreamSubscription<int>> _waitingSubs = {};
 
   @override
   void initState() {
     super.initState();
+    QueueSortPrefs.load().then((sort) {
+      if (mounted) setState(() => _sort = sort);
+    });
+    _controller.addListener(_syncWaitingSubs);
     _prompts =
         widget.prompts ??
         (widget.enableIntegrations ? _defaultPrompts() : null);
@@ -116,6 +125,33 @@ class _HomeScreenState extends State<HomeScreen> {
     askPush: _askForPush,
     canShowDialog: () => mounted && (ModalRoute.of(context)?.isCurrent ?? true),
   );
+
+  void _syncWaitingSubs() {
+    final needed =
+        _sort == QueueSort.waiting &&
+            showQueueTools(_controller.ownedQueues.length)
+        ? _controller.ownedQueues.map((q) => q.id).toSet()
+        : <String>{};
+    for (final id in _waitingSubs.keys.toList()) {
+      if (!needed.contains(id)) {
+        _waitingSubs.remove(id)?.cancel();
+        _waiting.remove(id);
+      }
+    }
+    for (final id in needed) {
+      if (_waitingSubs.containsKey(id)) continue;
+      _waitingSubs[id] = _queues.watchWaitingCount(id).listen((count) {
+        if (!mounted) return;
+        setState(() => _waiting[id] = count);
+      }, onError: (_) {});
+    }
+  }
+
+  void _setSort(QueueSort sort) {
+    setState(() => _sort = sort);
+    _syncWaitingSubs();
+    QueueSortPrefs.save(sort);
+  }
 
   void _onControllerChanged() {
     if (_controller.isLoading || _controller.hasError) return;
@@ -183,6 +219,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _controller.removeListener(_onControllerChanged);
+    _controller.removeListener(_syncWaitingSubs);
+    for (final sub in _waitingSubs.values) {
+      sub.cancel();
+    }
     _linkSub?.cancel();
     _pushSub?.cancel();
     _controller.dispose();
@@ -344,13 +384,35 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
     final showHeaders = operating.isNotEmpty || requests.isNotEmpty;
+    final tools = showQueueTools(owned.length);
+    final visible = tools
+        ? filterAndSortQueues(
+            owned,
+            query: _query,
+            sort: _sort,
+            waiting: _waiting,
+          )
+        : owned;
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
         if (showHeaders && owned.isNotEmpty) _sectionTitle(l10n.sectionOwner),
-        for (final q in owned) ...[
+        if (tools) _buildTools(l10n),
+        if (tools && visible.isEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Text(
+              l10n.noQueuesMatch,
+              textAlign: TextAlign.center,
+              style: context.qioText.body.copyWith(
+                color: context.qio.textSecondary,
+              ),
+            ),
+          ),
+        ],
+        for (final q in visible) ...[
           _QueueCard(
-            key: q == owned.first ? _firstQueueKey : null,
+            key: q == visible.first ? _firstQueueKey : ValueKey(q.id),
             queue: q,
             isOwner: true,
             queues: _queues,
@@ -368,6 +430,54 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 16),
         ],
       ],
+    );
+  }
+
+  Widget _buildTools(AppLocalizations l10n) {
+    String label(QueueSort sort) => switch (sort) {
+      QueueSort.name => l10n.sortByName,
+      QueueSort.recent => l10n.sortByRecent,
+      QueueSort.waiting => l10n.sortByWaiting,
+    };
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              onChanged: (v) => setState(() => _query = v),
+              textInputAction: TextInputAction.search,
+              decoration: InputDecoration(
+                hintText: l10n.searchQueuesHint,
+                prefixIcon: const Icon(Icons.search),
+                isDense: false,
+                constraints: const BoxConstraints(minHeight: 48),
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          PopupMenuButton<QueueSort>(
+            tooltip: l10n.sortQueues,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            initialValue: _sort,
+            onSelected: _setSort,
+            itemBuilder: (_) => [
+              for (final sort in QueueSort.values)
+                CheckedPopupMenuItem(
+                  value: sort,
+                  checked: sort == _sort,
+                  child: Text(label(sort)),
+                ),
+            ],
+            child: const SizedBox(
+              width: 48,
+              height: 48,
+              child: Icon(Icons.sort),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

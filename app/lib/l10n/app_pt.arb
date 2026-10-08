@@ -538,5 +538,11 @@
   "quickReopenLabel": "Reabrir fila {name}",
   "@quickReopenLabel": {"placeholders": {"name": {"type": "String"}}},
   "quickQrLabel": "Mostrar QR code da fila {name}",
-  "@quickQrLabel": {"placeholders": {"name": {"type": "String"}}}
+  "@quickQrLabel": {"placeholders": {"name": {"type": "String"}}},
+  "searchQueuesHint": "Buscar fila pelo nome",
+  "sortQueues": "Ordenar filas",
+  "sortByName": "Nome",
+  "sortByRecent": "Mais recentes",
+  "sortByWaiting": "Mais espera",
+  "noQueuesMatch": "Nenhuma fila encontrada"
 }

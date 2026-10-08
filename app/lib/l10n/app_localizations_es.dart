@@ -1560,4 +1560,22 @@ class AppLocalizationsEs extends AppLocalizations {
   String quickQrLabel(String name) {
     return 'Mostrar código QR de la fila $name';
   }
+
+  @override
+  String get searchQueuesHint => 'Buscar fila por nombre';
+
+  @override
+  String get sortQueues => 'Ordenar filas';
+
+  @override
+  String get sortByName => 'Nombre';
+
+  @override
+  String get sortByRecent => 'Más recientes';
+
+  @override
+  String get sortByWaiting => 'Más espera';
+
+  @override
+  String get noQueuesMatch => 'Ninguna fila encontrada';
 }

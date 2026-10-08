@@ -495,5 +495,11 @@
   "quickReopenLabel": "Reopen queue {name}",
   "@quickReopenLabel": {"placeholders": {"name": {"type": "String"}}},
   "quickQrLabel": "Show QR code for queue {name}",
-  "@quickQrLabel": {"placeholders": {"name": {"type": "String"}}}
+  "@quickQrLabel": {"placeholders": {"name": {"type": "String"}}},
+  "searchQueuesHint": "Search queue by name",
+  "sortQueues": "Sort queues",
+  "sortByName": "Name",
+  "sortByRecent": "Most recent",
+  "sortByWaiting": "Longest wait",
+  "noQueuesMatch": "No queues found"
 }
