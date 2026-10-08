@@ -1,8 +1,16 @@
-# Casos de teste — Qio v1.1.0
+# Casos de teste — Qio
 
-Ambiente de produção: `https://qio.web.app` (hosting site `qio`, projeto `qio-app`),
-app Flutter v1.1.0. Rules publicadas em 30/09/2026 (commit `e8fdc9c`), hosting
-publicado em 30/09/2026 (commit `44e8b2d`).
+Versão atual do app em `main`: 1.4.0+5 (`app/pubspec.yaml`). Os testes automatizados
+(AUT-01 a AUT-08) foram reexecutados em 08/10/2026 sobre `main` (commit `8948214`).
+Os casos manuais e de integração (CLI, DON, OPE, CON, INT) foram executados entre
+30/09 e 01/10/2026 contra o ambiente de produção (`https://qio.web.app`, hosting
+site `qio`, projeto `qio-app`) e os emulators, com o app Flutter v1.1.0 (rules
+publicadas em 30/09/2026, commit `e8fdc9c`; hosting em 30/09/2026, commit
+`44e8b2d`). **Não foram reexecutados** para as funcionalidades posteriores à
+1.1.0 (push do dono, branding, horário de funcionamento, limite de fila,
+re-chamada, grupos, alertas, slots, métricas novas, exportação das métricas,
+App Check nas callables). Para essas, a cobertura é a dos testes automatizados;
+números em [`../qualidade.md`](../qualidade.md).
 
 Casos marcados **[emulator]** rodaram localmente nos emulators do Firebase
 (auth, Firestore, RTDB) com as rules do repositório, o app Flutter compilado
@@ -19,12 +27,14 @@ obtido" depois de executado.
 
 | ID | Perfil | Cenário | Passos | Resultado esperado | Resultado obtido | Situação | Data |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| AUT-01 | Sistema | Testes unitários do app (modelos e lógica pura) | `cd app && flutter test` | Todos passam | 48 testes, todos passaram | Aprovado | 30/09/2026 |
-| AUT-02 | Sistema | Análise estática do app | `cd app && flutter analyze lib test` | Nenhum problema | "No issues found!" | Aprovado | 30/09/2026 |
-| AUT-03 | Sistema | Lint e build da página web | `cd web && npm run lint && npm run build` | Sem erros | oxlint sem erros (exit 0); build Vite concluído | Aprovado | 30/09/2026 |
-| AUT-04 | Sistema | Rules do Firestore e do RTDB no emulator | `cd rules-tests && npm test` | Todos passam | 67 testes, 67 passaram, 0 falhas | Aprovado | 30/09/2026 |
+| AUT-01 | Sistema | Testes do app (unidade, widget e goldens) | `cd app && flutter test` | Todos passam | 451 testes em 56 arquivos, todos passaram (era 48 em 30/09/2026) | Aprovado | 08/10/2026 |
+| AUT-02 | Sistema | Análise estática do app | `cd app && flutter analyze lib test` | Nenhum problema | "No issues found!" | Aprovado | 08/10/2026 |
+| AUT-03 | Sistema | Lint e build da página web | `cd web && npm run lint && npm run build` | Sem erros | oxlint sem erros (exit 0); build Vite concluído (aviso de chunk > 500 kB) | Aprovado | 08/10/2026 |
+| AUT-04 | Sistema | Rules (Firestore, RTDB, Storage) e callable `joinQueue` nos emulators | `cd rules-tests && npm test` (duas passadas: `test:rules` e `test:callable`) | Todos passam | 167 testes das rules + 28 da callable = 195, 0 falhas (era 67 em 30/09/2026). Executado com firebase.json temporário em outras portas porque 5001/8080/9000 estavam ocupadas | Aprovado | 08/10/2026 |
 | AUT-05 | Sistema | Os testes de rules detectam regressão | Remover `operatorId == auth.uid` da rule de `history` e rodar AUT-04 | Ao menos 1 teste falha | 1 falha ("operador não cria registro em nome de outro"); rule restaurada | Aprovado | 27/09/2026 |
-| AUT-06 | Sistema | CI no PR | Abrir PR para `main` | Jobs `flutter`, `web` e `rules` verdes | Verdes no PR #35 (commit `89b1978`) | Aprovado | 28/09/2026 |
+| AUT-06 | Sistema | CI no PR | Abrir PR para `main` | Jobs `flutter`, `web`, `functions` e `rules` verdes | Verdes no PR #35 (commit `89b1978`, 28/09/2026); nas 14 execuções recentes de `ci.yml`, 13 terminaram em sucesso e 1 em falha (ver `docs/qualidade.md`) | Aprovado | 08/10/2026 |
+| AUT-07 | Sistema | Testes das Cloud Functions (lógica pura) | `cd functions && npm test` | Todos passam | 155 testes em 14 arquivos, todos passaram | Aprovado | 08/10/2026 |
+| AUT-08 | Sistema | Cobertura | `cd app && flutter test --coverage`; `cd functions && node --test --experimental-test-coverage` | Medir | App: 60,11% das linhas instrumentadas (4761/7920); functions `src/`: 99,91% de linhas. Ver `docs/qualidade.md` | Aprovado (medição) | 08/10/2026 |
 
 ## Cliente (web)
 
@@ -89,16 +99,20 @@ Nota CLI-03 (01/10/2026): a partir da 1.2.0 a `joinQueue` também bloqueia a ent
 
 ## Limitações conhecidas
 
-- Push com a aba em segundo plano ainda não chega: a Cloud Function foi
-  publicada em 01/10/2026 (plano Blaze), mas o build da web não tem
-  `VITE_VAPID_KEY`.
-- App Check desativado em produção (sem `VITE_RECAPTCHA_SITE_KEY` no build).
+- Push com a aba em segundo plano: em 01/10/2026 o build da web não tinha
+  `VITE_VAPID_KEY` (CLI-11 e INT-03 ficaram bloqueados). `docs/FCM.md` registra a
+  chave como configurada depois disso; falta validar a entrega em aparelho real
+  e reexecutar CLI-11/INT-03.
+- App Check: sem chave no build em 30/09/2026 (INT-04). Hoje o enforcement existe
+  só nas callables e está desligado (`ENFORCE_APP_CHECK=false`); RTDB, Firestore e
+  Storage nunca terão enforcement enquanto o app Flutter não usar App Check
+  (`docs/APPCHECK.md`).
 - Fila pausada: o bloqueio de entrada é só na interface; as rules do RTDB não
   impedem a criação de entry com a fila pausada.
   Nota de 01/10/2026: a Cloud Function `joinQueue` (1.2.0) passou a recusar
   entrada em fila pausada ou fechada no servidor (`failed-precondition`). O
   resultado registrado acima é anterior a isso e não foi reexecutado.
-- O cliente pode alterar campos da própria entry no RTDB (ticket, status).
+- (Resolvido) Na versão testada em 30/09/2026 o cliente podia alterar campos da própria entry no RTDB. Hoje as rules só permitem ao cliente `status: 'left'` e `fcmToken` na própria entry, e a entrada é pela callable `joinQueue`; coberto por `rules-tests/`.
 - O app Flutter compilado para web perde a sessão ao recarregar a página
   (observado só no ambiente de teste com emulator; o app é distribuído como
   APK).
