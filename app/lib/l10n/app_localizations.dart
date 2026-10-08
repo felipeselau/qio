@@ -2062,6 +2062,120 @@ abstract class AppLocalizations {
   /// **'Não foi possível exportar as métricas.'**
   String get exportMetricsError;
 
+  /// No description provided for @groups.
+  ///
+  /// In pt, this message translates to:
+  /// **'Grupos'**
+  String get groups;
+
+  /// No description provided for @groupNew.
+  ///
+  /// In pt, this message translates to:
+  /// **'Novo grupo…'**
+  String get groupNew;
+
+  /// No description provided for @groupRename.
+  ///
+  /// In pt, this message translates to:
+  /// **'Renomear grupo'**
+  String get groupRename;
+
+  /// No description provided for @groupDelete.
+  ///
+  /// In pt, this message translates to:
+  /// **'Excluir grupo'**
+  String get groupDelete;
+
+  /// No description provided for @groupDeleteConfirm.
+  ///
+  /// In pt, this message translates to:
+  /// **'Excluir o grupo \"{name}\"? As filas dele ficam sem grupo.'**
+  String groupDeleteConfirm(String name);
+
+  /// No description provided for @groupNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem grupo'**
+  String get groupNone;
+
+  /// No description provided for @groupName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nome do grupo'**
+  String get groupName;
+
+  /// No description provided for @groupLimitReached.
+  ///
+  /// In pt, this message translates to:
+  /// **'Limite de {max} grupos atingido.'**
+  String groupLimitReached(int max);
+
+  /// No description provided for @groupLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Grupo'**
+  String get groupLabel;
+
+  /// No description provided for @groupsEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum grupo ainda. Crie um para organizar suas filas.'**
+  String get groupsEmpty;
+
+  /// No description provided for @groupPermissionDenied.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem permissão para alterar grupos. Atualize o app e tente de novo.'**
+  String get groupPermissionDenied;
+
+  /// No description provided for @metricsScopeLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escopo das métricas'**
+  String get metricsScopeLabel;
+
+  /// No description provided for @metricsScopeAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Todas as filas'**
+  String get metricsScopeAll;
+
+  /// No description provided for @metricsScopeGroup.
+  ///
+  /// In pt, this message translates to:
+  /// **'Grupo: {name}'**
+  String metricsScopeGroup(String name);
+
+  /// No description provided for @metricsScopeQueue.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fila: {name}'**
+  String metricsScopeQueue(String name);
+
+  /// No description provided for @groupCompareTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Comparativo entre filas do grupo'**
+  String get groupCompareTitle;
+
+  /// No description provided for @groupCompareLine.
+  ///
+  /// In pt, this message translates to:
+  /// **'{total} atendimentos · espera {wait} · {rate}% não compareceram · nota {rating}'**
+  String groupCompareLine(int total, String wait, int rate, String rating);
+
+  /// No description provided for @csvDataScope.
+  ///
+  /// In pt, this message translates to:
+  /// **'escopo das métricas'**
+  String get csvDataScope;
+
+  /// No description provided for @groupsUnavailable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Grupos indisponíveis. Atualize o app ou as regras do Firestore.'**
+  String get groupsUnavailable;
+
   /// No description provided for @alertsTitle.
   ///
   /// In pt, this message translates to:

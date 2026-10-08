@@ -25,6 +25,7 @@ QueuePanelScreen panel(
   isOwner: isOwner,
   queues: queues,
   operators: operators ?? FakeOperatorService(),
+  groups: FakeGroupService(),
   showTour: false,
 );
 

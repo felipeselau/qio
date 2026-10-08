@@ -1083,6 +1083,76 @@ class AppLocalizationsPt extends AppLocalizations {
   String get exportMetricsError => 'Não foi possível exportar as métricas.';
 
   @override
+  String get groups => 'Grupos';
+
+  @override
+  String get groupNew => 'Novo grupo…';
+
+  @override
+  String get groupRename => 'Renomear grupo';
+
+  @override
+  String get groupDelete => 'Excluir grupo';
+
+  @override
+  String groupDeleteConfirm(String name) {
+    return 'Excluir o grupo \"$name\"? As filas dele ficam sem grupo.';
+  }
+
+  @override
+  String get groupNone => 'Sem grupo';
+
+  @override
+  String get groupName => 'Nome do grupo';
+
+  @override
+  String groupLimitReached(int max) {
+    return 'Limite de $max grupos atingido.';
+  }
+
+  @override
+  String get groupLabel => 'Grupo';
+
+  @override
+  String get groupsEmpty =>
+      'Nenhum grupo ainda. Crie um para organizar suas filas.';
+
+  @override
+  String get groupPermissionDenied =>
+      'Sem permissão para alterar grupos. Atualize o app e tente de novo.';
+
+  @override
+  String get metricsScopeLabel => 'Escopo das métricas';
+
+  @override
+  String get metricsScopeAll => 'Todas as filas';
+
+  @override
+  String metricsScopeGroup(String name) {
+    return 'Grupo: $name';
+  }
+
+  @override
+  String metricsScopeQueue(String name) {
+    return 'Fila: $name';
+  }
+
+  @override
+  String get groupCompareTitle => 'Comparativo entre filas do grupo';
+
+  @override
+  String groupCompareLine(int total, String wait, int rate, String rating) {
+    return '$total atendimentos · espera $wait · $rate% não compareceram · nota $rating';
+  }
+
+  @override
+  String get csvDataScope => 'escopo das métricas';
+
+  @override
+  String get groupsUnavailable =>
+      'Grupos indisponíveis. Atualize o app ou as regras do Firestore.';
+
+  @override
   String get alertsTitle => 'Alertas operacionais';
 
   @override
