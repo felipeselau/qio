@@ -25,6 +25,11 @@ export const app = initializeApp(firebaseConfig);
 // sem a chave, o app funciona normalmente sem essa proteção — não quebra o dev local.
 const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY as string | undefined;
 if (recaptchaSiteKey && import.meta.env.VITE_USE_EMULATORS !== 'true') {
+  const debugToken = import.meta.env.VITE_APPCHECK_DEBUG_TOKEN as string | undefined;
+  if (import.meta.env.DEV && debugToken) {
+    (self as unknown as { FIREBASE_APPCHECK_DEBUG_TOKEN: string | boolean }).FIREBASE_APPCHECK_DEBUG_TOKEN =
+      debugToken === 'true' ? true : debugToken;
+  }
   initializeAppCheck(app, {
     provider: new ReCaptchaEnterpriseProvider(recaptchaSiteKey),
     isTokenAutoRefreshEnabled: true,
