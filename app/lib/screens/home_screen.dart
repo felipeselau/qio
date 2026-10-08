@@ -34,6 +34,8 @@ import 'metrics_screen.dart';
 import 'queue_panel_screen.dart';
 import '../theme/qio_palette.dart';
 
+enum _AccountAction { account, operator }
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
@@ -185,7 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   final _fabKey = GlobalKey();
-  final _operatorKey = GlobalKey();
+  final _accountKey = GlobalKey();
   final _firstQueueKey = GlobalKey();
 
   Future<void> _runTour() async {
@@ -207,9 +209,9 @@ class _HomeScreenState extends State<HomeScreen> {
           body: l10n.tourHomeQueueBody,
         ),
       OnboardingStep(
-        key: _operatorKey,
-        title: l10n.tourHomeOperatorTitle,
-        body: l10n.tourHomeOperatorBody,
+        key: _accountKey,
+        title: l10n.tourHomeAccountTitle,
+        body: l10n.tourHomeAccountBody,
         shape: ShapeLightFocus.Circle,
       ),
     ]);
@@ -253,23 +255,33 @@ class _HomeScreenState extends State<HomeScreen> {
               context,
             ).push(MaterialPageRoute(builder: (_) => const MetricsScreen())),
           ),
-          IconButton(
-            key: _operatorKey,
-            tooltip: l10n.joinAsOperator,
-            icon: const Icon(Icons.badge_outlined, color: QioColors.primary),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const JoinOperatorScreen()),
+          PopupMenuButton<_AccountAction>(
+            key: _accountKey,
+            tooltip: l10n.accountTitle,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            onSelected: (action) => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => switch (action) {
+                  _AccountAction.account => const AccountScreen(),
+                  _AccountAction.operator => const JoinOperatorScreen(),
+                },
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Semantics(
-              button: true,
-              label: l10n.accountTitle,
-              child: GestureDetector(
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const AccountScreen()),
-                ),
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                value: _AccountAction.account,
+                child: Text(l10n.accountTitle),
+              ),
+              PopupMenuItem(
+                value: _AccountAction.operator,
+                child: Text(l10n.joinAsOperator),
+              ),
+            ],
+            child: SizedBox(
+              width: 48,
+              height: 48,
+              child: Center(
                 child: QioAvatar(
                   name: user?.displayName ?? user?.email ?? 'Q',
                   size: 36,
@@ -277,6 +289,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: QioResponsiveBody(
@@ -321,6 +334,10 @@ class _HomeScreenState extends State<HomeScreen> {
         onAction: () => Navigator.of(
           context,
         ).push(MaterialPageRoute(builder: (_) => const CreateQueueScreen())),
+        secondaryLabel: l10n.joinAsOperator,
+        onSecondary: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const JoinOperatorScreen())),
       );
     }
     final showHeaders = operating.isNotEmpty || requests.isNotEmpty;

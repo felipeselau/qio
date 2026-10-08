@@ -486,5 +486,7 @@
   "finishedServedUndo": "{name} marked as served",
   "@finishedServedUndo": {"placeholders": {"name": {"type": "String"}}},
   "finishedNoShowUndo": "{name} marked as no-show",
-  "@finishedNoShowUndo": {"placeholders": {"name": {"type": "String"}}}
+  "@finishedNoShowUndo": {"placeholders": {"name": {"type": "String"}}},
+  "tourHomeAccountTitle": "Your account and invites",
+  "tourHomeAccountBody": "Find your account here, plus the option to join as an operator with an invite code."
 }

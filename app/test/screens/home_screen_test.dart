@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:qio_app/models/operator.dart';
 import 'package:qio_app/models/queue.dart';
 import 'package:qio_app/screens/home_screen.dart';
+import 'package:qio_app/screens/join_operator_screen.dart';
 import 'package:qio_app/services/home_prompts.dart';
 
 import '../helpers/fake_auth.dart';
@@ -176,6 +177,42 @@ void main() {
     expect(find.text('My queues'), findsOneWidget);
     expect(find.text('Bakery'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('app bar no longer has the operator shortcut', (tester) async {
+    await pumpApp(
+      tester,
+      home(queues: FakeQueueService(ownerQueues: [fakeQueue('a')])),
+    );
+    await tick(tester);
+    expect(find.byTooltip('Entrar como operador'), findsNothing);
+    expect(find.byTooltip('Grupos'), findsOneWidget);
+    expect(find.byTooltip('Métricas das filas'), findsOneWidget);
+    expect(find.byTooltip('Minha conta'), findsOneWidget);
+  });
+
+  testWidgets('account menu offers account and join as operator', (
+    tester,
+  ) async {
+    await pumpApp(tester, home());
+    await tick(tester);
+    final size = tester.getSize(find.byTooltip('Minha conta'));
+    expect(size.width, greaterThanOrEqualTo(48));
+    expect(size.height, greaterThanOrEqualTo(48));
+    await tester.tap(find.byTooltip('Minha conta'));
+    await tick(tester);
+    expect(find.text('Minha conta'), findsOneWidget);
+    await tester.tap(find.text('Entrar como operador').last);
+    await tick(tester);
+    expect(find.byType(JoinOperatorScreen), findsOneWidget);
+  });
+
+  testWidgets('empty state links to join as operator', (tester) async {
+    await pumpApp(tester, home());
+    await tick(tester);
+    await tester.tap(find.text('Entrar como operador'));
+    await tick(tester);
+    expect(find.byType(JoinOperatorScreen), findsOneWidget);
   });
 
   group('startup prompts', () {

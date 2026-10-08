@@ -1532,4 +1532,11 @@ class AppLocalizationsPt extends AppLocalizations {
   String finishedNoShowUndo(String name) {
     return '$name marcado como não compareceu';
   }
+
+  @override
+  String get tourHomeAccountTitle => 'Sua conta e convites';
+
+  @override
+  String get tourHomeAccountBody =>
+      'Aqui ficam sua conta e a opção de entrar como operador com um código de convite.';
 }

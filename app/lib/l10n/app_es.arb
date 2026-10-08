@@ -486,5 +486,7 @@
   "finishedServedUndo": "{name} marcado como atendido",
   "@finishedServedUndo": {"placeholders": {"name": {"type": "String"}}},
   "finishedNoShowUndo": "{name} marcado como no se presentó",
-  "@finishedNoShowUndo": {"placeholders": {"name": {"type": "String"}}}
+  "@finishedNoShowUndo": {"placeholders": {"name": {"type": "String"}}},
+  "tourHomeAccountTitle": "Tu cuenta e invitaciones",
+  "tourHomeAccountBody": "Aquí están tu cuenta y la opción de entrar como operador con un código de invitación."
 }

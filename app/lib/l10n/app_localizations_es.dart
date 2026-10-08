@@ -1535,4 +1535,11 @@ class AppLocalizationsEs extends AppLocalizations {
   String finishedNoShowUndo(String name) {
     return '$name marcado como no se presentó';
   }
+
+  @override
+  String get tourHomeAccountTitle => 'Tu cuenta e invitaciones';
+
+  @override
+  String get tourHomeAccountBody =>
+      'Aquí están tu cuenta y la opción de entrar como operador con un código de invitación.';
 }

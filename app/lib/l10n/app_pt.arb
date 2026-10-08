@@ -529,5 +529,7 @@
   "finishedServedUndo": "{name} marcado como atendido",
   "@finishedServedUndo": {"placeholders": {"name": {"type": "String"}}},
   "finishedNoShowUndo": "{name} marcado como não compareceu",
-  "@finishedNoShowUndo": {"placeholders": {"name": {"type": "String"}}}
+  "@finishedNoShowUndo": {"placeholders": {"name": {"type": "String"}}},
+  "tourHomeAccountTitle": "Sua conta e convites",
+  "tourHomeAccountBody": "Aqui ficam sua conta e a opção de entrar como operador com um código de convite."
 }

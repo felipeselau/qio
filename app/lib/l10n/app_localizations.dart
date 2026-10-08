@@ -2817,6 +2817,18 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'{name} marcado como não compareceu'**
   String finishedNoShowUndo(String name);
+
+  /// No description provided for @tourHomeAccountTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sua conta e convites'**
+  String get tourHomeAccountTitle;
+
+  /// No description provided for @tourHomeAccountBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aqui ficam sua conta e a opção de entrar como operador com um código de convite.'**
+  String get tourHomeAccountBody;
 }
 
 class _AppLocalizationsDelegate
