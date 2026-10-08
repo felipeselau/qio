@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/qio_colors.dart';
+import '../theme/qio_palette.dart';
 
 class QioCard extends StatelessWidget {
   const QioCard({
@@ -18,7 +18,7 @@ class QioCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: color ?? QioColors.card,
+      color: color ?? context.qio.card,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
