@@ -53,6 +53,17 @@ Flags (`functions/.env`, lidas em `functions/src/appcheck.js`): `ENFORCE_APP_CHE
 as duas callables; `ENFORCE_APP_CHECK_JOIN` e `ENFORCE_APP_CHECK_FEEDBACK` (`true`/`false`)
 sobrescrevem por callable quando definidas.
 
+Limites da métrica de log:
+
+- `appCheck=absent` mistura "sem token" e "token inválido" (o Firebase só popula `request.app`
+  quando o token é válido).
+- Depois de ligar o enforcement o log some para chamadas barradas, então a métrica fica cega
+  para rejeições. Acompanhe-as pela métrica de App Check do console (Firebase Console > App
+  Check > APIs/Apps) e pelos erros `unauthenticated` das callables.
+- No web, `unauthenticated` também pode vir de ID token de Auth ausente ou expirado, não só de
+  App Check. Recarregar a página resolve os dois casos, então a mensagem "Recarregue a página"
+  serve para ambos.
+
 ## Rollback
 
 Definir a flag como `false` (ou removê-la) em `functions/.env` e refazer o deploy da function

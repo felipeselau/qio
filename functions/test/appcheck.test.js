@@ -31,4 +31,32 @@ describe('isEnforced', () => {
     assert.equal(isEnforced('joinQueue', env), true);
     assert.equal(isEnforced('desconhecida', { ENFORCE_APP_CHECK: 'true' }), true);
   });
+
+  it('flags específicas toleram caixa e espaços', () => {
+    assert.equal(isEnforced('joinQueue', { ENFORCE_APP_CHECK_JOIN: 'TRUE' }), true);
+    assert.equal(isEnforced('joinQueue', { ENFORCE_APP_CHECK_JOIN: ' true ' }), true);
+    assert.equal(
+      isEnforced('joinQueue', { ENFORCE_APP_CHECK: 'true', ENFORCE_APP_CHECK_JOIN: 'False' }),
+      false,
+    );
+    assert.equal(
+      isEnforced('submitFeedback', { ENFORCE_APP_CHECK: 'true', ENFORCE_APP_CHECK_FEEDBACK: ' FALSE ' }),
+      false,
+    );
+  });
+
+  it('valor específico estranho cai no fallback', () => {
+    assert.equal(isEnforced('joinQueue', { ENFORCE_APP_CHECK_JOIN: 'yes' }), false);
+    assert.equal(
+      isEnforced('joinQueue', { ENFORCE_APP_CHECK: 'true', ENFORCE_APP_CHECK_JOIN: 'yes' }),
+      true,
+    );
+  });
+
+  it('flag geral só liga com true (trim e caixa)', () => {
+    assert.equal(isEnforced('joinQueue', { ENFORCE_APP_CHECK: ' TRUE ' }), true);
+    assert.equal(isEnforced('joinQueue', { ENFORCE_APP_CHECK: 'yes' }), false);
+    assert.equal(isEnforced('joinQueue', { ENFORCE_APP_CHECK: '1' }), false);
+    assert.equal(isEnforced('joinQueue', { ENFORCE_APP_CHECK: '' }), false);
+  });
 });

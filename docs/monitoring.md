@@ -122,3 +122,7 @@ alerta quando `absent / total` ficar acima de 5% após o rollout. O critério pa
 enforcement (≥95% com token por 3 a 7 dias) está em `docs/APPCHECK.md`. Com o enforcement
 ligado, chamadas sem token são barradas antes do handler e não geram mais este log; use o
 erro `unauthenticated` nas métricas de callables.
+
+Atenção: `absent` mistura "sem token" e "token inválido" (`request.app` só existe com token
+válido). Após ligar o enforcement a métrica fica cega para as rejeições; acompanhe-as pela
+métrica de App Check do console (Firebase Console > App Check).

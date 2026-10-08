@@ -239,7 +239,8 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   App Check é opcional sem `VITE_RECAPTCHA_SITE_KEY`; usa **reCAPTCHA Enterprise**
   (Fraud Defense), não v3. A chave não aceita `localhost` e não roda com
   emulators. No CI, as chaves vêm de `vars.VITE_RECAPTCHA_SITE_KEY` e
-  `vars.VITE_VAPID_KEY` (GitHub → Actions → Variables). O app Flutter não usa App
+  `vars.VITE_VAPID_KEY` (GitHub → Actions → Variables). `VITE_APPCHECK_DEBUG_TOKEN`
+  (só `npm run dev`, ignorado em produção) habilita debug token. O app Flutter não usa App
   Check: APK fora da Play Store não passa no Play Integrity, então nunca ligue
   enforcement em RTDB/Firestore, só nas callables `joinQueue` e `submitFeedback` (chamadas só pela web).
 - PWA instalável (`web/public/manifest.webmanifest` + ícones PNG) **sem cache
