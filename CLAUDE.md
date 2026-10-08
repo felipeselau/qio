@@ -317,10 +317,14 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
 - Aviso ao dono quando alguém entra na fila (som + vibração + SnackBar) é
   in-app: `QueuePanelScreen` assina `watchEntries` e usa `entry_diff.dart`. Só
   funciona com o painel aberto; push com o app fechado é trabalho futuro.
-- `web/src/firebase.ts`: `getMessaging()` lança em navegadores sem suporte a FCM.
-  Use sempre `await getMessagingSafe()` (assíncrono, import dinâmico de
-  `firebase/messaging`, retorna `null`). Nunca importe `firebase/messaging`
-  estaticamente nem chame `getMessaging` no topo de um módulo.
+- `web/src/lib/messaging.ts`: `getMessaging()` lança em navegadores sem suporte a
+  FCM. Use sempre `await getMessagingSafe()` (assíncrono, import dinâmico via
+  `messagingModule.ts`): `null` (em cache) = sem suporte; falha de rede ao baixar o
+  chunk rejeita com `MessagingLoadError` e não é cacheada (retry). Nunca importe
+  `firebase/messaging` estaticamente nem chame `getMessaging` no topo de um módulo.
+- A landing `/` carrega o bundle inteiro (Auth/Database/Functions/App Check): a
+  `QueuePage` não usa `React.lazy` porque o caminho do QR é o principal e o lazy
+  adicionaria uma ida e volta de rede nele.
 - Landing em `/` (`web/src/routes/Landing.tsx`); `*` mostra "link inválido" só
   para caminhos desconhecidos. O link do app do dono só aparece se
   `VITE_OWNER_APP_URL` (https) estiver definida.
