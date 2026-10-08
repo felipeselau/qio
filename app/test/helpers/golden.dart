@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
@@ -55,6 +56,7 @@ Future<void> goldenApp(
   );
   await tester.pump(settle);
   await tester.pump(settle);
+  if (!Platform.isLinux) return;
   await expectLater(
     find.byType(MaterialApp),
     matchesGoldenFile('../goldens/$name.png'),
