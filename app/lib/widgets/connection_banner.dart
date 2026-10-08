@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
-import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
+import '../theme/qio_palette.dart';
 
 class ConnectionBanner extends StatefulWidget {
   const ConnectionBanner({
@@ -62,7 +62,7 @@ class _ConnectionBannerState extends State<ConnectionBanner> {
           ? Semantics(
               liveRegion: true,
               child: Material(
-                color: QioColors.statusPausedText,
+                color: context.qio.statusPausedText,
                 child: SafeArea(
                   bottom: false,
                   child: Padding(
@@ -75,14 +75,14 @@ class _ConnectionBannerState extends State<ConnectionBanner> {
                         Icon(
                           Icons.cloud_off_outlined,
                           size: 18,
-                          color: QioColors.background,
+                          color: context.qio.background,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             l10n.offlineBanner,
-                            style: QioTextStyles.caption.copyWith(
-                              color: QioColors.background,
+                            style: context.qioText.caption.copyWith(
+                              color: context.qio.background,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
