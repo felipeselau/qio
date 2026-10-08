@@ -345,6 +345,7 @@
   "groupNone": "No group",
   "groupName": "Group name",
   "groupLimitReached": "Limit of {max} groups reached.",
+  "queueLimitReached": "Limit of {max} queues reached. Delete a queue to create another.",
   "groupLabel": "Group",
   "groupsEmpty": "No groups yet. Create one to organize your queues.",
   "groupPermissionDenied": "No permission to change groups. Update the app and try again.",

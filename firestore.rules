@@ -23,6 +23,11 @@ service cloud.firestore {
         && (invite.data.expiresAt == null || invite.data.expiresAt > request.time);
     }
 
+    function notAnonymous() {
+      return request.auth != null
+        && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
     function validGroupId(data) {
       return !('groupId' in data)
         || (data.groupId is string && data.groupId.size() > 0 && data.groupId.size() <= 40);
@@ -106,7 +111,7 @@ service cloud.firestore {
     }
 
     match /operatorInvites/{code} {
-      allow get: if signedIn();
+      allow get: if notAnonymous();
       allow create: if signedIn()
         && request.resource.data.ownerId == request.auth.uid
         && isQueueOwner(request.resource.data.queueId);
@@ -155,7 +160,7 @@ service cloud.firestore {
       match /operatorRequests/{reqUid} {
         allow get: if signedIn() && (request.auth.uid == reqUid || isQueueOwner(queueId));
         allow list: if signedIn() && isQueueOwner(queueId);
-        allow create: if signedIn()
+        allow create: if notAnonymous()
           && request.auth.uid == reqUid
           && request.resource.data.uid == reqUid
           && request.resource.data.status == 'pending'
@@ -164,7 +169,8 @@ service cloud.firestore {
           (isQueueOwner(queueId)
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'respondedAt'])
             && request.resource.data.status in ['approved', 'rejected', 'removed'])
-          || (request.auth.uid == reqUid
+          || (notAnonymous()
+            && request.auth.uid == reqUid
             && resource.data.status != 'pending'
             && request.resource.data.uid == reqUid
             && request.resource.data.status == 'pending'

@@ -345,6 +345,7 @@
   "groupNone": "Sin grupo",
   "groupName": "Nombre del grupo",
   "groupLimitReached": "Límite de {max} grupos alcanzado.",
+  "queueLimitReached": "Límite de {max} filas alcanzado. Elimina una fila para crear otra.",
   "groupLabel": "Grupo",
   "groupsEmpty": "Aún no hay grupos. Crea uno para organizar tus filas.",
   "groupPermissionDenied": "Sin permiso para cambiar grupos. Actualiza la app e inténtalo de nuevo.",

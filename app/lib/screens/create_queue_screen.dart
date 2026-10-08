@@ -111,6 +111,17 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
           ),
         );
       }
+    } on QueueLimitReached {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context).queueLimitReached(maxQueuesPerOwner),
+            ),
+            backgroundColor: QioColors.error,
+          ),
+        );
+      }
     } on Exception {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

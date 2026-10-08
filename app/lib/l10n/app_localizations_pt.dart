@@ -1111,6 +1111,11 @@ class AppLocalizationsPt extends AppLocalizations {
   }
 
   @override
+  String queueLimitReached(int max) {
+    return 'Limite de $max filas atingido. Exclua uma fila para criar outra.';
+  }
+
+  @override
   String get groupLabel => 'Grupo';
 
   @override

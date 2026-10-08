@@ -235,6 +235,21 @@ conhecidas: `docs/qualidade.md`.
 - Deploy (Blaze + Cloud Scheduler): `--only functions:evaluateQueueAlerts` →
   `--only firestore:rules` → distribuir o APK.
 
+## Limites e validações
+
+- **Limite de filas por dono:** `maxQueuesPerOwner = 20` (`queue_service.dart`).
+  `QueueService.createQueue` conta as filas do dono (`count()`) no início e lança
+  `QueueLimitReached`; a tela de criação mostra `queueLimitReached` (pt/en/es).
+  Vale **só no cliente**: rules do Firestore não contam documentos, então um
+  cliente adulterado ainda passa do limite (contador/callable seria trabalho
+  futuro). Novos fluxos de criação (ex.: duplicar) devem reutilizar a checagem.
+- **Convites só para contas não anônimas:** `notAnonymous()` em `firestore.rules`
+  (`sign_in_provider != 'anonymous'`) é exigido para ler `operatorInvites/{code}`
+  e criar/recriar `operatorRequests/{uid}`. O app só autentica com e-mail/Google
+  (`auth_service.dart`), então o fluxo de operador não muda.
+- **Ordem de deploy:** rules (Firestore e RTDB) → APK. APK novo antes das rules
+  mostra a mensagem correta de limite.
+
 ## Operadores
 
 - **Convite**: `operatorInvites/{code}` (6 chars, validade padrão 24 h) é a fonte
