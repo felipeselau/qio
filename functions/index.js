@@ -49,6 +49,7 @@ const {
 } = require('./src/alerts');
 const { logError, logAppCheck } = require('./src/log');
 const { guarded } = require('./src/guard');
+const { isEnforced } = require('./src/appcheck');
 
 initializeApp();
 
@@ -122,7 +123,7 @@ exports.joinQueue = onCall(
   {
     region: 'us-central1',
     invoker: 'public',
-    enforceAppCheck: process.env.ENFORCE_APP_CHECK === 'true',
+    enforceAppCheck: isEnforced('joinQueue'),
   },
   guarded('joinQueue', async (request) => {
     logAppCheck('joinQueue', request);
@@ -236,7 +237,7 @@ exports.submitFeedback = onCall(
   {
     region: 'us-central1',
     invoker: 'public',
-    enforceAppCheck: process.env.ENFORCE_APP_CHECK === 'true',
+    enforceAppCheck: isEnforced('submitFeedback'),
   },
   guarded('submitFeedback', async (request) => {
     logAppCheck('submitFeedback', request);

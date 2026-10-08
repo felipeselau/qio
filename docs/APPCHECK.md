@@ -49,6 +49,10 @@ Não ative "Enforce" para Realtime Database, Firestore ou Storage em App Check >
 4. **Enforcement em `submitFeedback`**: `ENFORCE_APP_CHECK_FEEDBACK=true` e
    `firebase deploy --only functions:submitFeedback`.
 
+Flags (`functions/.env`, lidas em `functions/src/appcheck.js`): `ENFORCE_APP_CHECK` vale para
+as duas callables; `ENFORCE_APP_CHECK_JOIN` e `ENFORCE_APP_CHECK_FEEDBACK` (`true`/`false`)
+sobrescrevem por callable quando definidas.
+
 ## Rollback
 
 Definir a flag como `false` (ou removê-la) em `functions/.env` e refazer o deploy da function
