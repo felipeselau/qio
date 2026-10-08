@@ -88,6 +88,7 @@ export type QueueState = {
   position: number | null;
   estimatedWaitMin: number | null;
   waitingCount: number;
+  avgServiceMin: number;
   publicTickets: Record<string, PublicTicket>;
   full: boolean;
   loading: boolean;
@@ -216,6 +217,7 @@ export function useQueue(
     position,
     estimatedWaitMin,
     waitingCount,
+    avgServiceMin: meta?.avgServiceMinAuto ?? meta?.avgServiceMin ?? 10,
     publicTickets: (publicTickets ?? {}) as Record<string, PublicTicket>,
     full,
     loading,

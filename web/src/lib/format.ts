@@ -10,3 +10,15 @@ export function formatPhone(raw: string): string {
 export function isValidPhone(phone: string): boolean {
   return /^\(\d{2}\) \d{4,5}-\d{4}$/.test(phone);
 }
+
+export type WaitRange = { min: number; max: number };
+
+export function waitRange(position: number, avgMin: number): WaitRange | null {
+  if (!Number.isFinite(position) || !Number.isFinite(avgMin) || position < 1 || avgMin <= 0) {
+    return null;
+  }
+  const base = position * avgMin;
+  const min = Math.max(1, Math.round(base * 0.7));
+  const max = Math.max(min + 1, Math.round(base * 1.4));
+  return { min, max };
+}

@@ -72,7 +72,11 @@
     "slotPast": "Cerrado",
     "slotSpots": "{{count}} cupos libres",
     "slotRequired": "Elige un horario para entrar",
-    "yourSlot": "Tu horario: {{time}}"
+    "yourSlot": "Tu horario: {{time}}",
+    "aheadSummary_one": "{{count}} persona delante · espera aproximada {{min}}–{{max}} min",
+    "aheadSummary_other": "{{count}} personas delante · espera aproximada {{min}}–{{max}} min",
+    "noQueueNow": "Sin fila ahora",
+    "pausedNoJoin": "No es posible entrar mientras la fila está en pausa."
   },
   "errors": {
     "nameRequired": "Ingresa tu nombre",

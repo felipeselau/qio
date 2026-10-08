@@ -19,7 +19,7 @@ import {
   type PushSupport,
 } from '../lib/fcm';
 import { useQueue, type QueueMeta } from '../lib/useQueue';
-import { formatPhone, isValidPhone } from '../lib/format';
+import { formatPhone, isValidPhone, waitRange } from '../lib/format';
 import { useInstallPrompt } from '../lib/useInstallPrompt';
 import { formatSlotTime, isSlotFull, isSlotPast, slotTaken } from '../lib/slots';
 
@@ -131,6 +131,8 @@ export default function QueuePage() {
     myEntryResolved,
     position,
     estimatedWaitMin,
+    waitingCount,
+    avgServiceMin,
     publicTickets,
     full,
     loading,
@@ -157,6 +159,22 @@ export default function QueuePage() {
       root.style.removeProperty('--brand');
     };
   }, [brandColor]);
+
+  const queueName = meta?.name ?? null;
+  useEffect(() => {
+    if (!queueName) return;
+    const previous = document.title;
+    document.title = `${queueName} · Qio`;
+    return () => {
+      document.title = previous;
+    };
+  }, [queueName]);
+
+  const range = waitRange(waitingCount + 1, avgServiceMin);
+  const waitSummary =
+    waitingCount === 0 || !range
+      ? t('queue.noQueueNow')
+      : t('queue.aheadSummary', { count: waitingCount, min: range.min, max: range.max });
 
   const [authFailed, setAuthFailed] = useState(false);
   useEffect(() => {
@@ -731,6 +749,17 @@ export default function QueuePage() {
           </div>
         )}
 
+        {!scheduled && meta?.status !== 'closed' && (
+          <p className="wait-summary" role="status" aria-live="polite">
+            {waitSummary}
+          </p>
+        )}
+
+        {meta?.status === 'paused' ? (
+          <p className="muted" style={{ textAlign: 'center' }}>
+            {t('queue.pausedNoJoin')}
+          </p>
+        ) : (
         <form
           onSubmit={handleSubmit}
           style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
@@ -807,6 +836,7 @@ export default function QueuePage() {
             {submitting ? t('queue.joining') : t('queue.join')}
           </button>
         </form>
+        )}
       </div>
     </div>
   );
