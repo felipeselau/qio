@@ -1511,4 +1511,28 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get savingQueue => 'Guardando…';
+
+  @override
+  String get actionErrorOffline =>
+      'Sin conexión. Revisa tu internet e inténtalo de nuevo.';
+
+  @override
+  String get actionErrorAccessEnded =>
+      'Acceso finalizado o sin permiso para esta acción.';
+
+  @override
+  String get actionErrorConflict => 'La fila cambió. Inténtalo de nuevo.';
+
+  @override
+  String get undo => 'Deshacer';
+
+  @override
+  String finishedServedUndo(String name) {
+    return '$name marcado como atendido';
+  }
+
+  @override
+  String finishedNoShowUndo(String name) {
+    return '$name marcado como no se presentó';
+  }
 }

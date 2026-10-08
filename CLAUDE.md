@@ -192,6 +192,18 @@ conhecidas: `docs/qualidade.md`.
   `skips` quando > 0 (permission-denied no history é engolido: faça o deploy das
   rules do Firestore antes de distribuir o APK novo).
 
+- "Atendido"/"Não compareceu" no app são adiados 5 s (SnackBar "Desfazer"); o
+  flush ocorre ao agendar outra ação, chamar alguém, sair da tela ou pausar o
+  app. Kill forçado dentro dos 5 s perde a ação pendente e a entry segue na fila
+  (seguro). `finishedAt` segue `serverTimestamp`: o tempo de atendimento inclui até
+  ~5 s da janela de desfazer (viés pequeno e conhecido; as rules do history não
+  validam `finishedAt` e relógio de cliente distorceria ordenação/estimativa).
+- `_finishEntry`: `get` valida `called` → `_archiveEntry` → transação de status
+  (idempotente; `null` devolve `success(null)` p/ forçar round-trip com cache
+  frio) → `remove`. Archive falho deixa a entry `called` (repetível). Corrida
+  residual: outro operador finalizar com resultado diferente entre o `get` e a
+  transação. Timeout de 10 s vira "sem conexão" e a entry volta à lista.
+
 ## Estimativa de espera automática
 
 - `queues/{id}/meta/avgServiceMinAuto` (RTDB) é escrito só pela function

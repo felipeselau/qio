@@ -521,5 +521,13 @@
   "descriptionTooLong": "No máximo 300 caracteres",
   "avgServiceInvalid": "Informe de 1 a 240 minutos",
   "avgServiceAutoHint": "O tempo manual só vale até existir a estimativa automática, calculada a partir dos atendimentos.",
-  "savingQueue": "Salvando…"
+  "savingQueue": "Salvando…",
+  "actionErrorOffline": "Sem conexão. Verifique a internet e tente novamente.",
+  "actionErrorAccessEnded": "Acesso encerrado ou sem permissão para esta ação.",
+  "actionErrorConflict": "A fila mudou. Tente de novo.",
+  "undo": "Desfazer",
+  "finishedServedUndo": "{name} marcado como atendido",
+  "@finishedServedUndo": {"placeholders": {"name": {"type": "String"}}},
+  "finishedNoShowUndo": "{name} marcado como não compareceu",
+  "@finishedNoShowUndo": {"placeholders": {"name": {"type": "String"}}}
 }

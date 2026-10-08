@@ -16,6 +16,7 @@ class QueueActionBar extends StatelessWidget {
     required this.finishLoading,
     required this.deleteLoading,
     required this.isMine,
+    this.hiddenIds = const {},
     required this.onCallNext,
     required this.onServed,
     required this.onNoShow,
@@ -30,6 +31,7 @@ class QueueActionBar extends StatelessWidget {
   final bool finishLoading;
   final bool deleteLoading;
   final bool Function(QueueEntry) isMine;
+  final Set<String> hiddenIds;
   final VoidCallback onCallNext;
   final void Function(QueueEntry) onServed;
   final void Function(QueueEntry) onNoShow;
@@ -79,7 +81,12 @@ class QueueActionBar extends StatelessWidget {
                 builder: (context, snap) {
                   final entries = snap.data ?? [];
                   final mine = entries
-                      .where((e) => e.status == EntryStatus.called && isMine(e))
+                      .where(
+                        (e) =>
+                            e.status == EntryStatus.called &&
+                            isMine(e) &&
+                            !hiddenIds.contains(e.id),
+                      )
                       .toList();
                   final current = mine.isNotEmpty ? mine.first : null;
                   return Column(

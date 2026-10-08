@@ -478,5 +478,13 @@
   "descriptionTooLong": "At most 300 characters",
   "avgServiceInvalid": "Enter 1 to 240 minutes",
   "avgServiceAutoHint": "The manual time only applies until the automatic estimate exists, calculated from served customers.",
-  "savingQueue": "Saving…"
+  "savingQueue": "Saving…",
+  "actionErrorOffline": "No connection. Check your internet and try again.",
+  "actionErrorAccessEnded": "Access ended or no permission for this action.",
+  "actionErrorConflict": "The queue changed. Please try again.",
+  "undo": "Undo",
+  "finishedServedUndo": "{name} marked as served",
+  "@finishedServedUndo": {"placeholders": {"name": {"type": "String"}}},
+  "finishedNoShowUndo": "{name} marked as no-show",
+  "@finishedNoShowUndo": {"placeholders": {"name": {"type": "String"}}}
 }

@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qio_app/models/queue.dart';
@@ -104,7 +107,69 @@ void main() {
     expect(find.text('Chamar de novo'), findsOneWidget);
     await tester.tap(find.widgetWithText(QioButton, 'Atendido'));
     await tick(tester);
+    expect(queues.calls, isNot(contains('served:e1')));
+    expect(find.text('Ana marcado como atendido'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
     expect(queues.calls, contains('served:e1'));
+  });
+
+  testWidgets('undo cancels the pending served action', (tester) async {
+    final queues = service(
+      entries: [fakeEntry('e1', 1, name: 'Ana', status: EntryStatus.called)],
+    );
+    await pumpApp(tester, panel(queues), size: tall);
+    await tick(tester);
+    await tester.tap(find.widgetWithText(QioButton, 'Atendido'));
+    await tick(tester);
+    expect(find.text('CHAMANDO AGORA'), findsNothing);
+    await tester.tap(find.text('Desfazer'));
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(seconds: 6));
+    expect(queues.calls.where((c) => c.startsWith('served')), isEmpty);
+    expect(find.text('CHAMANDO AGORA'), findsOneWidget);
+  });
+
+  testWidgets('no-show also waits before archiving', (tester) async {
+    final queues = service(
+      entries: [fakeEntry('e1', 1, name: 'Ana', status: EntryStatus.called)],
+    );
+    await pumpApp(tester, panel(queues), size: tall);
+    await tick(tester);
+    await tester.tap(find.widgetWithText(QioButton, 'Não compareceu'));
+    await tick(tester);
+    expect(queues.calls, isNot(contains('noShow:e1')));
+    await tester.pump(const Duration(seconds: 5));
+    expect(queues.calls, contains('noShow:e1'));
+  });
+
+  testWidgets('leaving the screen flushes the pending action', (tester) async {
+    final queues = service(
+      entries: [fakeEntry('e1', 1, name: 'Ana', status: EntryStatus.called)],
+    );
+    await pumpApp(tester, panel(queues), size: tall);
+    await tick(tester);
+    await tester.tap(find.widgetWithText(QioButton, 'Atendido'));
+    await tick(tester);
+    expect(queues.calls, isNot(contains('served:e1')));
+    await tester.pumpWidget(const SizedBox());
+    await tester.pump();
+    expect(queues.calls, contains('served:e1'));
+  });
+
+  testWidgets('finish failure shows the mapped error message', (tester) async {
+    final queues = service(
+      entries: [fakeEntry('e1', 1, name: 'Ana', status: EntryStatus.called)],
+    )..finishError = FirebaseException(plugin: 'test', code: 'unavailable');
+    await pumpApp(tester, panel(queues), size: tall);
+    await tick(tester);
+    await tester.tap(find.widgetWithText(QioButton, 'Atendido'));
+    await tick(tester);
+    await tester.pump(const Duration(seconds: 5));
+    await tick(tester);
+    expect(
+      find.text('Sem conexão. Verifique a internet e tente novamente.'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('call next is disabled while an entry is being served', (
@@ -192,5 +257,219 @@ void main() {
     await tick(tester);
     expect(find.text('Call next'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('double tap schedules a single finish', (tester) async {
+    final queues = service(
+      entries: [fakeEntry('e1', 1, name: 'Ana', status: EntryStatus.called)],
+    );
+    await pumpApp(tester, panel(queues), size: tall);
+    await tick(tester);
+    final button = find.widgetWithText(QioButton, 'Atendido');
+    await tester.tap(button);
+    await tester.tap(button, warnIfMissed: false);
+    await tick(tester);
+    await tester.pump(const Duration(seconds: 5));
+    expect(queues.calls.where((c) => c == 'served:e1'), hasLength(1));
+  });
+
+  testWidgets('a second pending action flushes the first', (tester) async {
+    final queues = service(
+      entries: [
+        fakeEntry(
+          'e1',
+          1,
+          name: 'Ana',
+          status: EntryStatus.called,
+          operatorId: 'o1',
+        ),
+        fakeEntry(
+          'e2',
+          2,
+          name: 'Bia',
+          status: EntryStatus.called,
+          operatorId: 'o1',
+        ),
+      ],
+    );
+    await pumpApp(tester, panel(queues), size: tall);
+    await tick(tester);
+    Future<void> finishFirstOther() async {
+      tester
+          .widget<PopupMenuButton<EntryStatus>>(
+            find.byType(PopupMenuButton<EntryStatus>).first,
+          )
+          .onSelected!(EntryStatus.served);
+      await tick(tester);
+    }
+
+    await finishFirstOther();
+    expect(queues.calls, isNot(contains('served:e1')));
+    await finishFirstOther();
+    expect(queues.calls, contains('served:e1'));
+    expect(queues.calls, isNot(contains('served:e2')));
+    expect(find.text('Bia marcado como atendido'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 5));
+    expect(queues.calls, contains('served:e2'));
+    await tester.pump(const Duration(seconds: 1));
+  });
+
+  testWidgets('call next flushes a pending finish first', (tester) async {
+    final queues = service(
+      entries: [
+        fakeEntry('e1', 1, name: 'Ana', status: EntryStatus.called),
+        fakeEntry('e2', 2, name: 'Bia'),
+      ],
+    );
+    await pumpApp(tester, panel(queues), size: tall);
+    await tick(tester);
+    await tester.tap(find.widgetWithText(QioButton, 'Atendido'));
+    await tick(tester);
+    await tester.tap(find.widgetWithText(QioButton, 'Chamar próximo'));
+    await tick(tester);
+    final relevant = queues.calls
+        .where((c) => c.startsWith('served') || c.startsWith('callNext'))
+        .toList();
+    expect(relevant, ['served:e1', 'callNext:q1']);
+    await tester.pump(const Duration(seconds: 6));
+  });
+
+  testWidgets('app lifecycle pause flushes the pending action', (tester) async {
+    final queues = service(
+      entries: [fakeEntry('e1', 1, name: 'Ana', status: EntryStatus.called)],
+    );
+    await pumpApp(tester, panel(queues), size: tall);
+    await tick(tester);
+    await tester.tap(find.widgetWithText(QioButton, 'Atendido'));
+    await tick(tester);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump();
+    expect(queues.calls, contains('served:e1'));
+  });
+
+  testWidgets('leaving removes the undo snackbar', (tester) async {
+    final queues = service(
+      entries: [fakeEntry('e1', 1, name: 'Ana', status: EntryStatus.called)],
+    );
+    await pumpApp(tester, panel(queues), size: tall);
+    await tick(tester);
+    await tester.tap(find.widgetWithText(QioButton, 'Atendido'));
+    await tick(tester);
+    expect(find.text('Desfazer'), findsOneWidget);
+    await pumpApp(tester, const Scaffold(), size: tall);
+    await tick(tester);
+    expect(find.text('Desfazer'), findsNothing);
+    expect(queues.calls, contains('served:e1'));
+  });
+
+  testWidgets('failure while flushing on leave still reports the error', (
+    tester,
+  ) async {
+    final queues = service(
+      entries: [fakeEntry('e1', 1, name: 'Ana', status: EntryStatus.called)],
+    )..finishError = FirebaseException(plugin: 'test', code: 'unavailable');
+    await pumpApp(tester, panel(queues), size: tall);
+    await tick(tester);
+    await tester.tap(find.widgetWithText(QioButton, 'Atendido'));
+    await tick(tester);
+    await pumpApp(tester, const Scaffold(), size: tall);
+    await tick(tester);
+    await tick(tester);
+    expect(
+      find.text('Sem conexão. Verifique a internet e tente novamente.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('losing access discards the pending action', (tester) async {
+    final queues = service(
+      entries: [
+        fakeEntry(
+          'e1',
+          1,
+          name: 'Ana',
+          status: EntryStatus.called,
+          operatorId: 'uid-1',
+        ),
+      ],
+    );
+    final operators = FakeOperatorService();
+    addTearDown(operators.access.close);
+    await pumpApp(
+      tester,
+      panel(queues, isOwner: false, operators: operators),
+      size: tall,
+    );
+    await tick(tester);
+    await tester.tap(find.widgetWithText(QioButton, 'Atendido'));
+    await tick(tester);
+    operators.access.add(false);
+    await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+    await tick(tester);
+    await tester.pump(const Duration(seconds: 6));
+    await pumpApp(tester, const Scaffold(), size: tall);
+    await tick(tester);
+    expect(queues.calls.where((c) => c.startsWith('served')), isEmpty);
+  });
+
+  testWidgets('inactive does not flush the pending action', (tester) async {
+    final queues = service(
+      entries: [fakeEntry('e1', 1, name: 'Ana', status: EntryStatus.called)],
+    );
+    await pumpApp(tester, panel(queues), size: tall);
+    await tick(tester);
+    await tester.tap(find.widgetWithText(QioButton, 'Atendido'));
+    await tick(tester);
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.inactive);
+    await tester.pump();
+    expect(queues.calls, isNot(contains('served:e1')));
+    await tester.pump(const Duration(seconds: 6));
+    expect(queues.calls, contains('served:e1'));
+  });
+
+  testWidgets('failed archive keeps the entry visible and reports', (
+    tester,
+  ) async {
+    final queues = service(
+      entries: [fakeEntry('e1', 1, name: 'Ana', status: EntryStatus.called)],
+    )..finishError = FirebaseException(plugin: 'test', code: 'unavailable');
+    await pumpApp(tester, panel(queues), size: tall);
+    await tick(tester);
+    await tester.tap(find.widgetWithText(QioButton, 'Atendido'));
+    await tick(tester);
+    expect(find.text('CHAMANDO AGORA'), findsNothing);
+    await tester.pump(const Duration(seconds: 5));
+    await tick(tester);
+    expect(find.text('CHAMANDO AGORA'), findsOneWidget);
+    expect(
+      find.text('Sem conexão. Verifique a internet e tente novamente.'),
+      findsOneWidget,
+    );
+    queues.finishError = null;
+    await tester.tap(find.widgetWithText(QioButton, 'Atendido'));
+    await tick(tester);
+    await tester.pump(const Duration(seconds: 6));
+    expect(queues.calls, contains('served:e1'));
+  });
+
+  testWidgets('finish timeout reports offline and restores the entry', (
+    tester,
+  ) async {
+    final queues = service(
+      entries: [fakeEntry('e1', 1, name: 'Ana', status: EntryStatus.called)],
+    )..finishGate = Completer<void>().future;
+    await pumpApp(tester, panel(queues), size: tall);
+    await tick(tester);
+    await tester.tap(find.widgetWithText(QioButton, 'Atendido'));
+    await tick(tester);
+    await tester.pump(const Duration(seconds: 5));
+    expect(find.text('CHAMANDO AGORA'), findsNothing);
+    await tester.pump(const Duration(seconds: 10));
+    await tick(tester);
+    expect(find.text('CHAMANDO AGORA'), findsOneWidget);
+    expect(
+      find.text('Sem conexão. Verifique a internet e tente novamente.'),
+      findsOneWidget,
+    );
   });
 }
