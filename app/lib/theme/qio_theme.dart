@@ -15,13 +15,13 @@ class QioTheme {
 
   static ThemeData _build(Brightness brightness) {
     QioColors.apply(brightness);
+    final p = QioPalette.forBrightness(brightness);
+    final t = QioText(p);
     final base = ThemeData(brightness: brightness, useMaterial3: true);
 
     return base.copyWith(
-      extensions: <ThemeExtension<dynamic>>[
-        QioPalette.forBrightness(brightness),
-      ],
-      scaffoldBackgroundColor: QioColors.background,
+      extensions: <ThemeExtension<dynamic>>[p],
+      scaffoldBackgroundColor: p.background,
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: FadeForwardsPageTransitionsBuilder(),
@@ -35,36 +35,36 @@ class QioTheme {
         onPrimary: QioColors.textOnPrimary,
         secondary: QioColors.secondary,
         onSecondary: QioColors.textOnSecondary,
-        surface: QioColors.surface,
-        onSurface: QioColors.textPrimary,
+        surface: p.surface,
+        onSurface: p.textPrimary,
         error: QioColors.error,
         onError: Colors.white,
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: QioColors.surface,
-        foregroundColor: QioColors.textPrimary,
+        backgroundColor: p.surface,
+        foregroundColor: p.textPrimary,
         elevation: 0,
         centerTitle: false,
-        titleTextStyle: QioTextStyles.heading2,
+        titleTextStyle: t.heading2,
       ),
       cardTheme: CardThemeData(
-        color: QioColors.card,
+        color: p.card,
         elevation: 1,
-        shadowColor: QioColors.gray900.withValues(alpha: 0.08),
+        shadowColor: p.gray900.withValues(alpha: 0.08),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: EdgeInsets.zero,
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: QioColors.gray50,
+        fillColor: p.gray50,
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: QioColors.gray200),
+          borderSide: BorderSide(color: p.gray200),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: QioColors.gray200),
+          borderSide: BorderSide(color: p.gray200),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -74,18 +74,14 @@ class QioTheme {
           borderRadius: BorderRadius.circular(10),
           borderSide: BorderSide(color: QioColors.error),
         ),
-        labelStyle: QioTextStyles.label,
+        labelStyle: t.label,
         hintStyle: TextStyle(
           fontFamily: 'Inter',
           fontSize: 14,
-          color: QioColors.textHint,
+          color: p.textHint,
         ),
       ),
-      dividerTheme: DividerThemeData(
-        color: QioColors.gray200,
-        thickness: 1,
-        space: 1,
-      ),
+      dividerTheme: DividerThemeData(color: p.gray200, thickness: 1, space: 1),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: QioColors.primary,
@@ -95,24 +91,24 @@ class QioTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
-          textStyle: QioTextStyles.button,
+          textStyle: t.button,
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: QioColors.primaryText,
-          side: BorderSide(color: QioColors.gray300),
+          foregroundColor: p.primaryText,
+          side: BorderSide(color: p.gray300),
           padding: EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
-          textStyle: QioTextStyles.button,
+          textStyle: t.button,
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: QioColors.primaryText,
-          textStyle: QioTextStyles.bodyMedium,
+          foregroundColor: p.primaryText,
+          textStyle: t.bodyMedium,
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
