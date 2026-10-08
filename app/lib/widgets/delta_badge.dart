@@ -3,8 +3,8 @@ import 'package:intl/intl.dart' show NumberFormat;
 
 import '../l10n/app_localizations.dart';
 import '../services/metrics_trend.dart';
-import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
+import '../theme/qio_palette.dart';
 
 bool lowerIsBetter(MetricKey key) => key != MetricKey.total;
 
@@ -40,17 +40,17 @@ class DeltaBadge extends StatelessWidget {
     }
     final Color color;
     if (same) {
-      color = QioColors.textSecondary;
+      color = context.qio.textSecondary;
     } else {
       final good = lowerIsBetter(metric) ? !up : up;
-      color = good ? QioColors.statusOpenText : QioColors.statusClosedText;
+      color = good ? context.qio.statusOpenText : context.qio.statusClosedText;
     }
     return Semantics(
       label: spoken,
       child: ExcludeSemantics(
         child: Text(
           text,
-          style: QioTextStyles.caption.copyWith(
+          style: context.qioText.caption.copyWith(
             color: color,
             fontWeight: FontWeight.w600,
           ),
