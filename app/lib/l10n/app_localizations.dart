@@ -463,20 +463,8 @@ abstract class AppLocalizations {
   /// No description provided for @tourHomeQueueBody.
   ///
   /// In pt, this message translates to:
-  /// **'Toque no cartão para ver o QR code e chamar as pessoas.'**
+  /// **'Toque no cartão para abrir o painel e chamar as pessoas. Pause ou mostre o QR code pelos atalhos do cartão.'**
   String get tourHomeQueueBody;
-
-  /// No description provided for @tourHomeOperatorTitle.
-  ///
-  /// In pt, this message translates to:
-  /// **'Entrar como operador'**
-  String get tourHomeOperatorTitle;
-
-  /// No description provided for @tourHomeOperatorBody.
-  ///
-  /// In pt, this message translates to:
-  /// **'Recebeu um código de convite? Use aqui para ajudar em uma fila.'**
-  String get tourHomeOperatorBody;
 
   /// No description provided for @emptyQueuesTitle.
   ///
@@ -2823,6 +2811,78 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'{name} marcado como não compareceu'**
   String finishedNoShowUndo(String name);
+
+  /// No description provided for @tourHomeAccountTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sua conta e convites'**
+  String get tourHomeAccountTitle;
+
+  /// No description provided for @tourHomeAccountBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aqui ficam sua conta e a opção de entrar como operador com um código de convite.'**
+  String get tourHomeAccountBody;
+
+  /// No description provided for @quickQr.
+  ///
+  /// In pt, this message translates to:
+  /// **'QR code'**
+  String get quickQr;
+
+  /// No description provided for @quickPauseLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pausar fila {name}'**
+  String quickPauseLabel(String name);
+
+  /// No description provided for @quickReopenLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Reabrir fila {name}'**
+  String quickReopenLabel(String name);
+
+  /// No description provided for @quickQrLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostrar QR code da fila {name}'**
+  String quickQrLabel(String name);
+
+  /// No description provided for @searchQueuesHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Buscar fila pelo nome'**
+  String get searchQueuesHint;
+
+  /// No description provided for @sortQueues.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ordenar filas'**
+  String get sortQueues;
+
+  /// No description provided for @sortByName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nome'**
+  String get sortByName;
+
+  /// No description provided for @sortByRecent.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mais recentes'**
+  String get sortByRecent;
+
+  /// No description provided for @sortByWaiting.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mais espera'**
+  String get sortByWaiting;
+
+  /// No description provided for @noQueuesMatch.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma fila encontrada'**
+  String get noQueuesMatch;
 }
 
 class _AppLocalizationsDelegate

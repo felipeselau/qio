@@ -75,6 +75,8 @@ class QioEmptyState extends StatelessWidget {
     this.message,
     this.actionLabel,
     this.onAction,
+    this.secondaryLabel,
+    this.onSecondary,
     this.compact = false,
   });
 
@@ -83,6 +85,8 @@ class QioEmptyState extends StatelessWidget {
   final String? message;
   final String? actionLabel;
   final VoidCallback? onAction;
+  final String? secondaryLabel;
+  final VoidCallback? onSecondary;
   final bool compact;
 
   @override
@@ -113,6 +117,15 @@ class QioEmptyState extends StatelessWidget {
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: 20),
               QioButton(label: actionLabel!, onPressed: onAction),
+            ],
+            if (secondaryLabel != null && onSecondary != null) ...[
+              const SizedBox(height: 8),
+              QioButton(
+                label: secondaryLabel!,
+                variant: QioButtonVariant.ghost,
+                icon: Icons.badge_outlined,
+                onPressed: onSecondary,
+              ),
             ],
           ],
         ),

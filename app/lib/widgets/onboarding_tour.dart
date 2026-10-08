@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
@@ -37,11 +39,13 @@ Future<void> showOnboardingTour(
   Future<void> done() => OnboardingService.instance.markCompleted(tour, uid);
 
   final navigator = Navigator.of(context);
+  final finished = Completer<void>();
   late final TutorialCoachMark tutorial;
   late final PageRoute<void> backRoute;
 
   void release() {
     if (backRoute.isActive) navigator.removeRoute(backRoute);
+    if (!finished.isCompleted) finished.complete();
   }
 
   backRoute = PageRouteBuilder<void>(
@@ -95,8 +99,14 @@ Future<void> showOnboardingTour(
     },
   );
 
-  tutorial.show(context: context);
-  navigator.push(backRoute);
+  try {
+    tutorial.show(context: context);
+    navigator.push(backRoute);
+  } catch (_) {
+    release();
+    rethrow;
+  }
+  await finished.future;
 }
 
 class _StepText extends StatelessWidget {

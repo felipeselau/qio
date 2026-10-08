@@ -10,9 +10,12 @@ import '../l10n/app_localizations.dart';
 import '../controllers/home_controller.dart';
 import '../models/operator.dart';
 import '../models/queue.dart';
+import '../services/action_errors.dart';
 import '../services/auth_service.dart';
 import '../services/deep_link.dart';
+import '../services/home_prompts.dart';
 import '../services/push_service.dart';
+import '../services/queue_sort.dart';
 import '../services/onboarding_service.dart';
 import '../services/operator_service.dart';
 import '../services/queue_service.dart';
@@ -24,14 +27,18 @@ import '../widgets/onboarding_tour.dart';
 import '../widgets/qio_card.dart';
 import '../widgets/qio_empty_state.dart';
 import '../widgets/qio_skeleton.dart';
+import '../widgets/queue_panel/status_message_dialog.dart';
 import '../widgets/qio_responsive_body.dart';
 import 'account_screen.dart';
 import 'create_queue_screen.dart';
 import 'groups_screen.dart';
 import 'join_operator_screen.dart';
 import 'metrics_screen.dart';
+import 'qr_poster_screen.dart';
 import 'queue_panel_screen.dart';
 import '../theme/qio_palette.dart';
+
+enum _AccountAction { account, operator }
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -40,6 +47,7 @@ class HomeScreen extends StatefulWidget {
     this.queues,
     this.operators,
     this.enableIntegrations = true,
+    this.prompts,
   });
 
   final AuthService? auth;
@@ -47,6 +55,8 @@ class HomeScreen extends StatefulWidget {
   final OperatorService? operators;
   @visibleForTesting
   final bool enableIntegrations;
+  @visibleForTesting
+  final HomePrompts? prompts;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -64,10 +74,26 @@ class _HomeScreenState extends State<HomeScreen> {
   );
 
   StreamSubscription<Uri>? _linkSub;
+  HomePrompts? _prompts;
+  String _query = '';
+  final _searchController = TextEditingController();
+  QueueSort _sort = QueueSort.name;
+  final Map<String, int> _waiting = {};
+  final Map<String, StreamSubscription<int>> _waitingSubs = {};
 
   @override
   void initState() {
     super.initState();
+    QueueSortPrefs.load().then((sort) {
+      if (!mounted) return;
+      setState(() => _sort = sort);
+      _syncWaitingSubs();
+    });
+    _controller.addListener(_syncWaitingSubs);
+    _prompts =
+        widget.prompts ??
+        (widget.enableIntegrations ? _defaultPrompts() : null);
+    if (_prompts != null) _controller.addListener(_onControllerChanged);
     if (!widget.enableIntegrations) return;
     final links = AppLinks();
     links.getInitialLink().then((uri) {
@@ -92,9 +118,63 @@ class _HomeScreenState extends State<HomeScreen> {
       final id = queueIdFromPush(m.data);
       if (id != null) _openQueue(id);
     });
-    if (await PushService.instance.shouldPrompt() && mounted) {
-      await _askForPush();
+  }
+
+  HomePrompts _defaultPrompts() => HomePrompts(
+    runTour: _runTour,
+    shouldPromptPush: () async =>
+        PushService.instance.supported &&
+        await PushService.instance.shouldPrompt(),
+    askPush: _askForPush,
+    canShowDialog: () => mounted,
+  );
+
+  bool _wasCurrent = true;
+
+  bool _routeCurrent() => ModalRoute.of(context)?.isCurrent ?? true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final current = _routeCurrent();
+    final returned = current && !_wasCurrent;
+    _wasCurrent = current;
+    if (returned && _prompts != null) _onControllerChanged();
+  }
+
+  void _syncWaitingSubs() {
+    final needed = {
+      ..._controller.ownedQueues.map((q) => q.id),
+      ..._controller.operatingQueues.map((o) => o.queueId),
+    };
+    for (final id in _waitingSubs.keys.toList()) {
+      if (!needed.contains(id)) {
+        _waitingSubs.remove(id)?.cancel();
+        _waiting.remove(id);
+      }
     }
+    for (final id in needed) {
+      if (_waitingSubs.containsKey(id)) continue;
+      _waitingSubs[id] = _queues.watchWaitingCount(id).listen((count) {
+        if (!mounted) return;
+        setState(() => _waiting[id] = count);
+      }, onError: (_) {});
+    }
+  }
+
+  void _setSort(QueueSort sort) {
+    setState(() => _sort = sort);
+    _syncWaitingSubs();
+    QueueSortPrefs.save(sort);
+  }
+
+  void _onControllerChanged() {
+    if (_controller.isLoading || _controller.hasError) return;
+    final hasOwned = _controller.ownedQueues.isNotEmpty;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _prompts?.onQueues(hasOwned: hasOwned, routeFree: _routeCurrent);
+    });
   }
 
   Future<void> _askForPush() async {
@@ -153,6 +233,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
+    _controller.removeListener(_onControllerChanged);
+    _controller.removeListener(_syncWaitingSubs);
+    _searchController.dispose();
+    for (final sub in _waitingSubs.values) {
+      sub.cancel();
+    }
     _linkSub?.cancel();
     _pushSub?.cancel();
     _controller.dispose();
@@ -160,38 +246,34 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   final _fabKey = GlobalKey();
-  final _operatorKey = GlobalKey();
+  final _accountKey = GlobalKey();
   final _firstQueueKey = GlobalKey();
-  bool _tourScheduled = false;
 
-  void _scheduleTour(bool hasOwned) {
-    if (_tourScheduled || !widget.enableIntegrations) return;
-    _tourScheduled = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final l10n = AppLocalizations.of(context);
-      showOnboardingTour(context, OnboardingTour.home, [
+  Future<void> _runTour() async {
+    if (!mounted) return;
+    final hasOwned = _controller.ownedQueues.isNotEmpty;
+    final l10n = AppLocalizations.of(context);
+    await showOnboardingTour(context, OnboardingTour.home, [
+      OnboardingStep(
+        key: _fabKey,
+        title: l10n.tourHomeFabTitle,
+        body: l10n.tourHomeFabBody,
+        shape: ShapeLightFocus.Circle,
+        above: true,
+      ),
+      if (hasOwned)
         OnboardingStep(
-          key: _fabKey,
-          title: l10n.tourHomeFabTitle,
-          body: l10n.tourHomeFabBody,
-          shape: ShapeLightFocus.Circle,
-          above: true,
+          key: _firstQueueKey,
+          title: l10n.tourHomeQueueTitle,
+          body: l10n.tourHomeQueueBody,
         ),
-        if (hasOwned)
-          OnboardingStep(
-            key: _firstQueueKey,
-            title: l10n.tourHomeQueueTitle,
-            body: l10n.tourHomeQueueBody,
-          ),
-        OnboardingStep(
-          key: _operatorKey,
-          title: l10n.tourHomeOperatorTitle,
-          body: l10n.tourHomeOperatorBody,
-          shape: ShapeLightFocus.Circle,
-        ),
-      ]);
-    });
+      OnboardingStep(
+        key: _accountKey,
+        title: l10n.tourHomeAccountTitle,
+        body: l10n.tourHomeAccountBody,
+        shape: ShapeLightFocus.Circle,
+      ),
+    ]);
   }
 
   @override
@@ -232,23 +314,33 @@ class _HomeScreenState extends State<HomeScreen> {
               context,
             ).push(MaterialPageRoute(builder: (_) => const MetricsScreen())),
           ),
-          IconButton(
-            key: _operatorKey,
-            tooltip: l10n.joinAsOperator,
-            icon: const Icon(Icons.badge_outlined, color: QioColors.primary),
-            onPressed: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const JoinOperatorScreen()),
+          PopupMenuButton<_AccountAction>(
+            key: _accountKey,
+            tooltip: l10n.accountTitle,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            onSelected: (action) => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => switch (action) {
+                  _AccountAction.account => const AccountScreen(),
+                  _AccountAction.operator => const JoinOperatorScreen(),
+                },
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Semantics(
-              button: true,
-              label: l10n.accountTitle,
-              child: GestureDetector(
-                onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const AccountScreen()),
-                ),
+            itemBuilder: (_) => [
+              PopupMenuItem(
+                value: _AccountAction.account,
+                child: Text(l10n.accountTitle),
+              ),
+              PopupMenuItem(
+                value: _AccountAction.operator,
+                child: Text(l10n.joinAsOperator),
+              ),
+            ],
+            child: SizedBox(
+              width: 48,
+              height: 48,
+              child: Center(
                 child: QioAvatar(
                   name: user?.displayName ?? user?.email ?? 'Q',
                   size: 36,
@@ -256,6 +348,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: QioResponsiveBody(
@@ -266,7 +359,6 @@ class _HomeScreenState extends State<HomeScreen> {
               return QioErrorState(onRetry: _controller.retry);
             }
             if (_controller.isLoading) return const QioSkeletonList();
-            _scheduleTour(_controller.ownedQueues.isNotEmpty);
             return _buildBody(
               _controller.ownedQueues,
               _controller.operatingQueues,
@@ -301,25 +393,60 @@ class _HomeScreenState extends State<HomeScreen> {
         onAction: () => Navigator.of(
           context,
         ).push(MaterialPageRoute(builder: (_) => const CreateQueueScreen())),
+        secondaryLabel: l10n.joinAsOperator,
+        onSecondary: () => Navigator.of(
+          context,
+        ).push(MaterialPageRoute(builder: (_) => const JoinOperatorScreen())),
       );
     }
     final showHeaders = operating.isNotEmpty || requests.isNotEmpty;
+    final tools = showQueueTools(owned.length);
+    final visible = tools
+        ? filterAndSortQueues(
+            owned,
+            query: _query,
+            sort: _sort,
+            waiting: _waiting,
+          )
+        : owned;
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
         if (showHeaders && owned.isNotEmpty) _sectionTitle(l10n.sectionOwner),
-        for (final q in owned) ...[
-          _QueueCard(
-            key: q == owned.first ? _firstQueueKey : null,
-            queue: q,
-            isOwner: true,
-            queues: _queues,
+        if (tools) _buildTools(l10n),
+        if (tools && visible.isEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: Text(
+              l10n.noQueuesMatch,
+              textAlign: TextAlign.center,
+              style: context.qioText.body.copyWith(
+                color: context.qio.textSecondary,
+              ),
+            ),
+          ),
+        ],
+        for (final q in visible) ...[
+          SizedBox(
+            key: q == visible.first ? _firstQueueKey : null,
+            child: _QueueCard(
+              key: ValueKey(q.id),
+              queue: q,
+              isOwner: true,
+              waiting: _waiting[q.id] ?? 0,
+              queues: _queues,
+            ),
           ),
           const SizedBox(height: 16),
         ],
         if (operating.isNotEmpty) _sectionTitle(l10n.sectionOperator),
         for (final op in operating) ...[
-          _OperatorQueueCard(operator: op, queues: _queues),
+          _OperatorQueueCard(
+            key: ValueKey('op-${op.queueId}'),
+            operator: op,
+            waiting: _waiting[op.queueId] ?? 0,
+            queues: _queues,
+          ),
           const SizedBox(height: 16),
         ],
         if (requests.isNotEmpty) _sectionTitle(l10n.sectionRequests),
@@ -328,6 +455,65 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 16),
         ],
       ],
+    );
+  }
+
+  Widget _buildTools(AppLocalizations l10n) {
+    String label(QueueSort sort) => switch (sort) {
+      QueueSort.name => l10n.sortByName,
+      QueueSort.recent => l10n.sortByRecent,
+      QueueSort.waiting => l10n.sortByWaiting,
+    };
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              onChanged: (v) => setState(() => _query = v),
+              textInputAction: TextInputAction.search,
+              decoration: InputDecoration(
+                hintText: l10n.searchQueuesHint,
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _query.isEmpty
+                    ? null
+                    : IconButton(
+                        tooltip: l10n.clear,
+                        icon: const Icon(Icons.close),
+                        onPressed: () {
+                          _searchController.clear();
+                          setState(() => _query = '');
+                        },
+                      ),
+                isDense: false,
+                constraints: const BoxConstraints(minHeight: 48),
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          PopupMenuButton<QueueSort>(
+            tooltip: l10n.sortQueues,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+            initialValue: _sort,
+            onSelected: _setSort,
+            itemBuilder: (_) => [
+              for (final sort in QueueSort.values)
+                CheckedPopupMenuItem(
+                  value: sort,
+                  checked: sort == _sort,
+                  child: Text(label(sort)),
+                ),
+            ],
+            child: const SizedBox(
+              width: 48,
+              height: 48,
+              child: Icon(Icons.sort),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -346,81 +532,207 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _QueueCard extends StatelessWidget {
+class _QueueCard extends StatefulWidget {
   const _QueueCard({
     super.key,
     required this.queue,
     required this.isOwner,
+    required this.waiting,
     required this.queues,
   });
 
   final Queue queue;
   final bool isOwner;
+  final int waiting;
   final QueueService queues;
+
+  @override
+  State<_QueueCard> createState() => _QueueCardState();
+}
+
+class _QueueCardState extends State<_QueueCard> {
+  bool _busy = false;
+
+  Future<void> _toggleStatus() async {
+    if (_busy) return;
+    final q = widget.queue;
+    final target = q.status == QueueStatus.open
+        ? QueueStatus.paused
+        : QueueStatus.open;
+    StatusChange? change;
+    if (target != QueueStatus.open) {
+      change = await showStatusMessageDialog(context, target);
+      if (change == null || !mounted) return;
+    }
+    setState(() => _busy = true);
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context);
+    try {
+      await widget.queues.updateQueueStatus(
+        q.id,
+        target,
+        message: change?.message,
+        resumeAt: change?.resumeAt,
+      );
+    } on Exception catch (e) {
+      messenger
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text(describeActionError(e).message(l10n)),
+            backgroundColor: QioColors.error,
+          ),
+        );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  void _openQr() {
+    final q = widget.queue;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => QrPosterScreen(
+          queueName: q.name,
+          joinUrl: widget.queues.queueJoinUrl(q.id),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final q = queue;
-    return MergeSemantics(
-      child: QioCard(
-        padding: const EdgeInsets.all(20),
-        onTap: () => Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => QueuePanelScreen(
-              queueId: q.id,
-              queueName: q.name,
-              isOwner: isOwner,
-            ),
-          ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    q.name,
-                    style: context.qioText.heading3.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: context.qio.textPrimary,
+    final q = widget.queue;
+    final isOwner = widget.isOwner;
+    return QioCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          MergeSemantics(
+            child: InkWell(
+              borderRadius: BorderRadius.circular(12),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => QueuePanelScreen(
+                    queueId: q.id,
+                    queueName: q.name,
+                    isOwner: isOwner,
+                  ),
+                ),
+              ),
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(20, 20, 20, isOwner ? 8 : 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            q.name,
+                            style: context.qioText.heading3.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: context.qio.textPrimary,
+                            ),
+                          ),
+                        ),
+                        QioBadge(
+                          label: q.status.label(l10n),
+                          status: switch (q.status) {
+                            QueueStatus.open => QioBadgeStatus.open,
+                            QueueStatus.paused => QioBadgeStatus.paused,
+                            QueueStatus.closed => QioBadgeStatus.closed,
+                          },
+                        ),
+                      ],
                     ),
-                  ),
+                    const SizedBox(height: 12),
+                    Text(
+                      l10n.waitingCount(widget.waiting),
+                      style: context.qioText.body.copyWith(
+                        fontSize: 14,
+                        color: context.qio.gray700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      isOwner
+                          ? l10n.createdOn(q.createdAt)
+                          : l10n.youAreOperator,
+                      style: context.qioText.caption.copyWith(
+                        fontSize: 12,
+                        color: context.qio.gray400,
+                      ),
+                    ),
+                  ],
                 ),
-                QioBadge(
-                  label: q.status.label(l10n),
-                  status: switch (q.status) {
-                    QueueStatus.open => QioBadgeStatus.open,
-                    QueueStatus.paused => QioBadgeStatus.paused,
-                    QueueStatus.closed => QioBadgeStatus.closed,
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            StreamBuilder<int>(
-              stream: queues.watchWaitingCount(q.id),
-              builder: (context, snap) {
-                final count = snap.data ?? 0;
-                return Text(
-                  l10n.waitingCount(count),
-                  style: context.qioText.body.copyWith(
-                    fontSize: 14,
-                    color: context.qio.gray700,
-                  ),
-                );
-              },
-            ),
-            const SizedBox(height: 4),
-            Text(
-              isOwner ? l10n.createdOn(q.createdAt) : l10n.youAreOperator,
-              style: context.qioText.caption.copyWith(
-                fontSize: 12,
-                color: context.qio.gray400,
               ),
             ),
-          ],
+          ),
+          if (isOwner)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+              child: Wrap(
+                spacing: 8,
+                children: [
+                  _QuickAction(
+                    icon: q.status == QueueStatus.open
+                        ? Icons.pause_circle_outline
+                        : Icons.play_circle_outline,
+                    label: q.status == QueueStatus.open
+                        ? l10n.pause
+                        : l10n.reopen,
+                    semanticLabel: q.status == QueueStatus.open
+                        ? l10n.quickPauseLabel(q.name)
+                        : l10n.quickReopenLabel(q.name),
+                    onPressed: _busy ? null : _toggleStatus,
+                  ),
+                  _QuickAction(
+                    icon: Icons.qr_code_2,
+                    label: l10n.quickQr,
+                    semanticLabel: l10n.quickQrLabel(q.name),
+                    onPressed: _openQr,
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickAction extends StatelessWidget {
+  const _QuickAction({
+    required this.icon,
+    required this.label,
+    required this.semanticLabel,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String label;
+  final String semanticLabel;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      enabled: onPressed != null,
+      label: semanticLabel,
+      excludeSemantics: true,
+      onTap: onPressed,
+      child: TextButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 20),
+        label: Text(label),
+        style: TextButton.styleFrom(
+          minimumSize: const Size(48, 48),
+          tapTargetSize: MaterialTapTargetSize.padded,
+          foregroundColor: context.qio.primaryText,
         ),
       ),
     );
@@ -428,9 +740,15 @@ class _QueueCard extends StatelessWidget {
 }
 
 class _OperatorQueueCard extends StatefulWidget {
-  const _OperatorQueueCard({required this.operator, required this.queues});
+  const _OperatorQueueCard({
+    super.key,
+    required this.operator,
+    required this.waiting,
+    required this.queues,
+  });
 
   final QueueOperator operator;
+  final int waiting;
   final QueueService queues;
 
   @override
@@ -459,7 +777,12 @@ class _OperatorQueueCardState extends State<_OperatorQueueCard> {
             ),
           );
         }
-        return _QueueCard(queue: queue, isOwner: false, queues: widget.queues);
+        return _QueueCard(
+          queue: queue,
+          isOwner: false,
+          waiting: widget.waiting,
+          queues: widget.queues,
+        );
       },
     );
   }
