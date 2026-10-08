@@ -39,10 +39,8 @@ describe('Firestore rules', () => {
     env.authenticatedContext(uid, { firebase: { sign_in_provider: 'anonymous' } }).firestore();
   const passwordDb = (uid) =>
     env.authenticatedContext(uid, { firebase: { sign_in_provider: 'password' } }).firestore();
-  const noProviderDb = (uid) => {
-    const ctx = env.authenticatedContext(uid);
-    return ctx.firestore();
-  };
+  const noProviderDb = (uid) =>
+    env.authenticatedContext(uid, { firebase: undefined }).firestore();
   const googleDb = (uid) =>
     env.authenticatedContext(uid, { firebase: { sign_in_provider: 'google.com' } }).firestore();
 
