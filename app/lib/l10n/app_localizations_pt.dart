@@ -1470,4 +1470,38 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get slotTimeChangeWarning =>
       'Quem já entrou neste horário continua na vaga antiga; as vagas ocupadas seguem contando.';
+
+  @override
+  String get editQueue => 'Editar fila';
+
+  @override
+  String get editQueueHint => 'Nome, descrição e tempo médio';
+
+  @override
+  String get queueUpdated => 'Fila atualizada';
+
+  @override
+  String get duplicateQueue => 'Duplicar fila';
+
+  @override
+  String get duplicateQueueHint =>
+      'Copia limite, horário, cor, modo, grupo e alertas';
+
+  @override
+  String get duplicateQueueSuffix => ' (cópia)';
+
+  @override
+  String get queueDuplicated => 'Fila duplicada';
+
+  @override
+  String get advancedOptions => 'Opções avançadas';
+
+  @override
+  String get queueNameTooLong => 'No máximo 60 caracteres';
+
+  @override
+  String get descriptionTooLong => 'No máximo 300 caracteres';
+
+  @override
+  String get avgServiceInvalid => 'Informe de 1 a 240 minutos';
 }

@@ -8,6 +8,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import '../models/alerts_config.dart';
 import '../models/history_entry.dart';
 import '../models/queue.dart';
+import '../models/queue_info.dart';
 import '../models/queue_entry.dart';
 import '../models/queue_feedback.dart';
 import '../models/queue_schedule.dart';
@@ -42,21 +43,38 @@ class QueueService {
   Future<Queue> createQueue({
     required String name,
     String? description,
-    int avgServiceMin = 10,
+    int? avgServiceMin,
     int maxWaiting = 0,
     String? groupId,
     QueueMode mode = QueueMode.queue,
     List<QueueSlot> slots = const [],
+    QueueSchedule? schedule,
+    String? brandColor,
+    AlertsConfig? alerts,
   }) async {
+    final info = QueueInfo(
+      name: name,
+      description: description,
+      avgServiceMin: avgServiceMin ?? defaultAvgServiceMin,
+    );
+    final infoError = info.error;
+    if (infoError != null) throw FormatException(infoError.name);
+    final normalized = info.normalized();
+    name = normalized.name;
+    description = normalized.description;
+    final avg = normalized.avgServiceMin;
     final now = DateTime.now();
     final docRef = await _firestore.collection('queues').add({
       'ownerId': _uid,
       'name': name,
       'description': description,
       'status': QueueStatus.open.value,
-      'avgServiceMin': avgServiceMin,
+      'avgServiceMin': avg,
       'maxWaiting': maxWaiting,
       'groupId': ?groupId,
+      if (schedule != null && schedule.enabled) 'schedule': schedule.toMap(),
+      'brandColor': ?brandColor,
+      if (alerts != null) 'alerts': alerts.toMap(),
       if (mode == QueueMode.schedule) ...{
         'mode': mode.value,
         'slots': [for (final s in slots) s.toMap()],
@@ -73,8 +91,9 @@ class QueueService {
         'status': QueueStatus.open.value,
         'name': name,
         'description': description,
-        'avgServiceMin': avgServiceMin,
+        'avgServiceMin': avg,
         'maxWaiting': maxWaiting,
+        'brandColor': ?brandColor,
         if (mode == QueueMode.schedule) ...{
           'mode': mode.value,
           'slots': slotsMirror(slots),
@@ -95,9 +114,13 @@ class QueueService {
       name: name,
       description: description,
       status: QueueStatus.open,
-      avgServiceMin: avgServiceMin,
+      avgServiceMin: avg,
       createdAt: now,
       groupId: groupId,
+      maxWaiting: maxWaiting,
+      schedule: schedule,
+      brandColor: brandColor,
+      alerts: alerts,
       mode: mode,
       slots: slots,
     );
@@ -275,6 +298,49 @@ class QueueService {
       'slots': slotsMirror(sorted),
       'updatedAt': ServerValue.timestamp,
     });
+  }
+
+  Future<void> updateQueueInfo(
+    String queueId, {
+    required String name,
+    String? description,
+    required int avgServiceMin,
+  }) async {
+    final info = QueueInfo(
+      name: name,
+      description: description,
+      avgServiceMin: avgServiceMin,
+    );
+    final infoError = info.error;
+    if (infoError != null) throw FormatException(infoError.name);
+    final fields = info.normalized().toFields();
+    await _firestore.collection('queues').doc(queueId).update(fields);
+    await _ensureOwnerMirror(queueId);
+    await _rtdb.ref('queues/$queueId/meta').update({
+      ...fields,
+      'updatedAt': ServerValue.timestamp,
+    });
+  }
+
+  Future<Queue> duplicateQueue(String queueId, {required String name}) async {
+    final doc = await _firestore.collection('queues').doc(queueId).get();
+    final data = doc.data();
+    if (data == null || data['ownerId'] != _uid) {
+      throw StateError('not the owner of $queueId');
+    }
+    final source = Queue.fromDoc(queueId, data);
+    return createQueue(
+      name: name,
+      description: source.description,
+      avgServiceMin: source.avgServiceMin,
+      maxWaiting: source.maxWaiting,
+      groupId: source.groupId,
+      mode: source.mode,
+      slots: source.slots,
+      schedule: source.schedule,
+      brandColor: source.brandColor,
+      alerts: source.alerts,
+    );
   }
 
   Future<void> deleteQueue(String queueId) async {

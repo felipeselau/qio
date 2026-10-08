@@ -466,5 +466,17 @@
   "@slotsTileSummary": {"placeholders": {"count": {"type": "int"}}},
   "waitTileSlot": "Slot {time}",
   "@waitTileSlot": {"placeholders": {"time": {"type": "String"}}},
-  "slotTimeChangeWarning": "People already in this slot keep their spot; taken spots still count."
+  "slotTimeChangeWarning": "People already in this slot keep their spot; taken spots still count.",
+  "editQueue": "Edit queue",
+  "editQueueHint": "Name, description and average time",
+  "queueUpdated": "Queue updated",
+  "duplicateQueue": "Duplicate queue",
+  "duplicateQueueHint": "Copies limit, hours, color, mode, group and alerts",
+  "duplicateQueueSuffix": " (copy)",
+  "queueDuplicated": "Queue duplicated",
+  "advancedOptions": "Advanced options",
+  "queueNameTooLong": "At most 60 characters",
+  "descriptionTooLong": "At most 300 characters",
+  "avgServiceInvalid": "Enter 1 to 240 minutes",
+  "back": "Back"
 }

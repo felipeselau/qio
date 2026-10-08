@@ -126,6 +126,31 @@ describe('RTDB rules', () => {
       await assertFails(set(ref(rtdb(OWNER), path('meta/statusMessage')), 5));
     });
 
+    it('dono grava nome, descrição e tempo médio válidos', async () => {
+      await assertSucceeds(set(ref(rtdb(OWNER), path('meta/name')), 'x'.repeat(60)));
+      await assertSucceeds(set(ref(rtdb(OWNER), path('meta/description')), 'a'.repeat(300)));
+      await assertSucceeds(set(ref(rtdb(OWNER), path('meta/avgServiceMin')), 240));
+    });
+
+    it('rejeita nome, descrição e tempo médio inválidos', async () => {
+      for (const v of ['', 'x'.repeat(61), 5]) {
+        await assertFails(set(ref(rtdb(OWNER), path('meta/name')), v));
+      }
+      for (const v of ['a'.repeat(301), 5]) {
+        await assertFails(set(ref(rtdb(OWNER), path('meta/description')), v));
+      }
+      for (const v of [0, 241, 2.5, '10']) {
+        await assertFails(set(ref(rtdb(OWNER), path('meta/avgServiceMin')), v));
+      }
+    });
+
+    it('operador, cliente e estranho não gravam nome nem tempo médio', async () => {
+      for (const uid of [OPERATOR, 'client1', STRANGER]) {
+        await assertFails(set(ref(rtdb(uid), path('meta/name')), 'Hack'));
+        await assertFails(set(ref(rtdb(uid), path('meta/avgServiceMin')), 5));
+      }
+    });
+
     it('operador, cliente e estranho não gravam limite nem mensagem', async () => {
       for (const uid of [OPERATOR, 'client1', STRANGER]) {
         await assertFails(set(ref(rtdb(uid), path('meta/maxWaiting')), 5));

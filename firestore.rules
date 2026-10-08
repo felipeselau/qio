@@ -55,8 +55,9 @@ service cloud.firestore {
     }
 
     function validSlot(s) {
+      let c = s.capacity;
       return s.start.matches('^([01][0-9]|2[0-3]):[0-5][0-9]$')
-        && s.capacity is int && s.capacity >= 1 && s.capacity <= 50;
+        && c is int && c >= 1 && c <= 50;
     }
 
     function slotAt(slots, i) {
@@ -77,6 +78,32 @@ service cloud.firestore {
     function scheduleModeOk(data) {
       return (!('mode' in data) || data.mode in ['queue', 'schedule'])
         && (!('slots' in data) || validSlots(data.slots));
+    }
+
+    function validQueueName(v) {
+      return v is string && v.size() >= 1 && v.size() <= 60;
+    }
+
+    function validQueueDescription(v) {
+      return v == null || (v is string && v.size() <= 300);
+    }
+
+    function validAvgServiceMin(v) {
+      return v is int && v >= 1 && v <= 240;
+    }
+
+    function queueInfoOkOnCreate(data) {
+      return (!('name' in data) || validQueueName(data.name))
+        && validQueueDescription(data.get('description', null))
+        && (!('avgServiceMin' in data) || validAvgServiceMin(data.avgServiceMin));
+    }
+
+    function queueInfoOk() {
+      let d = request.resource.data;
+      return !d.diff(resource.data).affectedKeys().hasAny(['name', 'description', 'avgServiceMin'])
+        || (validQueueName(d.get('name', null))
+          && validQueueDescription(d.get('description', null))
+          && validAvgServiceMin(d.get('avgServiceMin', null)));
     }
 
     match /owners/{uid} {
@@ -125,11 +152,13 @@ service cloud.firestore {
         && request.resource.data.ownerId == request.auth.uid
         && validGroupId(request.resource.data)
         && alertsOkOnCreate()
+        && queueInfoOkOnCreate(request.resource.data)
         && scheduleModeOk(request.resource.data);
       allow update: if request.auth != null
         && resource.data.ownerId == request.auth.uid
         && validGroupId(request.resource.data)
         && alertsOk()
+        && queueInfoOk()
         && scheduleModeOk(request.resource.data);
       allow delete: if request.auth != null && resource.data.ownerId == request.auth.uid;
 

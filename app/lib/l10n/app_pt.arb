@@ -509,5 +509,17 @@
   "@slotsTileSummary": {"placeholders": {"count": {"type": "int"}}},
   "waitTileSlot": "Horário {time}",
   "@waitTileSlot": {"placeholders": {"time": {"type": "String"}}},
-  "slotTimeChangeWarning": "Quem já entrou neste horário continua na vaga antiga; as vagas ocupadas seguem contando."
+  "slotTimeChangeWarning": "Quem já entrou neste horário continua na vaga antiga; as vagas ocupadas seguem contando.",
+  "editQueue": "Editar fila",
+  "editQueueHint": "Nome, descrição e tempo médio",
+  "queueUpdated": "Fila atualizada",
+  "duplicateQueue": "Duplicar fila",
+  "duplicateQueueHint": "Copia limite, horário, cor, modo, grupo e alertas",
+  "duplicateQueueSuffix": " (cópia)",
+  "queueDuplicated": "Fila duplicada",
+  "advancedOptions": "Opções avançadas",
+  "queueNameTooLong": "No máximo 60 caracteres",
+  "descriptionTooLong": "No máximo 300 caracteres",
+  "avgServiceInvalid": "Informe de 1 a 240 minutos",
+  "back": "Voltar"
 }

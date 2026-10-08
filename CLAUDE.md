@@ -150,6 +150,20 @@ Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
   integração com `applyQueueSchedules` (o horário de funcionamento continua mandando em
   open/closed).
 
+## Editar e duplicar fila
+
+- `QueueService.updateQueueInfo` (nome 1–60, descrição ≤300, tempo médio 1–240; validação
+  em `models/queue_info.dart`, erro `FormatException`) grava no Firestore e faz um único
+  `update` em `meta` do RTDB. O `queueId` (e o QR) não muda. Painel: tiles "Editar fila" e
+  "Duplicar fila" (só dono).
+- `duplicateQueue` cria fila nova `<nome> (cópia)` copiando descrição, tempo médio, limite,
+  grupo, modo/slots, horário de funcionamento, cor e alertas. Não copia entries, history,
+  operadores, logo, mensagem de status nem `alertState`.
+- Rules validam `name`/`description`/`avgServiceMin` no Firestore (create, e update só quando
+  um dos três muda, para não travar docs legados) e em `meta/{name,description,avgServiceMin}`
+  no RTDB. O Firestore limita a 1000 expressões por avaliação e `validSlots` já consome quase
+  tudo: cuidado ao somar checagens no `update` de `queues/{id}`. Deploy: rules antes do APK.
+
 ## Ordem da fila, chamar de novo e mover
 
 - A ordem de espera é `(order ?? joinedAt, ticket)`. "Mover para o fim" grava
