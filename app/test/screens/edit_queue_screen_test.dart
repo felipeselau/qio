@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:qio_app/models/queue.dart';
 import 'package:qio_app/screens/edit_queue_screen.dart';
 import 'package:qio_app/screens/queue_panel_screen.dart';
+import 'package:qio_app/screens/queue_settings_screen.dart';
 import 'package:qio_app/widgets/queue_panel/duplicate_queue_tile.dart';
 import 'package:qio_app/widgets/queue_panel/edit_queue_tile.dart';
 
@@ -102,6 +103,8 @@ void main() {
       size: tall,
     );
     await tick(tester);
+    await tester.tap(find.byTooltip('Configurações da fila'));
+    await tick(tester);
     expect(find.byType(EditQueueTile), findsOneWidget);
     expect(find.byType(DuplicateQueueTile), findsOneWidget);
 
@@ -166,9 +169,11 @@ void main() {
       size: tall,
     );
     await tick(tester);
+    await tester.tap(find.byTooltip('Configurações da fila'));
+    await tick(tester);
     await tester.tap(find.byType(DuplicateQueueTile));
     await tick(tester);
-    expect(find.byType(QueuePanelScreen), findsOneWidget);
+    expect(find.byType(QueueSettingsScreen), findsOneWidget);
     expect(find.byType(SnackBar), findsOneWidget);
   });
 
