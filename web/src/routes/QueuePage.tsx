@@ -10,6 +10,7 @@ import {
   storePendingFeedback,
   clearPendingFeedback,
 } from '../lib/storage';
+import { derivePhase, shouldClearStoredEntry, type Phase } from '../lib/phase';
 import { joinQueue, leaveQueue, saveFcmToken, submitFeedback } from '../lib/join';
 import {
   getFcmToken,
@@ -122,17 +123,6 @@ function StatusNotice({ meta }: { meta: QueueMeta | null }) {
   );
 }
 
-type Phase =
-  | 'loading'
-  | 'join'
-  | 'ticket'
-  | 'called'
-  | 'left'
-  | 'closed'
-  | 'gone'
-  | 'feedback'
-  | 'thanks';
-
 const MAX_COMMENT = 300;
 
 export default function QueuePage() {
@@ -243,12 +233,18 @@ export default function QueuePage() {
   // sem isso, o gap entre setEntryId e o primeiro onValue limparia a entry
   // recém-criada (bug: permitia re-entrar na fila infinitamente).
   useEffect(() => {
-    if (entryId && myEntry === null && myEntryResolved && !loading && authed) {
-      const had = getStoredEntryId(queueId);
-      if (had === entryId) {
-        clearStoredEntryId(queueId);
-        setEntryId(null);
-      }
+    if (
+      shouldClearStoredEntry({
+        entryId,
+        hasEntry: myEntry !== null,
+        resolved: myEntryResolved,
+        loading,
+        authed,
+        storedEntryId: getStoredEntryId(queueId),
+      })
+    ) {
+      clearStoredEntryId(queueId);
+      setEntryId(null);
     }
   }, [myEntry, myEntryResolved, entryId, loading, authed, queueId]);
 
@@ -321,21 +317,18 @@ export default function QueuePage() {
     if (navigator.vibrate) navigator.vibrate([400, 200, 400]);
   }
 
-  const phase: Phase = (() => {
-    if (loading || !authed || failed) return 'loading';
-    if (!exists) return 'gone';
-    if (hasLeft) return 'left';
-    if (meta?.status === 'closed' && !myEntry) return 'closed';
-    if (!myEntry && thanked) return 'thanks';
-    if (!myEntry && feedbackId) return 'feedback';
-    if (!myEntry) return 'join';
-    if (myEntry.status === 'called') {
-      // dispara alerta uma vez ao entrar no estado
-      return 'called';
-    }
-    if (myEntry.status === 'left') return 'left';
-    return 'ticket';
-  })();
+  const phase: Phase = derivePhase({
+    loading,
+    authed,
+    failed,
+    exists,
+    hasLeft,
+    metaStatus: meta?.status,
+    myEntryStatus: myEntry?.status,
+    hasEntry: !!myEntry,
+    thanked,
+    feedbackId,
+  });
 
   const recalledAt = myEntry?.recalledAt ?? null;
   const lastRecall = useRef<number | null>(null);
