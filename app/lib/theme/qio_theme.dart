@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'qio_colors.dart';
+import 'qio_palette.dart';
 import 'qio_text_styles.dart';
 
 class QioTheme {
@@ -17,6 +18,9 @@ class QioTheme {
     final base = ThemeData(brightness: brightness, useMaterial3: true);
 
     return base.copyWith(
+      extensions: <ThemeExtension<dynamic>>[
+        QioPalette.forBrightness(brightness),
+      ],
       scaffoldBackgroundColor: QioColors.background,
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
