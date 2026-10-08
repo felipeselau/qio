@@ -19,7 +19,16 @@ import {
   type PushSupport,
 } from '../lib/fcm';
 import { useQueue, type QueueMeta } from '../lib/useQueue';
-import { formatPhone, isValidPhone } from '../lib/format';
+import {
+  elapsedSince,
+  formatElapsed,
+  formatPhone,
+  isValidPhone,
+  waitRange,
+} from '../lib/format';
+import { playAlertSound, unlockAudio } from '../lib/alert';
+import { holdWakeLock } from '../lib/wakeLock';
+import { useOnline } from '../lib/useOnline';
 import { useInstallPrompt } from '../lib/useInstallPrompt';
 import { formatSlotTime, isSlotFull, isSlotPast, slotTaken } from '../lib/slots';
 
@@ -57,6 +66,33 @@ function QueueLogo({ meta }: { meta: QueueMeta | null }) {
     <div className="queue-logo queue-logo-fallback" aria-hidden="true">
       {initial}
     </div>
+  );
+}
+
+function OfflineBanner() {
+  const { t } = useTranslation();
+  const online = useOnline();
+  if (online) return null;
+  return (
+    <div className="notice notice-warning" role="status">
+      {t('queue.offlineBanner')}
+    </div>
+  );
+}
+
+function CalledTimer({ calledAt }: { calledAt: number | null }) {
+  const { t } = useTranslation();
+  const [startedAt] = useState(() => Date.now());
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const seconds = elapsedSince(calledAt ?? startedAt, now);
+  return (
+    <p style={{ fontSize: 14, opacity: 0.9 }}>
+      {t('queue.calledSince', { time: formatElapsed(seconds) })}
+    </p>
   );
 }
 
@@ -131,11 +167,15 @@ export default function QueuePage() {
     myEntryResolved,
     position,
     estimatedWaitMin,
+    waitingCount,
+    avgServiceMin,
+    publicReady,
     publicTickets,
     full,
     loading,
     exists,
     failed,
+    retry,
   } = useQueue(queueId, entryId, authed);
 
   const scheduled = meta?.mode === 'schedule';
@@ -158,7 +198,33 @@ export default function QueuePage() {
     };
   }, [brandColor]);
 
+  const queueName = meta?.name ?? null;
+  useEffect(() => {
+    if (!queueName) return;
+    const previous = document.title;
+    document.title = `${queueName} · Qio`;
+    return () => {
+      document.title = previous;
+    };
+  }, [queueName]);
+
+  const range = waitRange(waitingCount + 1, avgServiceMin);
+  const waitSummary =
+    waitingCount === 0
+      ? t('queue.noQueueNow')
+      : range
+        ? t('queue.aheadSummary', { count: waitingCount, min: range.min, max: range.max })
+        : t('queue.aheadCount', { count: waitingCount });
+
   const [authFailed, setAuthFailed] = useState(false);
+  const [focusTick, setFocusTick] = useState(0);
+  const [authAttempt, setAuthAttempt] = useState(0);
+  function handleRetry() {
+    setAuthFailed(false);
+    setAuthAttempt((n) => n + 1);
+    setFocusTick((n) => n + 1);
+    retry();
+  }
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -170,7 +236,7 @@ export default function QueuePage() {
       }
     });
     return unsub;
-  }, [queueId]);
+  }, [queueId, authAttempt]);
 
   // limpa entryId local se a entry sumiu do RTDB (served/no_show/left).
   // myEntryResolved garante que o listener já entregou o primeiro valor —
@@ -188,6 +254,7 @@ export default function QueuePage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    unlockAudio();
     if (!name.trim()) {
       setError(t('errors.nameRequired'));
       return;
@@ -231,21 +298,26 @@ export default function QueuePage() {
     }
   }
 
+  function handleRejoin() {
+    clearStoredEntryId(queueId);
+    setEntryId(null);
+    setHasLeft(false);
+    setLeaving(false);
+    setConfirmLeave(false);
+    setError(null);
+    setFcmDone(false);
+    setPush('unsupported');
+    setPushBusy(false);
+    setThanked(false);
+    setRating(0);
+    setComment('');
+    setFeedbackId(null);
+    clearPendingFeedback(queueId);
+    setFocusTick((n) => n + 1);
+  }
+
   function playAlert() {
-    try {
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = 880;
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
-      osc.start();
-      osc.stop(ctx.currentTime + 1.2);
-    } catch {
-      // ignore
-    }
+    playAlertSound();
     if (navigator.vibrate) navigator.vibrate([400, 200, 400]);
   }
 
@@ -320,6 +392,31 @@ export default function QueuePage() {
   const [push, setPush] = useState<PushSupport>('unsupported');
   const [pushBusy, setPushBusy] = useState(false);
 
+  const [calledAnnounce, setCalledAnnounce] = useState('');
+  const calledTicket = myEntry?.ticket;
+  useEffect(() => {
+    if (phase !== 'called') {
+      setCalledAnnounce('');
+      return;
+    }
+    const timer = window.setTimeout(
+      () =>
+        setCalledAnnounce(
+          `${t('queue.yourTurn')} ${t('queue.ticketNumber', { ticket: calledTicket })}`,
+        ),
+      150,
+    );
+    return () => window.clearTimeout(timer);
+  }, [phase, calledTicket, t]);
+
+  const screenKey = phase === 'loading' ? (authFailed || failed ? 'error' : 'loading') : phase;
+  useEffect(() => {
+    if (screenKey === 'loading') return;
+    document
+      .querySelector<HTMLElement>('[data-autofocus]')
+      ?.focus({ preventScroll: true });
+  }, [screenKey, focusTick]);
+
   const registerToken = useCallback(() => {
     if (!entryId) return;
     getFcmToken().then((token) => {
@@ -336,7 +433,21 @@ export default function QueuePage() {
     });
   }, [phase, myEntry, entryId, fcmDone, registerToken]);
 
+  useEffect(() => {
+    if (phase !== 'ticket' && phase !== 'called') return;
+    const release = holdWakeLock();
+    const unlock = () => unlockAudio();
+    window.addEventListener('pointerdown', unlock, { once: true });
+    window.addEventListener('keydown', unlock, { once: true });
+    return () => {
+      release();
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+  }, [phase]);
+
   async function enablePush() {
+    unlockAudio();
     setPushBusy(true);
     try {
       const result = await requestPushPermission();
@@ -356,8 +467,11 @@ export default function QueuePage() {
     if (authFailed || failed) {
       return (
         <div className="center-col fade-in" key="error">
-          <h1 style={{ fontSize: 20, fontWeight: 700 }}>{t('queue.connectFailed')}</h1>
+          <h1 data-autofocus tabIndex={-1} style={{ fontSize: 20, fontWeight: 700 }}>{t('queue.connectFailed')}</h1>
           <p className="muted">{t('queue.connectFailedHint')}</p>
+          <button type="button" className="btn btn-primary" onClick={handleRetry}>
+            {t('queue.retry')}
+          </button>
         </div>
       );
     }
@@ -383,7 +497,7 @@ export default function QueuePage() {
   if (phase === 'gone') {
     return (
       <div className="center-col fade-in" key="gone">
-        <h1 style={{ fontSize: 20, fontWeight: 700 }}>{t('queue.notFound')}</h1>
+        <h1 data-autofocus tabIndex={-1} style={{ fontSize: 20, fontWeight: 700 }}>{t('queue.notFound')}</h1>
         <p className="muted">{t('queue.notFoundHint')}</p>
       </div>
     );
@@ -392,7 +506,7 @@ export default function QueuePage() {
   if (phase === 'closed') {
     return (
       <div className="center-col fade-in" key="closed">
-        <h1 style={{ fontSize: 20, fontWeight: 700 }}>{meta?.name}</h1>
+        <h1 data-autofocus tabIndex={-1} style={{ fontSize: 20, fontWeight: 700 }}>{meta?.name}</h1>
         <span className="badge badge-closed">{t('queue.closedBadge')}</span>
         <StatusNotice meta={meta} />
         <p className="muted">{t('queue.closedHint')}</p>
@@ -403,7 +517,7 @@ export default function QueuePage() {
   if (phase === 'called' && myEntry) {
     return (
       <div
-        className="fade-in" key="called" role="alert"
+        className="fade-in" key="called"
         style={{
           background: 'var(--success-strong)',
           flex: 1,
@@ -418,14 +532,25 @@ export default function QueuePage() {
           color: 'var(--white)',
         }}
       >
-        <div style={{ fontSize: 72 }}>✓</div>
-        <h1 style={{ fontSize: 24, fontWeight: 700 }}>{t('queue.yourTurn')}</h1>
-        <p style={{ fontSize: 18, fontWeight: 600 }}>
-          {t('queue.ticketNumber', { ticket: myEntry.ticket })}
-        </p>
-        <p style={{ fontSize: 14, opacity: 0.9 }}>
-          {t('queue.goToService')}
-        </p>
+        <OfflineBanner />
+        <div className="sr-only" role="alert" aria-live="assertive">
+          {calledAnnounce}
+        </div>
+        <div
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}
+        >
+          <div style={{ fontSize: 72 }} aria-hidden="true">✓</div>
+          <h1 data-autofocus tabIndex={-1} style={{ fontSize: 24, fontWeight: 700 }}>{t('queue.yourTurn')}</h1>
+          {meta?.name && <p style={{ fontSize: 16, opacity: 0.95 }}>{meta.name}</p>}
+          <p style={{ fontSize: 18, fontWeight: 600 }}>
+            {t('queue.ticketNumber', { ticket: myEntry.ticket })}
+          </p>
+          <p style={{ fontSize: 14, opacity: 0.9 }}>
+            {t('queue.goToService')}
+          </p>
+        </div>
+        <CalledTimer calledAt={myEntry.calledAt} />
+        <p style={{ fontSize: 14, fontWeight: 600 }}>{t('queue.calledWarning')}</p>
       </div>
     );
   }
@@ -433,8 +558,8 @@ export default function QueuePage() {
   if (phase === 'thanks') {
     return (
       <div className="center-col fade-in" key="thanks">
-        <div style={{ fontSize: 48 }}>🙏</div>
-        <h1 style={{ fontSize: 20, fontWeight: 700 }}>{t('queue.feedbackThanks')}</h1>
+        <div style={{ fontSize: 48 }} aria-hidden="true">🙏</div>
+        <h1 data-autofocus tabIndex={-1} style={{ fontSize: 20, fontWeight: 700 }}>{t('queue.feedbackThanks')}</h1>
         <p className="muted">{t('queue.feedbackThanksHint')}</p>
       </div>
     );
@@ -445,7 +570,7 @@ export default function QueuePage() {
       <div className="page fade-in" key="feedback">
         <div className="page-scroll">
           <div className="card" style={{ textAlign: 'center' }}>
-            <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>
+            <h1 data-autofocus tabIndex={-1} style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>
               {t('queue.feedbackTitle')}
             </h1>
             <div className="stars" role="radiogroup" aria-label={t('queue.feedbackTitle')}>
@@ -499,8 +624,11 @@ export default function QueuePage() {
   if (phase === 'left') {
     return (
       <div className="center-col fade-in" key="left">
-        <h1 style={{ fontSize: 20, fontWeight: 700 }}>{t('queue.left')}</h1>
+        <h1 data-autofocus tabIndex={-1} style={{ fontSize: 20, fontWeight: 700 }}>{t('queue.left')}</h1>
         <p className="muted">{t('queue.leftHint')}</p>
+        <button type="button" className="btn btn-primary" onClick={handleRejoin}>
+          {t('queue.rejoin')}
+        </button>
       </div>
     );
   }
@@ -509,6 +637,7 @@ export default function QueuePage() {
     return (
       <div className="page fade-in" key="ticket">
         <div className="page-scroll">
+          <OfflineBanner />
           <div className="card" style={{ textAlign: 'center', padding: 24 }}>
             <QueueLogo meta={meta} />
             <p
@@ -701,9 +830,10 @@ export default function QueuePage() {
   return (
     <div className="page fade-in" key="join">
       <div className="page-scroll">
+        <OfflineBanner />
         <div style={{ textAlign: 'center', marginBottom: 8 }}>
           <QueueLogo meta={meta} />
-          <h1 style={{ fontSize: 24, fontWeight: 700 }}>{meta?.name}</h1>
+          <h1 data-autofocus tabIndex={-1} style={{ fontSize: 24, fontWeight: 700 }}>{meta?.name}</h1>
           <span
             className={`badge badge-${meta?.status ?? 'open'}`}
             style={{ marginTop: 8 }}
@@ -731,6 +861,15 @@ export default function QueuePage() {
           </div>
         )}
 
+        {!scheduled && meta?.status !== 'closed' && publicReady && (
+          <p className="wait-summary">{waitSummary}</p>
+        )}
+
+        {meta?.status === 'paused' ? (
+          <p className="muted" style={{ textAlign: 'center' }}>
+            {t('queue.pausedNoJoin')}
+          </p>
+        ) : (
         <form
           onSubmit={handleSubmit}
           style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
@@ -807,6 +946,7 @@ export default function QueuePage() {
             {submitting ? t('queue.joining') : t('queue.join')}
           </button>
         </form>
+        )}
       </div>
     </div>
   );

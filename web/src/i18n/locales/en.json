@@ -72,7 +72,18 @@
     "slotPast": "Closed",
     "slotSpots": "{{count}} spots left",
     "slotRequired": "Choose a time to join",
-    "yourSlot": "Your time: {{time}}"
+    "yourSlot": "Your time: {{time}}",
+    "aheadSummary_one": "{{count}} person ahead · estimated wait {{min}}–{{max}} min",
+    "aheadSummary_other": "{{count}} people ahead · estimated wait {{min}}–{{max}} min",
+    "retry": "Try again",
+    "offlineBanner": "No connection — your position may be out of date.",
+    "rejoin": "Join again",
+    "calledSince": "Called {{time}} ago",
+    "calledWarning": "If you don't show up, your turn may be skipped.",
+    "aheadCount_one": "{{count}} person ahead",
+    "aheadCount_other": "{{count}} people ahead",
+    "noQueueNow": "No line right now",
+    "pausedNoJoin": "You can't join while the queue is paused."
   },
   "errors": {
     "nameRequired": "Enter your name",

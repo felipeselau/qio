@@ -72,7 +72,18 @@
     "slotPast": "Encerrado",
     "slotSpots": "{{count}} vagas livres",
     "slotRequired": "Escolha um horário para entrar",
-    "yourSlot": "Seu horário: {{time}}"
+    "yourSlot": "Seu horário: {{time}}",
+    "aheadSummary_one": "{{count}} pessoa na frente · espera aproximada {{min}}–{{max}} min",
+    "aheadSummary_other": "{{count}} pessoas na frente · espera aproximada {{min}}–{{max}} min",
+    "retry": "Tentar de novo",
+    "offlineBanner": "Sem conexão — a posição pode estar desatualizada.",
+    "rejoin": "Entrar de novo",
+    "calledSince": "Chamado há {{time}}",
+    "calledWarning": "Se você não aparecer, sua vez pode passar.",
+    "aheadCount_one": "{{count}} pessoa na frente",
+    "aheadCount_other": "{{count}} pessoas na frente",
+    "noQueueNow": "Sem fila agora",
+    "pausedNoJoin": "Não é possível entrar enquanto a fila está em pausa."
   },
   "errors": {
     "nameRequired": "Informe seu nome",

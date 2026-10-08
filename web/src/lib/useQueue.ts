@@ -1,7 +1,8 @@
 import i18n from '../i18n';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { onValue, ref } from 'firebase/database';
 import { db } from '../firebase';
+import { effectiveAvgMin } from './format';
 import { parseSlots, type Slot } from './slots';
 
 export type QueueMeta = {
@@ -88,11 +89,14 @@ export type QueueState = {
   position: number | null;
   estimatedWaitMin: number | null;
   waitingCount: number;
+  avgServiceMin: number;
+  publicReady: boolean;
   publicTickets: Record<string, PublicTicket>;
   full: boolean;
   loading: boolean;
   exists: boolean;
   failed: boolean;
+  retry: () => void;
 };
 
 export function useQueue(
@@ -107,6 +111,12 @@ export function useQueue(
   const [loading, setLoading] = useState(true);
   const [exists, setExists] = useState(true);
   const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const retry = useCallback(() => {
+    setFailed(false);
+    setLoading(true);
+    setAttempt((n) => n + 1);
+  }, []);
 
   // As regras da RTDB exigem auth != null para ler meta/public. Se o listener
   // for anexado antes do signInAnonymously terminar, a leitura é negada, o
@@ -150,16 +160,20 @@ export function useQueue(
       },
     );
     return unsub;
-  }, [queueId, ready]);
+  }, [queueId, ready, attempt]);
 
   useEffect(() => {
     if (!ready) return;
     const publicRef = ref(db, `queues/${queueId}/public`);
-    const unsub = onValue(publicRef, (snap) => {
-      setPublicTickets(snap.val() ?? {});
-    });
+    const unsub = onValue(
+      publicRef,
+      (snap) => {
+        setPublicTickets(snap.val() ?? {});
+      },
+      () => {},
+    );
     return unsub;
-  }, [queueId, ready]);
+  }, [queueId, ready, attempt]);
 
   useEffect(() => {
     if (!ready) return;
@@ -192,7 +206,7 @@ export function useQueue(
       setMyEntry(null);
     });
     return unsub;
-  }, [queueId, entryId, ready]);
+  }, [queueId, entryId, ready, attempt]);
 
   let position: number | null = null;
   let estimatedWaitMin: number | null = null;
@@ -200,7 +214,7 @@ export function useQueue(
     if (myEntry.status === 'waiting') {
       position = positionInQueue(publicTickets, myEntry);
     }
-    const avg = meta?.avgServiceMinAuto ?? meta?.avgServiceMin ?? 10;
+    const avg = effectiveAvgMin(meta?.avgServiceMinAuto, meta?.avgServiceMin);
     if (position != null && meta?.mode !== 'schedule') estimatedWaitMin = position * avg;
   }
 
@@ -216,10 +230,13 @@ export function useQueue(
     position,
     estimatedWaitMin,
     waitingCount,
+    avgServiceMin: effectiveAvgMin(meta?.avgServiceMinAuto, meta?.avgServiceMin),
+    publicReady: publicTickets !== null,
     publicTickets: (publicTickets ?? {}) as Record<string, PublicTicket>,
     full,
     loading,
     exists,
     failed,
+    retry,
   };
 }
