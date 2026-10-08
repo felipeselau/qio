@@ -47,7 +47,7 @@ const {
   buildAlertPush,
   wantsAlertPush,
 } = require('./src/alerts');
-const { logError } = require('./src/log');
+const { logError, logAppCheck } = require('./src/log');
 const { guarded } = require('./src/guard');
 
 initializeApp();
@@ -125,6 +125,7 @@ exports.joinQueue = onCall(
     enforceAppCheck: process.env.ENFORCE_APP_CHECK === 'true',
   },
   guarded('joinQueue', async (request) => {
+    logAppCheck('joinQueue', request);
     const uid = request.auth?.uid;
     if (!uid) {
       throw new HttpsError('unauthenticated', 'Faça login para entrar na fila.');
@@ -238,6 +239,7 @@ exports.submitFeedback = onCall(
     enforceAppCheck: process.env.ENFORCE_APP_CHECK === 'true',
   },
   guarded('submitFeedback', async (request) => {
+    logAppCheck('submitFeedback', request);
     const uid = request.auth?.uid;
     if (!uid) {
       throw new HttpsError('unauthenticated', 'Faça login para avaliar.');
