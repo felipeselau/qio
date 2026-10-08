@@ -9,6 +9,7 @@ import '../../theme/qio_text_styles.dart';
 import '../../widgets/qio_button.dart';
 import '../../widgets/qio_card.dart';
 import '../../screens/qr_poster_screen.dart';
+import '../../theme/qio_palette.dart';
 
 class QueueQrCard extends StatelessWidget {
   const QueueQrCard({
@@ -57,7 +58,7 @@ class QueueQrCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: QioColors.gray200),
+              border: Border.all(color: context.qio.gray200),
             ),
             child: Semantics(
               image: true,
@@ -73,9 +74,9 @@ class QueueQrCard extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             l10n.scanToJoin,
-            style: QioTextStyles.body.copyWith(
+            style: context.qioText.body.copyWith(
               fontSize: 14,
-              color: QioColors.gray700,
+              color: context.qio.gray700,
             ),
           ),
           const SizedBox(height: 16),
@@ -91,7 +92,7 @@ class QueueQrCard extends StatelessWidget {
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: QioColors.gray100,
+                  color: context.qio.gray100,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -99,9 +100,9 @@ class QueueQrCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         joinUrl.replaceFirst('https://', ''),
-                        style: QioTextStyles.caption.copyWith(
+                        style: context.qioText.caption.copyWith(
                           fontSize: 13,
-                          color: QioColors.gray700,
+                          color: context.qio.gray700,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
