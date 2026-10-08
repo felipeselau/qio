@@ -6,6 +6,7 @@ import '../../theme/qio_colors.dart';
 import '../../theme/qio_text_styles.dart';
 import '../qio_card.dart';
 import '../qio_input.dart';
+import '../../theme/qio_palette.dart';
 
 String? validateMaxWaiting(String? value, AppLocalizations l10n) {
   final text = value?.trim() ?? '';
@@ -83,7 +84,7 @@ class QueueLimitTile extends StatelessWidget {
       onTap: () => _edit(context),
       child: Row(
         children: [
-          Icon(Icons.people_alt_outlined, color: QioColors.primaryText),
+          Icon(Icons.people_alt_outlined, color: context.qio.primaryText),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -91,20 +92,20 @@ class QueueLimitTile extends StatelessWidget {
               children: [
                 Text(
                   l10n.queueLimitTitle,
-                  style: QioTextStyles.bodyMedium.copyWith(
-                    color: QioColors.textPrimary,
+                  style: context.qioText.bodyMedium.copyWith(
+                    color: context.qio.textPrimary,
                   ),
                 ),
                 Text(
                   maxWaiting > 0
                       ? l10n.queueLimitValue(maxWaiting)
                       : l10n.queueLimitNone,
-                  style: QioTextStyles.caption,
+                  style: context.qioText.caption,
                 ),
               ],
             ),
           ),
-          Icon(Icons.edit_outlined, size: 18, color: QioColors.gray500),
+          Icon(Icons.edit_outlined, size: 18, color: context.qio.gray500),
         ],
       ),
     );
