@@ -11,9 +11,8 @@
   primeiro da fila recebe **"Você é o próximo"** uma única vez (`nextNotifiedAt`).
 - O service worker só desenha a notificação quando o payload não traz
   `notification` (evita duplicar o aviso que o FCM já exibe).
-- Falta só a chave **VAPID** (`VITE_VAPID_KEY`): gerar em Firebase Console >
-  Configurações do projeto > Cloud Messaging > Web Push certificates, guardar em
-  GitHub > Actions > Variables e em `web/.env.local`. No iOS o push web só
+- A chave **VAPID** (`VITE_VAPID_KEY`) já está configurada nas Actions
+  variables do GitHub e presente no bundle publicado. No iOS o push web só
   funciona com a PWA instalada na tela inicial.
 
 ## Status atual
@@ -22,8 +21,16 @@ O projeto está no plano **Blaze (pay-as-you-go)** desde 01/10/2026 (Cloud
 Functions não rodam no plano Spark grátis — `cloudbuild.googleapis.com` só
 habilita com billing) e as functions v2 (`joinQueue`, `syncPublicTicket`,
 `onEntryCalled`, `updateServiceEstimate`) estão publicadas. O custo esperado
-fica dentro da cota gratuita no volume do TCC. O push web ainda depende de
-`VITE_VAPID_KEY` no build da web.
+fica dentro da cota gratuita no volume do TCC. A `VITE_VAPID_KEY` já está
+configurada (Actions variables e bundle publicado); falta só validar o push em
+segundo plano num aparelho real.
+
+### Teste manual pendente (ação do dono)
+
+- [ ] Android/Chrome: entrar na fila pelo QR, tocar em **Ativar aviso**, fechar
+  a aba, chamar a senha pelo app e confirmar que a notificação chega.
+- [ ] iOS: instalar a PWA na tela inicial, ativar o aviso, fechar a PWA, chamar a
+  senha pelo app e confirmar a notificação.
 
 O alerta **in-page** continua funcionando (listener RTDB no client
 web: som + vibração + tela verde quando a senha é chamada).
