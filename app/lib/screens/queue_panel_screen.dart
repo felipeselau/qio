@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/queue.dart';
@@ -9,14 +8,12 @@ import '../models/queue_entry.dart';
 import '../services/entry_diff.dart';
 import '../services/group_service.dart';
 import '../services/haptics.dart';
-import '../services/onboarding_service.dart';
 import '../services/operator_service.dart';
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
-import '../theme/qio_text_styles.dart';
-import '../widgets/onboarding_tour.dart';
-import '../widgets/qio_badge.dart';
 import '../widgets/queue_panel/queue_action_bar.dart';
+import '../widgets/queue_panel/panel_notices.dart';
+import '../widgets/queue_panel/queue_panel_title.dart';
 import '../widgets/queue_panel/queue_status_actions.dart';
 import '../widgets/queue_panel/status_message_dialog.dart';
 import '../widgets/queue_panel/delete_queue_dialog.dart';
@@ -71,20 +68,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
         await Future<void>.delayed(const Duration(milliseconds: 600));
         if (!mounted) return;
-        final l10n = AppLocalizations.of(context);
-        showOnboardingTour(context, OnboardingTour.panel, [
-          OnboardingStep(
-            key: _qrKey,
-            title: l10n.tourPanelQrTitle,
-            body: l10n.tourPanelQrBody,
-          ),
-          OnboardingStep(
-            key: _callNextKey,
-            title: l10n.tourPanelCallTitle,
-            body: l10n.tourPanelCallBody,
-            above: true,
-          ),
-        ]);
+        showPanelTour(context, _qrKey, _callNextKey);
       });
     }
     _joinSub = _queues
@@ -105,19 +89,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
     final added = newWaitingIds(_lastWaiting, entries);
     _lastWaiting = waitingIdsOf(entries);
     if (added.isEmpty || !mounted) return;
-    HapticFeedback.mediumImpact();
-    SystemSound.play(SystemSoundType.alert);
-    final l10n = AppLocalizations.of(context);
-    final message = added.length == 1
-        ? l10n.newPersonInQueue(
-            entries.firstWhere((e) => e.id == added.first).name,
-          )
-        : l10n.newPeopleInQueue(added.length);
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(content: Text(message), duration: const Duration(seconds: 3)),
-      );
+    announceNewEntries(context, entries, added);
   }
 
   Future<void> _repairMirror() async {
@@ -127,12 +99,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
       if (!mounted) return;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).syncError),
-            backgroundColor: QioColors.error,
-          ),
-        );
+        showSyncError(context);
       });
     }
   }
@@ -149,21 +116,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
     _accessLost = true;
     await _accessSub?.cancel();
     if (!mounted) return;
-    final l10n = AppLocalizations.of(context);
-    await showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => AlertDialog(
-        title: Text(l10n.accessEndedTitle),
-        content: Text(l10n.accessEndedBody),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(l10n.ok),
-          ),
-        ],
-      ),
-    );
+    await showAccessEndedDialog(context);
     if (mounted) Navigator.of(context).pop();
   }
 
@@ -173,53 +126,17 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
     return PopScope(
       canPop: !(_actionLoading || _finishLoading || _deleteLoading),
       child: Scaffold(
         backgroundColor: context.qio.gray100,
         appBar: AppBar(
           backgroundColor: context.qio.surface,
-          leading: TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              '←',
-              style: context.qioText.heading3.copyWith(
-                color: context.qio.primaryText,
-              ),
-            ),
-          ),
-          title: StreamBuilder<Queue>(
-            stream: _queues.watchQueue(widget.queueId),
-            builder: (context, snap) {
-              final q = snap.data;
-              final status = q?.status ?? QueueStatus.open;
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      widget.queueName,
-                      maxLines: 1,
-                      style: context.qioText.heading3.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: context.qio.textPrimary,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  QioBadge(
-                    label: status.label(l10n),
-                    status: switch (status) {
-                      QueueStatus.open => QioBadgeStatus.open,
-                      QueueStatus.paused => QioBadgeStatus.paused,
-                      QueueStatus.closed => QioBadgeStatus.closed,
-                    },
-                  ),
-                ],
-              );
-            },
+          leading: const QueueBackButton(),
+          title: QueuePanelTitle(
+            queueId: widget.queueId,
+            queueName: widget.queueName,
+            queues: _queues,
           ),
           centerTitle: true,
           actions: [
@@ -269,14 +186,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
     try {
       final next = await _queues.callNext(widget.queueId);
       Haptics.instance.medium();
-      if (next == null && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).nobodyInQueue),
-            backgroundColor: QioColors.warning,
-          ),
-        );
-      }
+      if (next == null && mounted) showNobodyInQueue(context);
     } on Exception catch (e) {
       _showError(e);
     } finally {
@@ -378,15 +288,8 @@ class _QueuePanelScreenState extends State<QueuePanelScreen> {
     try {
       await _queues.deleteQueue(widget.queueId);
       if (mounted) Navigator.of(context).pop();
-    } on Exception {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).genericActionError),
-            backgroundColor: QioColors.error,
-          ),
-        );
-      }
+    } on Exception catch (e) {
+      _showError(e);
     } finally {
       if (mounted) setState(() => _deleteLoading = false);
     }
