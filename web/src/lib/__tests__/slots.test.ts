@@ -115,6 +115,6 @@ describe('formatSlotTime', () => {
     expect(formatSlotTime(Date.parse('2026-03-10T12:30:00Z'), 'pt-BR')).toBe('09:30');
   });
   it('renders just after midnight', () => {
-    expect(formatSlotTime(sp('2026-03-10T00:05:00'), 'en')).toMatch(/^(24|00):05$/);
+    expect(formatSlotTime(sp('2026-03-10T00:05:00'), 'en')).toBe('00:05');
   });
 });
