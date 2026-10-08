@@ -127,6 +127,46 @@ describe('RTDB rules', () => {
       await assertFails(set(ref(rtdb(OWNER), path('meta/statusMessage')), 5));
     });
 
+    it('dono grava nome, descrição e tempo médio válidos', async () => {
+      await assertSucceeds(set(ref(rtdb(OWNER), path('meta/name')), 'x'.repeat(60)));
+      await assertSucceeds(set(ref(rtdb(OWNER), path('meta/description')), 'a'.repeat(300)));
+      await assertSucceeds(set(ref(rtdb(OWNER), path('meta/avgServiceMin')), 240));
+    });
+
+    it('rejeita nome, descrição e tempo médio inválidos', async () => {
+      for (const v of ['', 'x'.repeat(61), 5]) {
+        await assertFails(set(ref(rtdb(OWNER), path('meta/name')), v));
+      }
+      for (const v of ['a'.repeat(301), 5]) {
+        await assertFails(set(ref(rtdb(OWNER), path('meta/description')), v));
+      }
+      for (const v of [0, 241, 2.5, '10']) {
+        await assertFails(set(ref(rtdb(OWNER), path('meta/avgServiceMin')), v));
+      }
+    });
+
+    it('valor legado inalterado passa e valor novo inválido não', async () => {
+      const long = 'x'.repeat(80);
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await set(ref(ctx.database(), path('meta/name')), long);
+        await set(ref(ctx.database(), path('meta/description')), 'd'.repeat(400));
+        await set(ref(ctx.database(), path('meta/avgServiceMin')), 500);
+      });
+      await assertSucceeds(set(ref(rtdb(OWNER), path('meta/name')), long));
+      await assertSucceeds(set(ref(rtdb(OWNER), path('meta/description')), 'd'.repeat(400)));
+      await assertSucceeds(set(ref(rtdb(OWNER), path('meta/avgServiceMin')), 500));
+      await assertFails(set(ref(rtdb(OWNER), path('meta/name')), 'y'.repeat(81)));
+      await assertFails(set(ref(rtdb(OWNER), path('meta/avgServiceMin')), 501));
+      await assertSucceeds(set(ref(rtdb(OWNER), path('meta/name')), 'curto'));
+    });
+
+    it('operador, cliente e estranho não gravam nome nem tempo médio', async () => {
+      for (const uid of [OPERATOR, 'client1', STRANGER]) {
+        await assertFails(set(ref(rtdb(uid), path('meta/name')), 'Hack'));
+        await assertFails(set(ref(rtdb(uid), path('meta/avgServiceMin')), 5));
+      }
+    });
+
     it('operador, cliente e estranho não gravam limite nem mensagem', async () => {
       for (const uid of [OPERATOR, 'client1', STRANGER]) {
         await assertFails(set(ref(rtdb(uid), path('meta/maxWaiting')), 5));

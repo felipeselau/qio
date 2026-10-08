@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
+import '../models/queue_info.dart';
 import '../models/queue_slot.dart';
 import '../services/group_service.dart';
 import '../services/queue_service.dart';
@@ -9,6 +10,8 @@ import '../theme/qio_text_styles.dart';
 import '../widgets/group_picker.dart';
 import '../widgets/qio_button.dart';
 import '../widgets/qio_input.dart';
+import '../widgets/queue_info_fields.dart';
+import '../widgets/queue_panel/panel_notices.dart';
 import '../widgets/queue_panel/queue_limit_tile.dart';
 import '../widgets/queue_panel/slots_editor.dart';
 import '../widgets/qio_responsive_body.dart';
@@ -31,6 +34,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
   final _descCtrl = TextEditingController();
   final _timeCtrl = TextEditingController();
   final _limitCtrl = TextEditingController();
+  final _advancedCtrl = ExpansibleController();
   bool _isLoading = false;
   String? _groupId;
   QueueMode _mode = QueueMode.queue;
@@ -42,6 +46,8 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
       _descCtrl.text.trim().isNotEmpty ||
       _timeCtrl.text.trim().isNotEmpty ||
       _limitCtrl.text.trim().isNotEmpty ||
+      _groupId != null ||
+      _slots.isNotEmpty ||
       _mode == QueueMode.schedule;
 
   @override
@@ -85,11 +91,28 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
     super.dispose();
   }
 
+  bool _advancedHasError(AppLocalizations l10n) {
+    final time = _timeCtrl.text.trim();
+    return QueueInfo.validateDescription(_descCtrl.text) != null ||
+        (time.isNotEmpty &&
+            QueueInfo.validateAvgServiceMin(
+                  QueueInfo.parseAvgServiceMin(time),
+                ) !=
+                null) ||
+        validateMaxWaiting(_limitCtrl.text, l10n) != null;
+  }
+
   Future<void> _create() async {
+    final l10n = AppLocalizations.of(context);
     final formOk = _formKey.currentState!.validate();
     final slotsError = validateSlots(_mode, _slots);
     setState(() => _slotsError = slotsError);
-    if (!formOk || slotsError != null) return;
+    if (!formOk || slotsError != null) {
+      if (slotsError != null || _advancedHasError(l10n)) {
+        _advancedCtrl.expand();
+      }
+      return;
+    }
     setState(() => _isLoading = true);
     try {
       final queue = await (widget.queues ?? QueueService.instance).createQueue(
@@ -97,7 +120,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
         description: _descCtrl.text.trim().isEmpty
             ? null
             : _descCtrl.text.trim(),
-        avgServiceMin: int.tryParse(_timeCtrl.text.trim()) ?? 15,
+        avgServiceMin: QueueInfo.parseAvgServiceMin(_timeCtrl.text),
         maxWaiting: int.tryParse(_limitCtrl.text.trim()) ?? 0,
         groupId: _groupId,
         mode: _mode,
@@ -111,22 +134,11 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
           ),
         );
       }
-    } on QueueLimitReached {
+    } on Exception catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              AppLocalizations.of(context).queueLimitReached(maxQueuesPerOwner),
-            ),
-            backgroundColor: QioColors.error,
-          ),
-        );
-      }
-    } on Exception {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(AppLocalizations.of(context).genericActionError),
+            content: Text(queueErrorMessage(e, AppLocalizations.of(context))),
             backgroundColor: QioColors.error,
           ),
         );
@@ -147,17 +159,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: context.qio.surface,
-          leading: TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(
-              l10n.backWithArrow,
-              style: context.qioText.body.copyWith(
-                fontSize: 16,
-                color: QioColors.primary,
-              ),
-            ),
-          ),
-          leadingWidth: 100,
+          leading: const QueueBackButton(),
           title: Text(
             l10n.newQueue,
             style: context.qioText.heading2.copyWith(
@@ -189,59 +191,62 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    QioInput(
-                      label: l10n.queueNameLabel,
-                      hint: l10n.queueNameHint,
-                      controller: _nameCtrl,
-                      validator: (v) => (v == null || v.trim().isEmpty)
-                          ? l10n.queueNameRequired
-                          : null,
-                    ),
-                    const SizedBox(height: 24),
-                    QioInput(
-                      label: l10n.descriptionLabel,
-                      hint: l10n.descriptionHint,
-                      controller: _descCtrl,
-                      maxLines: 4,
-                    ),
-                    const SizedBox(height: 24),
-                    QioInput(
-                      label: l10n.avgServiceLabel,
-                      hint: '15',
-                      controller: _timeCtrl,
-                      keyboardType: TextInputType.number,
-                      validator: (v) {
-                        final n = int.tryParse(v ?? '');
-                        if (n == null || n <= 0) return l10n.invalidNumber;
-                        return null;
-                      },
-                    ),
+                    QueueNameField(controller: _nameCtrl, enabled: !_isLoading),
                     const SizedBox(height: 16),
-                    QioInput(
-                      label: l10n.maxWaitingLabel,
-                      hint: l10n.maxWaitingHint,
-                      controller: _limitCtrl,
-                      keyboardType: TextInputType.number,
-                      validator: (v) => validateMaxWaiting(v, l10n),
-                    ),
-                    const SizedBox(height: 16),
-                    GroupPicker(
-                      value: _groupId,
-                      groups: widget.groups,
-                      enabled: !_isLoading,
-                      onChanged: (id) => setState(() => _groupId = id),
-                    ),
-                    const SizedBox(height: 16),
-                    SlotsEditor(
-                      mode: _mode,
-                      slots: _slots,
-                      error: _slotsError,
-                      enabled: !_isLoading,
-                      onChanged: (mode, slots) => setState(() {
-                        _mode = mode;
-                        _slots = slots;
-                        _slotsError = null;
-                      }),
+                    Theme(
+                      data: Theme.of(
+                        context,
+                      ).copyWith(dividerColor: Colors.transparent),
+                      child: ExpansionTile(
+                        controller: _advancedCtrl,
+                        maintainState: true,
+                        tilePadding: EdgeInsets.zero,
+                        childrenPadding: const EdgeInsets.only(bottom: 8),
+                        title: Text(
+                          l10n.advancedOptions,
+                          style: context.qioText.bodyMedium.copyWith(
+                            color: context.qio.textPrimary,
+                          ),
+                        ),
+                        children: [
+                          QueueDescriptionField(
+                            controller: _descCtrl,
+                            enabled: !_isLoading,
+                          ),
+                          const SizedBox(height: 24),
+                          QueueAvgServiceField(
+                            controller: _timeCtrl,
+                            enabled: !_isLoading,
+                          ),
+                          const SizedBox(height: 16),
+                          QioInput(
+                            label: l10n.maxWaitingLabel,
+                            hint: l10n.maxWaitingHint,
+                            controller: _limitCtrl,
+                            keyboardType: TextInputType.number,
+                            validator: (v) => validateMaxWaiting(v, l10n),
+                          ),
+                          const SizedBox(height: 16),
+                          GroupPicker(
+                            value: _groupId,
+                            groups: widget.groups,
+                            enabled: !_isLoading,
+                            onChanged: (id) => setState(() => _groupId = id),
+                          ),
+                          const SizedBox(height: 16),
+                          SlotsEditor(
+                            mode: _mode,
+                            slots: _slots,
+                            error: _slotsError,
+                            enabled: !_isLoading,
+                            onChanged: (mode, slots) => setState(() {
+                              _mode = mode;
+                              _slots = slots;
+                              _slotsError = null;
+                            }),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 32),
                     QioButton(

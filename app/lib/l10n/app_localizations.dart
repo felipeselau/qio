@@ -118,12 +118,6 @@ abstract class AppLocalizations {
   /// **'Voltar'**
   String get back;
 
-  /// No description provided for @backWithArrow.
-  ///
-  /// In pt, this message translates to:
-  /// **'← Voltar'**
-  String get backWithArrow;
-
   /// No description provided for @create.
   ///
   /// In pt, this message translates to:
@@ -2715,6 +2709,84 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Quem já entrou neste horário continua na vaga antiga; as vagas ocupadas seguem contando.'**
   String get slotTimeChangeWarning;
+
+  /// No description provided for @editQueue.
+  ///
+  /// In pt, this message translates to:
+  /// **'Editar fila'**
+  String get editQueue;
+
+  /// No description provided for @editQueueHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nome, descrição e tempo médio'**
+  String get editQueueHint;
+
+  /// No description provided for @queueUpdated.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fila atualizada'**
+  String get queueUpdated;
+
+  /// No description provided for @duplicateQueue.
+  ///
+  /// In pt, this message translates to:
+  /// **'Duplicar fila'**
+  String get duplicateQueue;
+
+  /// No description provided for @duplicateQueueHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Copia limite, horário, cor, modo, grupo e alertas'**
+  String get duplicateQueueHint;
+
+  /// No description provided for @duplicateQueueCopyWord.
+  ///
+  /// In pt, this message translates to:
+  /// **'cópia'**
+  String get duplicateQueueCopyWord;
+
+  /// No description provided for @queueDuplicated.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fila duplicada'**
+  String get queueDuplicated;
+
+  /// No description provided for @advancedOptions.
+  ///
+  /// In pt, this message translates to:
+  /// **'Opções avançadas'**
+  String get advancedOptions;
+
+  /// No description provided for @queueNameTooLong.
+  ///
+  /// In pt, this message translates to:
+  /// **'No máximo 60 caracteres'**
+  String get queueNameTooLong;
+
+  /// No description provided for @descriptionTooLong.
+  ///
+  /// In pt, this message translates to:
+  /// **'No máximo 300 caracteres'**
+  String get descriptionTooLong;
+
+  /// No description provided for @avgServiceInvalid.
+  ///
+  /// In pt, this message translates to:
+  /// **'Informe de 1 a 240 minutos'**
+  String get avgServiceInvalid;
+
+  /// No description provided for @avgServiceAutoHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'O tempo manual só vale até existir a estimativa automática, calculada a partir dos atendimentos.'**
+  String get avgServiceAutoHint;
+
+  /// No description provided for @savingQueue.
+  ///
+  /// In pt, this message translates to:
+  /// **'Salvando…'**
+  String get savingQueue;
 
   /// No description provided for @actionErrorOffline.
   ///

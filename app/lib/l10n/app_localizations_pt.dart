@@ -18,9 +18,6 @@ class AppLocalizationsPt extends AppLocalizations {
   String get back => 'Voltar';
 
   @override
-  String get backWithArrow => '← Voltar';
-
-  @override
   String get create => 'Criar';
 
   @override
@@ -1475,6 +1472,47 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get slotTimeChangeWarning =>
       'Quem já entrou neste horário continua na vaga antiga; as vagas ocupadas seguem contando.';
+
+  @override
+  String get editQueue => 'Editar fila';
+
+  @override
+  String get editQueueHint => 'Nome, descrição e tempo médio';
+
+  @override
+  String get queueUpdated => 'Fila atualizada';
+
+  @override
+  String get duplicateQueue => 'Duplicar fila';
+
+  @override
+  String get duplicateQueueHint =>
+      'Copia limite, horário, cor, modo, grupo e alertas';
+
+  @override
+  String get duplicateQueueCopyWord => 'cópia';
+
+  @override
+  String get queueDuplicated => 'Fila duplicada';
+
+  @override
+  String get advancedOptions => 'Opções avançadas';
+
+  @override
+  String get queueNameTooLong => 'No máximo 60 caracteres';
+
+  @override
+  String get descriptionTooLong => 'No máximo 300 caracteres';
+
+  @override
+  String get avgServiceInvalid => 'Informe de 1 a 240 minutos';
+
+  @override
+  String get avgServiceAutoHint =>
+      'O tempo manual só vale até existir a estimativa automática, calculada a partir dos atendimentos.';
+
+  @override
+  String get savingQueue => 'Salvando…';
 
   @override
   String get actionErrorOffline =>

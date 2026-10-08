@@ -20,6 +20,8 @@ import '../../widgets/queue_panel/slots_editor.dart';
 import '../../widgets/queue_panel/queue_qr_card.dart';
 import '../../widgets/queue_panel/operators_tile.dart';
 import 'animated_entry_list.dart';
+import 'duplicate_queue_tile.dart';
+import 'edit_queue_tile.dart';
 import '../../theme/qio_palette.dart';
 
 class QueuePanelBody extends StatelessWidget {
@@ -72,7 +74,11 @@ class QueuePanelBody extends StatelessWidget {
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                QueueQrCard(key: qrKey, queueName: queueName, joinUrl: joinUrl),
+                QueueQrCard(
+                  key: qrKey,
+                  queueName: queueSnap.data?.name ?? queueName,
+                  joinUrl: joinUrl,
+                ),
                 const SizedBox(height: 16),
                 if (isOwner) ...[
                   OperatorsTile(queueId: queueId),
@@ -98,11 +104,21 @@ class QueuePanelBody extends StatelessWidget {
                   const SizedBox(height: 16),
                   QueueBrandTile(
                     queueId: queueId,
-                    queueName: queueName,
+                    queueName: queueSnap.data?.name ?? queueName,
                     brandColor: queueSnap.data?.brandColor,
                     logoUrl: queueSnap.data?.logoUrl,
                   ),
                   const SizedBox(height: 16),
+                  if (queueSnap.data case final queue?) ...[
+                    EditQueueTile(queue: queue, queues: queues),
+                    const SizedBox(height: 16),
+                    DuplicateQueueTile(
+                      queue: queue,
+                      queues: queues,
+                      groups: groups,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                 ],
                 QioCard(
                   child: Padding(
@@ -157,7 +173,11 @@ class QueuePanelBody extends StatelessWidget {
               final current = mine.isNotEmpty ? mine.first : null;
 
               final qrSection = <Widget>[
-                QueueQrCard(key: qrKey, queueName: queueName, joinUrl: joinUrl),
+                QueueQrCard(
+                  key: qrKey,
+                  queueName: queueSnap.data?.name ?? queueName,
+                  joinUrl: joinUrl,
+                ),
                 const SizedBox(height: 16),
                 if (isOwner) ...[
                   OperatorsTile(queueId: queueId),
@@ -183,11 +203,21 @@ class QueuePanelBody extends StatelessWidget {
                   const SizedBox(height: 16),
                   QueueBrandTile(
                     queueId: queueId,
-                    queueName: queueName,
+                    queueName: queueSnap.data?.name ?? queueName,
                     brandColor: queueSnap.data?.brandColor,
                     logoUrl: queueSnap.data?.logoUrl,
                   ),
                   const SizedBox(height: 16),
+                  if (queueSnap.data case final queue?) ...[
+                    EditQueueTile(queue: queue, queues: queues),
+                    const SizedBox(height: 16),
+                    DuplicateQueueTile(
+                      queue: queue,
+                      queues: queues,
+                      groups: groups,
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                 ],
               ];
               final queueSection = <Widget>[

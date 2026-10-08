@@ -11,6 +11,15 @@
           "updatedAt": {
             ".write": "root.child('queues').child($queueId).child('operatorUids').child(auth.uid).val() === true"
           },
+          "name": {
+            ".validate": "(data.exists() && newData.val() === data.val()) || (newData.isString() && newData.val().length >= 1 && newData.val().length <= 60)"
+          },
+          "description": {
+            ".validate": "(data.exists() && newData.val() === data.val()) || (newData.isString() && newData.val().length <= 300)"
+          },
+          "avgServiceMin": {
+            ".validate": "(data.exists() && newData.val() === data.val()) || (newData.isNumber() && newData.val() >= 1 && newData.val() <= 240 && newData.val() % 1 === 0)"
+          },
           "maxWaiting": {
             ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 1000 && newData.val() % 1 === 0"
           },
