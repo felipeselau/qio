@@ -90,7 +90,8 @@
     "securityCheckFailed": "Security check failed. Reload the page and try again.",
     "slotFull": "This time is full. Choose another one.",
     "slotRequired": "Choose a time to join the queue.",
-    "slotPassed": "This time has already passed. Choose another one."
+    "slotPassed": "This time has already passed. Choose another one.",
+    "reloadPage": "This queue now uses scheduled times. Reload the page to choose a time."
   },
   "push": {
     "called": "Your ticket was called — please go to the service desk."

@@ -90,7 +90,8 @@
     "securityCheckFailed": "Falló la verificación de seguridad. Recarga la página e inténtalo de nuevo.",
     "slotFull": "Este horario está completo. Elige otro.",
     "slotRequired": "Elige un horario para entrar en la fila.",
-    "slotPassed": "Este horario ya pasó. Elige otro."
+    "slotPassed": "Este horario ya pasó. Elige otro.",
+    "reloadPage": "Esta fila ahora usa horarios marcados. Recarga la página para elegir un horario."
   },
   "push": {
     "called": "Tu turno fue llamado — dirígete a la atención."

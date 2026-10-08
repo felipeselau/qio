@@ -140,7 +140,7 @@ export default function QueuePage() {
 
   const scheduled = meta?.mode === 'schedule';
   const slotOptions = (meta?.slots ?? []).map((slot) => {
-    const taken = slotTaken(publicTickets, slot, now);
+    const taken = slotTaken(publicTickets, slot);
     const past = isSlotPast(slot.start, now);
     const slotFull = isSlotFull(taken, slot);
     return { slot, free: Math.max(slot.capacity - taken, 0), past, slotFull };

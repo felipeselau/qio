@@ -18,8 +18,8 @@ const JOIN_ERROR_KEYS: Record<string, string> = {
 
 const SLOT_ERROR_KEYS: Record<string, string> = {
   'slot-full': 'errors.slotFull',
-  'slot-required': 'errors.slotRequired',
-  'slot-invalid': 'errors.slotRequired',
+  'slot-required': 'errors.reloadPage',
+  'slot-invalid': 'errors.reloadPage',
   'slot-passed': 'errors.slotPassed',
 };
 

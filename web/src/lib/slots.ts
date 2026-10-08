@@ -1,6 +1,6 @@
 export type Slot = { id: string; start: string; capacity: number };
 
-type PublicWithSlot = { status?: string; order?: number; slotId?: string };
+type PublicWithSlot = { status?: string; slotId?: string };
 
 const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const SP_OFFSET_MS = 3 * 60 * 60 * 1000;
@@ -35,14 +35,9 @@ export function isSlotPast(start: string, now: number): boolean {
 export function slotTaken(
   publicTickets: Record<string, PublicWithSlot>,
   slot: Slot,
-  now: number,
 ): number {
-  const startMs = slotStartMs(slot.start, now);
   return Object.values(publicTickets).filter(
-    (e) =>
-      (e.status === 'waiting' || e.status === 'called') &&
-      e.slotId === slot.id &&
-      e.order === startMs,
+    (e) => (e.status === 'waiting' || e.status === 'called') && e.slotId === slot.id,
   ).length;
 }
 

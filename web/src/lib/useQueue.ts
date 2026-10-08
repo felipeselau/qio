@@ -26,6 +26,7 @@ export type PublicTicket = {
   status: string;
   order?: number;
   slotId?: string;
+  slotStart?: number;
 };
 
 export function positionInQueue(
