@@ -196,14 +196,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get tourHomeQueueBody =>
-      'Toca la tarjeta para ver el código QR y llamar a las personas.';
-
-  @override
-  String get tourHomeOperatorTitle => 'Entrar como operador';
-
-  @override
-  String get tourHomeOperatorBody =>
-      '¿Recibiste un código de invitación? Úsalo aquí para ayudar en una fila.';
+      'Toca la tarjeta para abrir el panel y llamar a las personas. Pausa o muestra el código QR desde los atajos de la tarjeta.';
 
   @override
   String get emptyQueuesTitle => 'Aún no hay filas';
@@ -1559,4 +1552,47 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get tourPanelSettingsBody =>
       'Toca el engranaje para ver el código QR y ajustar la cola.';
+
+  @override
+  String get tourHomeAccountTitle => 'Tu cuenta e invitaciones';
+
+  @override
+  String get tourHomeAccountBody =>
+      'Aquí están tu cuenta y la opción de entrar como operador con un código de invitación.';
+
+  @override
+  String get quickQr => 'Código QR';
+
+  @override
+  String quickPauseLabel(String name) {
+    return 'Pausar fila $name';
+  }
+
+  @override
+  String quickReopenLabel(String name) {
+    return 'Reabrir fila $name';
+  }
+
+  @override
+  String quickQrLabel(String name) {
+    return 'Mostrar código QR de la fila $name';
+  }
+
+  @override
+  String get searchQueuesHint => 'Buscar fila por nombre';
+
+  @override
+  String get sortQueues => 'Ordenar filas';
+
+  @override
+  String get sortByName => 'Nombre';
+
+  @override
+  String get sortByRecent => 'Más recientes';
+
+  @override
+  String get sortByWaiting => 'Más espera';
+
+  @override
+  String get noQueuesMatch => 'Ninguna fila encontrada';
 }

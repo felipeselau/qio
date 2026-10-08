@@ -196,14 +196,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tourHomeQueueBody =>
-      'Tap the card to see the QR code and call people.';
-
-  @override
-  String get tourHomeOperatorTitle => 'Join as operator';
-
-  @override
-  String get tourHomeOperatorBody =>
-      'Got an invite code? Use it here to help run a queue.';
+      'Tap the card to open the panel and call people. Pause or show the QR code from the card shortcuts.';
 
   @override
   String get emptyQueuesTitle => 'No queues yet';
@@ -1555,4 +1548,47 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tourPanelSettingsBody =>
       'Tap the gear to see the QR code and adjust the queue.';
+
+  @override
+  String get tourHomeAccountTitle => 'Your account and invites';
+
+  @override
+  String get tourHomeAccountBody =>
+      'Find your account here, plus the option to join as an operator with an invite code.';
+
+  @override
+  String get quickQr => 'QR code';
+
+  @override
+  String quickPauseLabel(String name) {
+    return 'Pause queue $name';
+  }
+
+  @override
+  String quickReopenLabel(String name) {
+    return 'Reopen queue $name';
+  }
+
+  @override
+  String quickQrLabel(String name) {
+    return 'Show QR code for queue $name';
+  }
+
+  @override
+  String get searchQueuesHint => 'Search queue by name';
+
+  @override
+  String get sortQueues => 'Sort queues';
+
+  @override
+  String get sortByName => 'Name';
+
+  @override
+  String get sortByRecent => 'Most recent';
+
+  @override
+  String get sortByWaiting => 'Longest wait';
+
+  @override
+  String get noQueuesMatch => 'No queues found';
 }
