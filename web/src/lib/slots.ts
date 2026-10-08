@@ -49,7 +49,7 @@ export function formatSlotTime(ms: number, language: string): string {
   return new Date(ms).toLocaleTimeString(language, {
     hour: '2-digit',
     minute: '2-digit',
-    hour12: false,
+    hourCycle: 'h23',
     timeZone: 'America/Sao_Paulo',
   });
 }

@@ -4,24 +4,9 @@ import { auth, db, functions } from '../firebase';
 import { trackEvent } from './analytics';
 import i18n from '../i18n';
 import { storeEntryId } from './storage';
+import { feedbackErrorKey, joinErrorKey } from './joinErrors';
 
 export type JoinResult = { entryId: string; ticket: number; existing: boolean };
-
-const JOIN_ERROR_KEYS: Record<string, string> = {
-  'functions/already-exists': 'errors.alreadyExists',
-  'functions/resource-exhausted': 'errors.resourceExhausted',
-  'functions/failed-precondition': 'errors.failedPrecondition',
-  'functions/invalid-argument': 'errors.invalidArgument',
-  'functions/not-found': 'errors.notFound',
-  'functions/unauthenticated': 'errors.securityCheckFailed',
-};
-
-const SLOT_ERROR_KEYS: Record<string, string> = {
-  'slot-full': 'errors.slotFull',
-  'slot-required': 'errors.reloadPage',
-  'slot-invalid': 'errors.reloadPage',
-  'slot-passed': 'errors.slotPassed',
-};
 
 export async function joinQueue(
   queueId: string,
@@ -42,14 +27,7 @@ export async function joinQueue(
       await call({ queueId, name, phone, lang: i18n.language, ...(slotId ? { slotId } : {}) })
     ).data;
   } catch (err) {
-    const e = err as { code?: string; details?: { reason?: string } } | null;
-    const code = e?.code ?? '';
-    if (code === 'functions/resource-exhausted' && e?.details?.reason === 'queue-full') {
-      throw new Error(i18n.t('errors.queueFull'));
-    }
-    const reasonKey = e?.details?.reason ? SLOT_ERROR_KEYS[e.details.reason] : undefined;
-    if (reasonKey) throw new Error(i18n.t(reasonKey));
-    throw new Error(i18n.t(JOIN_ERROR_KEYS[code] ?? 'errors.joinFailed'));
+    throw new Error(i18n.t(joinErrorKey(err)));
   }
 
   storeEntryId(queueId, result.entryId);
@@ -86,9 +64,8 @@ export async function submitFeedback(
     await call({ queueId, entryId, rating, comment });
     trackEvent('feedback_sent', queueId);
   } catch (err) {
-    const code = (err as { code?: string } | null)?.code ?? '';
-    if (code === 'functions/failed-precondition') return;
-    if (code === 'functions/unauthenticated') throw new Error(i18n.t('errors.securityCheckFailed'));
-    throw new Error(i18n.t('errors.feedbackFailed'));
+    const key = feedbackErrorKey(err);
+    if (key === null) return;
+    throw new Error(i18n.t(key));
   }
 }
