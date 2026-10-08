@@ -1,5 +1,5 @@
 import i18n from '../i18n';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { onValue, ref } from 'firebase/database';
 import { db } from '../firebase';
 import { parseSlots, type Slot } from './slots';
@@ -94,6 +94,7 @@ export type QueueState = {
   loading: boolean;
   exists: boolean;
   failed: boolean;
+  retry: () => void;
 };
 
 export function useQueue(
@@ -108,6 +109,12 @@ export function useQueue(
   const [loading, setLoading] = useState(true);
   const [exists, setExists] = useState(true);
   const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const retry = useCallback(() => {
+    setFailed(false);
+    setLoading(true);
+    setAttempt((n) => n + 1);
+  }, []);
 
   // As regras da RTDB exigem auth != null para ler meta/public. Se o listener
   // for anexado antes do signInAnonymously terminar, a leitura é negada, o
@@ -151,7 +158,7 @@ export function useQueue(
       },
     );
     return unsub;
-  }, [queueId, ready]);
+  }, [queueId, ready, attempt]);
 
   useEffect(() => {
     if (!ready) return;
@@ -160,7 +167,7 @@ export function useQueue(
       setPublicTickets(snap.val() ?? {});
     });
     return unsub;
-  }, [queueId, ready]);
+  }, [queueId, ready, attempt]);
 
   useEffect(() => {
     if (!ready) return;
@@ -193,7 +200,7 @@ export function useQueue(
       setMyEntry(null);
     });
     return unsub;
-  }, [queueId, entryId, ready]);
+  }, [queueId, entryId, ready, attempt]);
 
   let position: number | null = null;
   let estimatedWaitMin: number | null = null;
@@ -223,5 +230,6 @@ export function useQueue(
     loading,
     exists,
     failed,
+    retry,
   };
 }

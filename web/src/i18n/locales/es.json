@@ -75,6 +75,11 @@
     "yourSlot": "Tu horario: {{time}}",
     "aheadSummary_one": "{{count}} persona delante · espera aproximada {{min}}–{{max}} min",
     "aheadSummary_other": "{{count}} personas delante · espera aproximada {{min}}–{{max}} min",
+    "retry": "Intentar de nuevo",
+    "offlineBanner": "Sin conexión — la posición puede estar desactualizada.",
+    "rejoin": "Entrar de nuevo",
+    "calledSince": "Llamado hace {{time}}",
+    "calledWarning": "Si no te presentas, tu turno puede pasar.",
     "noQueueNow": "Sin fila ahora",
     "pausedNoJoin": "No es posible entrar mientras la fila está en pausa."
   },

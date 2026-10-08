@@ -11,6 +11,17 @@ export function isValidPhone(phone: string): boolean {
   return /^\(\d{2}\) \d{4,5}-\d{4}$/.test(phone);
 }
 
+export function elapsedSince(startMs: number, nowMs: number): number {
+  return Math.max(0, Math.floor((nowMs - startMs) / 1000));
+}
+
+export function formatElapsed(totalSeconds: number): string {
+  const safe = Math.max(0, Math.floor(totalSeconds));
+  const minutes = Math.floor(safe / 60);
+  const seconds = safe % 60;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
 export type WaitRange = { min: number; max: number };
 
 export function waitRange(position: number, avgMin: number): WaitRange | null {

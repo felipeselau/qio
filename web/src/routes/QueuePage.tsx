@@ -19,7 +19,16 @@ import {
   type PushSupport,
 } from '../lib/fcm';
 import { useQueue, type QueueMeta } from '../lib/useQueue';
-import { formatPhone, isValidPhone, waitRange } from '../lib/format';
+import {
+  elapsedSince,
+  formatElapsed,
+  formatPhone,
+  isValidPhone,
+  waitRange,
+} from '../lib/format';
+import { playAlertSound, unlockAudio } from '../lib/alert';
+import { holdWakeLock } from '../lib/wakeLock';
+import { useOnline } from '../lib/useOnline';
 import { useInstallPrompt } from '../lib/useInstallPrompt';
 import { formatSlotTime, isSlotFull, isSlotPast, slotTaken } from '../lib/slots';
 
@@ -57,6 +66,33 @@ function QueueLogo({ meta }: { meta: QueueMeta | null }) {
     <div className="queue-logo queue-logo-fallback" aria-hidden="true">
       {initial}
     </div>
+  );
+}
+
+function OfflineBanner() {
+  const { t } = useTranslation();
+  const online = useOnline();
+  if (online) return null;
+  return (
+    <div className="notice notice-warning" role="status">
+      {t('queue.offlineBanner')}
+    </div>
+  );
+}
+
+function CalledTimer({ calledAt }: { calledAt: number | null }) {
+  const { t } = useTranslation();
+  const [startedAt] = useState(() => Date.now());
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+  const seconds = elapsedSince(calledAt ?? startedAt, now);
+  return (
+    <p style={{ fontSize: 14, opacity: 0.9 }}>
+      {t('queue.calledSince', { time: formatElapsed(seconds) })}
+    </p>
   );
 }
 
@@ -138,6 +174,7 @@ export default function QueuePage() {
     loading,
     exists,
     failed,
+    retry,
   } = useQueue(queueId, entryId, authed);
 
   const scheduled = meta?.mode === 'schedule';
@@ -177,6 +214,12 @@ export default function QueuePage() {
       : t('queue.aheadSummary', { count: waitingCount, min: range.min, max: range.max });
 
   const [authFailed, setAuthFailed] = useState(false);
+  const [authAttempt, setAuthAttempt] = useState(0);
+  function handleRetry() {
+    setAuthFailed(false);
+    setAuthAttempt((n) => n + 1);
+    retry();
+  }
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -188,7 +231,7 @@ export default function QueuePage() {
       }
     });
     return unsub;
-  }, [queueId]);
+  }, [queueId, authAttempt]);
 
   // limpa entryId local se a entry sumiu do RTDB (served/no_show/left).
   // myEntryResolved garante que o listener já entregou o primeiro valor —
@@ -206,6 +249,7 @@ export default function QueuePage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    unlockAudio();
     if (!name.trim()) {
       setError(t('errors.nameRequired'));
       return;
@@ -249,21 +293,17 @@ export default function QueuePage() {
     }
   }
 
+  function handleRejoin() {
+    clearStoredEntryId(queueId);
+    setEntryId(null);
+    setHasLeft(false);
+    setLeaving(false);
+    setConfirmLeave(false);
+    setError(null);
+  }
+
   function playAlert() {
-    try {
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.frequency.value = 880;
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.2);
-      osc.start();
-      osc.stop(ctx.currentTime + 1.2);
-    } catch {
-      // ignore
-    }
+    playAlertSound();
     if (navigator.vibrate) navigator.vibrate([400, 200, 400]);
   }
 
@@ -354,7 +394,21 @@ export default function QueuePage() {
     });
   }, [phase, myEntry, entryId, fcmDone, registerToken]);
 
+  useEffect(() => {
+    if (phase !== 'ticket') return;
+    const release = holdWakeLock();
+    const unlock = () => unlockAudio();
+    window.addEventListener('pointerdown', unlock, { once: true });
+    window.addEventListener('keydown', unlock, { once: true });
+    return () => {
+      release();
+      window.removeEventListener('pointerdown', unlock);
+      window.removeEventListener('keydown', unlock);
+    };
+  }, [phase]);
+
   async function enablePush() {
+    unlockAudio();
     setPushBusy(true);
     try {
       const result = await requestPushPermission();
@@ -376,6 +430,9 @@ export default function QueuePage() {
         <div className="center-col fade-in" key="error">
           <h1 style={{ fontSize: 20, fontWeight: 700 }}>{t('queue.connectFailed')}</h1>
           <p className="muted">{t('queue.connectFailedHint')}</p>
+          <button type="button" className="btn btn-primary" onClick={handleRetry}>
+            {t('queue.retry')}
+          </button>
         </div>
       );
     }
@@ -421,7 +478,7 @@ export default function QueuePage() {
   if (phase === 'called' && myEntry) {
     return (
       <div
-        className="fade-in" key="called" role="alert"
+        className="fade-in" key="called"
         style={{
           background: 'var(--success-strong)',
           flex: 1,
@@ -436,14 +493,23 @@ export default function QueuePage() {
           color: 'var(--white)',
         }}
       >
-        <div style={{ fontSize: 72 }}>✓</div>
-        <h1 style={{ fontSize: 24, fontWeight: 700 }}>{t('queue.yourTurn')}</h1>
-        <p style={{ fontSize: 18, fontWeight: 600 }}>
-          {t('queue.ticketNumber', { ticket: myEntry.ticket })}
-        </p>
-        <p style={{ fontSize: 14, opacity: 0.9 }}>
-          {t('queue.goToService')}
-        </p>
+        <OfflineBanner />
+        <div
+          role="alert"
+          style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}
+        >
+          <div style={{ fontSize: 72 }} aria-hidden="true">✓</div>
+          <h1 style={{ fontSize: 24, fontWeight: 700 }}>{t('queue.yourTurn')}</h1>
+          {meta?.name && <p style={{ fontSize: 16, opacity: 0.95 }}>{meta.name}</p>}
+          <p style={{ fontSize: 18, fontWeight: 600 }}>
+            {t('queue.ticketNumber', { ticket: myEntry.ticket })}
+          </p>
+          <p style={{ fontSize: 14, opacity: 0.9 }}>
+            {t('queue.goToService')}
+          </p>
+        </div>
+        <CalledTimer calledAt={myEntry.calledAt} />
+        <p style={{ fontSize: 14, fontWeight: 600 }}>{t('queue.calledWarning')}</p>
       </div>
     );
   }
@@ -519,6 +585,9 @@ export default function QueuePage() {
       <div className="center-col fade-in" key="left">
         <h1 style={{ fontSize: 20, fontWeight: 700 }}>{t('queue.left')}</h1>
         <p className="muted">{t('queue.leftHint')}</p>
+        <button type="button" className="btn btn-primary" onClick={handleRejoin}>
+          {t('queue.rejoin')}
+        </button>
       </div>
     );
   }
@@ -527,6 +596,7 @@ export default function QueuePage() {
     return (
       <div className="page fade-in" key="ticket">
         <div className="page-scroll">
+          <OfflineBanner />
           <div className="card" style={{ textAlign: 'center', padding: 24 }}>
             <QueueLogo meta={meta} />
             <p
@@ -719,6 +789,7 @@ export default function QueuePage() {
   return (
     <div className="page fade-in" key="join">
       <div className="page-scroll">
+        <OfflineBanner />
         <div style={{ textAlign: 'center', marginBottom: 8 }}>
           <QueueLogo meta={meta} />
           <h1 style={{ fontSize: 24, fontWeight: 700 }}>{meta?.name}</h1>
