@@ -3,7 +3,6 @@ import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-ch
 import { connectAuthEmulator, getAuth } from 'firebase/auth';
 import { connectDatabaseEmulator, getDatabase } from 'firebase/database';
 import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
-import type { Messaging } from 'firebase/messaging';
 
 const firebaseConfig = {
   apiKey: 'AIzaSyAY29R07GlubY5lFmUriQ8qiVuiiWv7W6Y',
@@ -44,22 +43,4 @@ if (import.meta.env.VITE_USE_EMULATORS === 'true') {
   connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
   connectDatabaseEmulator(db, 'localhost', 9000);
   connectFunctionsEmulator(functions, 'localhost', Number(import.meta.env.VITE_FUNCTIONS_EMULATOR_PORT ?? 5001));
-}
-
-// getMessaging() lança sincronamente em navegadores sem suporte a FCM
-// (muitos webviews de apps, Safari iOS antigo). Como firebase.ts é importado
-// por toda a aplicação, chamá-lo no topo do módulo derrubaria a página inteira.
-// Resolvido de forma preguiçosa: retorna null quando não há suporte.
-let _messaging: Promise<Messaging | null> | undefined;
-export function getMessagingSafe(): Promise<Messaging | null> {
-  if (_messaging) return _messaging;
-  _messaging = (async () => {
-    try {
-      const { getMessaging } = await import('firebase/messaging');
-      return getMessaging(app);
-    } catch {
-      return null;
-    }
-  })();
-  return _messaging;
 }

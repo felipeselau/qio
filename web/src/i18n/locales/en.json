@@ -67,6 +67,7 @@
     "pushEnable": "Turn on alerts",
     "pushOn": "You will be notified when it's your turn.",
     "pushDenied": "Alerts are blocked in the browser. The page still alerts you while it is open.",
+    "pushUnavailable": "Could not turn on alerts right now. Check your connection and tap to try again.",
     "slotTitle": "Choose a time",
     "slotFull": "Full",
     "slotPast": "Closed",
@@ -114,6 +115,8 @@
     "howTitle": "How to join a queue",
     "how": "Scan the venue's QR code or open the link it shared. No account and no app install needed.",
     "ownerTitle": "Run a venue?",
-    "ownerLink": "Get the Qio app to create your queue"
+    "ownerLink": "Get the Qio app to create your queue",
+    "documentTitle": "Qio — In-person queues, nothing to install",
+    "metaDescription": "Join a venue's queue from your phone without installing an app: scan the QR code and follow your position in real time."
   }
 }

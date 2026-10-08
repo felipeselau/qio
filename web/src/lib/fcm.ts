@@ -1,16 +1,39 @@
 import i18n from '../i18n';
-import { getMessagingSafe } from '../firebase';
+import { getMessagingSafe, MessagingLoadError } from './messaging';
+import { loadMessagingModule } from './messagingModule';
 
 const vapidKey = import.meta.env.VITE_VAPID_KEY as string | undefined;
 
-export type PushSupport = 'ready' | 'granted' | 'denied' | 'unsupported';
+const LOAD_RETRY_DELAY_MS = 600;
+
+export type PushSupport = 'ready' | 'granted' | 'denied' | 'unsupported' | 'unavailable';
+
+type MessagingModule = Awaited<ReturnType<typeof loadMessagingModule>>;
+
+async function loadWithRetry(): Promise<MessagingModule> {
+  try {
+    return await loadMessagingModule();
+  } catch {
+    await new Promise((resolve) => setTimeout(resolve, LOAD_RETRY_DELAY_MS));
+    try {
+      return await loadMessagingModule();
+    } catch (e) {
+      throw new MessagingLoadError(e);
+    }
+  }
+}
 
 export async function pushSupport(): Promise<PushSupport> {
   if (!vapidKey) return 'unsupported';
   if (typeof Notification === 'undefined') return 'unsupported';
+  let mod: MessagingModule;
   try {
-    const { isSupported } = await import('firebase/messaging');
-    if (!(await isSupported())) return 'unsupported';
+    mod = await loadWithRetry();
+  } catch {
+    return 'unavailable';
+  }
+  try {
+    if (!(await mod.isSupported())) return 'unsupported';
   } catch {
     return 'unsupported';
   }
@@ -26,14 +49,15 @@ export async function requestPushPermission(): Promise<'granted' | 'denied'> {
 
 export async function getFcmToken(): Promise<string | null> {
   if (!vapidKey) return null;
+  const mod = await loadWithRetry();
   try {
-    const { getToken, isSupported } = await import('firebase/messaging');
-    if (!(await isSupported())) return null;
+    if (!(await mod.isSupported())) return null;
     const messaging = await getMessagingSafe();
     if (!messaging) return null;
-    const token = await getToken(messaging, { vapidKey });
+    const token = await mod.getToken(messaging, { vapidKey });
     return token || null;
-  } catch {
+  } catch (e) {
+    if (e instanceof MessagingLoadError) throw e;
     return null;
   }
 }
@@ -44,8 +68,8 @@ export function listenForMessages(onTurn: () => void): () => void {
   let cancelled = false;
   void (async () => {
     try {
-      const { isSupported, onMessage } = await import('firebase/messaging');
-      if (!(await isSupported())) return;
+      const { isSupported, onMessage } = await loadMessagingModule();
+      if (cancelled || !(await isSupported())) return;
       const messaging = await getMessagingSafe();
       if (!messaging || cancelled) return;
       unsub = onMessage(messaging, () => {
@@ -57,7 +81,8 @@ export function listenForMessages(onTurn: () => void): () => void {
           onTurn();
         }
       });
-    } catch {
+    } catch (e) {
+      console.debug('[fcm] listenForMessages failed', e);
     }
   })();
   return () => {

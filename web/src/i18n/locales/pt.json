@@ -67,6 +67,7 @@
     "pushEnable": "Ativar aviso",
     "pushOn": "Você será avisado quando for a sua vez.",
     "pushDenied": "Avisos bloqueados no navegador. A página continua avisando enquanto estiver aberta.",
+    "pushUnavailable": "Não foi possível ativar o aviso agora. Verifique a conexão e toque para tentar de novo.",
     "slotTitle": "Escolha um horário",
     "slotFull": "Lotado",
     "slotPast": "Encerrado",
@@ -114,6 +115,8 @@
     "howTitle": "Como entrar na fila",
     "how": "Escaneie o QR code do estabelecimento ou abra o link que ele compartilhou. Não é preciso criar conta nem instalar app.",
     "ownerTitle": "Tem um estabelecimento?",
-    "ownerLink": "Baixar o app do Qio para criar sua fila"
+    "ownerLink": "Baixar o app do Qio para criar sua fila",
+    "documentTitle": "Qio — Fila presencial, sem instalar nada",
+    "metaDescription": "Entre na fila do estabelecimento pelo celular, sem instalar app: escaneie o QR code e acompanhe sua posição em tempo real."
   }
 }
