@@ -17,6 +17,7 @@ Future<void> pumpApp(
   final theme = themeMode == ThemeMode.dark ? QioTheme.dark : QioTheme.light;
   await tester.pumpWidget(
     MaterialApp(
+      debugShowCheckedModeBanner: false,
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,

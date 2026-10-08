@@ -27,7 +27,10 @@ flutter pub get
 flutter analyze lib test   # roda no CI
 flutter test               # roda no CI
 flutter run
+flutter test --update-goldens --tags golden   # regenera app/test/goldens
 ```
+Goldens (Ahem, tolerância 0,5%, `app/test/goldens/README.md`) rodam no `flutter test`
+e no CI; mudança visual intencional exige regenerá-los no PR.
 
 ### functions/
 ```bash
