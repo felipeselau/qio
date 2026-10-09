@@ -16,6 +16,7 @@ import 'package:qio_app/widgets/queue_panel/waiting_tile.dart';
 
 import '../helpers/fake_services.dart';
 import '../helpers/pump_app.dart';
+import '../helpers/panel_menu.dart';
 
 Future<void> tick(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 300));
@@ -81,7 +82,7 @@ void main() {
       panel(service(), isOwner: false, operators: ops),
       const Size(390, 844),
     );
-    await tester.tap(find.byTooltip('QR code da fila'));
+    await tapPanelAction(tester, 'QR code da fila');
     await tick(tester);
     expect(find.byType(QueueSettingsScreen), findsOneWidget);
     expect(find.text('QR code'), findsOneWidget);
@@ -104,7 +105,7 @@ void main() {
     addTearDown(exists.close);
     final queues = service()..existsOverride = exists.stream;
     await openFromHome(tester, panel(queues), const Size(390, 844));
-    await tester.tap(find.byTooltip('Configurações da fila'));
+    await tapPanelAction(tester, 'Configurações da fila');
     await tick(tester);
     expect(find.byType(QueueSettingsScreen), findsOneWidget);
     exists.add(false);
@@ -125,7 +126,7 @@ void main() {
     final queues = service()
       ..existsOverride = Stream<bool>.error(Exception('x'));
     await openFromHome(tester, panel(queues), const Size(390, 844));
-    await tester.tap(find.byTooltip('Configurações da fila'));
+    await tapPanelAction(tester, 'Configurações da fila');
     await tick(tester);
     await tick(tester);
     expect(find.byType(QueueSettingsScreen), findsNothing);
@@ -148,10 +149,13 @@ void main() {
           await tick(tester);
           expect(tester.takeException(), isNull);
           expect(find.byType(CurrentCalledCard), findsOneWidget);
-          if (owner) {
-            expect(find.byTooltip('Configurações da fila'), findsOneWidget);
-          }
-          expect(find.byTooltip('QR code da fila'), findsOneWidget);
+          expect(
+            find.descendant(
+              of: find.byType(AppBar),
+              matching: find.byTooltip('Mais ações'),
+            ),
+            findsOneWidget,
+          );
         });
       }
     }
@@ -187,7 +191,13 @@ void main() {
     expect(find.text('Fila fechada'), findsOneWidget);
     expect(find.byType(QueueQrCard), findsNothing);
     expect(find.byType(OperatorsTile), findsNothing);
-    expect(find.byTooltip('Configurações da fila'), findsOneWidget);
+    expect(
+      find.descendant(
+        of: find.byType(AppBar),
+        matching: find.byTooltip('Mais ações'),
+      ),
+      findsOneWidget,
+    );
 
     await pumpApp(
       tester,

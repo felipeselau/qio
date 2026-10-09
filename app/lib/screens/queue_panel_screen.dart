@@ -16,6 +16,7 @@ import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
 import '../widgets/queue_panel/add_person_dialog.dart';
 import '../widgets/queue_panel/queue_action_bar.dart';
+import '../widgets/queue_panel/queue_compact_menu.dart';
 import '../widgets/queue_panel/panel_notices.dart';
 import '../widgets/queue_panel/queue_panel_title.dart';
 import '../widgets/queue_panel/queue_settings_actions.dart';
@@ -195,29 +196,43 @@ class _QueuePanelScreenState extends State<QueuePanelScreen>
           centerTitle: true,
           actions: [
             IconButton(
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
               icon: const Icon(Icons.person_add_alt_1_outlined),
               tooltip: AppLocalizations.of(context).addPerson,
               onPressed: _actionLoading ? null : _addPerson,
             ),
-            if (!isPanelWide(MediaQuery.sizeOf(context).width))
-              QueueSettingsActions(
+            if (isPanelCompactBar(context))
+              QueueCompactMenu(
                 queueId: widget.queueId,
                 queueName: widget.queueName,
                 isOwner: widget.isOwner,
-                qrKey: _qrKey,
-                settingsKey: _settingsKey,
+                showSettings: !isPanelWide(MediaQuery.sizeOf(context).width),
+                menuKey: _qrKey,
+                onStatus: _updateStatus,
                 queues: _queues,
                 groups: widget.groups,
                 onQueueGone: _onQueueGone,
-              ),
-            if (widget.isOwner)
-              QueueStatusActions(
-                queueId: widget.queueId,
-                queueName: widget.queueName,
-                onStatus: _updateStatus,
-                queues: _queues,
-                compact: isPanelCompactBar(context),
-              ),
+              )
+            else ...[
+              if (!isPanelWide(MediaQuery.sizeOf(context).width))
+                QueueSettingsActions(
+                  queueId: widget.queueId,
+                  queueName: widget.queueName,
+                  isOwner: widget.isOwner,
+                  qrKey: _qrKey,
+                  settingsKey: _settingsKey,
+                  queues: _queues,
+                  groups: widget.groups,
+                  onQueueGone: _onQueueGone,
+                ),
+              if (widget.isOwner)
+                QueueStatusActions(
+                  queueId: widget.queueId,
+                  queueName: widget.queueName,
+                  onStatus: _updateStatus,
+                  queues: _queues,
+                ),
+            ],
           ],
         ),
         body: QueuePanelBody(
