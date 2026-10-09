@@ -286,7 +286,15 @@ modelos; ainda sem dados): `docs/piloto/`.
   com `controller.toCreateArgs()` (inclui `expiry`). "Pular" restaura os defaults do passo
   (cor, tempo/limite, horário+expiração; o grupo do passo 1 não é afetado). Botão primário
   fixo no rodapé (`CreateQueueFooter`), barra com `Semantics('Passo X de Y')` e anúncio da
-  troca de passo. Erro de `createQueue` (`queueErrorMessage`) aparece num banner
+  troca de passo; o rodapé reserva o espaço do botão secundário (altura estável). O passo 1
+  fica vivo (`CreateQueueKeepAlive`; sem reabrir o teclado ao voltar). Horários: máx. 20
+  (`maxQueueSlots`); as sugestões **acumulam** (rótulo "Adicionar horários...", sem duplicar
+  nem passar de 20). A revisão mostra grupo (nome via `GroupService`), cor (amostra) e todas
+  as janelas do horário. `createQueue` tem timeout de 20 s (`TimeoutException` →
+  `cqCreateTimeout`); enquanto cria, voltar (sistema e botão) fica **bloqueado** e o botão
+  primário mostra o spinner. Risco conhecido: após o timeout a criação pode ter concluído no
+  servidor, e um retry gera fila duplicada (o aviso manda conferir a lista). Erro de
+  `createQueue` (`queueErrorMessage`) aparece num banner
   (`create-error`) e a tela segue aberta. Sucesso: `pushReplacement` ao painel.
 - Voltar do sistema e `QueueBackButton` voltam **um passo** (`PopScope(canPop: primeiro
   passo && !dirty)`); no passo 1 com draft sujo vale a confirmação de descarte. Widgets em

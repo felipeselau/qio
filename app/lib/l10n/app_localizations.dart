@@ -2761,7 +2761,7 @@ abstract class AppLocalizations {
   /// No description provided for @slotsTileSummary.
   ///
   /// In pt, this message translates to:
-  /// **'{count} horários'**
+  /// **'{count, plural, =1{1 horário} other{{count} horários}}'**
   String slotsTileSummary(int count);
 
   /// No description provided for @waitTileSlot.
@@ -3583,13 +3583,13 @@ abstract class AppLocalizations {
   /// No description provided for @cqSuggestEvery30.
   ///
   /// In pt, this message translates to:
-  /// **'A cada 30 min, das 9h às 17h'**
+  /// **'Adicionar horários a cada 30 min, das 9h às 17h'**
   String get cqSuggestEvery30;
 
   /// No description provided for @cqSuggestEveryHour.
   ///
   /// In pt, this message translates to:
-  /// **'A cada hora, das 9h às 17h'**
+  /// **'Adicionar horários a cada hora, das 9h às 17h'**
   String get cqSuggestEveryHour;
 
   /// No description provided for @cqCapacityTitle.
@@ -3679,7 +3679,7 @@ abstract class AppLocalizations {
   /// No description provided for @cqLimitPeople.
   ///
   /// In pt, this message translates to:
-  /// **'{count} pessoas'**
+  /// **'{count, plural, =1{1 pessoa} other{{count} pessoas}}'**
   String cqLimitPeople(int count);
 
   /// No description provided for @cqAlwaysOpen.
@@ -3711,6 +3711,12 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Nome'**
   String get cqSummaryName;
+
+  /// No description provided for @cqCreateTimeout.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem resposta. A fila pode ter sido criada: confira sua lista antes de tentar de novo.'**
+  String get cqCreateTimeout;
 }
 
 class _AppLocalizationsDelegate

@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:qio_app/models/queue_group.dart';
 import 'package:qio_app/models/queue_slot.dart';
 import 'package:qio_app/screens/create_queue_screen.dart';
 import 'package:qio_app/screens/queue_panel_screen.dart';
@@ -9,7 +12,11 @@ import '../helpers/create_queue_flow.dart';
 import '../helpers/fake_services.dart';
 import '../helpers/pump_app.dart';
 
-Future<void> openFromLauncher(WidgetTester tester) async {
+Future<void> openFromLauncher(
+  WidgetTester tester, {
+  FakeQueueService? queues,
+  FakeGroupService? groups,
+}) async {
   await pumpApp(
     tester,
     Builder(
@@ -17,8 +24,8 @@ Future<void> openFromLauncher(WidgetTester tester) async {
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute<void>(
             builder: (_) => CreateQueueScreen(
-              queues: FakeQueueService(),
-              groups: FakeGroupService(),
+              queues: queues ?? FakeQueueService(),
+              groups: groups ?? FakeGroupService(),
             ),
           ),
         ),
@@ -307,6 +314,156 @@ void main() {
       await tapKey(tester, 'create-back');
       expect(find.text('Descartar alterações?'), findsNothing);
       expect(find.text('abrir'), findsOneWidget);
+    });
+  });
+
+  group('criação em andamento', () {
+    testWidgets('voltar fica bloqueado enquanto cria na revisão', (
+      tester,
+    ) async {
+      final gate = Completer<void>();
+      final queues = FakeQueueService()..createGate = gate.future;
+      await openFromLauncher(tester, queues: queues);
+      await goToReview(tester);
+      await tester.tap(byKeyName('create-submit'));
+      await tester.pump();
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+      await tester.binding.handlePopRoute();
+      await tester.pump();
+      await tester.tap(byKeyName('create-back'));
+      await tester.pump();
+      expect(byKeyName('create-submit'), findsOneWidget);
+      expect(find.text('abrir'), findsNothing);
+
+      gate.complete();
+      await tester.pumpAndSettle();
+      expect(byKeyName('create-error'), findsOneWidget);
+    });
+
+    testWidgets('Criar agora seguido de voltar não sai da tela', (
+      tester,
+    ) async {
+      final gate = Completer<void>();
+      final queues = FakeQueueService()..createGate = gate.future;
+      await openFromLauncher(tester, queues: queues);
+      await typeName(tester, 'Padaria');
+      await tester.tap(byKeyName('create-quick'));
+      await tester.pump();
+
+      await tester.binding.handlePopRoute();
+      await tester.pump();
+      await tester.tap(byKeyName('create-back'));
+      await tester.pump();
+      expect(byKeyName('create-name'), findsOneWidget);
+      expect(find.text('Descartar alterações?'), findsNothing);
+      expect(find.text('abrir'), findsNothing);
+
+      gate.complete();
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('timeout de 20 s libera a tela com aviso', (tester) async {
+      final queues = FakeQueueService()..createGate = Completer<void>().future;
+      await pumpCreate(tester, queues: queues);
+      await goToReview(tester);
+      await tester.tap(byKeyName('create-submit'));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 21));
+
+      expect(
+        find.text(
+          'Sem resposta. A fila pode ter sido criada: confira sua lista '
+          'antes de tentar de novo.',
+        ),
+        findsOneWidget,
+      );
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+    });
+  });
+
+  group('passo 1 e revisão', () {
+    testWidgets('voltar ao passo 1 mantém Mais detalhes e não foca o nome', (
+      tester,
+    ) async {
+      await pumpCreate(tester);
+      await typeName(tester, 'Clínica');
+      await tapFinder(tester, find.text('Mais detalhes'));
+      await enterKey(tester, 'create-description', 'Sala 2');
+      await tapKey(tester, 'create-continue');
+      await tapKey(tester, 'create-back');
+
+      expect(textOf(tester, 'create-description'), 'Sala 2');
+      expect(find.text('Descrição (opcional)'), findsOneWidget);
+      final name = tester.widget<EditableText>(
+        find.descendant(
+          of: byKeyName('create-name'),
+          matching: find.byType(EditableText),
+        ),
+      );
+      expect(name.focusNode.hasFocus, isFalse);
+    });
+
+    testWidgets('revisão mostra o nome do grupo e a cor', (tester) async {
+      final groups = FakeGroupService(
+        groups: [
+          QueueGroup(id: 'g1', name: 'Loja Centro', createdAt: DateTime(2025)),
+        ],
+      );
+      await openFromLauncher(tester, groups: groups);
+      await typeName(tester, 'Clínica');
+      await tapFinder(tester, find.text('Mais detalhes'));
+      await tapFinder(
+        tester,
+        find.descendant(
+          of: byKeyName('create-group'),
+          matching: find.byType(DropdownButtonFormField<String?>),
+        ),
+      );
+      await tester.tap(find.text('Loja Centro').last);
+      await tester.pumpAndSettle();
+      await continueSteps(tester, 3);
+      await tester.tap(find.bySemanticsLabel('#7C3AED'));
+      await tester.pumpAndSettle();
+      await continueSteps(tester, 2);
+
+      expect(find.text('Loja Centro'), findsOneWidget);
+      expect(byKeyName('create-review-group'), findsOneWidget);
+      expect(byKeyName('create-review-color'), findsOneWidget);
+    });
+
+    testWidgets('rodapé mantém a altura entre passos', (tester) async {
+      await pumpCreate(tester);
+      await typeName(tester, 'Clínica');
+      final first = tester.getSize(byKeyName('create-continue')).height;
+      final top1 = tester.getTopLeft(byKeyName('create-continue')).dy;
+      await continueSteps(tester, 5);
+      expect(byKeyName('create-submit'), findsOneWidget);
+      expect(tester.getSize(byKeyName('create-submit')).height, first);
+      expect(tester.getTopLeft(byKeyName('create-submit')).dy, top1);
+    });
+
+    testWidgets('revisão com texto 2.0x em 320 px sem overflow', (
+      tester,
+    ) async {
+      await pumpApp(
+        tester,
+        Builder(
+          builder: (context) => MediaQuery(
+            data: MediaQuery.of(
+              context,
+            ).copyWith(textScaler: const TextScaler.linear(2)),
+            child: CreateQueueScreen(
+              queues: FakeQueueService(),
+              groups: FakeGroupService(),
+            ),
+          ),
+        ),
+        size: const Size(320, 568),
+      );
+      await goToReview(tester);
+      expect(byKeyName('create-submit'), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
   });
 

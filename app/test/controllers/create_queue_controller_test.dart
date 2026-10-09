@@ -341,9 +341,24 @@ void main() {
         expect(c.step, CreateQueueStep.capacity);
         c.back();
         expect(c.returningToReview, isFalse);
-        expect(c.step, CreateQueueStep.mode);
+        expect(c.step, CreateQueueStep.review);
+        expect(c.firstInvalidStep, CreateQueueStep.capacity);
       },
     );
+
+    test('back durante retorno à revisão vai direto à revisão', () {
+      final c = _named();
+      for (var i = 0; i < 5; i++) {
+        c.next();
+      }
+      c.jumpTo(CreateQueueStep.capacity);
+      expect(c.returningToReview, isTrue);
+      expect(c.back(), isTrue);
+      expect(c.step, CreateQueueStep.review);
+      expect(c.returningToReview, isFalse);
+      expect(c.back(), isTrue);
+      expect(c.step, CreateQueueStep.schedule);
+    });
   });
 
   group('isDirty', () {

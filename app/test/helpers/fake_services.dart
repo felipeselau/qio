@@ -276,6 +276,7 @@ class FakeQueueService implements QueueService {
   }) async {
     final error = createError;
     if (error != null) throw error;
+    await createGate;
     calls.add('create:$name:${mode.value}:${slots.length}');
     createdMode = mode;
     createdSlots = slots;
@@ -294,6 +295,7 @@ class FakeQueueService implements QueueService {
   }
 
   Queue? createResult;
+  Future<void>? createGate;
   QueueSchedule? createdSchedule;
   String? createdBrandColor;
   ({

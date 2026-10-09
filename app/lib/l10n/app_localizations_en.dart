@@ -1500,7 +1500,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String slotsTileSummary(int count) {
-    return '$count time slots';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count time slots',
+      one: '1 time slot',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -1974,10 +1980,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cqSuggestionsTitle => 'Time suggestions';
 
   @override
-  String get cqSuggestEvery30 => 'Every 30 min, 9am to 5pm';
+  String get cqSuggestEvery30 => 'Add times every 30 min, 9am to 5pm';
 
   @override
-  String get cqSuggestEveryHour => 'Every hour, 9am to 5pm';
+  String get cqSuggestEveryHour => 'Add times every hour, 9am to 5pm';
 
   @override
   String get cqCapacityTitle => 'Average time and waiting limit';
@@ -2031,7 +2037,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String cqLimitPeople(int count) {
-    return '$count people';
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count people',
+      one: '1 person',
+    );
+    return '$_temp0';
   }
 
   @override
@@ -2048,4 +2060,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cqSummaryName => 'Name';
+
+  @override
+  String get cqCreateTimeout =>
+      'No response. The queue may have been created: check your list before trying again.';
 }

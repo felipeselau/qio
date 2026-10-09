@@ -7,6 +7,27 @@ import '../../theme/qio_text_styles.dart';
 import '../qio_button.dart';
 import '../qio_responsive_body.dart';
 
+class CreateQueueKeepAlive extends StatefulWidget {
+  const CreateQueueKeepAlive({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  State<CreateQueueKeepAlive> createState() => _CreateQueueKeepAliveState();
+}
+
+class _CreateQueueKeepAliveState extends State<CreateQueueKeepAlive>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
+  }
+}
+
 class CreateQueueProgress extends StatelessWidget {
   const CreateQueueProgress({
     super.key,
@@ -121,16 +142,20 @@ class CreateQueueFooter extends StatelessWidget {
                   isLoading: isLoading,
                   isFullWidth: true,
                 ),
-                if (secondaryLabel != null) ...[
-                  const SizedBox(height: 4),
-                  QioButton(
+                const SizedBox(height: 4),
+                Visibility(
+                  visible: secondaryLabel != null,
+                  maintainSize: true,
+                  maintainAnimation: true,
+                  maintainState: true,
+                  child: QioButton(
                     key: secondaryKey,
-                    label: secondaryLabel!,
+                    label: secondaryLabel ?? ' ',
                     variant: QioButtonVariant.ghost,
                     onPressed: isLoading ? null : onSecondary,
                     isFullWidth: true,
                   ),
-                ],
+                ),
               ],
             ),
           ),
@@ -221,12 +246,14 @@ class CreateQueueSummaryCard extends StatelessWidget {
     super.key,
     required this.title,
     required this.lines,
+    this.leading,
     required this.editKey,
     required this.onEdit,
   });
 
   final String title;
   final List<String> lines;
+  final Widget? leading;
   final Key editKey;
   final VoidCallback? onEdit;
 
@@ -256,6 +283,7 @@ class CreateQueueSummaryCard extends StatelessWidget {
                       color: context.qio.textPrimary,
                     ),
                   ),
+                if (leading != null) ...[const SizedBox(height: 6), leading!],
               ],
             ),
           ),

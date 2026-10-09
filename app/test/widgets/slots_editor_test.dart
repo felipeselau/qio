@@ -135,7 +135,7 @@ void main() {
       ),
       size: tall,
     );
-    expect(find.textContaining('1 horários'), findsOneWidget);
+    expect(find.textContaining('1 horário'), findsOneWidget);
     await tester.tap(find.byType(QueueSlotsTile));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Salvar'));

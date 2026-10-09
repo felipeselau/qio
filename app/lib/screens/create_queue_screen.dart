@@ -4,7 +4,9 @@ import 'package:flutter/semantics.dart';
 import '../controllers/create_queue_controller.dart';
 import '../l10n/app_localizations.dart';
 import '../models/expiry_config.dart';
+import '../models/queue_group.dart';
 import '../models/queue_info.dart';
+import '../models/queue_schedule.dart';
 import '../models/queue_slot.dart';
 import '../services/brand_palette.dart';
 import '../services/group_service.dart';
@@ -35,6 +37,7 @@ class CreateQueueScreen extends StatefulWidget {
 }
 
 class _CreateQueueScreenState extends State<CreateQueueScreen> {
+  static const createTimeout = Duration(seconds: 20);
   static const _pageDuration = Duration(milliseconds: 250);
 
   final _c = CreateQueueController();
@@ -79,6 +82,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
     _descCtrl.dispose();
     _avgCtrl.dispose();
     _limitCtrl.dispose();
+    _moreCtrl.dispose();
     super.dispose();
   }
 
@@ -189,24 +193,31 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
   Future<void> _submit() async {
     if (_loading) return;
     final l10n = AppLocalizations.of(context);
+    final invalid = _c.firstInvalidStep;
+    if (invalid != null) {
+      if (_c.jumpTo(invalid)) _reveal(invalid);
+      return;
+    }
     setState(() {
       _loading = true;
       _error = null;
     });
     try {
       final args = _c.toCreateArgs();
-      final queue = await (widget.queues ?? QueueService.instance).createQueue(
-        name: args.name,
-        description: args.description,
-        avgServiceMin: args.avgServiceMin,
-        maxWaiting: args.maxWaiting,
-        groupId: args.groupId,
-        mode: args.mode,
-        slots: args.slots,
-        schedule: args.schedule,
-        brandColor: args.brandColor,
-        expiry: args.expiry,
-      );
+      final queue = await (widget.queues ?? QueueService.instance)
+          .createQueue(
+            name: args.name,
+            description: args.description,
+            avgServiceMin: args.avgServiceMin,
+            maxWaiting: args.maxWaiting,
+            groupId: args.groupId,
+            mode: args.mode,
+            slots: args.slots,
+            schedule: args.schedule,
+            brandColor: args.brandColor,
+            expiry: args.expiry,
+          )
+          .timeout(createTimeout);
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
@@ -227,7 +238,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
     final l10n = AppLocalizations.of(context);
     final step = _c.step;
     return PopScope(
-      canPop: _c.isFirst && (!_c.isDirty || _loading),
+      canPop: !_loading && _c.isFirst && !_c.isDirty,
       onPopInvokedWithResult: (didPop, _) {
         if (didPop || _loading) return;
         if (_c.isFirst) {
@@ -262,7 +273,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
                 controller: _pages,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  _nameStep(l10n),
+                  CreateQueueKeepAlive(child: _nameStep(l10n)),
                   _modeStep(l10n),
                   _capacityStep(l10n),
                   _appearanceStep(l10n),
@@ -554,24 +565,40 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
     final avg = QueueInfo.parseAvgServiceMin(d.avgServiceMin);
     final limit = int.tryParse(d.maxWaiting);
     final schedule = d.schedule;
-    final window = schedule != null && schedule.enabled
-        ? schedule.windows.firstOrNull
-        : null;
+    final windows = schedule != null && schedule.enabled
+        ? schedule.windows
+        : const <ScheduleWindow>[];
     final expiry = d.expiry;
     final color = brandPalette.where((c) => c.hex == d.brandColor).firstOrNull;
     return CreateQueueStepPage(
       title: l10n.cqReviewTitle,
       hint: l10n.cqReviewHint,
       children: [
-        CreateQueueSummaryCard(
-          title: l10n.cqSummaryName,
-          editKey: const ValueKey('create-edit-name'),
-          onEdit: _loading ? null : () => _edit(CreateQueueStep.name),
-          lines: [
-            d.name,
-            if (d.description.isNotEmpty) d.description,
-            if (d.groupId != null) l10n.cqGroupChosen,
-          ],
+        StreamBuilder<List<QueueGroup>>(
+          stream: d.groupId == null
+              ? null
+              : (widget.groups ?? GroupService.instance).watchGroups(),
+          builder: (context, snap) {
+            final group = (snap.data ?? const <QueueGroup>[])
+                .where((g) => g.id == d.groupId)
+                .firstOrNull;
+            return CreateQueueSummaryCard(
+              title: l10n.cqSummaryName,
+              editKey: const ValueKey('create-edit-name'),
+              onEdit: _loading ? null : () => _edit(CreateQueueStep.name),
+              lines: [d.name, if (d.description.isNotEmpty) d.description],
+              leading: d.groupId == null
+                  ? null
+                  : Align(
+                      alignment: Alignment.centerLeft,
+                      child: Chip(
+                        key: const ValueKey('create-review-group'),
+                        avatar: const Icon(Icons.folder_outlined, size: 18),
+                        label: Text(group?.name ?? l10n.cqGroupChosen),
+                      ),
+                    ),
+            );
+          },
         ),
         const SizedBox(height: 12),
         CreateQueueSummaryCard(
@@ -607,7 +634,18 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
           title: l10n.brandColorLabel,
           editKey: const ValueKey('create-edit-appearance'),
           onEdit: _loading ? null : () => _edit(CreateQueueStep.appearance),
-          lines: [color?.hex ?? l10n.cqDefaultColor],
+          lines: [if (color == null) l10n.cqDefaultColor else color.hex],
+          leading: color == null
+              ? null
+              : Container(
+                  key: const ValueKey('create-review-color'),
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    color: color.color,
+                    shape: BoxShape.circle,
+                  ),
+                ),
         ),
         const SizedBox(height: 12),
         CreateQueueSummaryCard(
@@ -615,13 +653,15 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
           editKey: const ValueKey('create-edit-schedule'),
           onEdit: _loading ? null : () => _edit(CreateQueueStep.schedule),
           lines: [
-            window == null
-                ? l10n.cqAlwaysOpen
-                : l10n.scheduleHours(
-                    daysSummary(window.days, locale),
-                    window.open,
-                    window.close,
-                  ),
+            if (windows.isEmpty)
+              l10n.cqAlwaysOpen
+            else
+              for (final w in windows)
+                l10n.scheduleHours(
+                  daysSummary(w.days, locale),
+                  w.open,
+                  w.close,
+                ),
             expiry != null && expiry.enabled
                 ? l10n.expiryAfterHours(expiry.hours)
                 : l10n.cqNoExpiry,

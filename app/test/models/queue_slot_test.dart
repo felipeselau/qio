@@ -214,6 +214,20 @@ void main() {
       expect(validateSlots(QueueMode.schedule, slots), isNull);
     });
 
+    test('com 20 horários já existentes não acrescenta nada', () {
+      final existing = [
+        for (var i = 0; i < maxQueueSlots; i++)
+          slot('e$i', '${(i + 1).toString().padLeft(2, '0')}:00'),
+      ];
+      final slots = suggestSlots(
+        fromMinutes: 9 * 60,
+        toMinutes: 17 * 60,
+        stepMinutes: 30,
+        existing: existing,
+      );
+      expect(slots.map((s) => s.id), existing.map((s) => s.id));
+    });
+
     test('pula horários já existentes e respeita o máximo', () {
       final existing = [
         for (var i = 0; i < 18; i++)

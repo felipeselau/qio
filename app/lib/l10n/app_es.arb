@@ -473,7 +473,7 @@
   "slotsInvalid": "Horario o cupos inválidos",
   "slotsOutsideSchedule": "Fuera del horario de atención: {time}",
   "@slotsOutsideSchedule": {"placeholders": {"time": {"type": "String"}}},
-  "slotsTileSummary": "{count} horarios",
+  "slotsTileSummary": "{count, plural, =1{1 horario} other{{count} horarios}}",
   "@slotsTileSummary": {"placeholders": {"count": {"type": "int"}}},
   "waitTileSlot": "Horario {time}",
   "@waitTileSlot": {"placeholders": {"time": {"type": "String"}}},
@@ -623,8 +623,8 @@
   "cqModeQueueHint": "Quien llega entra al final de la fila.",
   "cqModeScheduleHint": "Cada persona elige uno de los horarios que usted define.",
   "cqSuggestionsTitle": "Sugerencias de horarios",
-  "cqSuggestEvery30": "Cada 30 min, de 9 a 17 h",
-  "cqSuggestEveryHour": "Cada hora, de 9 a 17 h",
+  "cqSuggestEvery30": "Agregar horarios cada 30 min, de 9 a 17 h",
+  "cqSuggestEveryHour": "Agregar horarios cada hora, de 9 a 17 h",
   "cqCapacityTitle": "Tiempo medio y límite de espera",
   "cqCapacityHint": "Usamos el tiempo medio para estimar la espera. Si omite, valen {minutes} min por atención y sin límite de personas.",
   "cqAppearanceTitle": "Elija un color",
@@ -639,10 +639,11 @@
   "cqSummarySchedule": "Funcionamiento",
   "cqAverageTime": "Tiempo medio: {time}",
   "cqWaitingLimit": "Límite de espera: {limit}",
-  "cqLimitPeople": "{count} personas",
+  "cqLimitPeople": "{count, plural, =1{1 persona} other{{count} personas}}",
   "cqAlwaysOpen": "Siempre abierta",
   "cqNoExpiry": "No expirar",
   "cqDefaultColor": "Predeterminado",
   "cqGroupChosen": "En un grupo",
-  "cqSummaryName": "Nombre"
+  "cqSummaryName": "Nombre",
+  "cqCreateTimeout": "Sin respuesta. Puede que la fila se haya creado: revise su lista antes de intentarlo de nuevo."
 }

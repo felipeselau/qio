@@ -473,7 +473,7 @@
   "slotsInvalid": "Invalid time or spots",
   "slotsOutsideSchedule": "Outside opening hours: {time}",
   "@slotsOutsideSchedule": {"placeholders": {"time": {"type": "String"}}},
-  "slotsTileSummary": "{count} time slots",
+  "slotsTileSummary": "{count, plural, =1{1 time slot} other{{count} time slots}}",
   "@slotsTileSummary": {"placeholders": {"count": {"type": "int"}}},
   "waitTileSlot": "Slot {time}",
   "@waitTileSlot": {"placeholders": {"time": {"type": "String"}}},
@@ -623,8 +623,8 @@
   "cqModeQueueHint": "Whoever arrives joins the end of the line.",
   "cqModeScheduleHint": "Each person picks one of the times you set.",
   "cqSuggestionsTitle": "Time suggestions",
-  "cqSuggestEvery30": "Every 30 min, 9am to 5pm",
-  "cqSuggestEveryHour": "Every hour, 9am to 5pm",
+  "cqSuggestEvery30": "Add times every 30 min, 9am to 5pm",
+  "cqSuggestEveryHour": "Add times every hour, 9am to 5pm",
   "cqCapacityTitle": "Average time and waiting limit",
   "cqCapacityHint": "We use the average time to estimate the wait. If you skip, {minutes} min per customer and no limit apply.",
   "cqAppearanceTitle": "Pick a color",
@@ -639,10 +639,11 @@
   "cqSummarySchedule": "Operation",
   "cqAverageTime": "Average time: {time}",
   "cqWaitingLimit": "Waiting limit: {limit}",
-  "cqLimitPeople": "{count} people",
+  "cqLimitPeople": "{count, plural, =1{1 person} other{{count} people}}",
   "cqAlwaysOpen": "Always open",
   "cqNoExpiry": "Never expire",
   "cqDefaultColor": "Default",
   "cqGroupChosen": "In a group",
-  "cqSummaryName": "Name"
+  "cqSummaryName": "Name",
+  "cqCreateTimeout": "No response. The queue may have been created: check your list before trying again."
 }

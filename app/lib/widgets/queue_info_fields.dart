@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
@@ -18,6 +20,7 @@ String queueErrorMessage(Object error, AppLocalizations l10n) {
   if (error is QueueLimitReached) {
     return l10n.queueLimitReached(maxQueuesPerOwner);
   }
+  if (error is TimeoutException) return l10n.cqCreateTimeout;
   if (error is FormatException) {
     final info = QueueInfoError.values.asNameMap()[error.message];
     if (info != null) return queueInfoErrorText(info, l10n)!;

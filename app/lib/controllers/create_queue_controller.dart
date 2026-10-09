@@ -149,7 +149,11 @@ class CreateQueueController extends ChangeNotifier {
 
   bool back() {
     if (isFirst) return false;
-    _returnToReview = false;
+    if (_returnToReview) {
+      _returnToReview = false;
+      _go(CreateQueueStep.review);
+      return true;
+    }
     _go(CreateQueueStep.values[_step.index - 1]);
     return true;
   }
