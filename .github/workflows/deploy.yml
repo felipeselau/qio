@@ -20,23 +20,39 @@ on:
         description: Só validar (firebase deploy --dry-run), sem publicar
         type: boolean
         default: true
+      backfill_done:
+        description: all-ordered exige true (backfill feito ou desnecessário, docs/deploy.md)
+        type: boolean
+        default: false
 
 concurrency:
-  group: deploy-production
+  group: deploy-${{ inputs.dry_run }}
   cancel-in-progress: false
+
+permissions:
+  contents: read
 
 env:
   FIREBASE_PROJECT: qio-app
 
 jobs:
-  validate:
-    name: Testes e dry-run
+  test:
+    name: Testes (sem credenciais)
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
     steps:
+      - name: Exigir backfill_done no all-ordered
+        if: inputs.target == 'all-ordered' && inputs.backfill_done != true
+        run: |
+          echo "::error::all-ordered exige backfill_done=true (rode o backfill ou confirme que é desnecessário; docs/deploy.md)."
+          exit 1
+
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
 
       - name: Java (rules-tests)
         if: contains(fromJSON('["functions","rules-rtdb","rules-firestore","rules-storage","all-ordered"]'), inputs.target)
@@ -45,12 +61,9 @@ jobs:
           distribution: temurin
           java-version: 21
 
-      - uses: ./.github/actions/firebase-setup
-        with:
-          workload-identity-provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service-account: ${{ vars.GCP_SERVICE_ACCOUNT }}
-          credentials-json: ${{ secrets.GCP_SA_KEY }}
-          firebase-token: ${{ secrets.FIREBASE_TOKEN }}
+      - name: firebase-tools
+        if: contains(fromJSON('["functions","rules-rtdb","rules-firestore","rules-storage","all-ordered"]'), inputs.target)
+        run: npm install -g firebase-tools@15.33.0
 
       - name: Testes das functions
         if: contains(fromJSON('["functions","all-ordered"]'), inputs.target)
@@ -59,12 +72,20 @@ jobs:
           npm test
         working-directory: functions
 
-      - name: Testes das rules (emulators)
-        if: contains(fromJSON('["functions","rules-rtdb","rules-firestore","rules-storage","all-ordered"]'), inputs.target)
+      - name: Testes das rules e callables (emulators)
+        if: contains(fromJSON('["functions","all-ordered"]'), inputs.target)
         run: |
           npm ci
           (cd ../functions && npm ci)
           npm test
+        working-directory: rules-tests
+
+      - name: Testes das rules (emulators)
+        if: contains(fromJSON('["rules-rtdb","rules-firestore","rules-storage"]'), inputs.target)
+        run: |
+          npm ci
+          (cd ../functions && npm ci)
+          npm run test:rules
         working-directory: rules-tests
 
       - name: Build do web
@@ -88,29 +109,27 @@ jobs:
           path: web/dist
           retention-days: 1
 
-      - name: Dry-run
-        env:
-          TARGET: ${{ inputs.target }}
-        run: ./.github/scripts/deploy-target.sh "$TARGET" true
-
-  deploy:
-    name: Deploy em produção
-    needs: validate
-    if: inputs.dry_run == false
+  dry-run:
+    name: Dry-run (service account somente leitura)
+    needs: test
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    environment: production
     permissions:
       contents: read
       id-token: write
     steps:
       - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/firebase-setup
         with:
-          workload-identity-provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service-account: ${{ vars.GCP_SERVICE_ACCOUNT }}
-          credentials-json: ${{ secrets.GCP_SA_KEY }}
-          firebase-token: ${{ secrets.FIREBASE_TOKEN }}
+          ref: ${{ github.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Functions deps
+        if: contains(fromJSON('["functions","all-ordered"]'), inputs.target)
+        run: npm ci
+        working-directory: functions
 
       - uses: actions/download-artifact@v4
         if: contains(fromJSON('["hosting","all-ordered"]'), inputs.target)
@@ -118,10 +137,52 @@ jobs:
           name: deploy-web-dist
           path: web/dist
 
+      - uses: ./.github/actions/firebase-setup
+        with:
+          workload-identity-provider: ${{ vars.GCP_RO_WORKLOAD_IDENTITY_PROVIDER }}
+          service-account: ${{ vars.GCP_RO_SERVICE_ACCOUNT }}
+          credentials-json: ${{ secrets.GCP_RO_SA_KEY }}
+
+      - name: Dry-run
+        env:
+          TARGET: ${{ inputs.target }}
+        run: ./.github/scripts/deploy-target.sh "$TARGET" true
+
+  deploy:
+    name: Deploy em produção
+    needs: [test, dry-run]
+    if: inputs.dry_run == false && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Functions deps
         if: contains(fromJSON('["functions","all-ordered"]'), inputs.target)
         run: npm ci
         working-directory: functions
+
+      - uses: actions/download-artifact@v4
+        if: contains(fromJSON('["hosting","all-ordered"]'), inputs.target)
+        with:
+          name: deploy-web-dist
+          path: web/dist
+
+      - uses: ./.github/actions/firebase-setup
+        with:
+          workload-identity-provider: ${{ vars.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service-account: ${{ vars.GCP_SERVICE_ACCOUNT }}
+          credentials-json: ${{ secrets.GCP_SA_KEY }}
+          firebase-token: ${{ secrets.FIREBASE_TOKEN }}
 
       - name: Deploy
         env:

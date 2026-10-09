@@ -19,18 +19,30 @@ validação é `firebase deploy --dry-run` + testes com emulators; o primeiro am
 - `target`: `functions` | `rules-rtdb` | `rules-firestore` | `rules-storage` | `indexes` |
   `hosting` | `all-ordered`.
 - `dry_run` (padrão **true**): só valida. Com `false`, o job `deploy` roda depois do
-  `validate` e depende da aprovação do environment `production`.
+  `test` e do `dry-run` e depende da aprovação do environment `production`.
+- `backfill_done` (padrão false): **obrigatório `true` para `all-ordered`** (confirma que o
+  backfill foi feito ou é desnecessário; ver seção 5). O job `test` falha logo no início sem isso.
 
 ### Jobs
 
-1. `validate` (sempre): testes conforme o alvo, build do web (hosting) e dry-run.
-   - `functions`, `all-ordered`: `npm test` em `functions/`.
-   - `functions`, `rules-*`, `all-ordered`: `npm test` em `rules-tests/` (emulators
-     firestore+database+storage+functions; Java 21).
+Todos usam `ref: ${{ github.sha }}`. Os jobs com credenciais só rodam em `refs/heads/main`
+(disparo de outra branch executa apenas os testes).
+
+1. `test` (sem credenciais): testes conforme o alvo e build do web.
+   - `functions`, `all-ordered`: `npm test` em `functions/` e `npm test` em `rules-tests/`
+     (rules + callables; Java 21).
+   - `rules-rtdb`, `rules-firestore`, `rules-storage`: `npm run test:rules` em `rules-tests/`
+     (sem functions).
    - `hosting`, `all-ordered`: `npm run lint` + `npm run build` do web (com as `vars.VITE_*`).
-   - `indexes`: só dry-run (não há teste).
-2. `deploy` (só com `dry_run=false`, `environment: production`): baixa o `dist` do web,
-   publica na ordem abaixo.
+   - `indexes`: não há teste.
+2. `dry-run` (credencial **somente leitura**, sem environment): `firebase deploy --dry-run`.
+3. `deploy` (só com `dry_run=false` em `main`, `environment: production`): baixa o `dist`
+   do web, autentica com a credencial de **escrita** (que só existe no environment) e publica
+   na ordem abaixo. `npm ci` roda antes da autenticação.
+
+Concorrência: `group: deploy-<dry_run>`, sem cancelar execução em andamento. Dry-runs não
+enfileiram atrás de deploys reais. O GitHub mantém só um item pendente por grupo: um segundo
+deploy real disparado enquanto outro roda substitui o que estava pendente.
 
 ### Ordem do `all-ordered`
 
@@ -41,9 +53,10 @@ Segue o CLAUDE.md (functions -> backfill -> hosting -> rules do RTDB -> rules do
 Acrescentamos `indexes` na frente (aditivo; functions e consultas novas dependem deles; a
 criação do índice leva minutos, espere ficar `READY` antes de usar a feature) e `storage`
 no fim (as rules do Storage não dependem de nada). O backfill **não** roda no workflow:
-exige credencial Admin e julgamento humano (ver seção 5). Se o `all-ordered` precisar de
-backfill, rode o alvo `functions`, faça o backfill, depois `hosting`, `rules-rtdb` e
-`rules-firestore` separados.
+exige credencial Admin e julgamento humano (ver seção 5). Por isso o `all-ordered` exige
+`backfill_done=true`. Se o backfill for necessário, rode o alvo `functions`, faça o backfill,
+e então `all-ordered` com `backfill_done=true` (ou `hosting`, `rules-rtdb` e `rules-firestore`
+separados).
 
 Functions é publicado **sem `--force`**: o CLI não apaga função removida do código em modo
 não interativo (o deploy falha apontando quais). Apague à mão com
@@ -60,62 +73,94 @@ GitHub -> Settings -> Environments -> New environment -> `production`:
 2. Em **Deployment branches and tags**, escolha *Selected branches* -> `main`.
 3. (Opcional) **Wait timer** de alguns minutos.
 
-O dry-run **não** usa o environment (não pede aprovação). Por isso as credenciais
-precisam existir também no nível do repositório (ou ser repetidas no environment, se
-preferir restringi-las: nesse caso o dry-run não autentica e falha na etapa de setup).
-Recomendação: variáveis no repositório (não são segredos) e, se usar chave JSON,
-secret no repositório.
+**Credenciais de escrita ficam só no environment `production`** (variáveis e secrets do
+environment, não do repositório). Assim nenhum outro workflow, branch ou PR as enxerga.
+O dry-run não usa o environment (não pede aprovação) e por isso usa uma service account
+**somente leitura** distinta, configurada no repositório (seção 2.2). Os testes rodam sem
+nenhuma credencial.
 
 ### 2.2 Autenticação (preferência: Workload Identity Federation)
 
 Prioridade aplicada pela action `firebase-setup`:
 
-1. **WIF** (sem chave de longa duração): `vars.GCP_WORKLOAD_IDENTITY_PROVIDER` +
-   `vars.GCP_SERVICE_ACCOUNT`.
-2. **Chave JSON da service account**: `secrets.GCP_SA_KEY` (fallback se WIF não puder ser
-   usado; tem validade indefinida, rotacione).
-3. **`secrets.FIREBASE_TOKEN`** (obsoleto, `firebase login:ci`): último recurso, o job
-   emite warning.
+Prioridade aplicada pela action `firebase-setup` (a mesma ordem vale para leitura e escrita,
+sem o item 3 no dry-run):
 
-Sem nenhuma das três o job falha com mensagem clara.
+1. **WIF** (sem chave de longa duração).
+2. **Chave JSON da service account** (fallback se WIF não puder ser usado; validade
+   indefinida, rotacione).
+3. **`secrets.FIREBASE_TOKEN`** (obsoleto, `firebase login:ci`): último recurso do job
+   `deploy`; emite warning.
 
-Passo a passo WIF (gcloud, projeto `qio-app`; ajuste `OWNER/REPO`):
+Sem nenhuma o job falha com mensagem clara.
+
+| Uso | Onde configurar | Variáveis / secrets |
+| --- | --- | --- |
+| Escrita (job `deploy`) | **Environment `production`** | `vars.GCP_WORKLOAD_IDENTITY_PROVIDER`, `vars.GCP_SERVICE_ACCOUNT`; fallbacks `secrets.GCP_SA_KEY`, `secrets.FIREBASE_TOKEN` |
+| Leitura (job `dry-run`) | Repositório | `vars.GCP_RO_WORKLOAD_IDENTITY_PROVIDER`, `vars.GCP_RO_SERVICE_ACCOUNT`; fallback `secrets.GCP_RO_SA_KEY` |
+
+Passo a passo WIF (gcloud, projeto `qio-app`): um pool/provider, duas service accounts. O
+`sub` do token do GitHub distingue o job com environment
+(`repo:felipeselau/qio:environment:production`) do job sem environment em `main`
+(`repo:felipeselau/qio:ref:refs/heads/main`), e cada service account só aceita o seu.
 
 ```bash
 PROJECT=qio-app
 PROJECT_NUMBER=$(gcloud projects describe "$PROJECT" --format='value(projectNumber)')
+POOL="projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/github"
 gcloud iam service-accounts create github-deploy --project "$PROJECT" \
-  --display-name "GitHub Actions deploy"
+  --display-name "GitHub Actions deploy (escrita)"
+gcloud iam service-accounts create github-dryrun --project "$PROJECT" \
+  --display-name "GitHub Actions dry-run (leitura)"
 gcloud iam workload-identity-pools create github --project "$PROJECT" \
   --location global --display-name "GitHub"
 gcloud iam workload-identity-pools providers create-oidc github-oidc --project "$PROJECT" \
   --location global --workload-identity-pool github \
   --issuer-uri "https://token.actions.githubusercontent.com" \
   --attribute-mapping "google.subject=assertion.sub,attribute.repository=assertion.repository" \
-  --attribute-condition "assertion.repository=='felipeselau/qio'"
+  --attribute-condition "assertion.repository=='felipeselau/qio' && assertion.ref=='refs/heads/main'"
 gcloud iam service-accounts add-iam-policy-binding \
   "github-deploy@$PROJECT.iam.gserviceaccount.com" --project "$PROJECT" \
   --role roles/iam.workloadIdentityUser \
-  --member "principalSet://iam.googleapis.com/projects/$PROJECT_NUMBER/locations/global/workloadIdentityPools/github/attribute.repository/felipeselau/qio"
+  --member "principal://iam.googleapis.com/$POOL/subject/repo:felipeselau/qio:environment:production"
+gcloud iam service-accounts add-iam-policy-binding \
+  "github-dryrun@$PROJECT.iam.gserviceaccount.com" --project "$PROJECT" \
+  --role roles/iam.workloadIdentityUser \
+  --member "principal://iam.googleapis.com/$POOL/subject/repo:felipeselau/qio:ref:refs/heads/main"
 ```
 
-Variáveis do repositório (Settings -> Secrets and variables -> Actions -> Variables):
+A service account de escrita só é assumível por `assertion.sub ==
+'repo:felipeselau/qio:environment:production'` (e o environment só aceita `main`). Não use
+`attribute.repository` como único critério do binding: qualquer workflow do repo
+assumiria a conta de escrita.
 
-- `GCP_WORKLOAD_IDENTITY_PROVIDER` =
-  `projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/github/providers/github-oidc`
-- `GCP_SERVICE_ACCOUNT` = `github-deploy@qio-app.iam.gserviceaccount.com`
+Valores a gravar (provider = `projects/<PROJECT_NUMBER>/locations/global/workloadIdentityPools/github/providers/github-oidc`):
 
-Papéis da service account (mínimo sugerido; confira no console se algum deploy pedir mais):
+- Environment `production`: `GCP_WORKLOAD_IDENTITY_PROVIDER` = provider;
+  `GCP_SERVICE_ACCOUNT` = `github-deploy@qio-app.iam.gserviceaccount.com`.
+- Repositório: `GCP_RO_WORKLOAD_IDENTITY_PROVIDER` = provider;
+  `GCP_RO_SERVICE_ACCOUNT` = `github-dryrun@qio-app.iam.gserviceaccount.com`.
+
+Papéis da service account de **escrita** (mínimo sugerido; confira se algum deploy pedir mais):
 
 | Alvo | Papéis |
 | --- | --- |
+| Todos | `roles/serviceusage.serviceUsageConsumer` |
 | rules RTDB / Firestore / Storage / índices | `roles/firebaserules.admin`, `roles/datastore.indexAdmin`, `roles/firebasedatabase.admin` |
 | hosting | `roles/firebasehosting.admin` |
-| functions | `roles/cloudfunctions.admin`, `roles/iam.serviceAccountUser`, `roles/artifactregistry.writer`, `roles/cloudscheduler.admin`, `roles/run.admin`, `roles/eventarc.admin`, `roles/pubsub.admin` (ou `roles/firebase.admin` + `roles/iam.serviceAccountUser` para simplificar) |
+| functions | `roles/cloudfunctions.admin`, `roles/cloudbuild.builds.editor`, `roles/artifactregistry.writer`, `roles/run.admin`, `roles/cloudscheduler.admin`, `roles/eventarc.admin`, `roles/pubsub.admin`, `roles/storage.objectAdmin` no bucket `gcf-sources-<PROJECT_NUMBER>-us-central1` e **obrigatoriamente** `roles/iam.serviceAccountUser` (nas service accounts de runtime/build usadas pelas functions) |
+
+(`roles/firebase.admin` + `roles/iam.serviceAccountUser` simplifica, com mais privilégio.)
+
+Service account de **leitura** (dry-run): `roles/serviceusage.serviceUsageConsumer`,
+`roles/firebase.viewer`, `roles/firebaserules.viewer`, `roles/cloudfunctions.viewer`,
+`roles/datastore.viewer`, `roles/firebasedatabase.viewer`, `roles/firebasehosting.viewer`.
+O dry-run do CLI nem sempre se limita a leituras; se falhar por permissão, o dry-run
+com a conta de escrita pode ser feito rodando o alvo com `dry_run=false` somente depois de
+revisar os logs, ou ampliando o papel de leitura caso a caso. Nunca dê papéis de escrita à
+conta do repositório.
 
 Habilite as APIs `iamcredentials.googleapis.com` e `cloudresourcemanager.googleapis.com`.
-Ao ser a primeira vez de functions com a service account, o deploy pode precisar de
-`roles/iam.serviceAccountUser` sobre a service account padrão de runtime.
 
 ### 2.3 Variáveis do build do web
 
@@ -132,7 +177,8 @@ o WIF estiver validado pelo workflow assistido, o caminho é trocar esse job par
 ## 3. Como usar
 
 1. Actions -> **Deploy (assistido)** -> Run workflow.
-2. Escolha o `target`, deixe `dry_run` marcado. Leia o log do dry-run.
+2. Escolha o `target` (a partir de `main`), deixe `dry_run` marcado. Leia o log do dry-run.
+   Para `all-ordered`, marque `backfill_done`.
 3. Rode de novo com `dry_run` desmarcado; aprove no environment `production`.
 4. Faça o checklist pós-deploy.
 

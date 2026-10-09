@@ -581,12 +581,15 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   se** `secrets.FIREBASE_TOKEN` existir; sem ele o job passa verde com um warning
   e o site **não** é atualizado. Confira o bundle publicado em `qio.web.app`.
   Functions e rules **não** têm deploy automático no CI (só pelo workflow assistido, `docs/deploy.md`).
-- `FIREBASE_TOKEN` está obsoleto e só é usado pelo `deploy-hosting` do `ci.yml`.
+- `FIREBASE_TOKEN` está obsoleto; é usado pelo `deploy-hosting` do `ci.yml` e é o último
+  fallback de autenticação do `deploy.yml`.
   Deploy assistido (functions, rules, índices, hosting) é o workflow manual
-  `.github/workflows/deploy.yml` (`workflow_dispatch`, `dry_run` padrão true, environment
-  `production` com aprovação), autenticando por WIF (`vars.GCP_WORKLOAD_IDENTITY_PROVIDER` +
-  `vars.GCP_SERVICE_ACCOUNT`), chave `GCP_SA_KEY` ou, por último, `FIREBASE_TOKEN`. Não há
-  staging. Setup, ordem, rollback, o que o CI não faz e ações manuais acumuladas: `docs/deploy.md`.
+  `.github/workflows/deploy.yml` (`workflow_dispatch`, só em `main`, `dry_run` padrão true,
+  `all-ordered` exige `backfill_done`). Testes rodam sem credenciais, o dry-run usa service
+  account somente leitura (`GCP_RO_*`) e o deploy real roda no environment `production`
+  (aprovação), autenticando por WIF (`vars.GCP_WORKLOAD_IDENTITY_PROVIDER` +
+  `vars.GCP_SERVICE_ACCOUNT`, definidos no environment), chave `GCP_SA_KEY` ou, por último,
+  `FIREBASE_TOKEN`. Não há staging. Setup, ordem, rollback, o que o CI não faz e ações manuais acumuladas: `docs/deploy.md`.
   O CI usa `firebase-tools` fixo (15.33.0) e o deploy reaproveita o artefato `web-dist`
   do job `web`.
 - Projeto no plano **Blaze** desde 01/10/2026; `onEntryCalled` publicada. A
