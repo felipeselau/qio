@@ -83,14 +83,17 @@ modelos; ainda sem dados): `docs/piloto/`.
   na hora (QR, rules de `entries` dependem de `owners/{id}/ownerUid`, a web precisa de `meta`) e
   o trigger leva segundos; (b) `ensureMirror`/`_ensureOwnerMirror`/`syncOperatorMirror` como
   **reparo** (só escrevem se diverge; rede de segurança de filas legadas; `ensureMirror` só
-  cobre name/description/avgServiceMin/mode/slots, o resto fica com o trigger);
+  repara name/description/avgServiceMin/mode/slots quando há `meta`, e recria `meta` ausente completo; o resto fica com o trigger);
   `_ensureOwnerMirrorIfOwner` fica em cache por sessão (`uid/queueId`); (c) campos que são do
-  app e não espelho: `meta/serving`, `meta/updatedAt` (só `callNext`/entries; setters de fila
-  **não bumpam mais** `updatedAt`, então edições do dono deixam de adiar o alerta de "fila
-  parada"), `entries`. **Ordem de deploy OBRIGATÓRIA:** functions `mirror*` (no ar e
+  app e não espelho: `meta/serving`, `meta/updatedAt` (`callNext`/entries; o trigger só o carimba quando o `status` muda, então outras edições do dono não adiam o alerta de "fila parada"), `entries`. **Ordem de deploy OBRIGATÓRIA:** functions `mirror*` (no ar e
   verificadas) → … → APK. APK novo com functions antigas deixa o RTDB desatualizado (web
   mostra status/nome/limite velhos). APK antigo continua funcionando (faz dual-write; o trigger
-  só confirma). Latência: web vê a mudança de status/limite segundos depois (cold start do
+  só confirma). Triggers com `retry: true` (handlers idempotentes relançam o erro) e patch sobre todos os
+  campos espelhados, então uma falha do RTDB é reexecutada e converge; o retorno antecipado
+  (nenhum campo espelhado mudou) é seguro porque só pula eventos que não alteram `meta`.
+  Fila existente sem `meta` continua sem ser recriada pelo trigger (nunca zerar `serving`):
+  `ensureMirror` recria incluindo limite, cor, logo e aviso. Delete do doc (`after == null`)
+  é ignorado: `deleteQueue` já limpa o RTDB. Latência: web vê a mudança de status/limite segundos depois (cold start do
   trigger). Rules do RTDB **não** foram alteradas: restringir `meta` (menos `serving`/
   `updatedAt` de operador) e `owners` ao Admin só quando o APK antigo sumir.
 - **Trigger de espelho (issue #164, rede de segurança):** `mirrorQueueToRtdb`
@@ -204,14 +207,16 @@ modelos; ainda sem dados): `docs/piloto/`.
   em uma ou duas vagas (sem transação de contagem). O web também bloqueia o botão
   usando `public/` (`useQueue.full`).
 - Pausar/fechar no app abre um diálogo com mensagem e horário de retorno; reabrir
-  limpa os dois. Deploy: functions (`joinQueue`) antes das rules do RTDB.
+  limpa os dois. O app grava só no Firestore; `mirrorQueueToRtdb` replica `status`,
+  `statusMessage`, `resumeAt` e `maxWaiting` no `meta` (segundos de latência) e carimba
+  `meta/updatedAt` quando o `status` muda. Deploy: functions (`joinQueue`) antes das rules do RTDB.
 
 ## Agendamento por horário (slots)
 
 - `queues/{id}.mode` (`'queue'` padrão | `'schedule'`) e `slots = [{id, start:'HH:mm',
   capacity 1–50}]` (máx. 20, horários únicos, ids estáveis) no Firestore (fonte da verdade,
   só o dono escreve). Espelho no RTDB: `meta/mode` e `meta/slots/{slotId} = {start,
-  capacity}` (dual-write em `QueueService.updateModeAndSlots`/`createQueue`). Os slots são
+  capacity}` (o app escreve só no Firestore em `QueueService.updateModeAndSlots`; `createQueue` faz o write inicial no RTDB e o trigger replica as edições). Os slots são
   **diários** (repetem todo dia) e o fuso é fixo `America/Sao_Paulo`. Filas antigas e
   entries antigas não têm `mode`/`slotId` e funcionam como sempre.
 - `joinQueue` (lógica pura em `functions/src/slots.js`): em `mode == 'schedule'`
@@ -246,16 +251,16 @@ modelos; ainda sem dados): `docs/piloto/`.
 ## Editar e duplicar fila
 
 - `QueueService.updateQueueInfo` (nome 1–60, descrição ≤300, tempo médio 1–240; validação
-  em `models/queue_info.dart`, erro `FormatException`) grava no Firestore e faz um único
-  `update` em `meta` do RTDB. O `queueId` (e o QR) não muda. Painel: tiles "Editar fila" e
+  em `models/queue_info.dart`, erro `FormatException`) grava só no Firestore (o
+  trigger `mirrorQueueToRtdb` replica no `meta`). O `queueId` (e o QR) não muda. Painel: tiles "Editar fila" e
   "Duplicar fila" (só dono).
 - `duplicateQueue` cria fila nova `<nome> (cópia)` copiando descrição, tempo médio, limite,
   grupo, modo/slots, horário de funcionamento, cor e alertas. Não copia entries, history,
   operadores, logo, mensagem de status nem `alertState`.
 - Rules validam `name`/`description`/`avgServiceMin` no Firestore (create, e update só de cada
   campo que mudou, para não travar docs legados) e em `meta/{name,description,avgServiceMin}`
-  no RTDB (valor legado inalterado passa). `updateQueueInfo` grava só os campos alterados,
-  RTDB primeiro e Firestore por último; `ensureMirror` repara divergência de
+  no RTDB (valor legado inalterado passa). `updateQueueInfo` grava só os campos alterados
+  no Firestore (sem segundo write); `ensureMirror` repara divergência de
   name/description/avgServiceMin no `meta` (normalizados por `QueueInfo.forMirror`: nome
   truncado a 60 ou "Fila", descrição a 300, tempo fora de 1–240 vira o default). O tempo
   manual só vale até existir `avgServiceMinAuto`. O Firestore limita a 1000 expressões por avaliação; `MAX_SLOTS`/`maxQueueSlots` = 20
@@ -505,11 +510,15 @@ modelos; ainda sem dados): `docs/piloto/`.
   `pending → approved | rejected | removed`. Só o dono muda status (rules).
 - **Operador ativo**: `queues/{id}/operators/{uid}`. Home do operador usa
   `collectionGroup` filtrado por `uid`.
-- **Espelho RTDB** `queues/{id}/operatorUids/{uid}: true`: escrito pelo dono em
-  `syncOperatorMirror` ao aprovar/remover. Rules do RTDB usam esse espelho p/
-  liberar `meta/serving`, `meta/updatedAt` e `entries` ao operador. Remover o
-  operador apaga do espelho → perde acesso na hora; o painel escuta
-  `operators/{uid}` e fecha com aviso.
+- **Espelho RTDB** `queues/{id}/operatorUids/{uid}: true`: escrito pelo trigger
+  `mirrorOperatorToRtdb` ao aprovar/remover (o app não escreve mais; `syncOperatorMirror`
+  é só reparo, lê `ownerId` do doc e só grava se diverge). Rules do RTDB usam esse espelho
+  p/ liberar `meta/serving`, `meta/updatedAt` e `entries` ao operador. Aprovar/remover
+  agora leva **segundos** (trigger), não é imediato: o operador recém-aprovado recebe
+  `permission-denied` em `entries` até o espelho chegar, por isso `watchEntries` reanexa
+  (`retryOnPermissionDenied`, 2,5 s, máx. 5 tentativas, zera a cada evento). Operador
+  removido perde acesso em segundos; o painel escuta `operators/{uid}` (Firestore) e fecha
+  com aviso na hora.
 - `callNext` reserva a entry por transação (`_claimEntry`) e avança
   `meta/serving` por transação (nunca volta). Histórico grava `calledBy` e
   `operatorId`; rule exige `operatorId == auth.uid` p/ operador.

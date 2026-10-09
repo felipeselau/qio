@@ -23,6 +23,7 @@ import 'delete_service.dart';
 import 'finish_entry.dart';
 import 'join_url.dart';
 import 'mirror.dart';
+import 'resilient_stream.dart';
 import 'slug.dart';
 import 'waiting_count.dart';
 
@@ -227,6 +228,14 @@ class QueueService {
         'name': info.name,
         'description': info.description,
         'avgServiceMin': info.avgServiceMin,
+        'maxWaiting': queue.maxWaiting,
+        'brandColor': ?queue.brandColor,
+        'logoUrl': ?queue.logoUrl,
+        if (queue.status != QueueStatus.open) ...{
+          'statusMessage': ?queue.statusMessage,
+          if (queue.resumeAt != null)
+            'resumeAt': queue.resumeAt!.millisecondsSinceEpoch,
+        },
         if (queue.isScheduled) ...{
           'mode': queue.mode.value,
           'slots': slotsMirror(queue.slots),
@@ -531,6 +540,10 @@ class QueueService {
   }
 
   Stream<List<QueueEntry>> watchEntries(String queueId) {
+    return retryOnPermissionDenied(() => _watchEntriesOnce(queueId));
+  }
+
+  Stream<List<QueueEntry>> _watchEntriesOnce(String queueId) {
     return _rtdb
         .ref('queues/$queueId/entries')
         .orderByChild('ticket')

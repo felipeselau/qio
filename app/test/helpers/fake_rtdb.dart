@@ -29,7 +29,27 @@ class FakeDatabaseRef implements DatabaseReference {
   @override
   Future<void> update(Map<String, Object?> value) async {
     db.writes.add('update:$path');
+    final current = db.values[path];
+    final next = <String, Object?>{if (current is Map) ...current.cast()};
+    for (final e in value.entries) {
+      if (e.value == null) {
+        next.remove(e.key);
+      } else {
+        next[e.key] = e.value;
+      }
+    }
+    db.values[path] = next;
   }
+
+  @override
+  Future<void> remove() async {
+    db.writes.add('remove:$path');
+    db.values.remove(path);
+  }
+
+  @override
+  DatabaseReference child(String childPath) =>
+      FakeDatabaseRef(db, '$path/$childPath');
 
   @override
   Future<DataSnapshot> get() async {

@@ -44,11 +44,11 @@ const operatorDeps = {
 };
 
 exports.mirrorQueueToRtdb = onDocumentWritten(
-  { document: 'queues/{queueId}', region },
+  { document: 'queues/{queueId}', region, retry: true },
   createMirrorQueueHandler(queueDeps),
 );
 
 exports.mirrorOperatorToRtdb = onDocumentWritten(
-  { document: 'queues/{queueId}/operators/{uid}', region },
+  { document: 'queues/{queueId}/operators/{uid}', region, retry: true },
   createMirrorOperatorHandler(operatorDeps),
 );

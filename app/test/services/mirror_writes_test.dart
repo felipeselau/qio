@@ -140,6 +140,24 @@ void main() {
       expect(rtdb.writes, contains('set:queues/q1/meta'));
     });
 
+    test('ensureMirror recria meta com limite, cor, logo e aviso', () async {
+      await firestore.collection('queues').doc('q1').update({
+        'status': 'paused',
+        'maxWaiting': 7,
+        'brandColor': '#112233',
+        'logoUrl': 'https://firebasestorage.googleapis.com/x',
+        'statusMessage': 'volto ja',
+        'resumeAt': Timestamp.fromMillisecondsSinceEpoch(5000),
+      });
+      await service.ensureMirror('q1');
+      final meta = rtdb.values['queues/q1/meta']! as Map;
+      expect(meta['maxWaiting'], 7);
+      expect(meta['brandColor'], '#112233');
+      expect(meta['logoUrl'], 'https://firebasestorage.googleapis.com/x');
+      expect(meta['statusMessage'], 'volto ja');
+      expect(meta['resumeAt'], 5000);
+    });
+
     test('ensureMirror nao escreve quando o espelho esta em dia', () async {
       rtdb.values['owners/q1'] = {'ownerUid': 'uid-1'};
       rtdb.values['queues/q1/meta'] = {
@@ -192,6 +210,12 @@ void main() {
           .set({'uid': 'op1'});
       await operators.syncOperatorMirror('q1');
       expect(rtdb.values['queues/q1/operatorUids'], {'op1': true});
+    });
+
+    test('syncOperatorMirror ignora fila de outro dono', () async {
+      await firestore.collection('queues').doc('q1').update({'ownerId': 'x'});
+      await operators.syncOperatorMirror('q1');
+      expect(rtdb.touched, isFalse);
     });
 
     test('syncOperatorMirror nao escreve quando esta em dia', () async {

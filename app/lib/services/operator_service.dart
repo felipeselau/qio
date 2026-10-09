@@ -301,6 +301,8 @@ class OperatorService {
   // Reparo (só escreve quando diverge) do espelho de operadores; aprovar e
   // remover não escrevem mais no RTDB, quem espelha é mirrorOperatorToRtdb.
   Future<void> syncOperatorMirror(String queueId) async {
+    final queueSnap = await _queueDoc(queueId).get();
+    if (queueSnap.data()?['ownerId'] != _uid) return;
     final snap = await _queueDoc(queueId).collection('operators').get();
     final expected = {for (final d in snap.docs) d.id: true};
     final mirrorRef = _rtdb.ref('queues/$queueId/operatorUids');
