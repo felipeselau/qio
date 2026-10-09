@@ -3328,6 +3328,42 @@ abstract class AppLocalizations {
   /// **'Ao concluir um atendimento, o telefone não é salvo no histórico.'**
   String get anonymizePhoneHint;
 
+  /// No description provided for @expiryTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Expirar entradas esquecidas'**
+  String get expiryTitle;
+
+  /// No description provided for @expiryHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Remove da fila quem ficou aguardando sem atividade. Não afeta quem já foi chamado.'**
+  String get expiryHint;
+
+  /// No description provided for @expiryAfterHours.
+  ///
+  /// In pt, this message translates to:
+  /// **'Expirar após {hours} h'**
+  String expiryAfterHours(int hours);
+
+  /// No description provided for @expiryClearOnClose.
+  ///
+  /// In pt, this message translates to:
+  /// **'Limpar a fila ao fechar por horário'**
+  String get expiryClearOnClose;
+
+  /// No description provided for @expiryResetTicketDaily.
+  ///
+  /// In pt, this message translates to:
+  /// **'Reiniciar a senha todo dia'**
+  String get expiryResetTicketDaily;
+
+  /// No description provided for @expiryResetTicketDailyHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Zera na primeira vez em que a fila ficar vazia a cada novo dia.'**
+  String get expiryResetTicketDailyHint;
+
   /// No description provided for @dataSubjectTitle.
   ///
   /// In pt, this message translates to:

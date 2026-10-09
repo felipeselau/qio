@@ -7,6 +7,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import '../models/alerts_config.dart';
+import '../models/expiry_config.dart';
 import '../models/history_entry.dart';
 import '../models/queue.dart';
 import '../models/queue_info.dart';
@@ -416,6 +417,12 @@ class QueueService {
   Future<void> updateAnonymizePhone(String queueId, bool value) async {
     await _firestore.collection('queues').doc(queueId).update({
       'anonymizePhone': value,
+    });
+  }
+
+  Future<void> updateExpiry(String queueId, ExpiryConfig config) async {
+    await _firestore.collection('queues').doc(queueId).update({
+      'expiry': config.toMap(),
     });
   }
 

@@ -280,6 +280,22 @@ void main() {
       expect(e.isNoShow, isFalse);
     });
 
+    test('reason expired/closed não conta como desistência', () {
+      final e = HistoryEntry.fromDoc('x', {
+        'result': 'left',
+        'reason': 'expired',
+      });
+      expect(e.isLeft, isTrue);
+      expect(e.isSystemRemoved, isTrue);
+      final m = computeHistoryMetrics([
+        e,
+        HistoryEntry.fromDoc('y', {'result': 'left'}),
+        HistoryEntry.fromDoc('z', {'result': 'left', 'reason': 'closed'}),
+      ]);
+      expect(m.left, 1);
+      expect(m.total, 3);
+    });
+
     test('documento vazio', () {
       final e = HistoryEntry.fromDoc('x', {});
       expect(e.id, 'x');

@@ -81,7 +81,7 @@ double? _averageMinutes(Iterable<Duration> durations) {
 HistoryMetrics computeHistoryMetrics(List<HistoryEntry> entries) {
   final served = entries.where((e) => e.isServed).length;
   final noShow = entries.where((e) => e.isNoShow).length;
-  final left = entries.where((e) => e.isLeft).length;
+  final left = entries.where((e) => e.isLeft && !e.isSystemRemoved).length;
   final total = entries.length;
   final waits = entries.map((e) => e.wait).whereType<Duration>();
   final services = entries
