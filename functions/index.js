@@ -26,7 +26,7 @@ const {
   slotsFromDoc,
   isSlotFull,
 } = require('./src/slots');
-const { publicTicketFor, shouldRenotify } = require('./src/ticket');
+const { publicTicketFor, shouldRenotify, countWaiting, waitingChanged } = require('./src/ticket');
 const { planScheduleChange } = require('./src/schedule');
 const {
   buildNewEntryMessage,
@@ -508,6 +508,7 @@ exports.syncPublicTicket = onValueWritten(
     region: 'us-central1',
   },
   async (event) => {
+    const before = event.data.before.val();
     const after = event.data.after.val();
     const { queueId, entryId } = event.params;
     const db = getDatabase();
@@ -525,6 +526,7 @@ exports.syncPublicTicket = onValueWritten(
       } else {
         await publicRef.remove();
       }
+      if (waitingChanged(before, after)) await refreshWaitingCount(db, queueId);
     } catch (err) {
       logError('syncPublicTicket failed', err, { queueId, entryId });
       throw err;
@@ -532,6 +534,14 @@ exports.syncPublicTicket = onValueWritten(
     return null;
   },
 );
+
+async function refreshWaitingCount(db, queueId) {
+  const metaRef = db.ref(`queues/${queueId}/meta`);
+  const nameSnap = await metaRef.child('name').once('value');
+  if (!nameSnap.exists()) return;
+  const publicSnap = await db.ref(`queues/${queueId}/public`).once('value');
+  await metaRef.child('waitingCount').set(countWaiting(publicSnap.val()));
+}
 
 async function archiveLeftEntry(queueId, entryId, entry) {
   const firestore = getFirestore();

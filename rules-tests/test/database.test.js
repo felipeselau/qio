@@ -204,6 +204,24 @@ describe('RTDB rules', () => {
       await assertFails(set(ref(rtdb(OPERATOR), path('meta/avgServiceMinAuto')), 1));
     });
 
+    it('dono, operador e cliente não escrevem meta/waitingCount', async () => {
+      for (const uid of [OWNER, OPERATOR, 'client1', STRANGER]) {
+        await assertFails(set(ref(rtdb(uid), path('meta/waitingCount')), 0));
+        await assertFails(update(ref(rtdb(uid), path('meta')), { waitingCount: 9 }));
+      }
+    });
+
+    it('meta/waitingCount é legível por autenticado e o dono segue escrevendo o resto do meta', async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await set(ref(ctx.database(), path('meta/waitingCount')), 2);
+      });
+      const snap = await get(ref(rtdb('client1'), path('meta/waitingCount')));
+      assert.equal(snap.val(), 2);
+      const ownerSnap = await get(ref(rtdb(OWNER), path('meta/waitingCount')));
+      assert.equal(ownerSnap.val(), 2);
+      await assertSucceeds(update(ref(rtdb(OWNER), path('meta')), { maxWaiting: 5 }));
+    });
+
     it('operador não escreve meta/name', async () => {
       await assertFails(set(ref(rtdb(OPERATOR), path('meta/name')), 'Hack'));
     });
