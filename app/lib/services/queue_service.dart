@@ -18,6 +18,7 @@ import '../models/queue_slot.dart';
 import 'history_privacy.dart';
 import 'action_errors.dart';
 import 'analytics_service.dart';
+import 'claim_entry.dart';
 import 'delete_service.dart';
 import 'finish_entry.dart';
 import 'join_url.dart';
@@ -703,17 +704,14 @@ class QueueService {
 
   Future<QueueEntry?> _claimEntry(DatabaseReference entryRef) async {
     final uid = _uid;
-    final now = DateTime.now().millisecondsSinceEpoch;
+    final now = serverNowMs(
+      await _serverTimeOffset(),
+      DateTime.now().millisecondsSinceEpoch,
+    );
     final result = await entryRef.runTransaction((current) {
       if (current == null) return Transaction.success(null);
-      final data = Map<Object?, Object?>.from(current as Map);
-      if (data['status'] != EntryStatus.waiting.value) {
-        return Transaction.abort();
-      }
-      data['status'] = EntryStatus.called.value;
-      data['calledAt'] = now;
-      data['operatorId'] = uid;
-      return Transaction.success(data);
+      final data = claimedEntryData(current, uid, now);
+      return data == null ? Transaction.abort() : Transaction.success(data);
     }, applyLocally: false);
 
     final value = result.snapshot.value;
@@ -723,6 +721,22 @@ class QueueService {
       return null;
     }
     return entry;
+  }
+
+  @visibleForTesting
+  Future<Object?> Function()? serverTimeOffsetReader;
+
+  Future<Object?> _readServerTimeOffset() async =>
+      (await _rtdb.ref('.info/serverTimeOffset').get()).value;
+
+  Future<Object?> _serverTimeOffset() async {
+    try {
+      return await (serverTimeOffsetReader ?? _readServerTimeOffset)().timeout(
+        const Duration(seconds: 2),
+      );
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> _finishEntry(
@@ -797,9 +811,7 @@ class QueueService {
             'phone': anonymize ? null : entry.phone,
             'result': result.value,
             'joinedAt': Timestamp.fromDate(entry.joinedAt),
-            'calledAt': entry.calledAt != null
-                ? Timestamp.fromDate(entry.calledAt!)
-                : null,
+            'calledAt': historyTimestamp(entry.calledAt),
             'calledBy': entry.operatorId,
             'operatorId': _uid,
             'finishedAt': FieldValue.serverTimestamp(),

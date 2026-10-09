@@ -81,6 +81,7 @@ const {
   manualRateKey,
   nextManualRateState,
   isActiveCeilingReached,
+  resolveActiveCeiling,
 } = require('./src/manual');
 const logger = require('firebase-functions/logger');
 const { logError, logAppCheck } = require('./src/log');
@@ -497,6 +498,7 @@ exports.addManualEntry = onCall(
         isActiveCeilingReached(
           maxWaiting,
           waitingSnap.numChildren() + calledSnap.numChildren(),
+          resolveActiveCeiling(),
         )
       ) {
         throw new HttpsError('resource-exhausted', 'Fila lotada no momento.', {

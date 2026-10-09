@@ -738,6 +738,22 @@ describe('RTDB rules', () => {
       );
     });
 
+    it('operador e dono gravam calledAt numérico em entry existente', async () => {
+      for (const uid of [OPERATOR, OWNER]) {
+        await assertSucceeds(set(ref(rtdb(uid), entryPath('e1/calledAt')), 1790000000000));
+      }
+    });
+
+    it('calledAt não cria nó fantasma nem aceita valor não numérico', async () => {
+      await assertFails(set(ref(rtdb(OPERATOR), entryPath('ghost/calledAt')), 1790000000000));
+      await assertFails(set(ref(rtdb(OWNER), entryPath('ghost/calledAt')), 1790000000000));
+      await assertFails(set(ref(rtdb(OPERATOR), entryPath('e1/calledAt')), 'agora'));
+    });
+
+    it('cliente não altera calledAt', async () => {
+      await assertFails(set(ref(rtdb('client1'), entryPath('e1/calledAt')), 1790000000000));
+    });
+
     it('cliente marca left', async () => {
       await assertSucceeds(update(ref(rtdb('client1'), entryPath('e1')), { status: 'left' }));
     });

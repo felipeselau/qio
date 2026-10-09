@@ -14,6 +14,15 @@ function nextManualRateState(current, now, options = MANUAL_RATE_LIMIT) {
   return { limited: false, timestamps: [...recent, now] };
 }
 
+function resolveActiveCeiling(env = process.env) {
+  if (env.FUNCTIONS_EMULATOR !== 'true') return MAX_ACTIVE_ENTRIES;
+  const override = Number(env.MANUAL_MAX_ACTIVE_ENTRIES);
+  if (!Number.isInteger(override) || override < 1 || override >= MAX_ACTIVE_ENTRIES) {
+    return MAX_ACTIVE_ENTRIES;
+  }
+  return override;
+}
+
 function isActiveCeilingReached(maxWaiting, activeCount, ceiling = MAX_ACTIVE_ENTRIES) {
   if (normalizeMaxWaiting(maxWaiting) !== 0) return false;
   return activeCount >= ceiling;
@@ -70,6 +79,7 @@ module.exports = {
   MAX_ACTIVE_ENTRIES,
   manualRateKey,
   nextManualRateState,
+  resolveActiveCeiling,
   isActiveCeilingReached,
   parseManualInput,
   isQueueStaff,

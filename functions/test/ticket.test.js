@@ -48,6 +48,13 @@ describe('shouldRenotify', () => {
     assert.equal(shouldRenotify({ status: 'called' }, { status: 'called', recalledAt: 5 }), true);
   });
 
+  it('não notifica quando só o calledAt é corrigido pelo servidor', () => {
+    assert.equal(
+      shouldRenotify({ status: 'called', calledAt: 1000 }, { status: 'called', calledAt: 1500 }),
+      false,
+    );
+  });
+
   it('não notifica sem mudança ou fora de called', () => {
     assert.equal(shouldRenotify({ status: 'called', recalledAt: 1 }, { status: 'called', recalledAt: 1 }), false);
     assert.equal(shouldRenotify({ status: 'waiting' }, { status: 'waiting' }), false);

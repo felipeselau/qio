@@ -53,6 +53,10 @@ functions) e `test:callable` (com functions, só `join-callable.test.js`). Os
 triggers (`syncPublicTicket` remove `entries/{id}` após `left`) reagiam tarde ao
 seed do teste seguinte e apagavam a entry (flake em `database.test.js`); não
 volte a subir functions junto das rules.
+`test:callable` define `MANUAL_MAX_ACTIVE_ENTRIES=40`: `resolveActiveCeiling`
+(`functions/src/manual.js`) só aceita esse override com `FUNCTIONS_EMULATOR=true` e só abaixo de
+1000 (produção sempre usa 1000). Semear 1000 entries disparava ~2000 triggers no emulator e a
+callable `addManualEntry` falhava com `functions/internal` no CI (teste "teto absoluto").
 
 Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
 `~/.claude/CLAUDE.md`). Não há testes em `web/`. Contagem de testes, cobertura e limitações
@@ -292,6 +296,19 @@ modelos; ainda sem dados): `docs/piloto/`.
   (seguro). `finishedAt` segue `serverTimestamp`: o tempo de atendimento inclui até
   ~5 s da janela de desfazer (viés pequeno e conhecido; as rules do history não
   validam `finishedAt` e relógio de cliente distorceria ordenação/estimativa).
+- `calledAt` usa o relógio do **servidor estimado**: `_claimEntry` lê
+  `.info/serverTimeOffset` (timeout 2 s, offset 0 se falhar) e a transação de claim por
+  status grava `calledAt = DateTime.now() + offset` (`serverNowMs`/`claimedEntryData`,
+  `services/claim_entry.dart`). Erro < 1 RTT, independente do relógio do aparelho; sem
+  segundo write, sem releitura. Não se usa `ServerValue.timestamp` dentro do
+  `runTransaction` (suporte nativo não verificado). O `_archiveEntry` converte o ms para
+  `Timestamp` (`historyTimestamp`). Espera e atendimento (`calledAt − joinedAt`,
+  `finishedAt − calledAt`) deixam de depender do relógio do operador. Rules:
+  `entries/*/calledAt` exige número e `status` existente na entry (impede nó fantasma).
+  `shouldRenotify` ignora `calledAt`. O `CalledTimer` do web compara `calledAt` com
+  `Date.now()` do cliente (clamp em 0 via `elapsedSince`): relógio errado do cliente
+  distorce só o contador na tela. Deploy: rules do RTDB antes do APK; APK antigo segue
+  compatível com as rules novas (grava `calledAt` numérico junto do `status`).
 - `_finishEntry`: `get` valida `called` → `_archiveEntry` → transação de status
   (idempotente; `null` devolve `success(null)` p/ forçar round-trip com cache
   frio) → `remove`. Archive falho deixa a entry `called` (repetível). Corrida
@@ -604,6 +621,11 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   `messagingModule.ts`): `null` (em cache) = sem suporte; falha de rede ao baixar o
   chunk rejeita com `MessagingLoadError` e não é cacheada (retry). Nunca importe
   `firebase/messaging` estaticamente nem chame `getMessaging` no topo de um módulo.
+- `web/src/routes/QueuePage.tsx` é só o orquestrador (hooks, estado, efeitos e handlers);
+  cada fase é um componente de apresentação em `web/src/routes/queue/` (`JoinForm`,
+  `TicketView`, `CalledView`, `FeedbackView`, `StateViews` com erro/carregando/inexistente/
+  fechada/obrigado/saiu, `Banners`, `QueueLogo`). Estado e ordem dos hooks ficam na página;
+  a conta das opções de horário é `buildSlotOptions` (`lib/slots.ts`, testada).
 - A landing `/` carrega o bundle inteiro (Auth/Database/Functions/App Check): a
   `QueuePage` não usa `React.lazy` porque o caminho do QR é o principal e o lazy
   adicionaria uma ida e volta de rede nele.
