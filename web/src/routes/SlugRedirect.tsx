@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { signInAnonymously } from 'firebase/auth';
-import { httpsCallable } from 'firebase/functions';
-import { auth, functions } from '../firebase';
+import { resolveSlugToQueueId } from '../lib/resolveSlug';
 import { parseSlug, queuePathFor, slugErrorKind } from '../lib/slug';
 
 type Resolution =
@@ -11,13 +9,6 @@ type Resolution =
   | { kind: 'found'; queueId: string }
   | { kind: 'notFound' }
   | { kind: 'retry' };
-
-async function resolve(slug: string): Promise<string> {
-  await auth.authStateReady();
-  if (!auth.currentUser) await signInAnonymously(auth);
-  const call = httpsCallable<{ slug: string }, { queueId: string }>(functions, 'resolveSlug');
-  return (await call({ slug })).data.queueId;
-}
 
 export default function SlugRedirect() {
   const { t } = useTranslation();
@@ -35,7 +26,7 @@ export default function SlugRedirect() {
     }
     let active = true;
     setState({ kind: 'loading' });
-    resolve(slug)
+    resolveSlugToQueueId(slug)
       .then((queueId) => {
         if (active) setState({ kind: 'found', queueId });
       })
