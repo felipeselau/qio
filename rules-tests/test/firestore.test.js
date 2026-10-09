@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
 import {
   Timestamp,
+  addDoc,
   collection,
   collectionGroup,
   deleteDoc,
@@ -411,6 +412,37 @@ describe('Firestore rules', () => {
           retentionDays: 730,
           anonymizePhone: true,
           expiry: { enabled: true, hours: 48, clearOnClose: true, resetTicketDaily: true },
+        }),
+      );
+    });
+
+    it('create do wizard no pior caso cabe num único add()', async () => {
+      await assertSucceeds(
+        addDoc(collection(db(OWNER), 'queues'), {
+          ownerId: OWNER,
+          name: 'x'.repeat(60),
+          description: 'd'.repeat(300),
+          status: 'open',
+          avgServiceMin: 240,
+          maxWaiting: 1000,
+          groupId: 'g'.repeat(40),
+          schedule: {
+            enabled: true,
+            timezone: 'America/Sao_Paulo',
+            windows: [
+              { days: [1, 2, 3, 4, 5, 6, 7], open: '22:00', close: '06:00' },
+              { days: [1, 2, 3], open: '08:00', close: '12:00' },
+              { days: [4, 5], open: '13:00', close: '18:00' },
+            ],
+          },
+          brandColor: '#1E88E5',
+          alerts,
+          mode: 'schedule',
+          slots: slots24,
+          expiry: { enabled: true, hours: 48, clearOnClose: true, resetTicketDaily: true },
+          retentionDays: 730,
+          anonymizePhone: true,
+          createdAt: Timestamp.now(),
         }),
       );
     });

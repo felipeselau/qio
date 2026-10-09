@@ -419,6 +419,17 @@ modelos; ainda sem dados): `docs/piloto/`.
 
 ## Limites e validações
 
+- **Create de fila no pior caso (#212):** `allow create` de `queues/{id}` aceita num
+  único `add()` o payload completo do wizard (modo `schedule` com 20 slots de capacity 50,
+  `alerts` completo, `schedule` com janelas, `groupId` de 40, `brandColor`, `expiry`,
+  `retentionDays`, `anonymizePhone`, nome 60, descrição 300, `avgServiceMin`, `maxWaiting`);
+  teste "create do wizard no pior caso cabe num único add()" em `rules-tests/test/
+  firestore.test.js`. Conclusão: não há necessidade de gravar `slots` num segundo `update`.
+  **A folga é mínima** (~2%, 10–20 das 1000 expressões): somar ~10 termos triviais
+  (`&& true`) ao `allow create` já estoura. Qualquer validação nova no create (ex.:
+  `schedule`, `brandColor`, `expiry`) deve ser feita no cliente; se for inevitável, rode o
+  teste e, se falhar, grave `slots` num `update` logo após o `add()`. Como medir:
+  `docs/qualidade.md` (seção "Margem do create").
 - **Limite de filas por dono:** `maxQueuesPerOwner = 20` (`queue_service.dart`).
   `QueueService.createQueue` conta as filas do dono (`count()`) no início e lança
   `QueueLimitReached`; a tela de criação mostra `queueLimitReached` (pt/en/es).
