@@ -9,6 +9,7 @@ import '../../theme/qio_text_styles.dart';
 import '../../widgets/qio_button.dart';
 import '../../widgets/qio_card.dart';
 import '../../screens/qr_poster_screen.dart';
+import '../../services/queue_service.dart';
 import '../../theme/qio_palette.dart';
 
 class QueueQrCard extends StatelessWidget {
@@ -16,10 +17,22 @@ class QueueQrCard extends StatelessWidget {
     super.key,
     required this.queueName,
     required this.joinUrl,
+    this.queueId,
+    this.logoUrl,
+    this.brandColor,
+    this.posterTitle,
+    this.canEdit = false,
+    this.queues,
   });
 
   final String queueName;
   final String joinUrl;
+  final String? queueId;
+  final String? logoUrl;
+  final String? brandColor;
+  final String? posterTitle;
+  final bool canEdit;
+  final QueueService? queues;
 
   Future<void> _copyLink(BuildContext context, String url) async {
     await Clipboard.setData(ClipboardData(text: url));
@@ -157,8 +170,16 @@ class QueueQrCard extends StatelessWidget {
             isFullWidth: true,
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute<void>(
-                builder: (_) =>
-                    QrPosterScreen(queueName: queueName, joinUrl: joinUrl),
+                builder: (_) => QrPosterScreen(
+                  queueName: queueName,
+                  joinUrl: joinUrl,
+                  queueId: queueId,
+                  logoUrl: logoUrl,
+                  brandColor: brandColor,
+                  posterTitle: posterTitle,
+                  canEdit: canEdit,
+                  queues: queues,
+                ),
               ),
             ),
           ),

@@ -1,4 +1,5 @@
 import { after, before, beforeEach, describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
 import {
   Timestamp,
@@ -12,9 +13,11 @@ import {
   limit,
   orderBy,
   query,
+  serverTimestamp,
   setDoc,
   updateDoc,
   where,
+  writeBatch,
 } from 'firebase/firestore';
 import { OPERATOR, OWNER, QUEUE, STRANGER, setupEnv } from './helpers.js';
 
@@ -827,6 +830,262 @@ describe('Firestore rules', () => {
     it('usuário consulta só os próprios pedidos', async () => {
       await assertSucceeds(
         getDocs(query(collectionGroup(db('pendingUser'), 'operatorRequests'), where('uid', '==', 'pendingUser'))),
+      );
+    });
+  });
+
+  describe('queueSlugs', () => {
+    const slugDoc = (overrides = {}) => ({
+      queueId: QUEUE,
+      ownerId: OWNER,
+      createdAt: serverTimestamp(),
+      ...overrides,
+    });
+    const seedSlug = (slug, data = { queueId: QUEUE, ownerId: OWNER, createdAt: Timestamp.now() }) =>
+      env.withSecurityRulesDisabled((ctx) => setDoc(doc(ctx.firestore(), 'queueSlugs', slug), data));
+
+    it('dono cria slug válido para a própria fila', async () => {
+      await assertSucceeds(setDoc(doc(db(OWNER), 'queueSlugs', 'minha-loja'), slugDoc()));
+    });
+
+    it('aceita limites de tamanho 3 e 40', async () => {
+      await assertSucceeds(setDoc(doc(db(OWNER), 'queueSlugs', 'abc'), slugDoc()));
+      await assertSucceeds(setDoc(doc(db(OWNER), 'queueSlugs', 'a'.repeat(40)), slugDoc()));
+    });
+
+    it('recusa formato inválido', async () => {
+      for (const bad of ['ab', 'a'.repeat(41), '-abc', 'abc-', 'ab_c', 'ABC', 'a b', 'café', 'a.b']) {
+        await assertFails(setDoc(doc(db(OWNER), 'queueSlugs', bad), slugDoc()));
+      }
+    });
+
+    it('recusa slugs reservados', async () => {
+      for (const word of ['admin', 'api', 'app', 'privacidade', 'termos', 'assets', 'fonts', 'icons']) {
+        await assertFails(setDoc(doc(db(OWNER), 'queueSlugs', word), slugDoc()));
+      }
+    });
+
+    it('colisão: slug existente não pode ser recriado nem por outro dono nem pelo mesmo', async () => {
+      await seedSlug('padaria');
+      await assertFails(setDoc(doc(db(OWNER), 'queueSlugs', 'padaria'), slugDoc()));
+      await env.withSecurityRulesDisabled((ctx) =>
+        setDoc(doc(ctx.firestore(), 'queues', 'q2'), { ownerId: STRANGER, name: 'Outra', status: 'open' }),
+      );
+      await assertFails(
+        setDoc(doc(db(STRANGER), 'queueSlugs', 'padaria'), slugDoc({ queueId: 'q2', ownerId: STRANGER })),
+      );
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        const snap = await getDoc(doc(ctx.firestore(), 'queueSlugs', 'padaria'));
+        assert.equal(snap.get('ownerId'), OWNER);
+      });
+    });
+
+    it('não cria slug para fila de outro dono', async () => {
+      await assertFails(setDoc(doc(db(STRANGER), 'queueSlugs', 'roubado'), slugDoc({ ownerId: STRANGER })));
+    });
+
+    it('não cria com ownerId de outro', async () => {
+      await assertFails(setDoc(doc(db(OWNER), 'queueSlugs', 'falso'), slugDoc({ ownerId: STRANGER })));
+    });
+
+    it('operador não cria slug', async () => {
+      await assertFails(setDoc(doc(db(OPERATOR), 'queueSlugs', 'operador'), slugDoc({ ownerId: OPERATOR })));
+    });
+
+    it('não autenticado não cria', async () => {
+      const anon = env.unauthenticatedContext().firestore();
+      await assertFails(setDoc(doc(anon, 'queueSlugs', 'sem-login'), slugDoc()));
+    });
+
+    it('recusa campos extras, faltando campo ou createdAt arbitrário', async () => {
+      await assertFails(setDoc(doc(db(OWNER), 'queueSlugs', 'extra'), slugDoc({ x: 1 })));
+      await assertFails(setDoc(doc(db(OWNER), 'queueSlugs', 'sem-data'), { queueId: QUEUE, ownerId: OWNER }));
+      await assertFails(setDoc(doc(db(OWNER), 'queueSlugs', 'data-falsa'), slugDoc({ createdAt: Timestamp.fromMillis(1) })));
+      await assertFails(setDoc(doc(db(OWNER), 'queueSlugs', 'fila-num'), slugDoc({ queueId: 5 })));
+    });
+
+    it('slug de fila inexistente é recusado', async () => {
+      await assertFails(setDoc(doc(db(OWNER), 'queueSlugs', 'fantasma'), slugDoc({ queueId: 'nao-existe' })));
+    });
+
+    it('update é sempre recusado', async () => {
+      await seedSlug('padaria');
+      await assertFails(updateDoc(doc(db(OWNER), 'queueSlugs', 'padaria'), { queueId: 'q2' }));
+    });
+
+    it('listagem é recusada para todos', async () => {
+      await seedSlug('padaria');
+      await assertFails(getDocs(collection(db(OWNER), 'queueSlugs')));
+      await assertFails(getDocs(query(collection(db(OWNER), 'queueSlugs'), where('ownerId', '==', OWNER))));
+      await assertFails(getDocs(collection(env.unauthenticatedContext().firestore(), 'queueSlugs')));
+    });
+
+    it('get só para o dono do slug', async () => {
+      await seedSlug('padaria');
+      await assertSucceeds(getDoc(doc(db(OWNER), 'queueSlugs', 'padaria')));
+      await assertFails(getDoc(doc(db(STRANGER), 'queueSlugs', 'padaria')));
+    });
+
+    it('ninguém apaga o slug (só tombstone)', async () => {
+      await seedSlug('padaria');
+      await assertFails(deleteDoc(doc(db(STRANGER), 'queueSlugs', 'padaria')));
+      await assertFails(deleteDoc(doc(db(OWNER), 'queueSlugs', 'padaria')));
+    });
+
+    it('anônimo não cria slug nem para a própria fila', async () => {
+      await assertFails(setDoc(doc(anonDb(OWNER), 'queueSlugs', 'anonimo'), slugDoc()));
+    });
+
+    it('queueId com caracteres inválidos é recusado', async () => {
+      await env.withSecurityRulesDisabled((ctx) =>
+        setDoc(doc(ctx.firestore(), 'queues', 'a.b'), { ownerId: OWNER, name: 'X', status: 'open' }),
+      );
+      await assertFails(setDoc(doc(db(OWNER), 'queueSlugs', 'ponto'), slugDoc({ queueId: 'a.b' })));
+    });
+
+    describe('tombstone', () => {
+      const daysAgo = (d) => Timestamp.fromMillis(Date.now() - d * 86400 * 1000);
+      const tomb = (ownerId, daysOld) => ({
+        queueId: 'q-velha',
+        ownerId,
+        createdAt: daysAgo(daysOld + 5),
+        released: true,
+        releasedAt: daysAgo(daysOld),
+      });
+
+      beforeEach(async () => {
+        await env.withSecurityRulesDisabled((ctx) =>
+          setDoc(doc(ctx.firestore(), 'queues', 'q2'), { ownerId: STRANGER, name: 'Outra', status: 'open' }),
+        );
+      });
+
+      it('dono libera o próprio slug (tombstone)', async () => {
+        await seedSlug('padaria');
+        const ref = doc(db(OWNER), 'queueSlugs', 'padaria');
+        await assertSucceeds(updateDoc(ref, { released: true, releasedAt: serverTimestamp() }));
+        await env.withSecurityRulesDisabled(async (ctx) => {
+          const snap = await getDoc(doc(ctx.firestore(), 'queueSlugs', 'padaria'));
+          assert.equal(snap.get('released'), true);
+          assert.equal(snap.get('queueId'), QUEUE);
+        });
+      });
+
+      it('estranho não libera slug alheio', async () => {
+        await seedSlug('padaria');
+        await assertFails(
+          updateDoc(doc(db(STRANGER), 'queueSlugs', 'padaria'), { released: true, releasedAt: serverTimestamp() }),
+        );
+      });
+
+      it('liberar não aceita releasedAt arbitrário nem outros campos', async () => {
+        await seedSlug('padaria');
+        const ref = doc(db(OWNER), 'queueSlugs', 'padaria');
+        await assertFails(updateDoc(ref, { released: true, releasedAt: Timestamp.fromMillis(1) }));
+        await assertFails(updateDoc(ref, { released: true, releasedAt: serverTimestamp(), queueId: 'q2' }));
+        await assertFails(updateDoc(ref, { released: true, releasedAt: serverTimestamp(), extra: 1 }));
+      });
+
+      it('outro dono NÃO toma o slug dentro de 30 dias', async () => {
+        await seedSlug('velho', tomb(OWNER, 1));
+        await assertFails(
+          setDoc(doc(db(STRANGER), 'queueSlugs', 'velho'), slugDoc({ queueId: 'q2', ownerId: STRANGER })),
+        );
+        await seedSlug('quase', tomb(OWNER, 29));
+        await assertFails(
+          setDoc(doc(db(STRANGER), 'queueSlugs', 'quase'), slugDoc({ queueId: 'q2', ownerId: STRANGER })),
+        );
+      });
+
+      it('mesmo dono retoma dentro dos 30 dias', async () => {
+        await seedSlug('velho', tomb(OWNER, 1));
+        await assertSucceeds(setDoc(doc(db(OWNER), 'queueSlugs', 'velho'), slugDoc()));
+        await env.withSecurityRulesDisabled(async (ctx) => {
+          const snap = await getDoc(doc(ctx.firestore(), 'queueSlugs', 'velho'));
+          assert.equal(snap.get('released'), undefined);
+          assert.equal(snap.get('queueId'), QUEUE);
+        });
+      });
+
+      it('após 30 dias outro dono toma o slug', async () => {
+        await seedSlug('velho', tomb(OWNER, 31));
+        await assertSucceeds(
+          setDoc(doc(db(STRANGER), 'queueSlugs', 'velho'), slugDoc({ queueId: 'q2', ownerId: STRANGER })),
+        );
+      });
+
+      it('retomar tombstone exige as validações de criação', async () => {
+        await seedSlug('velho', tomb(OWNER, 31));
+        await assertFails(
+          setDoc(doc(anonDb(STRANGER), 'queueSlugs', 'velho'), slugDoc({ queueId: 'q2', ownerId: STRANGER })),
+        );
+        await assertFails(setDoc(doc(db(STRANGER), 'queueSlugs', 'velho'), slugDoc({ ownerId: STRANGER })));
+      });
+
+      it('slug ativo não pode ser retomado nem pelo dono', async () => {
+        await seedSlug('ativo');
+        await assertFails(setDoc(doc(db(OWNER), 'queueSlugs', 'ativo'), slugDoc()));
+      });
+
+      it('tombstone é legível por qualquer logado; ativo só pelo dono', async () => {
+        await seedSlug('velho', tomb(OWNER, 1));
+        await seedSlug('ativo');
+        await assertSucceeds(getDoc(doc(db(STRANGER), 'queueSlugs', 'velho')));
+        await assertFails(getDoc(doc(db(STRANGER), 'queueSlugs', 'ativo')));
+        await assertSucceeds(getDoc(doc(db(STRANGER), 'queueSlugs', 'inexistente')));
+      });
+
+      it('troca em batch deixa tombstone do antigo e grava o novo', async () => {
+        await seedSlug('antigo');
+        await env.withSecurityRulesDisabled((ctx) =>
+          updateDoc(doc(ctx.firestore(), 'queues', QUEUE), { slug: 'antigo' }),
+        );
+        const fs = db(OWNER);
+        const batch = writeBatch(fs);
+        batch.set(doc(fs, 'queueSlugs', 'novo-nome'), slugDoc());
+        batch.update(doc(fs, 'queueSlugs', 'antigo'), { released: true, releasedAt: serverTimestamp() });
+        batch.update(doc(fs, 'queues', QUEUE), { slug: 'novo-nome' });
+        await assertSucceeds(batch.commit());
+        await env.withSecurityRulesDisabled(async (ctx) => {
+          const old = await getDoc(doc(ctx.firestore(), 'queueSlugs', 'antigo'));
+          assert.equal(old.get('released'), true);
+          const next = await getDoc(doc(ctx.firestore(), 'queueSlugs', 'novo-nome'));
+          assert.equal(next.get('queueId'), QUEUE);
+        });
+      });
+    });
+
+    it('batch com slug em uso falha inteiro e não altera a fila', async () => {
+      await seedSlug('ocupado', { queueId: 'q2', ownerId: STRANGER, createdAt: Timestamp.now() });
+      const fs = db(OWNER);
+      const batch = writeBatch(fs);
+      batch.set(doc(fs, 'queueSlugs', 'ocupado'), slugDoc());
+      batch.update(doc(fs, 'queues', QUEUE), { slug: 'ocupado' });
+      await assertFails(batch.commit());
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        const queue = await getDoc(doc(ctx.firestore(), 'queues', QUEUE));
+        assert.equal(queue.get('slug'), undefined);
+      });
+    });
+
+    it('pior caso: 20 slots + slug + posterTitle no mesmo update e batch com slug', async () => {
+      const slots = Array.from({ length: 20 }, (_, i) => ({
+        id: `s${i}`,
+        start: `${String(i).padStart(2, '0')}:00`,
+        capacity: 50,
+      }));
+      const fs = db(OWNER);
+      await assertSucceeds(
+        updateDoc(doc(fs, 'queues', QUEUE), { mode: 'schedule', slots, slug: 'com-slots', posterTitle: 'Olá' }),
+      );
+      const batch = writeBatch(fs);
+      batch.set(doc(fs, 'queueSlugs', 'novo-slug'), slugDoc());
+      batch.update(doc(fs, 'queues', QUEUE), { slug: 'novo-slug', slots });
+      await assertSucceeds(batch.commit());
+    });
+
+    it('dono grava slug e posterTitle na fila sem validação extra', async () => {
+      await assertSucceeds(
+        updateDoc(doc(db(OWNER), 'queues', QUEUE), { slug: 'minha-loja', posterTitle: 'Entre na fila' }),
       );
     });
   });

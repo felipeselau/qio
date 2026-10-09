@@ -1725,6 +1725,85 @@ class AppLocalizationsEs extends AppLocalizations {
   String get termsOfUse => 'Términos de uso';
 
   @override
+  String get posterSize => 'TAMAÑO DEL CARTEL';
+
+  @override
+  String get posterSizeA4 => 'A4';
+
+  @override
+  String get posterSizeA5 => 'A5';
+
+  @override
+  String get posterSizeTable => 'Tarjeta de mesa (10×15 cm)';
+
+  @override
+  String get posterHeadlineLabel => 'Frase en el cartel (opcional)';
+
+  @override
+  String get posterHeadlineHint => 'Ej.: Pide tu lugar sin esperar de pie';
+
+  @override
+  String get posterHeadlineInvalid => 'Usa hasta 60 caracteres.';
+
+  @override
+  String get sharePdf => 'Compartir PDF';
+
+  @override
+  String get sharePdfError => 'No se pudo compartir el PDF.';
+
+  @override
+  String posterPreviewSemantics(String size) {
+    return 'Vista previa del cartel, $size';
+  }
+
+  @override
+  String get slugTitle => 'Enlace corto';
+
+  @override
+  String get slugNone => 'Sin definir';
+
+  @override
+  String get slugRemove => 'Quitar enlace corto';
+
+  @override
+  String get slugDialogLabel => 'Nombre del enlace';
+
+  @override
+  String get slugDialogHint => 'mi-tienda';
+
+  @override
+  String slugPreview(String url) {
+    return 'Enlace: $url';
+  }
+
+  @override
+  String get slugInvalid =>
+      'Usa de 3 a 40 letras minúsculas, números o guiones, sin guion al inicio ni al final.';
+
+  @override
+  String get slugReservedError => 'Ese nombre está reservado. Elige otro.';
+
+  @override
+  String get slugTakenError => 'Ese enlace ya está en uso. Elige otro.';
+
+  @override
+  String get slugSaved => 'Enlace corto guardado';
+
+  @override
+  String get slugRemoved => 'Enlace corto eliminado';
+
+  @override
+  String get slugReleaseNotice =>
+      'Cambiar el enlace invalida los QR impresos con el enlace anterior. El enlace anterior queda reservado para ti por 30 días.';
+
+  @override
+  String get posterNameLossy =>
+      'Algunos caracteres no existen en la fuente del PDF y se omitirán o reemplazarán.';
+
+  @override
+  String get posterNameFallback => 'Fila';
+
+  @override
   String get exportCsvWithPhone => 'Exportar CSV con teléfono';
 
   @override

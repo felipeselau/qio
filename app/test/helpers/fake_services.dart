@@ -106,6 +106,7 @@ class FakeQueueService implements QueueService {
   Object? callNextError;
   Object? finishError;
   Object? statusError;
+  Object? slugError;
   Future<void>? finishGate;
   final List<String> calls = [];
   final Map<String, int> waitingListens = {};
@@ -176,6 +177,21 @@ class FakeQueueService implements QueueService {
 
   @override
   Future<List<QueueFeedback>> fetchFeedback(String queueId) async => feedback;
+
+  @override
+  Future<void> setSlug(
+    String queueId, {
+    String? currentSlug,
+    String? newSlug,
+  }) async {
+    calls.add('setSlug:$queueId:${currentSlug ?? '-'}:${newSlug ?? '-'}');
+    if (slugError != null) throw slugError!;
+  }
+
+  @override
+  Future<void> updatePosterTitle(String queueId, String? title) async {
+    calls.add('posterTitle:$queueId:${title ?? '-'}');
+  }
 
   @override
   String queueJoinUrl(String queueId) => 'https://qio.web.app/q/$queueId';

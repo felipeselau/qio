@@ -3142,6 +3142,150 @@ abstract class AppLocalizations {
   /// **'Termos de uso'**
   String get termsOfUse;
 
+  /// No description provided for @posterSize.
+  ///
+  /// In pt, this message translates to:
+  /// **'TAMANHO DO CARTAZ'**
+  String get posterSize;
+
+  /// No description provided for @posterSizeA4.
+  ///
+  /// In pt, this message translates to:
+  /// **'A4'**
+  String get posterSizeA4;
+
+  /// No description provided for @posterSizeA5.
+  ///
+  /// In pt, this message translates to:
+  /// **'A5'**
+  String get posterSizeA5;
+
+  /// No description provided for @posterSizeTable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cartão de mesa (10×15 cm)'**
+  String get posterSizeTable;
+
+  /// No description provided for @posterHeadlineLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Frase no cartaz (opcional)'**
+  String get posterHeadlineLabel;
+
+  /// No description provided for @posterHeadlineHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ex.: Peça seu lugar sem esperar em pé'**
+  String get posterHeadlineHint;
+
+  /// No description provided for @posterHeadlineInvalid.
+  ///
+  /// In pt, this message translates to:
+  /// **'Use até 60 caracteres.'**
+  String get posterHeadlineInvalid;
+
+  /// No description provided for @sharePdf.
+  ///
+  /// In pt, this message translates to:
+  /// **'Compartilhar PDF'**
+  String get sharePdf;
+
+  /// No description provided for @sharePdfError.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível compartilhar o PDF.'**
+  String get sharePdfError;
+
+  /// No description provided for @posterPreviewSemantics.
+  ///
+  /// In pt, this message translates to:
+  /// **'Prévia do cartaz em {size}'**
+  String posterPreviewSemantics(String size);
+
+  /// No description provided for @slugTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Link curto'**
+  String get slugTitle;
+
+  /// No description provided for @slugNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não definido'**
+  String get slugNone;
+
+  /// No description provided for @slugRemove.
+  ///
+  /// In pt, this message translates to:
+  /// **'Remover link curto'**
+  String get slugRemove;
+
+  /// No description provided for @slugDialogLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nome do link'**
+  String get slugDialogLabel;
+
+  /// No description provided for @slugDialogHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'minha-loja'**
+  String get slugDialogHint;
+
+  /// No description provided for @slugPreview.
+  ///
+  /// In pt, this message translates to:
+  /// **'Link: {url}'**
+  String slugPreview(String url);
+
+  /// No description provided for @slugInvalid.
+  ///
+  /// In pt, this message translates to:
+  /// **'Use de 3 a 40 letras minúsculas, números ou hífen, sem hífen no início ou no fim.'**
+  String get slugInvalid;
+
+  /// No description provided for @slugReservedError.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esse nome é reservado. Escolha outro.'**
+  String get slugReservedError;
+
+  /// No description provided for @slugTakenError.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esse link já está em uso. Escolha outro.'**
+  String get slugTakenError;
+
+  /// No description provided for @slugSaved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Link curto salvo'**
+  String get slugSaved;
+
+  /// No description provided for @slugRemoved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Link curto removido'**
+  String get slugRemoved;
+
+  /// No description provided for @slugReleaseNotice.
+  ///
+  /// In pt, this message translates to:
+  /// **'Trocar o link invalida os QRs impressos com o link antigo. O link antigo fica reservado por 30 dias para você.'**
+  String get slugReleaseNotice;
+
+  /// No description provided for @posterNameLossy.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alguns caracteres do texto não existem na fonte do PDF e serão omitidos ou trocados.'**
+  String get posterNameLossy;
+
+  /// No description provided for @posterNameFallback.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fila'**
+  String get posterNameFallback;
+
   /// No description provided for @exportCsvWithPhone.
   ///
   /// In pt, this message translates to:
