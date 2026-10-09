@@ -28,6 +28,7 @@ const {
 } = require('./src/slots');
 const { publicTicketFor, shouldRenotify } = require('./src/ticket');
 const { planScheduleChange } = require('./src/schedule');
+const { purgeAllRetention } = require('./src/retention');
 const {
   buildNewEntryMessage,
   recipientUids,
@@ -622,6 +623,30 @@ exports.applyQueueSchedules = onSchedule(
         logError('applyQueueSchedules failed', err, { queueId: doc.id });
       }
     }
+  },
+);
+
+exports.purgeOldHistory = onSchedule(
+  {
+    schedule: 'every day 03:30',
+    region: 'us-central1',
+    timeZone: 'America/Sao_Paulo',
+    timeoutSeconds: 540,
+  },
+  async () => {
+    const firestore = getFirestore();
+    const snap = await firestore
+      .collection('queues')
+      .select('retentionDays', 'deleting')
+      .get();
+    const totals = await purgeAllRetention(
+      firestore,
+      snap.docs,
+      Date.now(),
+      (ms) => Timestamp.fromMillis(ms),
+      { onError: (err, ctx) => logError('purgeOldHistory failed', err, ctx) },
+    );
+    logger.info('purgeOldHistory', { event: 'purgeOldHistory', ...totals });
   },
 );
 
