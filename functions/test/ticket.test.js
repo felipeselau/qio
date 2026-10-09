@@ -1,6 +1,6 @@
 const { describe, it } = require('node:test');
 const assert = require('node:assert/strict');
-const { orderOf, publicTicketFor, shouldRenotify } = require('../src/ticket');
+const { orderOf, publicTicketFor, shouldRenotify, countWaiting, waitingChanged } = require('../src/ticket');
 
 describe('orderOf', () => {
   it('usa order quando existe, senão joinedAt', () => {
@@ -52,5 +52,52 @@ describe('shouldRenotify', () => {
     assert.equal(shouldRenotify({ status: 'called', recalledAt: 1 }, { status: 'called', recalledAt: 1 }), false);
     assert.equal(shouldRenotify({ status: 'waiting' }, { status: 'waiting' }), false);
     assert.equal(shouldRenotify({ status: 'called' }, null), false);
+  });
+});
+
+describe('countWaiting', () => {
+  it('conta só status waiting', () => {
+    assert.equal(
+      countWaiting({
+        a: { ticket: 1, status: 'waiting' },
+        b: { ticket: 2, status: 'called' },
+        c: { ticket: 3, status: 'waiting' },
+      }),
+      2,
+    );
+  });
+
+  it('é 0 para vazio, nulo ou inválido', () => {
+    assert.equal(countWaiting(null), 0);
+    assert.equal(countWaiting(undefined), 0);
+    assert.equal(countWaiting({}), 0);
+    assert.equal(countWaiting({ a: null }), 0);
+    assert.equal(countWaiting('x'), 0);
+  });
+
+  it('é idempotente: reprocessar o mesmo estado dá o mesmo valor', () => {
+    const pub = { a: { status: 'waiting' }, b: { status: 'waiting' } };
+    assert.equal(countWaiting(pub), countWaiting(pub));
+  });
+});
+
+describe('waitingChanged', () => {
+  const w = { status: 'waiting' };
+  const c = { status: 'called' };
+
+  it('detecta entrada e saída de waiting', () => {
+    assert.equal(waitingChanged(null, w), true);
+    assert.equal(waitingChanged(w, c), true);
+    assert.equal(waitingChanged(w, { status: 'left' }), true);
+    assert.equal(waitingChanged(w, null), true);
+    assert.equal(waitingChanged(c, w), true);
+  });
+
+  it('ignora mudanças que não alteram waiting', () => {
+    assert.equal(waitingChanged(w, { status: 'waiting', fcmToken: 't' }), false);
+    assert.equal(waitingChanged(c, { status: 'called', recalledAt: 1 }), false);
+    assert.equal(waitingChanged(c, null), false);
+    assert.equal(waitingChanged(null, c), false);
+    assert.equal(waitingChanged(null, null), false);
   });
 });

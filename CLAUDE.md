@@ -180,6 +180,37 @@ conhecidas: `docs/qualidade.md`.
 - Voltar do painel/criação/edição é `QueueBackButton` (`BackButton` do Material, tooltip e
   semântica localizados, usa `maybePop` e portanto respeita o `PopScope`).
 
+## Contador de espera no meta
+
+- `queues/{id}/meta/waitingCount` = número de entries `waiting` (só `waiting`; `called`
+  não conta, igual à contagem antiga da home). Escrito pela function (Admin); a rule
+  do RTDB tem `.validate: false` no campo, então ninguém grava um valor pelo cliente
+  (leitura como o resto do `meta`). Ressalva: o dono pode **apagar** o campo
+  (`remove`/`null`, `.validate` não roda em remoção) e o app cai no fallback; um
+  `set` completo do `meta` pelo dono (ensureMirror/createQueue com `meta` ausente)
+  também o apaga até a próxima trigger ou reconciliação.
+- Estratégia: **recontagem**, não delta (`functions/src/waiting.js`). Quando a entry
+  entra/sai de `waiting` (`waitingChanged`), `syncPublicTicket` lê `public/` (só
+  `{ticket,status,order}`), grava, **relê** e regrava se mudou (até 2 escritas), o
+  que cobre corrida entre eventos. Reentrega é idempotente. Roda também quando o
+  arquivamento do `left` falha (depois de remover `public/`), e então a trigger relança.
+- A escrita é `transaction` no nó `meta`: aborta se `meta` não existe, não tem `name`
+  ou tem `deleting === true` (não recria fila apagada nem mexe em fila sendo apagada);
+  com `meta` nulo no cache local devolve o valor inalterado para o SDK reconferir no servidor.
+- Reconciliação: `reconcileWaitingCounts` (a cada 15 min) lista as filas pelo
+  Firestore (só ids, sem ler `entries`), recontagem de `public/` com concorrência 5 e
+  corrige divergência.
+- App: `QueueService.watchWaitingCount` lê só `meta/waitingCount` (um número por
+  card). Se o campo não existe, cai para a contagem por `public/`
+  (`app/lib/services/waiting_count.dart`) e abandona o `public/` quando o campo
+  aparece (e volta a ele se sumir). Web continua contando por `public/`. APK antigo
+  segue contando por `public/`.
+- Backfill: `GOOGLE_CLOUD_PROJECT=qio-app node functions/scripts/backfill-waiting-count.js
+  [--dry-run]` (opcional `FIREBASE_DATABASE_URL`). Conta a partir de `public/` com a
+  mesma regra da trigger, pula filas sem `meta/name` ou com `deleting`, pula valores
+  já corretos e grava só o campo, via a mesma transação. **Ordem de deploy**:
+  functions → backfill → rules do RTDB → APK.
+
 ## Ordem da fila, chamar de novo e mover
 
 - A ordem de espera é `(order ?? joinedAt, ticket)`. "Mover para o fim" grava
@@ -323,6 +354,41 @@ conhecidas: `docs/qualidade.md`.
   `validSlots` usa `concat` para repetir a lista e evitar um teste de tamanho por slot.
 - Deploy: `--only functions:purgeOldHistory` → `--only firestore:rules` → APK. Sem a
   function nada é apagado; as rules novas só adicionam validação dos dois campos.
+
+## Entrada manual (balcão)
+
+- Callable `addManualEntry` (`functions/index.js`, lógica pura em
+  `functions/src/manual.js`, região us-central1) com `{queueId, name, phone?, slotId?}`.
+  Chamada só pelo app (botão "Adicionar pessoa" na AppBar do painel, dono e operador;
+  `ManualEntryService` + `add_person_dialog.dart`).
+- Autorização igual às rules do RTDB: `owners/{queueId}/ownerUid == uid` ou
+  `queues/{id}/operatorUids/{uid} == true`; senão `permission-denied`.
+- Mesma validação da `joinQueue` (nome 1–60, telefone vazio ou máscara BR),
+  `meta/status == 'open'` (pausada/fechada recusa com `failed-precondition`, igual ao
+  join), `maxWaiting` (`queue-full`) e, em fila `schedule`, `slotId` válido com
+  capacidade (`slot-required|slot-invalid|slot-passed|slot-full`). Ticket por transação
+  Admin em `tickets/{queueId}`.
+- Limites: telefone não vazio já ativo na fila (inclusive de cliente da web) →
+  `already-exists`; rate limit de 30 adições / 10 min por uid em
+  `rateLimits/{queueId}/manual-{uid}` (`resource-exhausted`, `reason: 'rate-limited'`;
+  Admin escreve sem rule, `rateLimits` é fechado a clientes); sem `maxWaiting`, teto
+  absoluto de 1000 entries `waiting`+`called` (`queue-full`). Lógica em `manual.js`.
+- A entry é criada por Admin com `manual: true`, **sem `uid` e sem `fcmToken`/`lang`**.
+  Rules: `manual` booleano permitido; o create exige `uid` **ou** `manual == true`; o
+  cliente não escreve em entry sem `uid` e `manual` é imutável para ele. Dono/operador
+  já tinham write total em `entries`.
+- `syncPublicTicket` espelha normalmente em `public/`; `onEntryJoined` ignora entries
+  manuais (não notifica quem acabou de adicionar). History/métricas não usam `uid`.
+  Sem cliente, não há `left`, push nem feedback.
+- `enforceAppCheck: false` é **fixo e deliberado** nesta callable (o app Flutter não usa
+  App Check; APK fora da Play Store não passa no Play Integrity). Diferente de
+  `ENFORCE_APP_CHECK_JOIN`/`ENFORCE_APP_CHECK_FEEDBACK`, ela ignora `ENFORCE_APP_CHECK`
+  e não tem flag; a proteção é auth + posse da fila + os limites acima.
+- Deploy: functions (`addManualEntry`, `onEntryJoined`) → rules do RTDB → APK. Rules antes
+  das functions deixaria entries manuais sem criador; o APK antigo lê entry sem `uid`
+  como `''` e não mostra o selo.
+- Limitações: duas pessoas manuais com o mesmo nome/telefone são permitidas; limite de
+  fila pode passar em uma ou duas vagas sob concorrência (como no join).
 
 ## Operadores
 

@@ -9,6 +9,7 @@ import 'package:qio_app/widgets/queue_panel/edit_queue_tile.dart';
 
 import '../helpers/fake_services.dart';
 import '../helpers/pump_app.dart';
+import '../helpers/panel_menu.dart';
 
 const tall = Size(390, 2400);
 
@@ -103,7 +104,7 @@ void main() {
       size: tall,
     );
     await tick(tester);
-    await tester.tap(find.byTooltip('Configurações da fila'));
+    await tapPanelAction(tester, 'Configurações da fila');
     await tick(tester);
     expect(find.byType(EditQueueTile), findsOneWidget);
     expect(find.byType(DuplicateQueueTile), findsOneWidget);
@@ -169,7 +170,7 @@ void main() {
       size: tall,
     );
     await tick(tester);
-    await tester.tap(find.byTooltip('Configurações da fila'));
+    await tapPanelAction(tester, 'Configurações da fila');
     await tick(tester);
     await tester.tap(find.byType(DuplicateQueueTile));
     await tick(tester);

@@ -21,6 +21,7 @@ import 'delete_service.dart';
 import 'finish_entry.dart';
 import 'join_url.dart';
 import 'mirror.dart';
+import 'waiting_count.dart';
 
 const maxQueuesPerOwner = 20;
 
@@ -531,15 +532,16 @@ class QueueService {
         .map((event) => event.snapshot.value == true);
   }
 
-  Stream<int> watchWaitingCount(String queueId) {
-    return _rtdb.ref('queues/$queueId/public').onValue.map((event) {
-      final map = event.snapshot.value as Map<dynamic, dynamic>?;
-      if (map == null) return 0;
-      return map.values
-          .where((v) => v is Map && v['status'] == EntryStatus.waiting.value)
-          .length;
-    });
-  }
+  Stream<int> watchWaitingCount(String queueId) => waitingCountStream(
+    metaCount: _rtdb
+        .ref('queues/$queueId/meta/waitingCount')
+        .onValue
+        .map((event) => event.snapshot.value),
+    publicNode: () => _rtdb
+        .ref('queues/$queueId/public')
+        .onValue
+        .map((event) => event.snapshot.value),
+  );
 
   Future<QueueEntry?> callNext(String queueId) async {
     final metaRef = _rtdb.ref('queues/$queueId/meta');

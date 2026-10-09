@@ -26,27 +26,47 @@ class QueuePanelTitle extends StatelessWidget {
       stream: queues.watchQueue(queueId),
       builder: (context, snap) {
         final status = snap.data?.status ?? QueueStatus.open;
+        final label = status.label(l10n);
+        final badgeStatus = switch (status) {
+          QueueStatus.open => QioBadgeStatus.open,
+          QueueStatus.paused => QioBadgeStatus.paused,
+          QueueStatus.closed => QioBadgeStatus.closed,
+        };
         return Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                snap.data?.name ?? queueName,
-                maxLines: 1,
-                style: context.qioText.heading3.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: context.qio.textPrimary,
-                ),
+            Text(
+              snap.data?.name ?? queueName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              softWrap: false,
+              style: context.qioText.heading3.copyWith(
+                fontWeight: FontWeight.w700,
+                color: context.qio.textPrimary,
               ),
             ),
             const SizedBox(height: 4),
-            QioBadge(
-              label: status.label(l10n),
-              status: switch (status) {
-                QueueStatus.open => QioBadgeStatus.open,
-                QueueStatus.paused => QioBadgeStatus.paused,
-                QueueStatus.closed => QioBadgeStatus.closed,
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final tight = constraints.maxWidth < 96;
+                if (tight) {
+                  return Semantics(
+                    label: label,
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: switch (status) {
+                          QueueStatus.open => context.qio.statusOpenText,
+                          QueueStatus.paused => context.qio.statusPausedText,
+                          QueueStatus.closed => context.qio.statusClosedText,
+                        },
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  );
+                }
+                return QioBadge(label: label, status: badgeStatus);
               },
             ),
           ],
