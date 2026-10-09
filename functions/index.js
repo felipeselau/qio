@@ -27,7 +27,7 @@ const {
   isSlotFull,
 } = require('./src/slots');
 const { shouldRenotify } =require('./src/ticket');
-const { applyEntryChange, reconcileWaitingCounts, mapLimit } = require('./src/waiting');
+const { applyEntryChange, reconcileWaitingCounts } = require('./src/waiting');
 const { planScheduleChange } = require('./src/schedule');
 const {
   normalizeExpiry,

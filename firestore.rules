@@ -116,7 +116,8 @@ service cloud.firestore {
         && !changed.hasAny(['alertState', 'deleting', 'ownerId'])
         && (!('mode' in changed) || d.get('mode', null) in ['queue', 'schedule'])
         && (!('slots' in changed) || validSlots(d.get('slots', null)))
-        && (!('alerts' in changed) || validAlerts(d.get('alerts', null)));
+        && (!('alerts' in changed) || validAlerts(d.get('alerts', null)))
+        && (!('expiry' in changed) || d.get('expiry', null) is map);
     }
 
     function validRetentionDays(v) {
@@ -182,6 +183,7 @@ service cloud.firestore {
         && !('deleting' in request.resource.data)
         && queueInfoOkOnCreate(request.resource.data)
         && privacyOkOnCreate(request.resource.data)
+        && (!('expiry' in request.resource.data) || request.resource.data.expiry is map)
         && scheduleModeOk(request.resource.data);
       allow update: if request.auth != null
         && resource.data.ownerId == request.auth.uid
