@@ -17,7 +17,7 @@ describe('callable resolveSlug (emulador)', () => {
     const app = initializeApp({ projectId: 'demo-qio', apiKey: 'fake-key' }, `slug-${apps.length}`);
     apps.push(app);
     const auth = getAuth(app);
-    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+    connectAuthEmulator(auth, `http://localhost:${process.env.AUTH_EMULATOR_PORT ?? 9099}`, { disableWarnings: true });
     const cred = await signInAnonymously(auth);
     const functions = getFunctions(app);
     connectFunctionsEmulator(functions, FUNCTIONS_HOST, Number(FUNCTIONS_PORT));
