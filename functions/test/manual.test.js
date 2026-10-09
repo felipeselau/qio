@@ -76,6 +76,7 @@ const {
   manualRateKey,
   nextManualRateState,
   isActiveCeilingReached,
+  resolveActiveCeiling,
 } = require('../src/manual');
 const { publicTicketFor, shouldRenotify } = require('../src/ticket');
 const { pickNextWaiting, advancedFromWaiting } = require('../src/webpush');
@@ -109,6 +110,17 @@ describe('teto de entries ativas', () => {
     assert.equal(isActiveCeilingReached(0, MAX_ACTIVE_ENTRIES), true);
     assert.equal(isActiveCeilingReached(undefined, MAX_ACTIVE_ENTRIES - 1), false);
     assert.equal(isActiveCeilingReached(50, 5000), false);
+  });
+
+  it('override só vale no emulator e só para baixo', () => {
+    const emu = { FUNCTIONS_EMULATOR: 'true' };
+    assert.equal(resolveActiveCeiling({}), MAX_ACTIVE_ENTRIES);
+    assert.equal(resolveActiveCeiling({ MANUAL_MAX_ACTIVE_ENTRIES: '40' }), MAX_ACTIVE_ENTRIES);
+    assert.equal(resolveActiveCeiling({ ...emu, MANUAL_MAX_ACTIVE_ENTRIES: '40' }), 40);
+    assert.equal(resolveActiveCeiling({ ...emu, MANUAL_MAX_ACTIVE_ENTRIES: '5000' }), MAX_ACTIVE_ENTRIES);
+    assert.equal(resolveActiveCeiling({ ...emu, MANUAL_MAX_ACTIVE_ENTRIES: '0' }), MAX_ACTIVE_ENTRIES);
+    assert.equal(resolveActiveCeiling({ ...emu, MANUAL_MAX_ACTIVE_ENTRIES: 'x' }), MAX_ACTIVE_ENTRIES);
+    assert.equal(resolveActiveCeiling(emu), MAX_ACTIVE_ENTRIES);
   });
 });
 
