@@ -1718,4 +1718,73 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get termsOfUse => 'Terms of use';
+
+  @override
+  String get posterSize => 'POSTER SIZE';
+
+  @override
+  String get posterSizeA4 => 'A4';
+
+  @override
+  String get posterSizeA5 => 'A5';
+
+  @override
+  String get posterSizeTable => 'Table card (10×15 cm)';
+
+  @override
+  String get posterHeadlineLabel => 'Poster headline (optional)';
+
+  @override
+  String get posterHeadlineHint =>
+      'E.g. Get your spot without standing in line';
+
+  @override
+  String get posterHeadlineInvalid => 'Use up to 60 characters.';
+
+  @override
+  String get sharePdf => 'Share PDF';
+
+  @override
+  String get sharePdfError => 'Could not share the PDF.';
+
+  @override
+  String posterPreviewSemantics(String size) {
+    return 'Poster preview, $size';
+  }
+
+  @override
+  String get slugTitle => 'Short link';
+
+  @override
+  String get slugNone => 'Not set';
+
+  @override
+  String get slugRemove => 'Remove short link';
+
+  @override
+  String get slugDialogLabel => 'Link name';
+
+  @override
+  String get slugDialogHint => 'my-shop';
+
+  @override
+  String slugPreview(String url) {
+    return 'Link: $url';
+  }
+
+  @override
+  String get slugInvalid =>
+      'Use 3 to 40 lowercase letters, numbers or hyphens, with no hyphen at the start or end.';
+
+  @override
+  String get slugReservedError => 'That name is reserved. Choose another.';
+
+  @override
+  String get slugTakenError => 'That link is already in use. Choose another.';
+
+  @override
+  String get slugSaved => 'Short link saved';
+
+  @override
+  String get slugRemoved => 'Short link removed';
 }

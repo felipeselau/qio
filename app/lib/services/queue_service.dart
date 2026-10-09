@@ -29,6 +29,10 @@ class QueueLimitReached implements Exception {
   const QueueLimitReached();
 }
 
+class SlugTaken implements Exception {
+  const SlugTaken();
+}
+
 class QueueService {
   QueueService._();
   static final QueueService instance = QueueService._();
@@ -305,6 +309,41 @@ class QueueService {
     await _rtdb.ref('queues/$queueId/meta').update({
       'logoUrl': null,
       'updatedAt': ServerValue.timestamp,
+    });
+  }
+
+  Future<void> setSlug(
+    String queueId, {
+    String? currentSlug,
+    String? newSlug,
+  }) async {
+    if (newSlug == currentSlug) return;
+    final slugs = _firestore.collection('queueSlugs');
+    final batch = _firestore.batch();
+    if (newSlug != null) {
+      batch.set(slugs.doc(newSlug), {
+        'queueId': queueId,
+        'ownerId': _uid,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    }
+    if (currentSlug != null) batch.delete(slugs.doc(currentSlug));
+    batch.update(_firestore.collection('queues').doc(queueId), {
+      'slug': newSlug ?? FieldValue.delete(),
+    });
+    try {
+      await batch.commit();
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied' && newSlug != null) {
+        throw const SlugTaken();
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> updatePosterTitle(String queueId, String? title) async {
+    await _firestore.collection('queues').doc(queueId).update({
+      'posterTitle': title ?? FieldValue.delete(),
     });
   }
 
