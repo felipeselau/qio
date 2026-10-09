@@ -63,6 +63,8 @@ class Queue {
     this.alerts,
     this.mode = QueueMode.queue,
     this.slots = const [],
+    this.anonymizePhone = false,
+    this.retentionDays,
   });
 
   final String id;
@@ -84,6 +86,8 @@ class Queue {
   final AlertsConfig? alerts;
   final QueueMode mode;
   final List<QueueSlot> slots;
+  final bool anonymizePhone;
+  final int? retentionDays;
 
   bool get hasLimit => maxWaiting > 0;
 
@@ -114,6 +118,8 @@ class Queue {
       alerts: AlertsConfig.fromMap(data['alerts']),
       mode: QueueModeX.fromValue(data['mode'] as String?),
       slots: QueueSlot.listFromRaw(data['slots']),
+      anonymizePhone: data['anonymizePhone'] == true,
+      retentionDays: (data['retentionDays'] as num?)?.toInt(),
     );
   }
 

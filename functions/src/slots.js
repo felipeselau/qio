@@ -1,6 +1,6 @@
 const { startOfDaySaoPaulo } = require('./alerts');
 
-const MAX_SLOTS = 24;
+const MAX_SLOTS = 20;
 const MAX_SLOT_CAPACITY = 50;
 const SLOT_GRACE_MS = 15 * 60 * 1000;
 const MINUTE_MS = 60 * 1000;

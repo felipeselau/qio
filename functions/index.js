@@ -29,6 +29,7 @@ const {
 const { shouldRenotify } =require('./src/ticket');
 const { applyEntryChange, reconcileWaitingCounts } = require('./src/waiting');
 const { planScheduleChange } = require('./src/schedule');
+const { purgeAllRetention } = require('./src/retention');
 const {
   buildNewEntryMessage,
   recipientUids,
@@ -688,7 +689,11 @@ async function archiveLeftEntry(queueId, entryId, entry) {
   try {
     await firestore
       .doc(`queues/${queueId}/history/${entryId}`)
-      .create(historyFromLeftEntry(entry, Date.now()));
+      .create(
+        historyFromLeftEntry(entry, Date.now(), {
+          anonymizePhone: queueDoc.data()?.anonymizePhone === true,
+        }),
+      );
   } catch (err) {
     if (err?.code !== 6) throw err;
   }
@@ -770,6 +775,30 @@ exports.applyQueueSchedules = onSchedule(
         logError('applyQueueSchedules failed', err, { queueId: doc.id });
       }
     }
+  },
+);
+
+exports.purgeOldHistory = onSchedule(
+  {
+    schedule: 'every day 03:30',
+    region: 'us-central1',
+    timeZone: 'America/Sao_Paulo',
+    timeoutSeconds: 540,
+  },
+  async () => {
+    const firestore = getFirestore();
+    const snap = await firestore
+      .collection('queues')
+      .select('retentionDays', 'deleting')
+      .get();
+    const totals = await purgeAllRetention(
+      firestore,
+      snap.docs,
+      Date.now(),
+      (ms) => Timestamp.fromMillis(ms),
+      { onError: (err, ctx) => logError('purgeOldHistory failed', err, ctx) },
+    );
+    logger.info('purgeOldHistory', { event: 'purgeOldHistory', ...totals });
   },
 );
 

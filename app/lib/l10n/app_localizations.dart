@@ -3141,6 +3141,48 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Termos de uso'**
   String get termsOfUse;
+
+  /// No description provided for @exportCsvWithPhone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Exportar CSV com telefone'**
+  String get exportCsvWithPhone;
+
+  /// No description provided for @exportPdfWithPhone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Exportar PDF com telefone'**
+  String get exportPdfWithPhone;
+
+  /// No description provided for @exportPhoneTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Incluir telefone?'**
+  String get exportPhoneTitle;
+
+  /// No description provided for @exportPhoneWarning.
+  ///
+  /// In pt, this message translates to:
+  /// **'O telefone é dado pessoal (LGPD). Por padrão a exportação não o inclui. Inclua apenas se precisar e proteja o arquivo.'**
+  String get exportPhoneWarning;
+
+  /// No description provided for @exportPhoneConfirm.
+  ///
+  /// In pt, this message translates to:
+  /// **'Incluir telefone'**
+  String get exportPhoneConfirm;
+
+  /// No description provided for @anonymizePhoneTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não guardar telefone no histórico'**
+  String get anonymizePhoneTitle;
+
+  /// No description provided for @anonymizePhoneHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ao concluir um atendimento, o telefone não é salvo no histórico.'**
+  String get anonymizePhoneHint;
 }
 
 class _AppLocalizationsDelegate

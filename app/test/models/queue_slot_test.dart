@@ -62,7 +62,7 @@ void main() {
       expect(validateSlots(QueueMode.schedule, [slot('a', '09:00')]), isNull);
     });
 
-    test('rejects duplicates, invalid values and more than 24', () {
+    test('rejects duplicates, invalid values and more than 20', () {
       expect(
         validateSlots(QueueMode.schedule, [
           slot('a', '09:00'),
@@ -83,11 +83,11 @@ void main() {
         SlotsError.invalid,
       );
       final many = [
-        for (var i = 0; i < 25; i++)
+        for (var i = 0; i < 21; i++)
           slot('s$i', '${(i % 24).toString().padLeft(2, '0')}:00'),
       ];
       expect(validateSlots(QueueMode.schedule, many), SlotsError.tooMany);
-      expect(validateSlots(QueueMode.schedule, many.take(24).toList()), isNull);
+      expect(validateSlots(QueueMode.schedule, many.take(20).toList()), isNull);
     });
   });
 
