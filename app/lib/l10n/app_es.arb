@@ -560,5 +560,5 @@
   "@expiryAfterHours": {"placeholders": {"hours": {"type": "int"}}},
   "expiryClearOnClose": "Vaciar la fila al cerrar por horario",
   "expiryResetTicketDaily": "Reiniciar el número cada día",
-  "expiryResetTicketDailyHint": "Solo reinicia cuando no hay nadie en la fila."
+  "expiryResetTicketDailyHint": "Se reinicia la primera vez que la fila queda vacía cada día nuevo."
 }

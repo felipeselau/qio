@@ -37,7 +37,8 @@ class ExpiryConfig {
 
   static ExpiryConfig? fromMap(Object? raw) {
     if (raw is! Map) return null;
-    final hours = (raw['hours'] as num?)?.toInt();
+    final rawHours = raw['hours'];
+    final hours = rawHours is num ? rawHours.toInt() : null;
     return ExpiryConfig(
       enabled: raw['enabled'] == true,
       hours: hours != null && hours >= 1 && hours <= 48 ? hours : defaultHours,

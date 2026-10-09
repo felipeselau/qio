@@ -1763,5 +1763,5 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get expiryResetTicketDailyHint =>
-      'Só zera quando não há ninguém na fila.';
+      'Zera na primeira vez em que a fila ficar vazia a cada novo dia.';
 }

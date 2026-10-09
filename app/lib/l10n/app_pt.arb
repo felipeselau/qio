@@ -608,5 +608,5 @@
   "@expiryAfterHours": {"placeholders": {"hours": {"type": "int"}}},
   "expiryClearOnClose": "Limpar a fila ao fechar por horário",
   "expiryResetTicketDaily": "Reiniciar a senha todo dia",
-  "expiryResetTicketDailyHint": "Só zera quando não há ninguém na fila."
+  "expiryResetTicketDailyHint": "Zera na primeira vez em que a fila ficar vazia a cada novo dia."
 }

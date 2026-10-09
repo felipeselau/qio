@@ -14,6 +14,7 @@ class HistoryEntry {
     this.operatorId,
     this.recalls = 0,
     this.skips = 0,
+    this.reason,
   });
 
   final String id;
@@ -28,6 +29,7 @@ class HistoryEntry {
   final String? operatorId;
   final int recalls;
   final int skips;
+  final String? reason;
 
   String? get attendantId {
     if (calledBy != null && calledBy!.isNotEmpty) return calledBy;
@@ -38,6 +40,8 @@ class HistoryEntry {
   bool get isServed => result == 'served';
   bool get isNoShow => result == 'no_show';
   bool get isLeft => result == 'left';
+  bool get isSystemRemoved =>
+      isLeft && (reason == 'expired' || reason == 'closed');
 
   DateTime get referenceTime => finishedAt ?? joinedAt;
 
@@ -73,6 +77,7 @@ class HistoryEntry {
       operatorId: data['operatorId'] as String?,
       recalls: _count(data['recalls']),
       skips: _count(data['skips']),
+      reason: data['reason'] is String ? data['reason'] as String : null,
     );
   }
 }

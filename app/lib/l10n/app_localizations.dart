@@ -3217,7 +3217,7 @@ abstract class AppLocalizations {
   /// No description provided for @expiryResetTicketDailyHint.
   ///
   /// In pt, this message translates to:
-  /// **'Só zera quando não há ninguém na fila.'**
+  /// **'Zera na primeira vez em que a fila ficar vazia a cada novo dia.'**
   String get expiryResetTicketDailyHint;
 }
 

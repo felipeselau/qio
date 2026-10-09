@@ -7,6 +7,7 @@ const {
   dayKey,
   planTicketReset,
   expireQueue,
+  maintainQueue,
   clearWaitingOnClose,
   runTicketReset,
 } = require('../src/expire');
@@ -15,7 +16,7 @@ const { historyFromLeftEntry } = require('../src/history');
 const H = 60 * 60 * 1000;
 const now = Date.UTC(2026, 9, 9, 15, 0, 0);
 
-function fakeDeps(initial, { anonymizePhone = false } = {}) {
+function fakeDeps(initial, { anonymizePhone = false, status = 'open' } = {}) {
   const entries = structuredClone(initial);
   const publicMap = Object.fromEntries(Object.keys(entries).map((id) => [id, true]));
   const history = {};
@@ -38,6 +39,10 @@ function fakeDeps(initial, { anonymizePhone = false } = {}) {
         if (history[id]) return;
         history[id] = historyFromLeftEntry(entry, now, { anonymizePhone, reason });
       },
+      undoArchive: async (q, id, reason) => {
+        if (history[id]?.reason === reason) delete history[id];
+      },
+      readStatus: async () => status,
       removeIfStale: (q, id, n, hours) => removeWhere(id, (c) => isStale(c, n, hours)),
       removeIfWaiting: (q, id) => removeWhere(id, (c) => c.status === 'waiting'),
       removePublic: async (q, id) => {
@@ -127,6 +132,8 @@ describe('runTicketReset', () => {
   it('zera e marca, depois fica idempotente', async () => {
     const state = { resets: 0, day: '2026-10-08' };
     const deps = {
+      readStatus: async () => 'open',
+      readEntries: async () => null,
       resetTicket: async () => {
         state.resets += 1;
       },
@@ -138,6 +145,45 @@ describe('runTicketReset', () => {
     await runTicketReset({ queueId: 'q', lastDay: state.day, now, activeCount: 0, deps });
     assert.equal(state.resets, 1);
     assert.equal(state.day, '2026-10-09');
+  });
+
+  it('não zera se a releitura achar entry ativa', async () => {
+    let resets = 0;
+    let marks = 0;
+    const deps = {
+      readStatus: async () => 'open',
+      readEntries: async () => ({ a: { status: 'waiting' } }),
+      resetTicket: async () => (resets += 1),
+      markResetDay: async () => (marks += 1),
+    };
+    const r = await runTicketReset({ queueId: 'q', lastDay: '2026-10-08', now, activeCount: 0, deps });
+    assert.equal(r.action, 'none');
+    assert.equal(resets, 0);
+    assert.equal(marks, 0);
+  });
+
+  it('não zera se a fila não existe no RTDB', async () => {
+    let resets = 0;
+    const deps = {
+      readStatus: async () => null,
+      readEntries: async () => null,
+      resetTicket: async () => (resets += 1),
+      markResetDay: async () => {},
+    };
+    await runTicketReset({ queueId: 'q', lastDay: '2026-10-08', now, activeCount: 0, deps });
+    assert.equal(resets, 0);
+  });
+
+  it('zera quando a releitura está vazia', async () => {
+    let resets = 0;
+    const deps = {
+      readStatus: async () => 'closed',
+      readEntries: async () => null,
+      resetTicket: async () => (resets += 1),
+      markResetDay: async () => {},
+    };
+    await runTicketReset({ queueId: 'q', lastDay: '2026-10-08', now, activeCount: 0, deps });
+    assert.equal(resets, 1);
   });
 
   it('não zera com entries ativas', async () => {
@@ -193,6 +239,20 @@ describe('expireQueue', () => {
     const r = await expireQueue({ queueId: 'q', config: { hours: 12 }, now, deps: f.deps });
     assert.equal(r.expired, 0);
     assert.ok(f.entries.old);
+    assert.equal(f.history.old, undefined);
+  });
+
+  it('undo não apaga history de outra origem', async () => {
+    const f = fakeDeps(base);
+    f.history.old = { result: 'left' };
+    const original = f.deps.readEntries;
+    f.deps.readEntries = async () => {
+      const snapshot = await original();
+      f.entries.old.status = 'called';
+      return snapshot;
+    };
+    await expireQueue({ queueId: 'q', config: { hours: 12 }, now, deps: f.deps });
+    assert.deepEqual(f.history.old, { result: 'left' });
   });
 
   it('processa em lotes e isola erros', async () => {
@@ -237,6 +297,38 @@ describe('clearWaitingOnClose', () => {
     assert.equal(f.history.a.reason, 'closed');
     assert.deepEqual(Object.keys(f.entries), ['b']);
     assert.deepEqual(Object.keys(f.publicMap), ['b']);
+  });
+});
+
+describe('maintainQueue', () => {
+  const waiting = { status: 'waiting', ticket: 1, name: 'A', phone: '', joinedAt: now - H };
+  const called = { status: 'called', ticket: 2, name: 'B', phone: '', joinedAt: now - H };
+
+  it('fila fechada com clearOnClose limpa waiting e preserva called', async () => {
+    const f = fakeDeps({ a: waiting, b: called }, { status: 'closed' });
+    const r = await maintainQueue({
+      queueId: 'q',
+      config: { hours: 12, clearOnClose: true },
+      now,
+      deps: f.deps,
+    });
+    assert.equal(r.cleared, 1);
+    assert.equal(r.remaining, 1);
+    assert.equal(f.history.a.reason, 'closed');
+    const again = await maintainQueue({
+      queueId: 'q',
+      config: { hours: 12, clearOnClose: true },
+      now,
+      deps: f.deps,
+    });
+    assert.equal(again.cleared, 0);
+  });
+
+  it('fila aberta ou sem clearOnClose não limpa', async () => {
+    const open = fakeDeps({ a: waiting });
+    assert.equal((await maintainQueue({ queueId: 'q', config: { hours: 12, clearOnClose: true }, now, deps: open.deps })).cleared, 0);
+    const closed = fakeDeps({ a: waiting }, { status: 'closed' });
+    assert.equal((await maintainQueue({ queueId: 'q', config: { hours: 12, clearOnClose: false }, now, deps: closed.deps })).cleared, 0);
   });
 });
 

@@ -1767,5 +1767,5 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get expiryResetTicketDailyHint =>
-      'Solo reinicia cuando no hay nadie en la fila.';
+      'Se reinicia la primera vez que la fila queda vacía cada día nuevo.';
 }

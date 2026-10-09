@@ -39,7 +39,7 @@ class _ExpiryTileState extends State<ExpiryTile> {
         widget.queueId,
         next,
       );
-    } on Exception {
+    } catch (_) {
       messenger.showSnackBar(
         SnackBar(
           content: Text(l10n.genericActionError),
@@ -55,9 +55,8 @@ class _ExpiryTileState extends State<ExpiryTile> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final config = _current;
-    final hours = ExpiryConfig.hourOptions.contains(config.hours)
-        ? config.hours
-        : ExpiryConfig.defaultHours;
+    final hours = config.hours;
+    final options = {...ExpiryConfig.hourOptions, hours}.toList()..sort();
     return QioCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -105,7 +104,7 @@ class _ExpiryTileState extends State<ExpiryTile> {
                   key: const ValueKey('expiry-hours'),
                   value: hours,
                   items: [
-                    for (final h in ExpiryConfig.hourOptions)
+                    for (final h in options)
                       DropdownMenuItem(value: h, child: Text('$h h')),
                   ],
                   onChanged: _busy

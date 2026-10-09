@@ -560,5 +560,5 @@
   "@expiryAfterHours": {"placeholders": {"hours": {"type": "int"}}},
   "expiryClearOnClose": "Clear the queue when closing on schedule",
   "expiryResetTicketDaily": "Reset the ticket number every day",
-  "expiryResetTicketDailyHint": "Only resets when nobody is in the queue."
+  "expiryResetTicketDailyHint": "Resets the first time the queue is empty each new day."
 }

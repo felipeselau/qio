@@ -48,6 +48,27 @@ void main() {
     expect(queues.calls, contains('expiry:q1:true:24:false:true'));
   });
 
+  testWidgets('shows an hour outside the preset list', (tester) async {
+    await pumpApp(
+      tester,
+      const Scaffold(
+        body: SingleChildScrollView(
+          child: ExpiryTile(
+            queueId: 'q1',
+            config: ExpiryConfig(enabled: true, hours: 5),
+          ),
+        ),
+      ),
+    );
+    expect(find.text('Expirar após 5 h'), findsOneWidget);
+  });
+
+  test('fromMap tolerates wrong types', () {
+    final c = ExpiryConfig.fromMap({'enabled': true, 'hours': '6'})!;
+    expect(c.hours, 12);
+    expect(ExpiryConfig.fromMap('x'), isNull);
+  });
+
   test('Queue.fromDoc reads expiry and clamps invalid hours', () {
     final q = Queue.fromDoc('q1', {
       'ownerId': 'u',

@@ -72,7 +72,10 @@ async function archiveEntries({ queueId, candidates, reason, removeEntry, deps, 
       try {
         await deps.archive(queueId, entryId, entry, reason);
         const removed = await removeEntry(queueId, entryId);
-        if (!removed) return false;
+        if (!removed) {
+          if (deps.undoArchive) await deps.undoArchive(queueId, entryId, reason);
+          return false;
+        }
         await deps.removePublic(queueId, entryId);
         return true;
       } catch (err) {
@@ -113,10 +116,27 @@ async function clearWaitingOnClose({ queueId, deps, batchSize }) {
   });
 }
 
+async function maintainQueue({ queueId, config, now, deps, batchSize }) {
+  const result = await expireQueue({ queueId, config, now, deps, batchSize });
+  let { remaining } = result;
+  let cleared = 0;
+  if (config.clearOnClose && (await deps.readStatus(queueId)) === 'closed') {
+    cleared = await clearWaitingOnClose({ queueId, deps, batchSize });
+    remaining -= cleared;
+  }
+  return { expired: result.expired, cleared, remaining };
+}
+
 async function runTicketReset({ queueId, lastDay, now, activeCount, deps }) {
   const plan = planTicketReset({ lastDay, now, activeCount });
   if (plan.action === 'none') return plan;
-  if (plan.action === 'reset') await deps.resetTicket(queueId);
+  if (plan.action === 'reset') {
+    const status = await deps.readStatus(queueId);
+    if (status === null || status === undefined) return { action: 'none', day: plan.day };
+    const fresh = entriesOf(await deps.readEntries(queueId));
+    if (fresh.some(([, e]) => isActive(e))) return { action: 'none', day: plan.day };
+    await deps.resetTicket(queueId);
+  }
   await deps.markResetDay(queueId, plan.day);
   return plan;
 }
@@ -133,6 +153,7 @@ module.exports = {
   planTicketReset,
   archiveEntries,
   expireQueue,
+  maintainQueue,
   clearWaitingOnClose,
   runTicketReset,
 };

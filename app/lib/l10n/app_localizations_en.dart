@@ -1762,5 +1762,5 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get expiryResetTicketDailyHint =>
-      'Only resets when nobody is in the queue.';
+      'Resets the first time the queue is empty each new day.';
 }

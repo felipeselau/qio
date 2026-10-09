@@ -31,7 +31,7 @@ const { applyEntryChange, reconcileWaitingCounts } = require('./src/waiting');
 const { planScheduleChange } = require('./src/schedule');
 const {
   normalizeExpiry,
-  expireQueue,
+  maintainQueue,
   clearWaitingOnClose,
   runTicketReset,
   isStale,
@@ -741,7 +741,12 @@ exports.updateServiceEstimate = onDocumentCreated(
 );
 
 exports.applyQueueSchedules = onSchedule(
-  { schedule: 'every 5 minutes', region: 'us-central1', timeZone: 'UTC' },
+  {
+    schedule: 'every 5 minutes',
+    region: 'us-central1',
+    timeZone: 'UTC',
+    timeoutSeconds: 300,
+  },
   async () => {
     const firestore = getFirestore();
     const db = getDatabase();
@@ -820,6 +825,13 @@ function expireDeps(queueId, anonymizePhone) {
       removeWhere(entryId, (current) => isStale(current, now, hours)),
     removeIfWaiting: (id, entryId) =>
       removeWhere(entryId, (current) => current.status === 'waiting'),
+    undoArchive: async (id, entryId, reason) => {
+      const ref = getFirestore().doc(`queues/${id}/history/${entryId}`);
+      const snap = await ref.get();
+      if (snap.exists && snap.data()?.reason === reason) await ref.delete();
+    },
+    readStatus: async (id) =>
+      (await db.ref(`queues/${id}/meta/status`).once('value')).val(),
     removePublic: (id, entryId) => db.ref(`queues/${id}/public/${entryId}`).remove(),
     resetTicket: (id) => db.ref(`tickets/${id}`).remove(),
     markResetDay: (id, day) =>
@@ -848,7 +860,7 @@ exports.expireStaleEntries = onSchedule(
         const config = normalizeExpiry(data.expiry);
         if (!config || data.deleting) return;
         const deps = expireDeps(doc.id, data.anonymizePhone === true);
-        const result = await expireQueue({ queueId: doc.id, config, now, deps });
+        const result = await maintainQueue({ queueId: doc.id, config, now, deps });
         expired += result.expired;
         if (config.resetTicketDaily) {
           await runTicketReset({

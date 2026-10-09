@@ -488,14 +488,17 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   remoção, a transação aborta mas o doc `history` já criado fica (janela de ms).
 - "Limpar ao fechar": quando `applyQueueSchedules` fecha a fila por horário e
   `clearOnClose` está ligado, arquiva as `waiting` restantes com `reason: 'closed'`
-  (`called` fica). Só dispara na virada de fechamento por horário, não em fechamento manual.
-  Se a limpeza falhar, não há retry (a virada já foi gravada); as entries seguem sujeitas à
-  expiração por horas.
+  (`called` fica). Além disso, `expireStaleEntries` repete a limpeza (idempotente) em toda
+  fila com `meta/status == 'closed'` (inclusive fechamento manual) e `clearOnClose`, o que
+  cobre falhas da virada. Se a fila reabrir antes da próxima rodada, nada é limpo.
+- Se a releitura mostra entry ativa ou a fila sumiu do RTDB, o reinício da senha é adiado.
+- App: `HistoryEntry.reason`; `left` com `reason` expired/closed não entra em
+  "Desistiram" (`left`) das métricas, mas segue em `total` e na lista (rótulo "Desistiu").
 - Reinício diário da senha: em `expireStaleEntries`, se o dia em `America/Sao_Paulo` mudou
   em relação a `queues/{id}.lastTicketResetDay` (escrito via Admin) e a fila não tem
   `waiting`/`called` (depois da expiração), remove `tickets/{id}` e grava o dia. Primeira
   execução só marca o dia. Com entries ativas adia até a fila esvaziar (pode zerar no meio
-  do dia seguinte). Sem transação entre o reset e `joinQueue`: um join na mesma janela de
+  do dia seguinte). Sem transação entre o reset e `joinQueue` (há releitura de `entries`/`meta/status` antes de remover): um join na mesma janela de
   ms pode receber a senha antiga + 1.
 - Web: a entry some do RTDB sem passar por `called`, então `derivePhase` cai em `join`
   (não há `feedback`/`left`); o cliente não sabe o motivo e não há mensagem "senha expirou"
