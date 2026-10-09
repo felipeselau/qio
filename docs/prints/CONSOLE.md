@@ -109,7 +109,7 @@ Estrutura em uso:
 
 **Nenhuma função deployada** (`functions:list` → vazio).
 
-`functions/index.js` define `onEntryCalled` (trigger RTDB → push FCM), mas:
+`functions/` define `syncPublicTicket` (roteador RTDB de `entries`, que também envia o push FCM; antes `onEntryCalled`), mas:
 - Functions v2 exige plano **Blaze**; o projeto está no **Spark**.
 - Consequência: **push notification quando a página do cliente está fechada
   não funciona em produção hoje.** Só funciona o alerta em foreground

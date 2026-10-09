@@ -56,7 +56,7 @@ sequenceDiagram
   participant J as joinQueue
   participant R as RTDB
   participant S as syncPublicTicket
-  participant P as onEntryJoined
+  participant P as syncPublicTicket (passo joined)
 
   C->>A: login anônimo (uid)
   C->>J: queueId, name, phone, lang, slotId?
@@ -108,9 +108,9 @@ sequenceDiagram
   actor O as Dono ou operador (app)
   participant Q as QueueService
   participant R as RTDB
-  participant T1 as syncPublicTicket
-  participant T2 as onEntryCalled
-  participant T3 as onQueueAdvanced
+  participant T1 as syncPublicTicket (passo sync)
+  participant T2 as syncPublicTicket (passo called)
+  participant T3 as syncPublicTicket (passo advanced)
   actor C as Cliente (web)
 
   O->>Q: Chamar próximo
@@ -153,7 +153,7 @@ sequenceDiagram
   participant Q as QueueService
   participant R as RTDB
   participant F as Firestore
-  participant T1 as syncPublicTicket
+  participant T1 as syncPublicTicket (passo sync)
   participant T4 as updateServiceEstimate
 
   O->>Q: Marcar atendido ou não compareceu

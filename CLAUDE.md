@@ -252,7 +252,7 @@ modelos; ainda sem dados): `docs/piloto/`.
   `entries/{id}/order = now` e `skips++` (a senha não muda). `public/{id}` agora é
   `{ticket, status, order}` (`functions/src/ticket.js`); o web calcula a posição
   com `positionInQueue` e cai para a comparação por senha se `order` faltar.
-- "Chamar de novo" grava `recalledAt = now` e `recalls++`; `onEntryCalled`
+- "Chamar de novo" grava `recalledAt = now` e `recalls++`; `syncPublicTicket` (passo `called`)
   reenvia o push quando `recalledAt` muda (`shouldRenotify`) e o web repete
   som/vibração. "Chamar agora" reaproveita `_claimEntry`.
 - Só dono/operador escrevem `order/recalls/skips/recalledAt` (o cliente tem esses
@@ -425,14 +425,14 @@ modelos; ainda sem dados): `docs/piloto/`.
   Rules: `manual` booleano permitido; o create exige `uid` **ou** `manual == true`; o
   cliente não escreve em entry sem `uid` e `manual` é imutável para ele. Dono/operador
   já tinham write total em `entries`.
-- `syncPublicTicket` espelha normalmente em `public/`; `onEntryJoined` ignora entries
+- `syncPublicTicket` espelha normalmente em `public/`; o passo `joined` do `syncPublicTicket` ignora entries
   manuais (não notifica quem acabou de adicionar). History/métricas não usam `uid`.
   Sem cliente, não há `left`, push nem feedback.
 - `enforceAppCheck: false` é **fixo e deliberado** nesta callable (o app Flutter não usa
   App Check; APK fora da Play Store não passa no Play Integrity). Diferente de
   `ENFORCE_APP_CHECK_JOIN`/`ENFORCE_APP_CHECK_FEEDBACK`, ela ignora `ENFORCE_APP_CHECK`
   e não tem flag; a proteção é auth + posse da fila + os limites acima.
-- Deploy: functions (`addManualEntry`, `onEntryJoined`) → rules do RTDB → APK. Rules antes
+- Deploy: functions (`addManualEntry`, `syncPublicTicket`) → rules do RTDB → APK. Rules antes
   das functions deixaria entries manuais sem criador; o APK antigo lê entry sem `uid`
   como `''` e não mostra o selo.
 - Limitações: duas pessoas manuais com o mesmo nome/telefone são permitidas; limite de
@@ -578,6 +578,62 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   busca); a forma só-dígitos é só tolerância a legado. Detalhes em `docs/privacidade.md`.
 - Passo a passo em `docs/privacidade.md`. Deploy: functions → rules do Firestore → APK.
 
+## Estrutura das functions e roteador de entries
+
+- `functions/index.js` é só ponto de registro: `initializeApp()` e `exports.X =
+  require('./src/handlers/<dominio>').X`. Uma função nova entra com um arquivo próprio em
+  `src/handlers/` e **uma linha** no `index.js` (sem mexer nos outros handlers).
+- Handlers por domínio (`functions/src/handlers/`): `join`, `manual`, `feedback`, `slug`,
+  `delete` (`deleteQueue`/`deleteAccount`), `dsr`, `entries` (`syncPublicTicket` + `reconcileWaitingCounts`),
+  `push` (envio de FCM de entry, sem export de função), `schedule`, `alerts`, `expire`,
+  `openwatch`, `estimate`, `history` (`purgeOldHistory`). `_shared.js` guarda o que é comum
+  (`findActive`, `resolveSlot`, `archiveLeftEntry`, `expireDeps`). Lógica pura continua em
+  `functions/src/*.js`; nomes exportados, região, timeout, memória, `retry`,
+  `guarded`/`isEnforced` e mensagens de `logError` não mudaram.
+- **Roteador de entries**: `syncPublicTicket` (`handlers/entries.js`) é o **único** trigger
+  em `queues/{queueId}/entries/{entryId}` (RTDB `onValueWritten`). Lê before/after uma vez e
+  `routeEntryWrite` (`src/entryRouter.js`, puro e testado) despacha em paralelo
+  (`Promise.allSettled`; a falha de um passo não impede os outros e é repropagada):
+  `sync` (`applyEntryChange`, sempre), `joined` (create; era `onEntryJoined`), `called`
+  (`shouldRenotify`; era `onEntryCalled`) e `advanced` (`advancedFromWaiting`; era
+  `onQueueAdvanced`). Os passos de push estão em `handlers/push.js` e mantêm os mesmos
+  guards e logs. `onEntryJoined`, `onEntryCalled` e `onQueueAdvanced` **deixaram de ser
+  exports**: mencionados neste guia e em `docs/` como nome de lógica, não de função deployada.
+- **NUNCA ligar `retry: true` em `syncPublicTicket`**: a reentrega repetiria os passos `called` e
+  `joined` (push duplicado; `joined` não tem dedupe) e reaplicaria `sync`. O roteador relança o
+  erro de um passo só para ele ficar visível no log.
+- Invocações por escrita em `entries/{id}`: **4 → 1** (contagem de triggers registrados:
+  `test/exports.test.js` falha se mais de uma função escutar o path). Cada escrita
+  de entry (join, chamada, `fcmToken`, `order`, `left`...) custava 4 invocações, a maioria
+  retornando `null` logo no início.
+- Verificação: `node functions/scripts/dump-exports.js <arquivo.json>` grava nome e `__endpoint`
+  (região, timeout, memória, trigger, retry) de cada export; compare com um dump da `main`
+  via `diff`. Dumps versionados: `functions/scripts/exports-before.main.json` (main antes da #165) e
+  `exports-after.json`. Na migração a única diferença foi a remoção das 3 funções acima.
+- **Deploy da consolidação**: `firebase deploy --only functions` com `--force` (o CLI pede
+  confirmação para apagar `onEntryCalled`, `onEntryJoined`, `onQueueAdvanced`; sem TTY o deploy
+  falha sem `--force`; `.github/scripts/deploy-target.sh` passa `--force` só no deploy real de
+  `functions`/`all-ordered`, e `--force` apaga qualquer função ausente do código). Alertas por
+  `function_name` das três antigas devem apontar para `syncPublicTicket` (mensagens `logError`
+  preservadas). Faça num único deploy: o `syncPublicTicket` novo já cobre os
+  quatro caminhos, então entre o update dele e a remoção das antigas pode haver segundos com
+  push duplicado de "É a sua vez" (o aviso "Você é o próximo" é protegido por
+  `nextNotifiedAt`). Deploy parcial `--only functions:syncPublicTicket` **não** remove as
+  antigas (duplicaria push até apagá-las com `firebase functions:delete onEntryCalled
+  onEntryJoined onQueueAdvanced --region us-central1 --force`). Rollback: `git revert` e novo
+  deploy recria as três.
+- **`minInstances: 1` em `onEntryCalled` (avaliado, não ligado)**: o cold start de Node 22 em
+  gen2 costuma ser de ~1–3 s sobre um evento RTDB que já tem latência variável de alguns
+  segundos; o push "É a sua vez" não é interativo. Custo de manter 1 instância ociosa é fixo
+  (poucos dólares/mês na memória padrão, estimativa: confirmar na calculadora do GCP) contra
+  o orçamento de R$20/mês do projeto (`docs/monitoring.md`). A consolidação já ajuda: um único
+  trigger recebe todo o tráfego de entries, então a instância fica quente com mais frequência
+  e o número de cold starts cai. Reavaliar com medição (p95 de `execution_times` do
+  `syncPublicTicket` e latência chamada→push em aparelho real); se passar ~5 s com fila ativa,
+  ligar `minInstances: 1` **no `syncPublicTicket`** (agora é o dono do caminho), não em função
+  nova. `onQueueAdvanced` ainda lê todas as entries `waiting` (índice `status`) a cada saída da
+  espera; filas grandes (>1000 waiting) deveriam trocar por consulta limitada em futuro trabalho.
+
 ## Gotchas
 
 - Aviso ao dono quando alguém entra na fila (som + vibração + SnackBar) é
@@ -645,7 +701,7 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   `FIREBASE_TOKEN`. Não há staging. Setup, ordem, rollback, o que o CI não faz e ações manuais acumuladas: `docs/deploy.md`.
   O CI usa `firebase-tools` fixo (15.33.0) e o deploy reaproveita o artefato `web-dist`
   do job `web`.
-- Projeto no plano **Blaze** desde 01/10/2026; `onEntryCalled` publicada. A
+- Projeto no plano **Blaze** desde 01/10/2026; o roteador `syncPublicTicket` (que envia o push de "é a sua vez", antes `onEntryCalled`) publicado. A
   `VITE_VAPID_KEY` já está nas Actions variables e no bundle publicado. Falta o
   teste manual do push em segundo plano (ação do dono, checklist em
   `docs/FCM.md`).
@@ -715,13 +771,13 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
 - **Dono:** o app registra o token em `owners/{uid}/devices/{token}`
   (`PushService`, `{token, platform, lang, updatedAt}`; rules só do próprio uid)
   depois do opt-in; `owners/{uid}.notifyNewEntries` (padrão ligado) desliga. Sair
-  da conta apaga o token. Só mobile. A function `onEntryJoined` avisa dono +
+  da conta apaga o token. Só mobile. O passo `joined` do `syncPublicTicket` (antes `onEntryJoined`) avisa dono +
   `operatorUids`, agrupa por idioma, usa `collapseKey/tag = queueId` e apaga
   tokens inválidos (`functions/src/push.js`). Canal Android `qio_new_entries`
   criado no `MainActivity`; permissão `POST_NOTIFICATIONS`; o toque abre o painel.
 - **Cliente (web):** o botão "Ativar aviso" na tela da senha pede a permissão e
-  grava `fcmToken` na entry; `joinQueue` grava `lang`; `onEntryCalled` e
-  `onQueueAdvanced` ("Você é o próximo", uma vez por `nextNotifiedAt`) enviam em
+  grava `fcmToken` na entry; `joinQueue` grava `lang`; os passos `called` e
+  `advanced` do `syncPublicTicket` ("Você é o próximo", uma vez por `nextNotifiedAt`) enviam em
   pt/en/es (`functions/src/webpush.js`). Precisa de `VITE_VAPID_KEY` no build
   (variável do GitHub Actions + `web/.env.local`). iOS: só com a PWA instalada.
   Detalhes em `docs/FCM.md`.

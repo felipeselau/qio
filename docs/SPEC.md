@@ -23,7 +23,7 @@ Qio é um sistema de filas para atendimentos presenciais. Owners criam filas e g
 - **Backend**: Firebase (projeto `qio-app`)
   - Firestore: dados duráveis (owners, queues, histórico)
   - RTDB: estado vivo das filas (posições, contador, entries)
-  - Cloud Functions v2 (plano Blaze desde 01/10/2026): no MVP, `joinQueue`, `syncPublicTicket`, `onEntryCalled` (RTDB → FCM push) e `updateServiceEstimate`; hoje também `submitFeedback`, `onEntryJoined`, `onQueueAdvanced`, `applyQueueSchedules` e `evaluateQueueAlerts`
+  - Cloud Functions v2 (plano Blaze desde 01/10/2026): no MVP, `joinQueue`, `syncPublicTicket` e `updateServiceEstimate`; hoje também `submitFeedback`, `applyQueueSchedules` e `evaluateQueueAlerts`
   - Auth: email/Google (owner) + anônima (client)
 
 ## 3. Arquitetura
@@ -63,7 +63,7 @@ Owner chama próximo → entry.status = "called"
 
 **Limite duro de plataforma**: iOS Safari não entrega web push em aba comum — só se o site for instalado na tela de início (iOS 16.4+). Sem app instalado, não existe workaround gratuito. No iOS o MVP depende da aba aberta (banner na página: "mantenha esta aba aberta"). FCM cobre Android/desktop.
 
-**Requisitos**: VAPID key (console Firebase → Cloud Messaging → Web Push certificates) + service worker `firebase-messaging-sw.js` no Hosting + Cloud Function `onEntryCalled` (plano Blaze, dentro da cota gratuita de 2M invocações/mês; FCM grátis).
+**Requisitos**: VAPID key (console Firebase → Cloud Messaging → Web Push certificates) + service worker `firebase-messaging-sw.js` no Hosting + Cloud Function `syncPublicTicket` (roteador de `entries`; passo "called" envia o push; plano Blaze, dentro da cota gratuita de 2M invocações/mês; FCM grátis).
 
 ## 5. Modelo de dados
 
@@ -135,7 +135,7 @@ Projeto no plano Blaze desde 01/10/2026 (Cloud Functions v2). Custo esperado den
 | Firestore | 50k reads, 20k writes/dia | baixo (1 read por entrada de client) | — |
 | RTDB | 100 conexões simultâneas, 10GB/mês tráfego | 1 conexão por client com página aberta + owner | ⚠️ gargalo do MVP |
 | Hosting | 10GB/mês | web React | — |
-| FCM/Functions | 2M invocações/mês (Functions); FCM grátis | `joinQueue`, `syncPublicTicket`, `onEntryCalled`, `updateServiceEstimate` e as demais listadas na seção 2 | dentro da cota no volume do TCC |
+| FCM/Functions | 2M invocações/mês (Functions); FCM grátis | `joinQueue`, `syncPublicTicket`, `updateServiceEstimate` e as demais listadas na seção 2 | dentro da cota no volume do TCC |
 
 100 conexões simultâneas ≈ ~100 clientes com página aberta ao mesmo tempo no projeto todo. Suficiente p/ validar; monitorar.
 

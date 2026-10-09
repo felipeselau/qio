@@ -19,7 +19,7 @@ Divisão do que já está no código e do que **só você pode fazer no console*
   de cliente, como `invalid-argument`, `not-found`, `already-exists` ou
   `resource-exhausted`, não é logado; `HttpsError('internal')`, `unavailable` e erros
   inesperados são; `queueId` é validado como string e cortado em 64 caracteres),
-  `syncPublicTicket` (relança o erro), `onEntryCalled`, `onEntryJoined`, `onQueueAdvanced`,
+  `syncPublicTicket` (relança o erro; é o roteador de `entries` e também loga `onEntryCalled`, `onEntryJoined` e `onQueueAdvanced` por passo, preservados como mensagens `logError`),
   `updateServiceEstimate` e `applyQueueSchedules`.
 - Consulta no Logs Explorer:
   `severity>=ERROR AND resource.type="cloud_run_revision"` (functions v2) ou filtre por
@@ -79,7 +79,7 @@ Nada abaixo foi feito pelo código. Projeto: `qio-app`.
    - Métrica: `Cloud Run Revision > Request count` filtrada por `response_code_class =
      5xx` (callables) e/ou métrica baseada em log para `severity>=ERROR` com
      `jsonPayload.event` em `joinQueue failed`, `submitFeedback failed`,
-     `syncPublicTicket failed`, `onEntryCalled failed`, `updateServiceEstimate failed`.
+     `syncPublicTicket failed`, `onEntryCalled failed`, `updateServiceEstimate failed`. Alertas ou métricas filtrados por `resource.labels.function_name` / `service_name` de `onEntryCalled`, `onEntryJoined` ou `onQueueAdvanced` devem apontar para `syncPublicTicket` (#165): a lógica roda dentro dele; as mensagens `... failed` continuam as mesmas.
    - Condição sugerida: taxa/contagem de erros acima de 5 em 5 min.
    - Criar um **canal de notificação por e-mail** (Notification channels → Email) e
      anexar à política.
