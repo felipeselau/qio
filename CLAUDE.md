@@ -295,7 +295,23 @@ modelos; ainda sem dados): `docs/piloto/`.
   primário mostra o spinner. Risco conhecido: após o timeout a criação pode ter concluído no
   servidor, e um retry gera fila duplicada (o aviso manda conferir a lista). Erro de
   `createQueue` (`queueErrorMessage`) aparece num banner
-  (`create-error`) e a tela segue aberta. Sucesso: `pushReplacement` ao painel.
+  (`create-error`) e a tela segue aberta. Sucesso: `pushReplacement` para `QueueCreatedScreen`.
+- **Limite antecipado (#222):** ao abrir o wizard, `initState` chama
+  `QueueService.isAtQueueLimit(uid)` (mesmo `count()` do `ensureUnderQueueLimit`, que passou a
+  usá-lo). Enquanto checa, `QueueLimitGate(checking: true)` mostra spinner; no limite mostra
+  `cqLimitTitle` + `queueLimitReached` + botão Voltar e **não** monta os passos; falha de rede
+  segue para o wizard. A checagem final em `createQueue` continua (corrida/cliente adulterado).
+  Testes de widget que montam `CreateQueueScreen` direto precisam de `pumpAndSettle` antes de
+  interagir (`pumpCreate` já faz).
+- **Tela "Fila criada" (#220):** `QueueCreatedScreen(queue:)` (recebe o `Queue` devolvido por
+  `createQueue`) mostra ✓, nome, QR, link `joinUrl(id)` (toque copia), "Compartilhar link"
+  (`onShare` injetável, padrão `SharePlus`) e "Abrir painel" (`pushReplacement` para
+  `QueuePanelScreen`, que mantém o tour da primeira abertura). Atalhos "deixe mais bonita":
+  Logo e cor / Link curto abrem `QueueSettingsScreen` (os tiles de logo e slug só existem
+  lá), Operadores abre `OperatorsScreen` e Alertas `AlertsSettingsScreen`, via `push`
+  (voltar retorna à tela). Voltar do sistema = Abrir painel (`PopScope(canPop: false)`); a
+  fila já existe, nunca volta ao wizard nem recria. Testes usam `destinationBuilder`
+  (`@visibleForTesting`).
 - Voltar do sistema e `QueueBackButton` voltam **um passo** (`PopScope(canPop: primeiro
   passo && !dirty)`); no passo 1 com draft sujo vale a confirmação de descarte. Widgets em
   `widgets/create_queue/`. Testes usam `ValueKey` (`create-name`, `create-continue`,
