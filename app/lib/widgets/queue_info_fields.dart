@@ -31,11 +31,17 @@ class QueueNameField extends StatelessWidget {
     required this.controller,
     this.enabled = true,
     this.initial,
+    this.autofocus = false,
+    this.onSubmitted,
+    this.textInputAction,
   });
 
   final TextEditingController controller;
   final bool enabled;
   final String? initial;
+  final bool autofocus;
+  final ValueChanged<String>? onSubmitted;
+  final TextInputAction? textInputAction;
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +51,9 @@ class QueueNameField extends StatelessWidget {
       hint: l10n.queueNameHint,
       controller: controller,
       enabled: enabled,
+      autofocus: autofocus,
+      onSubmitted: onSubmitted,
+      textInputAction: textInputAction,
       validator: (v) => initial != null && v?.trim() == initial!.trim()
           ? null
           : queueInfoErrorText(QueueInfo.validateName(v), l10n),

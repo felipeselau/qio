@@ -151,3 +151,28 @@ Map<String, dynamic>? slotsMirror(List<QueueSlot> slots) {
   if (slots.isEmpty) return null;
   return {for (final s in slots) s.id: s.toMirror()};
 }
+
+String _formatMinutes(int minutes) =>
+    '${(minutes ~/ 60).toString().padLeft(2, '0')}:'
+    '${(minutes % 60).toString().padLeft(2, '0')}';
+
+List<QueueSlot> suggestSlots({
+  required int fromMinutes,
+  required int toMinutes,
+  required int stepMinutes,
+  List<QueueSlot> existing = const [],
+  Random? random,
+}) {
+  final result = [...existing];
+  final taken = {for (final s in existing) s.start};
+  for (
+    var m = fromMinutes;
+    m < toMinutes && result.length < maxQueueSlots;
+    m += stepMinutes
+  ) {
+    final start = _formatMinutes(m);
+    if (!taken.add(start)) continue;
+    result.add(QueueSlot(id: newSlotId(random), start: start, capacity: 1));
+  }
+  return result;
+}

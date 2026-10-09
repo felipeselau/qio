@@ -33,8 +33,10 @@ class SlotsEditor extends StatelessWidget {
     this.error,
     this.enabled = true,
     this.initialSlots = const [],
+    this.showModeSelector = true,
   });
 
+  final bool showModeSelector;
   final QueueMode mode;
   final List<QueueSlot> slots;
   final void Function(QueueMode mode, List<QueueSlot> slots) onChanged;
@@ -90,39 +92,41 @@ class SlotsEditor extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          l10n.queueModeLabel,
-          style: context.qioText.label.copyWith(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: context.qio.gray700,
+        if (showModeSelector) ...[
+          Text(
+            l10n.queueModeLabel,
+            style: context.qioText.label.copyWith(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: context.qio.gray700,
+            ),
           ),
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            ChoiceChip(
-              label: Text(l10n.modeQueue),
-              avatar: const Icon(Icons.people_alt_outlined, size: 18),
-              selected: mode == QueueMode.queue,
-              onSelected: enabled
-                  ? (_) => onChanged(QueueMode.queue, slots)
-                  : null,
-            ),
-            ChoiceChip(
-              label: Text(l10n.modeSchedule),
-              avatar: const Icon(Icons.event_available_outlined, size: 18),
-              selected: mode == QueueMode.schedule,
-              onSelected: enabled
-                  ? (_) => onChanged(QueueMode.schedule, slots)
-                  : null,
-            ),
-          ],
-        ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ChoiceChip(
+                label: Text(l10n.modeQueue),
+                avatar: const Icon(Icons.people_alt_outlined, size: 18),
+                selected: mode == QueueMode.queue,
+                onSelected: enabled
+                    ? (_) => onChanged(QueueMode.queue, slots)
+                    : null,
+              ),
+              ChoiceChip(
+                label: Text(l10n.modeSchedule),
+                avatar: const Icon(Icons.event_available_outlined, size: 18),
+                selected: mode == QueueMode.schedule,
+                onSelected: enabled
+                    ? (_) => onChanged(QueueMode.schedule, slots)
+                    : null,
+              ),
+            ],
+          ),
+        ],
         if (mode == QueueMode.schedule) ...[
-          const SizedBox(height: 16),
+          if (showModeSelector) const SizedBox(height: 16),
           Text(
             l10n.slotsEditorTitle,
             style: context.qioText.label.copyWith(
@@ -166,6 +170,7 @@ class SlotsEditor extends StatelessWidget {
           Align(
             alignment: Alignment.centerLeft,
             child: OutlinedButton.icon(
+              key: const ValueKey('slots-add'),
               onPressed: enabled && slots.length < maxQueueSlots
                   ? () => _add(context)
                   : null,

@@ -215,9 +215,9 @@ class CreateQueueController extends ChangeNotifier {
       case CreateQueueStep.capacity:
         return _draft.copyWith(avgServiceMin: '', maxWaiting: '');
       case CreateQueueStep.appearance:
-        return _draft.copyWith(clearBrandColor: true, clearGroupId: true);
+        return _draft.copyWith(clearBrandColor: true);
       case CreateQueueStep.schedule:
-        return _draft.copyWith(clearSchedule: true);
+        return _draft.copyWith(clearSchedule: true, clearExpiry: true);
       default:
         return _draft;
     }
