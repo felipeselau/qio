@@ -79,6 +79,11 @@ describe('isWatchingOpen / unwatchOpen', () => {
     await expect(isWatchingOpen('q1')).resolves.toBe(false);
   });
 
+  it('propaga falha de leitura', async () => {
+    get.mockRejectedValueOnce(new Error('denied'));
+    await expect(isWatchingOpen('q1')).rejects.toThrow('denied');
+  });
+
   it('remove o pedido', async () => {
     await unwatchOpen('q1');
     expect(remove).toHaveBeenCalledWith({ path: 'queues/q1/openWatchers/u1' });

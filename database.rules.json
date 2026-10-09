@@ -144,6 +144,7 @@
           }
         },
         "openWatchers": {
+          ".indexOn": ["createdAt"],
           ".read": "root.child('owners').child($queueId).child('ownerUid').val() === auth.uid",
           "$uid": {
             ".read": "auth != null && auth.uid === $uid",

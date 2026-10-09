@@ -26,6 +26,7 @@ const bundle: LegalBundle = {
           'Identificador anónimo de sesión (Firebase Authentication anónimo).',
           'Datos del turno: número, estado, horarios de entrada y llamada, idioma, franja elegida.',
           'Token de notificaciones push opcional, solo si tocas "Activar aviso".',
+          'Solicitud opcional "Avísame cuando abra": token push, idioma y fecha de la solicitud, vinculados al identificador anónimo de sesión, sin nombre ni teléfono.',
           'Valoración y comentario opcionales tras la atención.',
           'Estadísticas de uso (Google Analytics) solo si están activadas, con opt-out en el pie y respetando Do Not Track.',
         ],
@@ -46,6 +47,7 @@ const bundle: LegalBundle = {
         heading: 'Retención',
         items: [
           'Entrada activa: solo mientras estás en la fila.',
+          'Solicitud "Avísame cuando abra" (token push, idioma y fecha): hasta que la fila abra (se borra tras el aviso), como máximo 24 horas, hasta que la canceles o hasta que se elimine la fila.',
           'Historial de atenciones (nombre, teléfono, resultado, horarios): objetivo de 180 días; la rutina automática de eliminación aún está pendiente.',
         ],
       },

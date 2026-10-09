@@ -50,9 +50,8 @@ const {
   buildNextMessage,
   pickNextWaiting,
   advancedFromWaiting,
-  buildOpenMessage,
 } = require('./src/webpush');
-const { openedFromClosed, activeWatchers, WATCHER_LIMIT } = require('./src/openwatch');
+const { openedFromClosed, processQueueOpened } = require('./src/openwatch');
 const {
   normalizeRating,
   normalizeComment,
@@ -1233,32 +1232,32 @@ exports.onQueueAdvanced = onValueWritten(
 );
 
 exports.onQueueOpened = onValueWritten(
-  { ref: 'queues/{queueId}/meta/status', region: 'us-central1' },
+  { ref: 'queues/{queueId}/meta/status', region: 'us-central1', retry: true },
   async (event) => {
     if (!openedFromClosed(event.data.before.val(), event.data.after.val())) return null;
     const { queueId } = event.params;
     const db = getDatabase();
+    const watchersRef = db.ref(`queues/${queueId}/openWatchers`);
+    const byCreatedAt = () => watchersRef.orderByChild('createdAt');
     try {
-      const watchersRef = db.ref(`queues/${queueId}/openWatchers`);
-      const snap = await watchersRef.limitToFirst(WATCHER_LIMIT).once('value');
-      const raw = snap.val();
-      if (!raw) return null;
-      const watchers = activeWatchers(raw, Date.now());
-      const nameSnap = await db.ref(`queues/${queueId}/meta/name`).once('value');
-      const queueName = nameSnap.val();
-      const toRemove = new Set(Object.keys(raw));
-      for (let i = 0; i < watchers.length; i += 500) {
-        const chunk = watchers.slice(i, i + 500);
-        const response = await getMessaging().sendEach(
-          chunk.map((w) => buildOpenMessage({ token: w.token, queueName, queueId, lang: w.lang })),
-        );
-        response.responses.forEach((r, idx) => {
-          if (!r.success && !isStaleTokenError(r.error?.code)) toRemove.delete(chunk[idx].uid);
-        });
-      }
-      await Promise.all([...toRemove].map((uid) => watchersRef.child(uid).remove()));
+      await processQueueOpened({
+        queueId,
+        now: Date.now(),
+        log: (message, err) => logError(message, err, { queueId }),
+        deps: {
+          fetchActive: async (limit, minCreatedAt) =>
+            (await byCreatedAt().startAt(minCreatedAt).limitToFirst(limit).once('value')).val(),
+          fetchExpired: async (limit, minCreatedAt) =>
+            (await byCreatedAt().endAt(minCreatedAt - 1).limitToFirst(limit).once('value')).val(),
+          update: (patch) => watchersRef.update(patch),
+          queueName: async () =>
+            (await db.ref(`queues/${queueId}/meta/name`).once('value')).val(),
+          send: async (messages) => (await getMessaging().sendEach(messages)).responses,
+        },
+      });
     } catch (err) {
       logError('onQueueOpened failed', err, { queueId });
+      throw err;
     }
     return null;
   },

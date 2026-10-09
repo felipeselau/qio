@@ -632,11 +632,20 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   (`web/src/lib/openWatch.ts`; `createdAt` é `serverTimestamp`, as rules exigem `=== now`).
   Rules: o próprio `uid` cria/lê/apaga o seu (só se `meta/name` existe e `meta/deleting` não
   é `true`; token 1–4096); só o dono lista; operador e outros clientes não leem.
-- Trigger `onQueueOpened` (`meta/status`, `functions/src/openwatch.js`): só em
-  `closed|paused → open`. Lê até 500 watchers (`WATCHER_LIMIT`), ignora `createdAt` > 24 h,
-  envia `buildOpenMessage` (pt/en/es, `tag = queueId`) e apaga os watchers (inclusive vencidos
-  e token inválido); falha transitória do FCM mantém o watcher. `deleteQueue` apaga
-  `openWatchers` (`QUEUE_RTDB_PATHS`). Watchers além dos 500 lidos ficam até o próximo open/TTL.
+- Trigger `onQueueOpened` (`meta/status`, `retry: true`, `processQueueOpened` em
+  `functions/src/openwatch.js`): só em `closed|paused → open`. `.indexOn: ["createdAt"]`;
+  pagina de 500 em 500 (até 20 rodadas) os pedidos com `createdAt >= now-24h`. Cada lote é
+  **capturado antes do envio** com um único `update({uid: null})`, então reentrega do evento
+  não duplica push. Envia `buildOpenMessage` (pt/en/es, `tag = queueId`); token inválido some;
+  falha transitória do FCM (por mensagem ou do lote) regrava o pedido (vale até o TTL). Vencidos
+  (> 24 h) também são apagados no open, em lotes. Falha no fetch/update inicial relança o erro
+  para o retry da plataforma, sem ter enviado nada. `deleteQueue` apaga `openWatchers`
+  (`QUEUE_RTDB_PATHS`).
+- Limites: o pedido é renovável (novo `set` renova o `createdAt` e o TTL de 24 h). Pedidos em
+  filas de terceiros ou que nunca abrem só saem pelo TTL: o RTDB não expira sozinho, então
+  ficam no banco até a fila abrir (vencidos ignorados/apagados), ser apagada ou o cliente
+  cancelar. A `tag = queueId` é a mesma do push de "chamado": o aviso de abertura pode ser
+  substituído por ele (intencional; os dois só existem em momentos diferentes).
 - Deploy: functions (`onQueueOpened`) → hosting → rules do RTDB. Web novo com rules antigas
   recebe `permission_denied` ao gravar (o botão mostra erro, nada quebra).
 

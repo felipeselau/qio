@@ -553,6 +553,33 @@ describe('RTDB rules', () => {
       await assertFails(set(ref(rtdb('c1'), wpath('c1')), watcher()));
     });
 
+    it('cliente renova o próprio pedido', async () => {
+      await assertSucceeds(set(ref(rtdb('c1'), wpath('c1')), watcher()));
+      await assertSucceeds(set(ref(rtdb('c1'), wpath('c1')), watcher({ fcmToken: 'novo' })));
+      const snap = await get(ref(rtdb('c1'), wpath('c1')));
+      assert.equal(snap.val().fcmToken, 'novo');
+    });
+
+    it('dono e operador não escrevem pedido alheio', async () => {
+      await assertFails(set(ref(rtdb(OWNER), wpath('c1')), watcher()));
+      await assertFails(set(ref(rtdb(OPERATOR), wpath('c1')), watcher()));
+    });
+
+    it('createdAt falso (passado ou futuro) é negado', async () => {
+      await assertFails(set(ref(rtdb('c1'), wpath('c1')), watcher({ createdAt: Date.now() })));
+      await assertFails(
+        set(ref(rtdb('c1'), wpath('c1')), watcher({ createdAt: Date.now() + 86_400_000 })),
+      );
+    });
+
+    it('fila em exclusão ainda deixa o cliente apagar o pedido', async () => {
+      await assertSucceeds(set(ref(rtdb('c1'), wpath('c1')), watcher()));
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await set(ref(ctx.database(), path('meta/deleting')), true);
+      });
+      await assertSucceeds(remove(ref(rtdb('c1'), wpath('c1'))));
+    });
+
     it('cliente lê e apaga só o próprio pedido', async () => {
       await assertSucceeds(set(ref(rtdb('c1'), wpath('c1')), watcher()));
       await assertSucceeds(get(ref(rtdb('c1'), wpath('c1'))));

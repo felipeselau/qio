@@ -171,6 +171,12 @@ describe('deleteQueueData', () => {
     assert.ok(!names(deps.calls).includes('releaseSlug'));
   });
 
+  it('apaga openWatchers antes de meta', () => {
+    const paths = QUEUE_RTDB_PATHS('q1');
+    assert.ok(paths.includes('queues/q1/openWatchers'));
+    assert.ok(paths.indexOf('queues/q1/openWatchers') < paths.indexOf('queues/q1/meta'));
+  });
+
   it('meta é o último caminho do RTDB removido', () => {
     assert.equal(QUEUE_RTDB_PATHS('q1').at(-1), 'queues/q1/meta');
   });

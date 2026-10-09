@@ -9,6 +9,7 @@ export default function NotifyOpen({ queueId }: { queueId: string }) {
   const { t } = useTranslation();
   const [support, setSupport] = useState<PushSupport | null>(null);
   const [status, setStatus] = useState<Status>('idle');
+  const [canceling, setCanceling] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -31,8 +32,6 @@ export default function NotifyOpen({ queueId }: { queueId: string }) {
     };
   }, [queueId]);
 
-  if (support === null || support === 'unsupported') return null;
-
   async function enable() {
     setStatus('busy');
     try {
@@ -50,44 +49,64 @@ export default function NotifyOpen({ queueId }: { queueId: string }) {
   }
 
   async function disable() {
-    setStatus('busy');
+    setCanceling(true);
     try {
       await unwatchOpen(queueId);
       setStatus('idle');
     } catch {
       setStatus('on');
+    } finally {
+      setCanceling(false);
     }
   }
 
-  if (status === 'denied') {
-    return <p className="muted" style={{ textAlign: 'center' }}>{t('queue.notifyOpenDenied')}</p>;
-  }
-
-  if (status === 'on') {
-    return (
-      <div className="notice" role="status">
+  let content = null;
+  if (support === null || support === 'unsupported') {
+    content = null;
+  } else if (status === 'denied') {
+    content = (
+      <p className="muted" role="status" style={{ textAlign: 'center' }}>
+        {t('queue.notifyOpenDenied')}
+      </p>
+    );
+  } else if (status === 'on') {
+    content = (
+      <div className="notice">
         <span>{t('queue.notifyOpenOn')}</span>
-        <button type="button" className="btn btn-secondary" onClick={disable}>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={disable}
+          disabled={canceling}
+          aria-busy={canceling}
+        >
           {t('queue.notifyOpenCancel')}
         </button>
+      </div>
+    );
+  } else {
+    content = (
+      <div className="notice" role="group" aria-label={t('queue.notifyOpen')}>
+        <span>{t('queue.notifyOpenHint')}</span>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={enable}
+          disabled={status === 'busy'}
+          aria-busy={status === 'busy'}
+        >
+          {t('queue.notifyOpen')}
+        </button>
+        {status === 'error' && (
+          <span className="error-text" role="alert">{t('queue.notifyOpenFailed')}</span>
+        )}
       </div>
     );
   }
 
   return (
-    <div className="notice" role="group" aria-label={t('queue.notifyOpen')}>
-      <span>{t('queue.notifyOpenHint')}</span>
-      <button
-        type="button"
-        className="btn btn-secondary"
-        onClick={enable}
-        disabled={status === 'busy'}
-      >
-        {t('queue.notifyOpen')}
-      </button>
-      {status === 'error' && (
-        <span className="error-text" role="alert">{t('queue.notifyOpenFailed')}</span>
-      )}
+    <div aria-live="polite" aria-atomic="true">
+      {content}
     </div>
   );
 }
