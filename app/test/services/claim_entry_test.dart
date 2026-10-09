@@ -21,6 +21,17 @@ void main() {
     expect(data['ticket'], 4);
   });
 
+  test('serverNowMs applies the server offset to the local clock', () {
+    expect(serverNowMs(-90000, 1790000100000), 1790000010000);
+    expect(serverNowMs(2500.4, 1000), 3500);
+    expect(serverNowMs(0, 1000), 1000);
+  });
+
+  test('serverNowMs falls back to the local clock without a valid offset', () {
+    expect(serverNowMs(null, 1000), 1000);
+    expect(serverNowMs('x', 1000), 1000);
+  });
+
   test('does not claim missing or non-waiting entries', () {
     expect(claimedEntryData(null, 'op1', 5000), isNull);
     expect(claimedEntryData(entry('called'), 'op1', 5000), isNull);

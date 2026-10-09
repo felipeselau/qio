@@ -704,7 +704,10 @@ class QueueService {
 
   Future<QueueEntry?> _claimEntry(DatabaseReference entryRef) async {
     final uid = _uid;
-    final now = DateTime.now().millisecondsSinceEpoch;
+    final now = serverNowMs(
+      await _serverTimeOffset(),
+      DateTime.now().millisecondsSinceEpoch,
+    );
     final result = await entryRef.runTransaction((current) {
       if (current == null) return Transaction.success(null);
       final data = claimedEntryData(current, uid, now);
@@ -713,24 +716,27 @@ class QueueService {
 
     final value = result.snapshot.value;
     if (!result.committed || value is! Map) return null;
-    var entry = QueueEntry.fromSnapshot(result.snapshot.key!, value);
+    final entry = QueueEntry.fromSnapshot(result.snapshot.key!, value);
     if (entry.status != EntryStatus.called || entry.operatorId != uid) {
       return null;
     }
-    try {
-      await entryRef.child('calledAt').set(ServerValue.timestamp);
-      final fresh = (await entryRef.get()).value;
-      if (fresh is Map) {
-        final refreshed = QueueEntry.fromSnapshot(entryRef.key!, fresh);
-        if (refreshed.status == EntryStatus.called &&
-            refreshed.operatorId == uid) {
-          entry = refreshed;
-        }
-      }
-    } on FirebaseException {
-      return entry;
-    }
     return entry;
+  }
+
+  @visibleForTesting
+  Future<Object?> Function()? serverTimeOffsetReader;
+
+  Future<Object?> _readServerTimeOffset() async =>
+      (await _rtdb.ref('.info/serverTimeOffset').get()).value;
+
+  Future<Object?> _serverTimeOffset() async {
+    try {
+      return await (serverTimeOffsetReader ?? _readServerTimeOffset)().timeout(
+        const Duration(seconds: 2),
+      );
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> _finishEntry(

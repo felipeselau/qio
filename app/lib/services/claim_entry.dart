@@ -2,6 +2,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/queue_entry.dart';
 
+int serverNowMs(Object? offsetMs, int localNowMs) =>
+    localNowMs + (offsetMs is num ? offsetMs.round() : 0);
+
 Map<Object?, Object?>? claimedEntryData(
   Object? current,
   String uid,
