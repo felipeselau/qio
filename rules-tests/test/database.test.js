@@ -738,6 +738,29 @@ describe('RTDB rules', () => {
       );
     });
 
+    it('operador e dono sobrescrevem calledAt com o timestamp do servidor', async () => {
+      for (const uid of [OPERATOR, OWNER]) {
+        await env.withSecurityRulesDisabled(async (ctx) => {
+          await update(ref(ctx.database(), entryPath('e1')), {
+            status: 'called',
+            operatorId: OPERATOR,
+            calledAt: 1,
+          });
+        });
+        await assertSucceeds(set(ref(rtdb(uid), entryPath('e1/calledAt')), serverTimestamp()));
+        await env.withSecurityRulesDisabled(async (ctx) => {
+          const snap = await get(ref(ctx.database(), entryPath('e1/calledAt')));
+          assert.equal(typeof snap.val(), 'number');
+          assert.ok(Math.abs(snap.val() - Date.now()) < 60000);
+          assert.notEqual(snap.val(), 1);
+        });
+      }
+    });
+
+    it('cliente não altera calledAt, nem com o timestamp do servidor', async () => {
+      await assertFails(set(ref(rtdb('client1'), entryPath('e1/calledAt')), serverTimestamp()));
+    });
+
     it('cliente marca left', async () => {
       await assertSucceeds(update(ref(rtdb('client1'), entryPath('e1')), { status: 'left' }));
     });

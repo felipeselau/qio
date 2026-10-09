@@ -18,6 +18,7 @@ import '../models/queue_slot.dart';
 import 'history_privacy.dart';
 import 'action_errors.dart';
 import 'analytics_service.dart';
+import 'claim_entry.dart';
 import 'delete_service.dart';
 import 'finish_entry.dart';
 import 'join_url.dart';
@@ -706,21 +707,28 @@ class QueueService {
     final now = DateTime.now().millisecondsSinceEpoch;
     final result = await entryRef.runTransaction((current) {
       if (current == null) return Transaction.success(null);
-      final data = Map<Object?, Object?>.from(current as Map);
-      if (data['status'] != EntryStatus.waiting.value) {
-        return Transaction.abort();
-      }
-      data['status'] = EntryStatus.called.value;
-      data['calledAt'] = now;
-      data['operatorId'] = uid;
-      return Transaction.success(data);
+      final data = claimedEntryData(current, uid, now);
+      return data == null ? Transaction.abort() : Transaction.success(data);
     }, applyLocally: false);
 
     final value = result.snapshot.value;
     if (!result.committed || value is! Map) return null;
-    final entry = QueueEntry.fromSnapshot(result.snapshot.key!, value);
+    var entry = QueueEntry.fromSnapshot(result.snapshot.key!, value);
     if (entry.status != EntryStatus.called || entry.operatorId != uid) {
       return null;
+    }
+    try {
+      await entryRef.child('calledAt').set(ServerValue.timestamp);
+      final fresh = (await entryRef.get()).value;
+      if (fresh is Map) {
+        final refreshed = QueueEntry.fromSnapshot(entryRef.key!, fresh);
+        if (refreshed.status == EntryStatus.called &&
+            refreshed.operatorId == uid) {
+          entry = refreshed;
+        }
+      }
+    } on FirebaseException {
+      return entry;
     }
     return entry;
   }
@@ -797,9 +805,7 @@ class QueueService {
             'phone': anonymize ? null : entry.phone,
             'result': result.value,
             'joinedAt': Timestamp.fromDate(entry.joinedAt),
-            'calledAt': entry.calledAt != null
-                ? Timestamp.fromDate(entry.calledAt!)
-                : null,
+            'calledAt': historyTimestamp(entry.calledAt),
             'calledBy': entry.operatorId,
             'operatorId': _uid,
             'finishedAt': FieldValue.serverTimestamp(),

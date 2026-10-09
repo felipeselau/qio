@@ -261,6 +261,18 @@ conhecidas: `docs/qualidade.md`.
   (seguro). `finishedAt` segue `serverTimestamp`: o tempo de atendimento inclui até
   ~5 s da janela de desfazer (viés pequeno e conhecido; as rules do history não
   validam `finishedAt` e relógio de cliente distorceria ordenação/estimativa).
+- `calledAt` é do **servidor**: `_claimEntry` reserva a entry por transação de status
+  (`claimedEntryData`, `services/claim_entry.dart`, com `calledAt` provisório do
+  aparelho) e logo depois faz `entries/{id}/calledAt = ServerValue.timestamp` e relê a
+  entry; o `_archiveEntry` converte esse ms para `Timestamp` (`historyTimestamp`). Não
+  se usa o placeholder dentro do `runTransaction` (suporte nativo não verificado em
+  aparelho). Se o `set` falhar (rede), vale o provisório do aparelho (viés só nesse
+  caso raro). Espera e atendimento (`calledAt − joinedAt`, `finishedAt − calledAt`) não
+  dependem mais do relógio do operador. `shouldRenotify` ignora mudança de `calledAt`
+  (só status e `recalledAt`), então a correção não reenvia push. O `CalledTimer` do web
+  ("chamado há X") compara `calledAt` do servidor com `Date.now()` do cliente: relógio
+  errado do cliente distorce só esse contador na tela, sem efeito em dados. Deploy:
+  rules não mudaram; APK novo funciona com as rules atuais.
 - `_finishEntry`: `get` valida `called` → `_archiveEntry` → transação de status
   (idempotente; `null` devolve `success(null)` p/ forçar round-trip com cache
   frio) → `remove`. Archive falho deixa a entry `called` (repetível). Corrida
