@@ -1823,6 +1823,28 @@ class AppLocalizationsPt extends AppLocalizations {
       'Ao concluir um atendimento, o telefone não é salvo no histórico.';
 
   @override
+  String get expiryTitle => 'Expirar entradas esquecidas';
+
+  @override
+  String get expiryHint =>
+      'Remove da fila quem ficou aguardando sem atividade. Não afeta quem já foi chamado.';
+
+  @override
+  String expiryAfterHours(int hours) {
+    return 'Expirar após $hours h';
+  }
+
+  @override
+  String get expiryClearOnClose => 'Limpar a fila ao fechar por horário';
+
+  @override
+  String get expiryResetTicketDaily => 'Reiniciar a senha todo dia';
+
+  @override
+  String get expiryResetTicketDailyHint =>
+      'Zera na primeira vez em que a fila ficar vazia a cada novo dia.';
+
+  @override
   String get dataSubjectTitle => 'Dados de um cliente';
 
   @override

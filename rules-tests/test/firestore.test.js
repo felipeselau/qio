@@ -410,6 +410,7 @@ describe('Firestore rules', () => {
           groupId: 'g'.repeat(40),
           retentionDays: 730,
           anonymizePhone: true,
+          expiry: { enabled: true, hours: 48, clearOnClose: true, resetTicketDaily: true },
         }),
       );
     });
@@ -432,8 +433,27 @@ describe('Firestore rules', () => {
           alerts,
           retentionDays: 365,
           anonymizePhone: true,
+          expiry: { enabled: true, hours: 24, clearOnClose: true, resetTicketDaily: false },
         }),
       );
+    });
+
+    it('expiry: exige map (detalhes validados na function)', async () => {
+      await assertSucceeds(updateDoc(ref(), { expiry: { enabled: false } }));
+      for (const bad of ['x', 1, true, null]) {
+        await assertFails(updateDoc(ref(), { expiry: bad }));
+      }
+    });
+
+    it('expiry válido em fila com 20 slots e todos os campos', async () => {
+      await assertSucceeds(updateDoc(ref(), { mode: 'schedule', slots: slots24 }));
+      await assertSucceeds(updateDoc(ref(), { expiry: { enabled: true, hours: 12 } }));
+    });
+
+    it('create exige expiry map', async () => {
+      const base = { ownerId: OWNER, name: 'x', status: 'open' };
+      await assertSucceeds(setDoc(doc(db(OWNER), 'queues', 'ex1'), { ...base, expiry: { enabled: true } }));
+      await assertFails(setDoc(doc(db(OWNER), 'queues', 'ex2'), { ...base, expiry: 'x' }));
     });
 
     it('update nega slot inválido em qualquer posição', async () => {

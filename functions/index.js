@@ -29,6 +29,13 @@ const {
 const { shouldRenotify } =require('./src/ticket');
 const { applyEntryChange, reconcileWaitingCounts } = require('./src/waiting');
 const { planScheduleChange } = require('./src/schedule');
+const {
+  normalizeExpiry,
+  maintainQueue,
+  clearWaitingOnClose,
+  runTicketReset,
+  isStale,
+} = require('./src/expire');
 const { purgeAllRetention } = require('./src/retention');
 const {
   buildNewEntryMessage,
@@ -914,16 +921,21 @@ exports.reconcileWaitingCounts = onSchedule(
   },
 );
 
-async function archiveLeftEntry(queueId, entryId, entry) {
+async function archiveLeftEntry(queueId, entryId, entry, options = {}) {
   const firestore = getFirestore();
-  const queueDoc = await firestore.doc(`queues/${queueId}`).get();
-  if (!queueDoc.exists) return;
+  let anonymizePhone = options.anonymizePhone;
+  if (typeof anonymizePhone !== 'boolean') {
+    const queueDoc = await firestore.doc(`queues/${queueId}`).get();
+    if (!queueDoc.exists) return;
+    anonymizePhone = queueDoc.data()?.anonymizePhone === true;
+  }
   try {
     await firestore
       .doc(`queues/${queueId}/history/${entryId}`)
       .create(
         historyFromLeftEntry(entry, Date.now(), {
-          anonymizePhone: queueDoc.data()?.anonymizePhone === true,
+          anonymizePhone,
+          reason: options.reason,
         }),
       );
   } catch (err) {
@@ -961,7 +973,12 @@ exports.updateServiceEstimate = onDocumentCreated(
 );
 
 exports.applyQueueSchedules = onSchedule(
-  { schedule: 'every 5 minutes', region: 'us-central1', timeZone: 'UTC' },
+  {
+    schedule: 'every 5 minutes',
+    region: 'us-central1',
+    timeZone: 'UTC',
+    timeoutSeconds: 300,
+  },
   async () => {
     const firestore = getFirestore();
     const db = getDatabase();
@@ -1003,10 +1020,94 @@ exports.applyQueueSchedules = onSchedule(
           }
           await metaRef.update(patch);
         }
+        if (plan.status === 'closed') {
+          const config = normalizeExpiry(data.expiry);
+          if (config?.clearOnClose) {
+            await clearWaitingOnClose({
+              queueId: doc.id,
+              deps: expireDeps(doc.id, data.anonymizePhone === true),
+            });
+          }
+        }
       } catch (err) {
         logError('applyQueueSchedules failed', err, { queueId: doc.id });
       }
     }
+  },
+);
+
+function expireDeps(queueId, anonymizePhone) {
+  const db = getDatabase();
+  const removeWhere = async (entryId, keep) => {
+    let removed = false;
+    await db.ref(`queues/${queueId}/entries/${entryId}`).transaction((current) => {
+      removed = false;
+      if (current === null || current === undefined) return current;
+      if (!keep(current)) return undefined;
+      removed = true;
+      return null;
+    });
+    return removed;
+  };
+  return {
+    readEntries: async (id) => (await db.ref(`queues/${id}/entries`).once('value')).val(),
+    archive: (id, entryId, entry, reason) =>
+      archiveLeftEntry(id, entryId, entry, { anonymizePhone, reason }),
+    removeIfStale: (id, entryId, now, hours) =>
+      removeWhere(entryId, (current) => isStale(current, now, hours)),
+    removeIfWaiting: (id, entryId) =>
+      removeWhere(entryId, (current) => current.status === 'waiting'),
+    undoArchive: async (id, entryId, reason) => {
+      const ref = getFirestore().doc(`queues/${id}/history/${entryId}`);
+      const snap = await ref.get();
+      if (snap.exists && snap.data()?.reason === reason) await ref.delete();
+    },
+    readStatus: async (id) =>
+      (await db.ref(`queues/${id}/meta/status`).once('value')).val(),
+    removePublic: (id, entryId) => db.ref(`queues/${id}/public/${entryId}`).remove(),
+    resetTicket: (id) => db.ref(`tickets/${id}`).remove(),
+    markResetDay: (id, day) =>
+      getFirestore().doc(`queues/${id}`).update({ lastTicketResetDay: day }),
+    onError: (err, ctx) => logError('expireStaleEntries entry failed', err, ctx),
+  };
+}
+
+exports.expireStaleEntries = onSchedule(
+  {
+    schedule: 'every 15 minutes',
+    region: 'us-central1',
+    timeZone: 'UTC',
+    timeoutSeconds: 540,
+  },
+  async () => {
+    const snap = await getFirestore()
+      .collection('queues')
+      .where('expiry.enabled', '==', true)
+      .get();
+    const now = Date.now();
+    let expired = 0;
+    await mapLimit(snap.docs, 5, async (doc) => {
+      try {
+        const data = doc.data();
+        const config = normalizeExpiry(data.expiry);
+        if (!config || data.deleting) return;
+        const deps = expireDeps(doc.id, data.anonymizePhone === true);
+        const result = await maintainQueue({ queueId: doc.id, config, now, deps });
+        expired += result.expired;
+        if (config.resetTicketDaily) {
+          await runTicketReset({
+            queueId: doc.id,
+            lastDay: data.lastTicketResetDay,
+            now,
+            activeCount: result.remaining,
+            deps,
+          });
+        }
+      } catch (err) {
+        logError('expireStaleEntries failed', err, { queueId: doc.id });
+      }
+    });
+    console.log(`expireStaleEntries: ${snap.size} filas, ${expired} expiradas`);
   },
 );
 

@@ -6,7 +6,7 @@ function toTimestamp(ms) {
 
 function historyFromLeftEntry(entry, nowMs, options = {}) {
   const source = entry ?? {};
-  return {
+  const doc = {
     ticket: typeof source.ticket === 'number' ? source.ticket : 0,
     name: typeof source.name === 'string' ? source.name : '',
     phone: options.anonymizePhone === true ? null : typeof source.phone === 'string' ? source.phone : '',
@@ -17,6 +17,8 @@ function historyFromLeftEntry(entry, nowMs, options = {}) {
     operatorId: null,
     finishedAt: Timestamp.fromMillis(nowMs),
   };
+  if (typeof options.reason === 'string' && options.reason) doc.reason = options.reason;
+  return doc;
 }
 
 module.exports = { historyFromLeftEntry };
