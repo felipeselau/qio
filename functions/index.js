@@ -1,7 +1,7 @@
 const { onValueWritten, onValueCreated } = require('firebase-functions/v2/database');
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
-const { onDocumentCreated, onDocumentWritten } = require('firebase-functions/v2/firestore');
+const { onDocumentCreated } = require('firebase-functions/v2/firestore');
 const { initializeApp, getApp } = require('firebase-admin/app');
 const { getMessaging } = require('firebase-admin/messaging');
 const { getDatabase } = require('firebase-admin/database');
@@ -86,7 +86,6 @@ const logger = require('firebase-functions/logger');
 const { logError, logAppCheck } = require('./src/log');
 const { guarded } = require('./src/guard');
 const { isEnforced } = require('./src/appcheck');
-const { buildMetaPatch, buildOwnerPatch, operatorMirrorAction } = require('./src/mirror');
 const {
   isSafeId,
   assertRecentLogin,
@@ -1034,74 +1033,7 @@ exports.updateServiceEstimate = onDocumentCreated(
   },
 );
 
-exports.mirrorQueueToRtdb = onDocumentWritten(
-  {
-    document: 'queues/{queueId}',
-    region: 'us-central1',
-  },
-  async (event) => {
-    const { queueId } = event.params;
-    try {
-      const after = event.data?.after;
-      if (!after?.exists) return null;
-      const doc = after.data();
-      if (!doc || doc.deleting) return null;
-
-      const db = getDatabase();
-      const ownerRef = db.ref(`owners/${queueId}`);
-      const ownerPatch = buildOwnerPatch(doc, (await ownerRef.once('value')).val());
-      if (ownerPatch) await ownerRef.set(ownerPatch);
-
-      const metaRef = db.ref(`queues/${queueId}/meta`);
-      const meta = (await metaRef.once('value')).val();
-      const patch = buildMetaPatch(doc, meta);
-      if (Object.keys(patch).length === 0) return null;
-
-      if (meta === null || meta === undefined) {
-        await metaRef.transaction((current) =>
-          current === null ? { ...patch, updatedAt: Date.now() } : undefined,
-        );
-      } else {
-        await metaRef.update(patch);
-      }
-      return { ok: true };
-    } catch (err) {
-      logError('mirrorQueueToRtdb failed', err, { queueId });
-      return null;
-    }
-  },
-);
-
-exports.mirrorOperatorToRtdb = onDocumentWritten(
-  {
-    document: 'queues/{queueId}/operators/{uid}',
-    region: 'us-central1',
-  },
-  async (event) => {
-    const { queueId, uid } = event.params;
-    try {
-      const action = operatorMirrorAction(
-        event.data?.before?.exists,
-        event.data?.after?.exists,
-        uid,
-      );
-      if (action === 'none') return null;
-      const ref = getDatabase().ref(`queues/${queueId}/operatorUids/${uid}`);
-      if (action === 'remove') {
-        await ref.remove();
-        return { ok: true };
-      }
-      const queue = await getFirestore().doc(`queues/${queueId}`).get();
-      if (!queue.exists || queue.data()?.deleting) return null;
-      if ((await ref.once('value')).val() === true) return null;
-      await ref.set(true);
-      return { ok: true };
-    } catch (err) {
-      logError('mirrorOperatorToRtdb failed', err, { queueId });
-      return null;
-    }
-  },
-);
+Object.assign(exports, require('./src/triggers/mirror'));
 
 exports.applyQueueSchedules = onSchedule(
   {

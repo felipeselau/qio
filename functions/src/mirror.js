@@ -1,3 +1,5 @@
+const { MAX_SLOTS } = require('./slots');
+
 const NAME_MAX = 60;
 const FALLBACK_NAME = 'Fila';
 const DESCRIPTION_MAX = 300;
@@ -5,7 +7,6 @@ const DEFAULT_AVG_SERVICE_MIN = 10;
 const MAX_WAITING_MAX = 1000;
 const STATUS_MESSAGE_MAX = 120;
 const LOGO_URL_MAX = 600;
-const MAX_MIRROR_SLOTS = 24;
 const STATUSES = ['open', 'paused', 'closed'];
 const HEX_RE = /^#[0-9A-Fa-f]{6}$/;
 const LOGO_RE = /^https:\/\/firebasestorage\.googleapis\.com\//;
@@ -25,20 +26,24 @@ function normalizeDescription(raw) {
   return text.length > DESCRIPTION_MAX ? text.slice(0, DESCRIPTION_MAX) : text;
 }
 
+function truncNumber(raw) {
+  return typeof raw === 'number' && Number.isFinite(raw) ? Math.trunc(raw) : null;
+}
+
 function normalizeAvgServiceMin(raw) {
-  if (typeof raw === 'number' && Number.isInteger(raw) && raw >= 1 && raw <= 240) return raw;
+  const value = truncNumber(raw);
+  if (value !== null && value >= 1 && value <= 240) return value;
   return DEFAULT_AVG_SERVICE_MIN;
 }
 
 function normalizeMaxWaiting(raw) {
-  if (typeof raw === 'number' && Number.isInteger(raw) && raw >= 0 && raw <= MAX_WAITING_MAX) {
-    return raw;
-  }
+  const value = truncNumber(raw);
+  if (value !== null && value >= 0 && value <= MAX_WAITING_MAX) return value;
   return 0;
 }
 
 function normalizeStatus(raw) {
-  return STATUSES.includes(raw) ? raw : 'open';
+  return STATUSES.includes(raw) ? raw : null;
 }
 
 function normalizeStatusMessage(raw) {
@@ -48,12 +53,8 @@ function normalizeStatusMessage(raw) {
 }
 
 function toMillis(raw) {
-  if (typeof raw === 'number' && Number.isFinite(raw)) return raw;
-  if (raw && typeof raw.toMillis === 'function') {
-    const ms = raw.toMillis();
-    return Number.isFinite(ms) ? ms : null;
-  }
-  return null;
+  const ms = raw && typeof raw.toMillis === 'function' ? raw.toMillis() : raw;
+  return typeof ms === 'number' && Number.isInteger(ms) ? ms : null;
 }
 
 function normalizeBrandColor(raw) {
@@ -81,16 +82,15 @@ function expectedSlots(list) {
     if (!item || typeof item.id !== 'string' || !SLOT_ID_RE.test(item.id)) continue;
     if (seen.has(item.id)) continue;
     const minutes = slotMinutes(item.start);
-    const cap = item.capacity;
-    if (minutes === null) continue;
-    if (typeof cap !== 'number' || !Number.isInteger(cap) || cap < 1 || cap > 50) continue;
+    const cap = truncNumber(item.capacity);
+    if (minutes === null || cap === null || cap < 1 || cap > 50) continue;
     seen.add(item.id);
     valid.push({ id: item.id, start: item.start, capacity: cap, minutes });
   }
-  valid.sort((a, b) => a.minutes - b.minutes);
+  valid.sort((x, y) => x.minutes - y.minutes);
   const map = {};
-  for (const s of valid.slice(0, MAX_MIRROR_SLOTS)) {
-    map[s.id] = { start: s.start, capacity: s.capacity };
+  for (const slot of valid.slice(0, MAX_SLOTS)) {
+    map[slot.id] = { start: slot.start, capacity: slot.capacity };
   }
   return Object.keys(map).length === 0 ? null : map;
 }
@@ -135,14 +135,53 @@ function isMirrorable(queueDoc) {
   return !!queueDoc && typeof queueDoc === 'object' && !queueDoc.deleting;
 }
 
-function buildMetaPatch(queueDoc, currentMeta) {
+const FIELD_GROUPS = [
+  'name',
+  'description',
+  'avgServiceMin',
+  'maxWaiting',
+  'status',
+  'statusMessage',
+  'resumeAt',
+  'brandColor',
+  'logoUrl',
+  'modeSlots',
+];
+
+function groupValue(want, group) {
+  return group === 'modeSlots' ? { mode: want.mode, slots: want.slots } : want[group];
+}
+
+function changedFields(before, after) {
+  if (!before || typeof before !== 'object') return new Set(FIELD_GROUPS);
+  const a = expectedMeta(before);
+  const b = expectedMeta(after ?? {});
+  return new Set(
+    FIELD_GROUPS.filter(
+      (g) => JSON.stringify(groupValue(a, g)) !== JSON.stringify(groupValue(b, g)),
+    ),
+  );
+}
+
+function ownerChanged(before, after) {
+  return !before || typeof before !== 'object' || before.ownerId !== after?.ownerId;
+}
+
+function buildMetaPatch(queueDoc, currentMeta, fields = null) {
   if (!isMirrorable(queueDoc)) return {};
   const want = expectedMeta(queueDoc);
 
   if (currentMeta === null || currentMeta === undefined) {
     const patch = { nextTicket: 0, serving: 0 };
-    for (const key of ['name', 'avgServiceMin', 'maxWaiting', 'status']) patch[key] = want[key];
-    for (const key of ['description', 'statusMessage', 'resumeAt', 'brandColor', 'logoUrl']) {
+    for (const key of ['name', 'avgServiceMin', 'maxWaiting']) patch[key] = want[key];
+    for (const key of [
+      'status',
+      'description',
+      'statusMessage',
+      'resumeAt',
+      'brandColor',
+      'logoUrl',
+    ]) {
       if (want[key] !== null) patch[key] = want[key];
     }
     if (want.mode === 'schedule' || want.slots) {
@@ -154,23 +193,29 @@ function buildMetaPatch(queueDoc, currentMeta) {
 
   if (currentMeta.deleting === true) return {};
 
+  const wants = (group) => !fields || fields.has(group);
   const patch = {};
-  for (const key of ['name', 'avgServiceMin', 'status']) {
-    if (currentMeta[key] !== want[key]) patch[key] = want[key];
-  }
-
   const nullable = (v) => (v === undefined || v === '' ? null : v);
-  for (const key of ['description', 'statusMessage', 'resumeAt', 'brandColor', 'logoUrl']) {
-    if (nullable(currentMeta[key]) !== want[key]) patch[key] = want[key];
+
+  for (const key of ['name', 'avgServiceMin']) {
+    if (wants(key) && currentMeta[key] !== want[key]) patch[key] = want[key];
   }
-
-  const haveMax = typeof currentMeta.maxWaiting === 'number' ? currentMeta.maxWaiting : 0;
-  if (haveMax !== want.maxWaiting) patch.maxWaiting = want.maxWaiting;
-
-  const haveMode = normalizeMode(currentMeta.mode);
-  if (haveMode !== want.mode || !sameSlots(currentSlots(currentMeta.slots), want.slots)) {
-    patch.mode = want.mode;
-    patch.slots = want.slots;
+  if (wants('status') && want.status !== null && currentMeta.status !== want.status) {
+    patch.status = want.status;
+  }
+  for (const key of ['description', 'statusMessage', 'resumeAt', 'brandColor', 'logoUrl']) {
+    if (wants(key) && nullable(currentMeta[key]) !== want[key]) patch[key] = want[key];
+  }
+  if (wants('maxWaiting')) {
+    const haveMax = typeof currentMeta.maxWaiting === 'number' ? currentMeta.maxWaiting : 0;
+    if (haveMax !== want.maxWaiting) patch.maxWaiting = want.maxWaiting;
+  }
+  if (wants('modeSlots')) {
+    const haveMode = normalizeMode(currentMeta.mode);
+    if (haveMode !== want.mode || !sameSlots(currentSlots(currentMeta.slots), want.slots)) {
+      patch.mode = want.mode;
+      patch.slots = want.slots;
+    }
   }
   return patch;
 }
@@ -183,17 +228,17 @@ function buildOwnerPatch(queueDoc, currentOwner) {
   return { ownerUid };
 }
 
-function operatorMirrorAction(before, after, uid) {
-  if (typeof uid !== 'string' || !UID_RE.test(uid)) return 'none';
-  if (after) return 'add';
-  if (before) return 'remove';
-  return 'none';
+function isValidUid(uid) {
+  return typeof uid === 'string' && UID_RE.test(uid);
 }
 
 module.exports = {
   buildMetaPatch,
   buildOwnerPatch,
-  operatorMirrorAction,
+  changedFields,
+  ownerChanged,
+  isMirrorable,
+  isValidUid,
   normalizeName,
   normalizeDescription,
   normalizeAvgServiceMin,

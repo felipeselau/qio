@@ -32,7 +32,12 @@ describe('trigger mirrorQueueToRtdb / mirrorOperatorToRtdb (emulador)', () => {
     }
   }
 
-  const quiet = (ms = 2500) => new Promise((r) => setTimeout(r, ms));
+  async function barrier() {
+    const id = newId();
+    await fs((db) => setDoc(doc(db, 'queues', id), { ownerId: 'barrier', name: 'barrier', status: 'open' }));
+    await waitFor(() => rtdb(`queues/${id}/meta/name`));
+  }
+
 
   before(async () => {
     env = await setupEnv();
@@ -109,16 +114,29 @@ describe('trigger mirrorQueueToRtdb / mirrorOperatorToRtdb (emulador)', () => {
     assert.equal(meta.nextNotifiedAt, 55);
   });
 
-  it('é idempotente: sem divergência não escreve nada', async () => {
+  it('só age nos campos que mudaram: update sem campo espelhado não repara nada', async () => {
     const id = newId();
     await fs((db) =>
       setDoc(doc(db, 'queues', id), { ownerId: 'owner1', name: 'A', status: 'open', avgServiceMin: 10 }),
     );
     await waitFor(() => rtdb(`queues/${id}/meta/name`));
-    await rtdbUpdate(`queues/${id}/meta`, { updatedAt: 1 });
-    await fs((db) => updateDoc(doc(db, 'queues', id), { posterTitle: 'irrelevante' }));
-    await quiet();
-    assert.equal(await rtdb(`queues/${id}/meta/updatedAt`), 1);
+    await rtdbUpdate(`queues/${id}/meta`, { name: 'Adulterado' });
+    await fs((db) =>
+      updateDoc(doc(db, 'queues', id), { posterTitle: 'x', alertState: { waitAt: 1 }, scheduleLastDesired: 'open' }),
+    );
+    await fs((db) => updateDoc(doc(db, 'queues', id), { maxWaiting: 7 }));
+    await waitFor(async () => (await rtdb(`queues/${id}/meta/maxWaiting`)) === 7);
+    assert.equal(await rtdb(`queues/${id}/meta/name`), 'Adulterado');
+  });
+
+  it('fila existente sem meta não recria meta num update', async () => {
+    const id = newId();
+    await fs((db) => setDoc(doc(db, 'queues', id), { ownerId: 'owner1', name: 'A', status: 'open' }));
+    await waitFor(() => rtdb(`queues/${id}/meta/name`));
+    await rtdbSet(`queues/${id}/meta`, null);
+    await fs((db) => updateDoc(doc(db, 'queues', id), { name: 'B' }));
+    await barrier();
+    assert.equal(await rtdb(`queues/${id}/meta`), null);
   });
 
   it('repara meta divergente e owners ausente em fila existente', async () => {
@@ -145,7 +163,7 @@ describe('trigger mirrorQueueToRtdb / mirrorOperatorToRtdb (emulador)', () => {
     await rtdbSet(`queues/${id}`, null);
     await rtdbSet(`owners/${id}`, null);
     await fs((db) => deleteDoc(doc(db, 'queues', id)));
-    await quiet();
+    await barrier();
     assert.equal(await rtdb(`queues/${id}`), null);
     assert.equal(await rtdb(`owners/${id}`), null);
   });
@@ -157,7 +175,7 @@ describe('trigger mirrorQueueToRtdb / mirrorOperatorToRtdb (emulador)', () => {
     await rtdbSet(`queues/${id}/meta`, null);
     await rtdbSet(`owners/${id}`, null);
     await fs((db) => updateDoc(doc(db, 'queues', id), { deleting: true, status: 'closed' }));
-    await quiet();
+    await barrier();
     assert.equal(await rtdb(`queues/${id}/meta`), null);
     assert.equal(await rtdb(`owners/${id}`), null);
   });
@@ -175,7 +193,7 @@ describe('trigger mirrorQueueToRtdb / mirrorOperatorToRtdb (emulador)', () => {
   it('operador em fila inexistente não cria nó no RTDB', async () => {
     const id = newId();
     await fs((db) => setDoc(doc(db, 'queues', id, 'operators', 'op1'), { uid: 'op1' }));
-    await quiet();
+    await barrier();
     assert.equal(await rtdb(`queues/${id}`), null);
   });
 });
