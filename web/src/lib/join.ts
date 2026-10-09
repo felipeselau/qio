@@ -1,6 +1,7 @@
 import { ref, update } from 'firebase/database';
 import { httpsCallable } from 'firebase/functions';
-import { auth, db, functions } from '../firebase';
+import { auth, db } from '../firebase';
+import { functions } from '../firebaseFunctions';
 import { trackEvent } from './analytics';
 import i18n from '../i18n';
 import { storeEntryId } from './storage';

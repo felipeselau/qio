@@ -25,6 +25,15 @@
         ]
       },
       {
+        "source": "/w/**",
+        "headers": [
+          {
+            "key": "Content-Security-Policy",
+            "value": "frame-ancestors *"
+          }
+        ]
+      },
+      {
         "source": "/.well-known/assetlinks.json",
         "headers": [
           {
@@ -35,6 +44,10 @@
       }
     ],
     "rewrites": [
+      {
+        "source": "/w/**",
+        "destination": "/widget.html"
+      },
       {
         "source": "**",
         "destination": "/index.html"

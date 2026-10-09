@@ -653,6 +653,22 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
 - Verificação no aparelho: `adb shell pm get-app-links com.qio.qio_app` deve
   mostrar `qio.web.app: verified`. iOS (Associated Domains) não foi feito.
 
+## Widget público de espera (`/w/{idOuSlug}`)
+
+- Página somente leitura "N na fila · ~X min" + estado (aberta/pausa/fechada, `statusMessage`,
+  `resumeAt`, `opensAt`) para embed/TV; doc e iframe em `docs/embed.md`. Lê só `meta` e `public/`
+  (nunca `entries`), auth anônima, listeners só com `ready` (`web/src/lib/useWidget.ts`).
+  Lógica pura em `web/src/lib/widget.ts`: estimativa `(waiting + 1) × (avgServiceMinAuto ??
+  avgServiceMin ?? 10)`, sem estimativa em `mode == 'schedule'`.
+- **Entrada Vite separada**: `web/widget.html` → `src/widgetMain.tsx` (não carrega `QueuePage`,
+  Messaging nem Functions). `firebase.json` reescreve `/w/**` → `/widget.html` (antes do `**`);
+  no dev, `widgetRewritePlugin` em `vite.config.ts` faz o mesmo. `firebase.ts` não exporta mais
+  `functions`: use `firebaseFunctions.ts` (import dinâmico no widget, só quando o valor é slug).
+- Slug: valor que casa `isValidSlug` chama `resolveSlug` e faz `replace` para `/w/{queueId}`;
+  `not-found` cai para tratar como queueId. Header `frame-ancestors *` só em `/w/**`; qualquer
+  proteção global futura contra framing deve excluir essa rota.
+- Deploy: só hosting (`web/dist` com `widget.html`). Nada de functions/rules.
+
 ## Monitoramento e analytics
 
 - Functions logam erros com `logError` (`functions/src/log.js`): remove name/phone/token
