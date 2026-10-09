@@ -2071,4 +2071,24 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get cqCreateTimeout =>
       'Sin respuesta. Puede que la fila se haya creado: revise su lista antes de intentarlo de nuevo.';
+
+  @override
+  String get cqResumeTitle => '¿Continuar donde lo dejaste?';
+
+  @override
+  String get cqResumeBody =>
+      'Tienes una fila en curso que no se creó. ¿Quieres continuar donde lo dejaste o descartarla?';
+
+  @override
+  String get cqResume => 'Continuar';
+
+  @override
+  String get cqDiscardDraft => 'Descartar';
+
+  @override
+  String get cqSaveDraft => 'Guardar borrador';
+
+  @override
+  String get cqDraftDiscardBody =>
+      'Ya completaste algunos campos. Guarda un borrador para continuar después o descarta lo que escribiste.';
 }

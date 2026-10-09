@@ -2064,4 +2064,24 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cqCreateTimeout =>
       'No response. The queue may have been created: check your list before trying again.';
+
+  @override
+  String get cqResumeTitle => 'Pick up where you left off?';
+
+  @override
+  String get cqResumeBody =>
+      'You have a queue in progress that was not created. Continue where you left off or discard it?';
+
+  @override
+  String get cqResume => 'Continue';
+
+  @override
+  String get cqDiscardDraft => 'Discard';
+
+  @override
+  String get cqSaveDraft => 'Save draft';
+
+  @override
+  String get cqDraftDiscardBody =>
+      'You have filled in some fields. Save a draft to continue later or discard what you typed.';
 }

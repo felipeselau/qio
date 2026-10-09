@@ -645,5 +645,11 @@
   "cqDefaultColor": "Predeterminado",
   "cqGroupChosen": "En un grupo",
   "cqSummaryName": "Nombre",
-  "cqCreateTimeout": "Sin respuesta. Puede que la fila se haya creado: revise su lista antes de intentarlo de nuevo."
+  "cqCreateTimeout": "Sin respuesta. Puede que la fila se haya creado: revise su lista antes de intentarlo de nuevo.",
+  "cqResumeTitle": "¿Continuar donde lo dejaste?",
+  "cqResumeBody": "Tienes una fila en curso que no se creó. ¿Quieres continuar donde lo dejaste o descartarla?",
+  "cqResume": "Continuar",
+  "cqDiscardDraft": "Descartar",
+  "cqSaveDraft": "Guardar borrador",
+  "cqDraftDiscardBody": "Ya completaste algunos campos. Guarda un borrador para continuar después o descarta lo que escribiste."
 }

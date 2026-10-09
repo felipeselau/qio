@@ -645,5 +645,11 @@
   "cqDefaultColor": "Default",
   "cqGroupChosen": "In a group",
   "cqSummaryName": "Name",
-  "cqCreateTimeout": "No response. The queue may have been created: check your list before trying again."
+  "cqCreateTimeout": "No response. The queue may have been created: check your list before trying again.",
+  "cqResumeTitle": "Pick up where you left off?",
+  "cqResumeBody": "You have a queue in progress that was not created. Continue where you left off or discard it?",
+  "cqResume": "Continue",
+  "cqDiscardDraft": "Discard",
+  "cqSaveDraft": "Save draft",
+  "cqDraftDiscardBody": "You have filled in some fields. Save a draft to continue later or discard what you typed."
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qio_app/screens/create_queue_screen.dart';
+import 'package:qio_app/services/create_queue_draft_store.dart';
 
 import 'fake_services.dart';
 import 'pump_app.dart';
@@ -11,13 +12,30 @@ Future<FakeQueueService> pumpCreate(
   WidgetTester tester, {
   FakeQueueService? queues,
   Size size = const Size(390, 844),
+  CreateQueueDraftStore? draftStore,
+  String? uid,
+  FakeGroupService? groups,
+  double textScale = 1,
 }) async {
   final service = queues ?? FakeQueueService();
-  await pumpApp(
-    tester,
-    CreateQueueScreen(queues: service, groups: FakeGroupService()),
-    size: size,
+  Widget home = CreateQueueScreen(
+    queues: service,
+    groups: groups ?? FakeGroupService(),
+    draftStore: draftStore,
+    uid: uid,
   );
+  if (textScale != 1) {
+    final screen = home;
+    home = Builder(
+      builder: (context) => MediaQuery(
+        data: MediaQuery.of(
+          context,
+        ).copyWith(textScaler: TextScaler.linear(textScale)),
+        child: screen,
+      ),
+    );
+  }
+  await pumpApp(tester, home, size: size);
   return service;
 }
 
