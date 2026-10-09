@@ -522,5 +522,7 @@
   "noQueuesMatch": "Ninguna fila encontrada",
   "callPhoneTooltip": "Llamar a {name}",
   "@callPhoneTooltip": {"placeholders": {"name": {"type": "String"}}},
-  "callPhoneFailed": "No se pudo abrir el marcador"
+  "callPhoneFailed": "No se pudo abrir el marcador",
+  "privacyPolicy": "Política de privacidad",
+  "termsOfUse": "Términos de uso"
 }

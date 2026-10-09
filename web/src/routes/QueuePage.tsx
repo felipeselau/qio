@@ -883,6 +883,7 @@ export default function QueuePage() {
               placeholder={t('queue.namePlaceholder')}
               autoComplete="name"
               maxLength={60}
+              aria-describedby="privacy-notice"
             />
           </div>
           <div className="field">
@@ -894,7 +895,14 @@ export default function QueuePage() {
               onChange={(e) => setPhone(formatPhone(e.target.value))}
               placeholder="(00) 00000-0000"
               autoComplete="tel"
+              aria-describedby="privacy-notice"
             />
+            <p id="privacy-notice" className="field-hint">
+              {t('queue.privacyNotice')}{' '}
+              <a href="/privacidade" target="_blank" rel="noopener noreferrer">
+                {t('queue.privacyLink')}
+              </a>
+            </p>
           </div>
           {scheduled && (
             <fieldset className="slot-picker">

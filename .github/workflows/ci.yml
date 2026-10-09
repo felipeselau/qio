@@ -65,6 +65,7 @@ jobs:
           VITE_VAPID_KEY: ${{ vars.VITE_VAPID_KEY }}
           VITE_MEASUREMENT_ID: ${{ vars.VITE_MEASUREMENT_ID }}
           VITE_OWNER_APP_URL: ${{ vars.VITE_OWNER_APP_URL }}
+          VITE_PRIVACY_CONTACT: ${{ vars.VITE_PRIVACY_CONTACT }}
       - uses: actions/upload-artifact@v4
         with:
           name: web-dist

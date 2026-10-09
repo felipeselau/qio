@@ -570,5 +570,7 @@
   "noQueuesMatch": "Nenhuma fila encontrada",
   "callPhoneTooltip": "Ligar para {name}",
   "@callPhoneTooltip": {"placeholders": {"name": {"type": "String"}}},
-  "callPhoneFailed": "Não foi possível abrir o discador"
+  "callPhoneFailed": "Não foi possível abrir o discador",
+  "privacyPolicy": "Política de privacidade",
+  "termsOfUse": "Termos de uso"
 }

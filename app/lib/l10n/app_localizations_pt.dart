@@ -1647,4 +1647,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get callPhoneFailed => 'Não foi possível abrir o discador';
+
+  @override
+  String get privacyPolicy => 'Política de privacidade';
+
+  @override
+  String get termsOfUse => 'Termos de uso';
 }

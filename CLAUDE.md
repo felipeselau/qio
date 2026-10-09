@@ -548,6 +548,19 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
 - Agentes não têm credenciais: nunca rodar esses scripts sem `--dry-run` contra
   `qio-app`. As ações manuais do dono estão em `docs/backup.md` seção 7.
 
+## Privacidade
+
+- Estabelecimento = controlador; Qio = operador. Minuta técnica (não é parecer
+  jurídico): `/privacidade` e `/termos` na web (`routes/Privacy.tsx`, `Terms.tsx`,
+  textos em `web/src/i18n/legal/{pt,en,es}.ts`, carregados por `React.lazy`/import
+  dinâmico fora do bundle principal; pt é a versão de referência).
+- Contato do controlador: `VITE_PRIVACY_CONTACT` (variável do GitHub Actions + CI);
+  vazio mostra "contate o estabelecimento". Vigência ainda é placeholder.
+- O formulário de entrada tem aviso com link; rodapé e landing linkam as páginas;
+  o app (login e conta) abre as URLs via `LegalLinks`.
+- Retenção-alvo do `history`: 180 dias, **ainda não aplicada pelo código**. Mapa de
+  dados e pendências do dono em `docs/privacidade.md`. Export sem telefone é a #160.
+
 ## Tooling (adaptado do OpenCode)
 
 O framework de agentes (product → builder → reviewer → advisor) e as regras de

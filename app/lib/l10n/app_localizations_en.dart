@@ -1646,4 +1646,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get callPhoneFailed => 'Could not open the dialer';
+
+  @override
+  String get privacyPolicy => 'Privacy policy';
+
+  @override
+  String get termsOfUse => 'Terms of use';
 }

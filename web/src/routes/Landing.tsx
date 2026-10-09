@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { ownerAppUrl } from '../lib/landing';
+import { PRIVACY_PATH } from '../lib/privacy';
 
 const appUrl = ownerAppUrl(import.meta.env.VITE_OWNER_APP_URL as string | undefined);
 
@@ -37,6 +39,9 @@ export default function Landing() {
         </h2>
         <p className="muted">{t('landing.how')}</p>
       </section>
+      <p className="muted">
+        <Link to={PRIVACY_PATH}>{t('queue.privacyLink')}</Link>
+      </p>
       {appUrl && (
         <section className="landing-owner" aria-labelledby="landing-owner">
           <h2 id="landing-owner" className="landing-h2">

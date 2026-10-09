@@ -1650,4 +1650,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get callPhoneFailed => 'No se pudo abrir el marcador';
+
+  @override
+  String get privacyPolicy => 'Política de privacidad';
+
+  @override
+  String get termsOfUse => 'Términos de uso';
 }

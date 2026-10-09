@@ -7,7 +7,10 @@
     "language": "Language",
     "loading": "Loading the queue",
     "analyticsOptOut": "Do not collect usage statistics",
-    "analyticsOptIn": "Allow usage statistics again"
+    "analyticsOptIn": "Allow usage statistics again",
+    "privacy": "Privacy",
+    "terms": "Terms",
+    "legalNav": "Legal information"
   },
   "queue": {
     "connectFailed": "Could not connect",
@@ -45,6 +48,8 @@
     "nameLabel": "Name *",
     "namePlaceholder": "Your name",
     "phoneLabel": "Phone",
+    "privacyNotice": "We use your name and phone only to organize this queue.",
+    "privacyLink": "Read the privacy policy",
     "joining": "Joining...",
     "join": "Join queue",
     "defaultName": "Queue",

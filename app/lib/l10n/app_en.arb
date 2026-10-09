@@ -522,5 +522,7 @@
   "noQueuesMatch": "No queues found",
   "callPhoneTooltip": "Call {name}",
   "@callPhoneTooltip": {"placeholders": {"name": {"type": "String"}}},
-  "callPhoneFailed": "Could not open the dialer"
+  "callPhoneFailed": "Could not open the dialer",
+  "privacyPolicy": "Privacy policy",
+  "termsOfUse": "Terms of use"
 }

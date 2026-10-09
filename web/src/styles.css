@@ -627,3 +627,50 @@ a {
 .landing-owner .btn {
   text-decoration: none;
 }
+
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px 12px;
+}
+
+.field-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.field-hint a {
+  color: inherit;
+}
+
+.legal {
+  flex: 1;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 20px;
+  line-height: 1.55;
+}
+
+.legal-title {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.legal-h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 24px;
+}
+
+.legal-draft,
+.legal-warning {
+  border: 1px solid var(--badge-paused);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--badge-paused);
+}
