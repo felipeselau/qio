@@ -6,6 +6,14 @@ const {
   pruneTimestamps,
   isRateLimited,
   rateLimitFromEnv,
+  nameKey,
+  namesMatch,
+  pickClaimable,
+  claimEntryUpdate,
+  CLAIM_RATE_LIMIT,
+  CLAIM_PHONE_RATE_LIMIT,
+  claimPhoneKey,
+  uidHash,
 } = require('../src/join');
 
 describe('normalizeName', () => {
@@ -117,5 +125,108 @@ describe('rateLimitFromEnv', () => {
       { max: 3, windowMs: 10 * 60 * 1000 },
     );
     assert.deepEqual(rateLimitFromEnv({ JOIN_RATE_LIMIT_MAX: '0' }).max, 3);
+  });
+});
+
+describe('namesMatch', () => {
+  it('ignora acento, caixa, bordas e espaços repetidos', () => {
+    assert.equal(nameKey('  JOÃO   da  Silva '), 'joao da silva');
+    assert.equal(namesMatch('José Álvares', 'jose   alvares'), true);
+  });
+
+  it('diferencia nomes distintos e vazios', () => {
+    assert.equal(namesMatch('Ana', 'Ana Maria'), false);
+    assert.equal(namesMatch('', ''), false);
+    assert.equal(namesMatch('Ana', null), false);
+  });
+});
+
+describe('pickClaimable', () => {
+  const entries = [
+    { entryId: 'a', uid: 'u1', name: 'Ana Souza', status: 'waiting', joinedAt: 2 },
+    { entryId: 'b', uid: 'u2', name: 'ana souza', status: 'called', joinedAt: 1 },
+    { entryId: 'c', uid: 'u3', name: 'Ana Souza', status: 'served', joinedAt: 0 },
+  ];
+
+  it('escolhe a waiting com nome igual', () => {
+    assert.equal(pickClaimable(entries, 'ANA  souza', 'novo').entryId, 'a');
+  });
+
+  it('não permite reivindicar entry called', () => {
+    assert.equal(pickClaimable([entries[1]], 'Ana Souza', 'novo'), null);
+  });
+
+  it('aceita entry manual sem uid', () => {
+    const manual = { entryId: 'm', name: 'Ana', status: 'waiting', manual: true };
+    assert.equal(pickClaimable([manual], 'ana', 'novo').entryId, 'm');
+  });
+
+  it('devolve null se o nome diverge', () => {
+    assert.equal(pickClaimable(entries, 'Bia', 'novo'), null);
+  });
+
+  it('ignora entries do próprio uid e inativas', () => {
+    assert.equal(pickClaimable(entries, 'Ana Souza', 'u1'), null);
+    assert.equal(pickClaimable([entries[2]], 'Ana Souza', 'novo'), null);
+    assert.equal(pickClaimable(null, 'Ana', 'novo'), null);
+  });
+});
+
+describe('claimEntryUpdate', () => {
+  const entry = {
+    uid: 'old',
+    ticket: 7,
+    name: 'Ana',
+    phone: '(11) 91234-5678',
+    status: 'waiting',
+    joinedAt: 5,
+    order: 9,
+    fcmToken: 'tok',
+  };
+
+  it('troca o uid, limpa o fcmToken e mantém o resto', () => {
+    const out = claimEntryUpdate(entry, 'old', 'new');
+    assert.equal(out.uid, 'new');
+    assert.equal('fcmToken' in out, false);
+    assert.equal(out.ticket, 7);
+    assert.equal(out.joinedAt, 5);
+    assert.equal(out.order, 9);
+    assert.equal(entry.uid, 'old');
+  });
+
+  it('aborta para entry called', () => {
+    assert.equal(claimEntryUpdate({ ...entry, status: 'called' }, 'old', 'new'), undefined);
+  });
+
+  it('aborta se o dono mudou ou a entry não está ativa', () => {
+    assert.equal(claimEntryUpdate(entry, 'other', 'new'), undefined);
+    assert.equal(claimEntryUpdate({ ...entry, status: 'left' }, 'old', 'new'), undefined);
+  });
+
+  it('repassa null (palpite inicial da transação)', () => {
+    assert.equal(claimEntryUpdate(null, 'old', 'new'), null);
+  });
+
+  it('limite de reivindicação é 3 por 10 min', () => {
+    assert.deepEqual(CLAIM_RATE_LIMIT, { max: 3, windowMs: 600000 });
+  });
+});
+
+describe('chaves de limite de reivindicação', () => {
+  it('hash do telefone é estável, sem PII e separa filas', () => {
+    const a = claimPhoneKey('q1', '(11) 91234-5678', 'p');
+    assert.equal(a, claimPhoneKey('q1', '11912345678', 'p'));
+    assert.notEqual(a, claimPhoneKey('q2', '(11) 91234-5678', 'p'));
+    assert.notEqual(a, claimPhoneKey('q1', '(11) 91234-5678', 'x'));
+    assert.match(a, /^[0-9a-f]{32}$/);
+  });
+
+  it('uidHash é curto e nulo sem uid', () => {
+    assert.match(uidHash('abc'), /^[0-9a-f]{12}$/);
+    assert.equal(uidHash(undefined), null);
+  });
+
+  it('limite por telefone é 5 por 10 min', () => {
+    assert.deepEqual(CLAIM_PHONE_RATE_LIMIT, { max: 5, windowMs: 600000 });
   });
 });
