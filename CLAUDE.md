@@ -585,6 +585,23 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   O bucket `qio-app.firebasestorage.app` já existe e as rules estão publicadas;
   rules testadas no emulator de Storage.
 
+## Aviso "me avise quando abrir" (web)
+
+- Em `paused` a `QueuePage` já esconde o formulário (mensagem/`resumeAt` via `StatusNotice`); em
+  `closed` e `paused` o componente `NotifyOpen` oferece "Me avise quando abrir". Só aparece se
+  `pushSupport()` não for `unsupported` (precisa de `VITE_VAPID_KEY`). Sem telefone novo.
+- Pedido: RTDB `queues/{id}/openWatchers/{uid} = {fcmToken, lang pt|en|es, createdAt}`
+  (`web/src/lib/openWatch.ts`; `createdAt` é `serverTimestamp`, as rules exigem `=== now`).
+  Rules: o próprio `uid` cria/lê/apaga o seu (só se `meta/name` existe e `meta/deleting` não
+  é `true`; token 1–4096); só o dono lista; operador e outros clientes não leem.
+- Trigger `onQueueOpened` (`meta/status`, `functions/src/openwatch.js`): só em
+  `closed|paused → open`. Lê até 500 watchers (`WATCHER_LIMIT`), ignora `createdAt` > 24 h,
+  envia `buildOpenMessage` (pt/en/es, `tag = queueId`) e apaga os watchers (inclusive vencidos
+  e token inválido); falha transitória do FCM mantém o watcher. `deleteQueue` apaga
+  `openWatchers` (`QUEUE_RTDB_PATHS`). Watchers além dos 500 lidos ficam até o próximo open/TTL.
+- Deploy: functions (`onQueueOpened`) → hosting → rules do RTDB. Web novo com rules antigas
+  recebe `permission_denied` ao gravar (o botão mostra erro, nada quebra).
+
 ## Push (dono e cliente)
 
 - **Dono:** o app registra o token em `owners/{uid}/devices/{token}`

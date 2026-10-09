@@ -7,18 +7,24 @@ const TEXT = {
     called: (ticket, queue) => `Senha #${ticket}: dirija-se ao atendimento (${queue})`,
     nextTitle: 'Você é o próximo',
     next: (queue) => `Fique por perto: a próxima senha em ${queue} é a sua.`,
+    openTitle: 'A fila abriu',
+    open: (queue) => `Já dá para entrar na fila: ${queue}.`,
   },
   en: {
     calledTitle: "It's your turn!",
     called: (ticket, queue) => `Ticket #${ticket}: please go to the service desk (${queue})`,
     nextTitle: "You're next",
     next: (queue) => `Stay close: you are next in ${queue}.`,
+    openTitle: 'The queue is open',
+    open: (queue) => `You can join the queue now: ${queue}.`,
   },
   es: {
     calledTitle: '¡Es tu turno!',
     called: (ticket, queue) => `Turno #${ticket}: dirígete a la atención (${queue})`,
     nextTitle: 'Eres el siguiente',
     next: (queue) => `Quédate cerca: eres el siguiente en ${queue}.`,
+    openTitle: 'La fila abrió',
+    open: (queue) => `Ya puedes entrar en la fila: ${queue}.`,
   },
 };
 
@@ -53,6 +59,19 @@ function buildNextMessage({ token, queueName, queueId, lang }) {
   };
 }
 
+function buildOpenMessage({ token, queueName, queueId, lang }) {
+  const t = TEXT[normalizeLang(lang)];
+  return {
+    token,
+    notification: { title: t.openTitle, body: t.open(queueLabel(queueName)) },
+    data: { type: 'open', queueId },
+    webpush: {
+      fcmOptions: { link: joinUrl(queueId) },
+      notification: { tag: queueId },
+    },
+  };
+}
+
 function orderKey(entry) {
   if (typeof entry.order === 'number') return entry.order;
   if (typeof entry.joinedAt === 'number') return entry.joinedAt;
@@ -74,6 +93,7 @@ function advancedFromWaiting(before, after) {
 module.exports = {
   buildCalledMessage,
   buildNextMessage,
+  buildOpenMessage,
   pickNextWaiting,
   advancedFromWaiting,
 };

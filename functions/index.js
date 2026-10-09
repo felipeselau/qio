@@ -43,7 +43,9 @@ const {
   buildNextMessage,
   pickNextWaiting,
   advancedFromWaiting,
+  buildOpenMessage,
 } = require('./src/webpush');
+const { openedFromClosed, activeWatchers, WATCHER_LIMIT } = require('./src/openwatch');
 const {
   normalizeRating,
   normalizeComment,
@@ -1124,6 +1126,38 @@ exports.onQueueAdvanced = onValueWritten(
       );
     } catch (err) {
       logError('onQueueAdvanced failed', err, { queueId });
+    }
+    return null;
+  },
+);
+
+exports.onQueueOpened = onValueWritten(
+  { ref: 'queues/{queueId}/meta/status', region: 'us-central1' },
+  async (event) => {
+    if (!openedFromClosed(event.data.before.val(), event.data.after.val())) return null;
+    const { queueId } = event.params;
+    const db = getDatabase();
+    try {
+      const watchersRef = db.ref(`queues/${queueId}/openWatchers`);
+      const snap = await watchersRef.limitToFirst(WATCHER_LIMIT).once('value');
+      const raw = snap.val();
+      if (!raw) return null;
+      const watchers = activeWatchers(raw, Date.now());
+      const nameSnap = await db.ref(`queues/${queueId}/meta/name`).once('value');
+      const queueName = nameSnap.val();
+      const toRemove = new Set(Object.keys(raw));
+      for (let i = 0; i < watchers.length; i += 500) {
+        const chunk = watchers.slice(i, i + 500);
+        const response = await getMessaging().sendEach(
+          chunk.map((w) => buildOpenMessage({ token: w.token, queueName, queueId, lang: w.lang })),
+        );
+        response.responses.forEach((r, idx) => {
+          if (!r.success && !isStaleTokenError(r.error?.code)) toRemove.delete(chunk[idx].uid);
+        });
+      }
+      await Promise.all([...toRemove].map((uid) => watchersRef.child(uid).remove()));
+    } catch (err) {
+      logError('onQueueOpened failed', err, { queueId });
     }
     return null;
   },
