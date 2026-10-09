@@ -11,13 +11,17 @@ if [ "$DRY_RUN" = "true" ]; then
 fi
 
 deploy() {
-  echo "::group::firebase deploy --only $1 (dry_run=$DRY_RUN)"
-  firebase deploy --only "$1" "${flags[@]}"
+  local extra=()
+  if [ "${2:-}" = "force" ] && [ "$DRY_RUN" != "true" ]; then
+    extra+=(--force)
+  fi
+  echo "::group::firebase deploy --only $1 (dry_run=$DRY_RUN${extra:+, --force})"
+  firebase deploy --only "$1" "${flags[@]}" ${extra[@]+"${extra[@]}"}
   echo "::endgroup::"
 }
 
 case "$TARGET" in
-  functions) deploy functions ;;
+  functions) deploy functions force ;;
   rules-rtdb) deploy database ;;
   rules-firestore) deploy firestore:rules ;;
   rules-storage) deploy storage ;;
@@ -25,7 +29,7 @@ case "$TARGET" in
   hosting) deploy hosting ;;
   all-ordered)
     deploy firestore:indexes
-    deploy functions
+    deploy functions force
     echo "::notice::Backfill (functions/scripts/backfill-*.js) é manual: rode agora, se necessário (docs/deploy.md)."
     deploy hosting
     deploy database

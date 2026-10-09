@@ -70,7 +70,7 @@ O sistema é composto por **3 módulos** que se comunicam via **Firebase** (BaaS
   - **Authentication**: login do proprietário (email/Google) e do cliente (anônimo)
   - **Firestore**: banco de dados relacional para dados duráveis (proprietários, filas, histórico)
   - **Realtime Database (RTDB)**: banco de dados em tempo real para estado vivo das filas (posições, chamadas)
-  - **Cloud Functions** (v2, Node 22): callables `joinQueue` e `submitFeedback`; gatilhos `syncPublicTicket`, `onEntryCalled`, `onEntryJoined`, `onQueueAdvanced` e `updateServiceEstimate`; agendadas `applyQueueSchedules` e `evaluateQueueAlerts`
+  - **Cloud Functions** (v2, Node 22): callables `joinQueue` e `submitFeedback`; gatilhos `syncPublicTicket` (roteador único de `entries`: espelho `public/`, push de nova entry, "é a sua vez" e "você é o próximo") e `updateServiceEstimate`; agendadas `applyQueueSchedules` e `evaluateQueueAlerts`
   - **Storage**: logos das filas
   - **Hosting**: hospedagem do site do cliente (React)
   - **Cloud Messaging (FCM)**: envio de notificações push
