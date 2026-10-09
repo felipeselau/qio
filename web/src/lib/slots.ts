@@ -45,6 +45,21 @@ export function isSlotFull(taken: number, slot: Slot): boolean {
   return taken >= slot.capacity;
 }
 
+export type SlotOption = { slot: Slot; free: number; past: boolean; slotFull: boolean };
+
+export function buildSlotOptions(
+  slots: Slot[],
+  publicTickets: Record<string, PublicWithSlot>,
+  now: number,
+): SlotOption[] {
+  return slots.map((slot) => {
+    const taken = slotTaken(publicTickets, slot);
+    const past = isSlotPast(slot.start, now);
+    const slotFull = isSlotFull(taken, slot);
+    return { slot, free: Math.max(slot.capacity - taken, 0), past, slotFull };
+  });
+}
+
 export function formatSlotTime(ms: number, language: string): string {
   return new Date(ms).toLocaleTimeString(language, {
     hour: '2-digit',

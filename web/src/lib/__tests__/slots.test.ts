@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   MAX_SLOTS,
   SLOT_GRACE_MS,
+  buildSlotOptions,
   formatSlotTime,
   isSlotFull,
   isSlotPast,
@@ -116,5 +117,31 @@ describe('formatSlotTime', () => {
   });
   it('renders just after midnight', () => {
     expect(formatSlotTime(sp('2026-03-10T00:05:00'), 'en')).toBe('00:05');
+  });
+});
+
+describe('buildSlotOptions', () => {
+  const now = sp('2026-05-01T10:00:00');
+  const slots = [
+    { id: 'a', start: '08:00', capacity: 2 },
+    { id: 'b', start: '12:00', capacity: 2 },
+    { id: 'c', start: '15:00', capacity: 3 },
+  ];
+  const tickets = {
+    t1: { status: 'waiting', slotId: 'b' },
+    t2: { status: 'called', slotId: 'b' },
+    t3: { status: 'waiting', slotId: 'c' },
+    t4: { status: 'waiting' },
+  };
+
+  it('marca passado, lotado e vagas livres', () => {
+    const [a, b, c] = buildSlotOptions(slots, tickets, now);
+    expect(a).toMatchObject({ free: 2, past: true, slotFull: false });
+    expect(b).toMatchObject({ free: 0, past: false, slotFull: true });
+    expect(c).toMatchObject({ free: 2, past: false, slotFull: false });
+  });
+
+  it('lista vazia devolve vazio', () => {
+    expect(buildSlotOptions([], tickets, now)).toEqual([]);
   });
 });
