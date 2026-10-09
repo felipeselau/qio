@@ -72,6 +72,17 @@ void main() {
       }
     });
 
+    test('failed-precondition com reason recent-login vira recent-login', () {
+      final mapped = mapCallableError(
+        FirebaseFunctionsException(
+          message: 'x',
+          code: 'failed-precondition',
+          details: {'reason': 'recent-login'},
+        ),
+      );
+      expect(mapped.code, 'recent-login');
+    });
+
     test('aborted com reason partial vira delete-incomplete', () {
       final mapped = mapCallableError(
         FirebaseFunctionsException(

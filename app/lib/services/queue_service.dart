@@ -49,8 +49,10 @@ class QueueService {
         .where('ownerId', isEqualTo: _uid)
         .snapshots()
         .map(
-          (snap) =>
-              snap.docs.map((d) => Queue.fromDoc(d.id, d.data())).toList(),
+          (snap) => snap.docs
+              .where((d) => d.data()['deleting'] != true)
+              .map((d) => Queue.fromDoc(d.id, d.data()))
+              .toList(),
         );
   }
 

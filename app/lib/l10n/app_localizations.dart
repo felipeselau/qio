@@ -400,6 +400,12 @@ abstract class AppLocalizations {
   /// **'Tentar novamente'**
   String get deleteAccountRetry;
 
+  /// No description provided for @deleteAccountRecentLogin.
+  ///
+  /// In pt, this message translates to:
+  /// **'Por segurança, confirme sua identidade de novo para concluir a exclusão.'**
+  String get deleteAccountRecentLogin;
+
   /// No description provided for @appearance.
   ///
   /// In pt, this message translates to:

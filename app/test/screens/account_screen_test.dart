@@ -237,6 +237,50 @@ void main() {
       );
     });
 
+    testWidgets('recent-login pede nova reautenticação', (tester) async {
+      final auth = FakeAuthService(user: FakeUser());
+      failWith = FirebaseException(
+        plugin: 'cloud_functions',
+        code: 'recent-login',
+      );
+      await open(tester, auth);
+      await tester.enterText(find.byType(TextField).first, 'EXCLUIR');
+      await tester.enterText(find.byType(TextField).last, 'segredo');
+      await tester.pump();
+      await tester.tap(confirmButton());
+      await tick(tester);
+      expect(
+        find.textContaining('confirme sua identidade de novo'),
+        findsOneWidget,
+      );
+
+      failWith = null;
+      await tester.tap(confirmButton());
+      await tick(tester);
+      expect(auth.calls, [
+        'reauth:password:segredo',
+        'reauth:password:segredo',
+        'signOut',
+      ]);
+    });
+
+    testWidgets('sign out com erro após exclusão não prende o usuário', (
+      tester,
+    ) async {
+      final auth = FakeAuthService(
+        user: FakeUser(),
+        signOutError: Exception('sessão morta'),
+      );
+      await open(tester, auth);
+      await tester.enterText(find.byType(TextField).first, 'EXCLUIR');
+      await tester.enterText(find.byType(TextField).last, 'segredo');
+      await tester.pump();
+      await tester.tap(confirmButton());
+      await tick(tester);
+      expect(invoked, ['deleteAccount']);
+      expect(find.text('Não foi possível sair da conta.'), findsNothing);
+    });
+
     testWidgets('erro da callable mostra retry sem nova reautenticação', (
       tester,
     ) async {

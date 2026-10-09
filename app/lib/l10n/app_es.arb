@@ -50,6 +50,7 @@
   "deleteAccountReauthFailed": "No se pudo confirmar tu identidad. Revisa la contraseña e inténtalo de nuevo.",
   "deleteAccountError": "La eliminación no terminó. Parte de los datos puede haberse borrado ya. Inténtalo de nuevo para completarla.",
   "deleteAccountRetry": "Reintentar",
+  "deleteAccountRecentLogin": "Por seguridad, confirma tu identidad de nuevo para completar la eliminación.",
   "appearance": "Apariencia",
   "systemOption": "Sistema",
   "themeLight": "Claro",

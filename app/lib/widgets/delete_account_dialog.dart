@@ -75,6 +75,14 @@ class _DeleteAccountDialogState extends State<DeleteAccountDialog> {
       if (mounted) Navigator.of(context).pop(true);
     } on Exception catch (e) {
       if (!mounted) return;
+      if (e is FirebaseException && e.code == 'recent-login') {
+        setState(() {
+          _reauthenticated = false;
+          _stage = _Stage.reauthFailed;
+          _errorText = l10n.deleteAccountRecentLogin;
+        });
+        return;
+      }
       setState(() {
         _stage = _Stage.failed;
         _errorText =

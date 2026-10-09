@@ -171,6 +171,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteAccountRetry => 'Try again';
 
   @override
+  String get deleteAccountRecentLogin =>
+      'For your security, confirm your identity again to finish the deletion.';
+
+  @override
   String get appearance => 'Appearance';
 
   @override

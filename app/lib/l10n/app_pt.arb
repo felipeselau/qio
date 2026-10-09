@@ -51,6 +51,7 @@
   "deleteAccountReauthFailed": "Não foi possível confirmar sua identidade. Confira a senha e tente de novo.",
   "deleteAccountError": "A exclusão não terminou. Parte dos dados pode já ter sido apagada. Tente novamente para concluir.",
   "deleteAccountRetry": "Tentar novamente",
+  "deleteAccountRecentLogin": "Por segurança, confirme sua identidade de novo para concluir a exclusão.",
   "appearance": "Aparência",
   "systemOption": "Sistema",
   "themeLight": "Claro",

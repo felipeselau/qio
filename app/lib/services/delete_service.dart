@@ -22,9 +22,11 @@ bool deleteConfirmationMatches(String input, {String? email}) {
 FirebaseException mapCallableError(FirebaseFunctionsException e) {
   final details = e.details;
   final reason = details is Map ? details['reason'] : null;
-  final code = e.code == 'aborted' && reason == 'partial'
-      ? 'delete-incomplete'
-      : e.code;
+  final code = switch ((e.code, reason)) {
+    ('aborted', 'partial') => 'delete-incomplete',
+    ('failed-precondition', 'recent-login') => 'recent-login',
+    _ => e.code,
+  };
   return FirebaseException(
     plugin: 'cloud_functions',
     code: code,

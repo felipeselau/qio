@@ -50,6 +50,7 @@
   "deleteAccountReauthFailed": "Couldn't confirm your identity. Check your password and try again.",
   "deleteAccountError": "Deletion didn't finish. Some data may already be gone. Try again to complete it.",
   "deleteAccountRetry": "Try again",
+  "deleteAccountRecentLogin": "For your security, confirm your identity again to finish the deletion.",
   "appearance": "Appearance",
   "systemOption": "System",
   "themeLight": "Light",

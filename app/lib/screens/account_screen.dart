@@ -107,7 +107,11 @@ class _AccountScreenState extends State<AccountScreen> {
       ),
     );
     if (deleted != true || !mounted) return;
-    await _signOut();
+    try {
+      await _auth.signOut();
+    } catch (_) {}
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   String _displayName(Map<String, dynamic>? owner) {
