@@ -53,6 +53,10 @@ functions) e `test:callable` (com functions, só `join-callable.test.js`). Os
 triggers (`syncPublicTicket` remove `entries/{id}` após `left`) reagiam tarde ao
 seed do teste seguinte e apagavam a entry (flake em `database.test.js`); não
 volte a subir functions junto das rules.
+`test:callable` define `MANUAL_MAX_ACTIVE_ENTRIES=40`: `resolveActiveCeiling`
+(`functions/src/manual.js`) só aceita esse override com `FUNCTIONS_EMULATOR=true` e só abaixo de
+1000 (produção sempre usa 1000). Semear 1000 entries disparava ~2000 triggers no emulator e a
+callable `addManualEntry` falhava com `functions/internal` no CI (teste "teto absoluto").
 
 Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
 `~/.claude/CLAUDE.md`). Não há testes em `web/`. Contagem de testes, cobertura e limitações
