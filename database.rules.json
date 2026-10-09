@@ -52,6 +52,9 @@
               }
             }
           },
+          "waitingCount": {
+            ".validate": false
+          },
           "logoUrl": {
             ".validate": "newData.isString() && newData.val().length <= 600 && newData.val().matches(/^https:\\/\\/firebasestorage\\.googleapis\\.com\\//)"
           }

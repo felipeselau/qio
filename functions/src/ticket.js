@@ -19,4 +19,17 @@ function shouldRenotify(before, after) {
   return (after.recalledAt ?? 0) !== (before.recalledAt ?? 0);
 }
 
-module.exports = { orderOf, publicTicketFor, shouldRenotify };
+function countWaiting(publicMap) {
+  if (!publicMap || typeof publicMap !== 'object') return 0;
+  let n = 0;
+  for (const v of Object.values(publicMap)) {
+    if (v && v.status === 'waiting') n += 1;
+  }
+  return n;
+}
+
+function waitingChanged(before, after) {
+  return (before?.status === 'waiting') !== (after?.status === 'waiting');
+}
+
+module.exports = { orderOf, publicTicketFor, shouldRenotify, countWaiting, waitingChanged };

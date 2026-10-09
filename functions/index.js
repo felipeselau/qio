@@ -26,7 +26,8 @@ const {
   slotsFromDoc,
   isSlotFull,
 } = require('./src/slots');
-const { publicTicketFor, shouldRenotify } = require('./src/ticket');
+const { shouldRenotify } =require('./src/ticket');
+const { applyEntryChange, reconcileWaitingCounts } = require('./src/waiting');
 const { planScheduleChange } = require('./src/schedule');
 const {
   buildNewEntryMessage,
@@ -650,28 +651,33 @@ exports.syncPublicTicket = onValueWritten(
     region: 'us-central1',
   },
   async (event) => {
-    const after = event.data.after.val();
-    const { queueId, entryId } = event.params;
-    const db = getDatabase();
-    const publicRef = db.ref(`queues/${queueId}/public/${entryId}`);
-    try {
-      if (after && after.status === 'left') {
-        try {
-          await archiveLeftEntry(queueId, entryId, after);
-          await db.ref(`queues/${queueId}/entries/${entryId}`).remove();
-        } finally {
-          await publicRef.remove();
-        }
-      } else if (after && ACTIVE_STATUSES.includes(after.status)) {
-        await publicRef.set(publicTicketFor(after));
-      } else {
-        await publicRef.remove();
-      }
-    } catch (err) {
-      logError('syncPublicTicket failed', err, { queueId, entryId });
-      throw err;
-    }
+    await applyEntryChange(
+      getDatabase(),
+      {
+        queueId: event.params.queueId,
+        entryId: event.params.entryId,
+        before: event.data.before.val(),
+        after: event.data.after.val(),
+      },
+      { archiveLeftEntry, logError },
+    );
     return null;
+  },
+);
+
+exports.reconcileWaitingCounts = onSchedule(
+  { schedule: 'every 15 minutes', region: 'us-central1', timeZone: 'UTC' },
+  async () => {
+    const snap = await getFirestore().collection('queues').select().get();
+    const results = await reconcileWaitingCounts(
+      getDatabase(),
+      snap.docs.map((d) => d.id),
+      {
+        concurrency: 5,
+        onError: (err, queueId) => logError('reconcileWaitingCounts failed', err, { queueId }),
+      },
+    );
+    console.log(`reconcileWaitingCounts: ${results.length} filas`);
   },
 );
 
