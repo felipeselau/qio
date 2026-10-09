@@ -554,5 +554,8 @@
   "sortByName": "Nome",
   "sortByRecent": "Mais recentes",
   "sortByWaiting": "Mais espera",
-  "noQueuesMatch": "Nenhuma fila encontrada"
+  "noQueuesMatch": "Nenhuma fila encontrada",
+  "callPhoneTooltip": "Ligar para {name}",
+  "@callPhoneTooltip": {"placeholders": {"name": {"type": "String"}}},
+  "callPhoneFailed": "Não foi possível abrir o discador"
 }

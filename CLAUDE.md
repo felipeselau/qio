@@ -340,6 +340,9 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
 - Aviso ao dono quando alguém entra na fila (som + vibração + SnackBar) é
   in-app: `QueuePanelScreen` assina `watchEntries` e usa `entry_diff.dart`. Só
   funciona com o painel aberto; push com o app fechado é trabalho futuro.
+- Painel (dono/operador): `WaitingTile` e `CurrentCalledCard` mostram o telefone e o
+  `PhoneCallButton` abre `tel:` (`phoneToTelUri` em `services/phone_call.dart`; só com
+  10–11 dígitos; `UrlLauncher` injetável). Telefone nunca aparece em `public/` nem na web.
 - `web/src/lib/messaging.ts`: `getMessaging()` lança em navegadores sem suporte a
   FCM. Use sempre `await getMessagingSafe()` (assíncrono, import dinâmico via
   `messagingModule.ts`): `null` (em cache) = sem suporte; falha de rede ao baixar o
