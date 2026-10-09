@@ -8,9 +8,8 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 Versão do app: 1.5.0+6.
 
-<!-- TODO #164: incluir aqui o espelho Firestore→RTDB por trigger (branch feat/mirror-trigger) quando o PR for mergeado -->
-
 ### Adicionado
+- Triggers `mirrorQueueToRtdb` e `mirrorOperatorToRtdb`: o Firestore passa a replicar `meta`, `owners` e `operatorUids` no RTDB de forma idempotente e segura contra eventos fora de ordem (#164, primeira etapa; o cliente ainda faz dual-write).
 - Métricas por atendente no painel gerencial (#124).
 - Exportação das métricas em CSV e PDF (#125).
 - Métricas de espera (mediana, P90 e faixas) e de re-chamadas (#126).
