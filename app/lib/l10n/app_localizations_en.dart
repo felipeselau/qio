@@ -2098,4 +2098,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cqShareLink => 'Share link';
+
+  @override
+  String get cqAlertsTitle => 'Want alerts for this queue?';
+
+  @override
+  String get cqAlertsHint =>
+      'Optional. We notify you when the wait, no-shows or a stalled queue go past the limit you pick.';
+
+  @override
+  String get cqAlertsPushNote =>
+      'Alerts arrive as notifications. Whether this account receives them is an option on the Operational alerts screen, in the queue settings.';
+
+  @override
+  String get cqSummaryAlerts => 'Alerts';
 }

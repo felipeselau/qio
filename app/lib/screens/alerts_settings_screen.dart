@@ -9,6 +9,7 @@ import '../theme/qio_text_styles.dart';
 import '../widgets/qio_button.dart';
 import '../widgets/qio_card.dart';
 import '../widgets/qio_responsive_body.dart';
+import '../widgets/queue_form/alerts_form.dart';
 import '../theme/qio_palette.dart';
 
 class AlertsSettingsScreen extends StatefulWidget {
@@ -133,84 +134,10 @@ class _AlertsSettingsScreenState extends State<AlertsSettingsScreen> {
               ),
             ),
             const SizedBox(height: 12),
-            QioCard(
-              child: SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(l10n.alertsEnable),
-                value: _config.enabled,
-                onChanged: (v) =>
-                    setState(() => _config = _config.copyWith(enabled: v)),
-              ),
+            AlertsForm(
+              value: _config,
+              onChanged: (v) => setState(() => _config = v),
             ),
-            if (_config.enabled) ...[
-              const SizedBox(height: 16),
-              _LimitCard(
-                label: l10n.alertsWaitLimit,
-                value: _config.maxWaitMin,
-                range: AlertsConfig.waitRange,
-                initial: 30,
-                format: (v) => l10n.alertsMinutes(v),
-                onChanged: (v) => setState(
-                  () => _config = _config.copyWith(maxWaitMin: () => v),
-                ),
-              ),
-              const SizedBox(height: 12),
-              _LimitCard(
-                label: l10n.alertsNoShowLimit,
-                value: _config.maxNoShowPct,
-                range: AlertsConfig.noShowRange,
-                initial: 30,
-                format: (v) => l10n.alertsPercent(v),
-                onChanged: (v) => setState(
-                  () => _config = _config.copyWith(maxNoShowPct: () => v),
-                ),
-              ),
-              const SizedBox(height: 12),
-              _LimitCard(
-                label: l10n.alertsIdleLimit,
-                value: _config.idleMin,
-                range: AlertsConfig.idleRange,
-                initial: 15,
-                format: (v) => l10n.alertsMinutes(v),
-                onChanged: (v) => setState(
-                  () => _config = _config.copyWith(idleMin: () => v),
-                ),
-              ),
-              const SizedBox(height: 12),
-              QioCard(
-                child: Row(
-                  children: [
-                    Expanded(child: Text(l10n.alertsCooldown)),
-                    DropdownButton<int>(
-                      value:
-                          AlertsConfig.cooldownOptions.contains(
-                            _config.cooldownMin,
-                          )
-                          ? _config.cooldownMin
-                          : AlertsConfig.defaultCooldownMin,
-                      items: [
-                        for (final m in AlertsConfig.cooldownOptions)
-                          DropdownMenuItem(
-                            value: m,
-                            child: Text(l10n.alertsMinutes(m)),
-                          ),
-                      ],
-                      onChanged: (v) {
-                        if (v != null) {
-                          setState(
-                            () => _config = _config.copyWith(cooldownMin: v),
-                          );
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              if (!_canSave) ...[
-                const SizedBox(height: 12),
-                Text(l10n.alertsNoRule, style: context.qioText.caption),
-              ],
-            ],
             const SizedBox(height: 24),
             QioButton(
               label: l10n.save,
@@ -220,55 +147,6 @@ class _AlertsSettingsScreenState extends State<AlertsSettingsScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _LimitCard extends StatelessWidget {
-  const _LimitCard({
-    required this.label,
-    required this.value,
-    required this.range,
-    required this.initial,
-    required this.format,
-    required this.onChanged,
-  });
-
-  final String label;
-  final int? value;
-  final (int, int) range;
-  final int initial;
-  final String Function(int) format;
-  final ValueChanged<int?> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final v = value;
-    return QioCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(label),
-            subtitle: v != null ? Text(format(v)) : null,
-            value: v != null,
-            onChanged: (on) => onChanged(on ? initial : null),
-          ),
-          if (v != null)
-            Slider(
-              value: v.toDouble().clamp(
-                range.$1.toDouble(),
-                range.$2.toDouble(),
-              ),
-              min: range.$1.toDouble(),
-              max: range.$2.toDouble(),
-              divisions: range.$2 - range.$1,
-              label: format(v),
-              onChanged: (d) => onChanged(d.round()),
-            ),
-        ],
       ),
     );
   }

@@ -1,11 +1,12 @@
 import 'dart:convert';
 
+import '../models/alerts_config.dart';
 import '../models/expiry_config.dart';
 import '../models/queue_schedule.dart';
 import '../models/queue_slot.dart';
 import '../services/brand_palette.dart';
 
-const createQueueDraftVersion = 1;
+const createQueueDraftVersion = 2;
 
 class CreateQueueDraft {
   const CreateQueueDraft({
@@ -19,6 +20,7 @@ class CreateQueueDraft {
     this.brandColor,
     this.schedule,
     this.expiry,
+    this.alerts,
   });
 
   final String name;
@@ -31,6 +33,7 @@ class CreateQueueDraft {
   final String? brandColor;
   final QueueSchedule? schedule;
   final ExpiryConfig? expiry;
+  final AlertsConfig? alerts;
 
   CreateQueueDraft copyWith({
     String? name,
@@ -47,6 +50,8 @@ class CreateQueueDraft {
     bool clearSchedule = false,
     ExpiryConfig? expiry,
     bool clearExpiry = false,
+    AlertsConfig? alerts,
+    bool clearAlerts = false,
   }) {
     return CreateQueueDraft(
       name: name ?? this.name,
@@ -59,6 +64,7 @@ class CreateQueueDraft {
       brandColor: clearBrandColor ? null : brandColor ?? this.brandColor,
       schedule: clearSchedule ? null : schedule ?? this.schedule,
       expiry: clearExpiry ? null : expiry ?? this.expiry,
+      alerts: clearAlerts ? null : alerts ?? this.alerts,
     );
   }
 
@@ -75,6 +81,7 @@ class CreateQueueDraft {
       brandColor: brandColor,
       schedule: schedule,
       expiry: expiry,
+      alerts: alerts,
     );
   }
 
@@ -90,6 +97,7 @@ class CreateQueueDraft {
     'brandColor': brandColor,
     'schedule': schedule?.toMap(),
     'expiry': expiry?.toMap(),
+    'alerts': alerts?.toMap(),
   };
 
   static CreateQueueDraft? fromJson(Object? raw, {Set<String>? validGroupIds}) {
@@ -138,6 +146,7 @@ class CreateQueueDraft {
       brandColor: color,
       schedule: schedule,
       expiry: ExpiryConfig.fromMap(raw['expiry']),
+      alerts: version >= 2 ? AlertsConfig.fromMap(raw['alerts']) : null,
     );
   }
 

@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qio_app/controllers/create_queue_controller.dart';
 import 'package:qio_app/controllers/create_queue_draft.dart';
+import 'package:qio_app/models/alerts_config.dart';
 import 'package:qio_app/models/expiry_config.dart';
 import 'package:qio_app/models/queue_info.dart';
 import 'package:qio_app/models/queue_schedule.dart';
@@ -207,7 +208,7 @@ void main() {
   group('navegação', () {
     test('totalSteps e índice', () {
       final c = _named();
-      expect(c.totalSteps, 6);
+      expect(c.totalSteps, 7);
       expect(c.stepIndex, 0);
       expect(c.isFirst, isTrue);
       c.next();
@@ -216,7 +217,7 @@ void main() {
 
     test('percorre todos os passos até review e para', () {
       final c = _named();
-      for (var i = 0; i < 5; i++) {
+      for (var i = 0; i < 6; i++) {
         expect(c.next(), isTrue);
       }
       expect(c.step, CreateQueueStep.review);
@@ -288,7 +289,7 @@ void main() {
         ),
       );
       expect(c.skip(), isTrue);
-      expect(c.step, CreateQueueStep.review);
+      expect(c.step, CreateQueueStep.alerts);
       expect(c.draft.schedule, isNull);
       expect(c.draft.expiry, isNull);
     });
@@ -304,7 +305,7 @@ void main() {
     test('jumpTo só para passos já alcançados e válidos', () {
       final c = _named();
       expect(c.jumpTo(CreateQueueStep.review), isFalse);
-      for (var i = 0; i < 5; i++) {
+      for (var i = 0; i < 6; i++) {
         c.next();
       }
       expect(c.jumpTo(CreateQueueStep.name), isTrue);
@@ -316,7 +317,7 @@ void main() {
 
     test('editar na revisão volta direto à revisão', () {
       final c = _named();
-      for (var i = 0; i < 5; i++) {
+      for (var i = 0; i < 6; i++) {
         c.next();
       }
       expect(c.jumpTo(CreateQueueStep.capacity), isTrue);
@@ -332,7 +333,7 @@ void main() {
       'editar na revisão bloqueia next se inválido e back cancela retorno',
       () {
         final c = _named();
-        for (var i = 0; i < 5; i++) {
+        for (var i = 0; i < 6; i++) {
           c.next();
         }
         c.jumpTo(CreateQueueStep.capacity);
@@ -348,7 +349,7 @@ void main() {
 
     test('back durante retorno à revisão vai direto à revisão', () {
       final c = _named();
-      for (var i = 0; i < 5; i++) {
+      for (var i = 0; i < 6; i++) {
         c.next();
       }
       c.jumpTo(CreateQueueStep.capacity);
@@ -357,7 +358,7 @@ void main() {
       expect(c.step, CreateQueueStep.review);
       expect(c.returningToReview, isFalse);
       expect(c.back(), isTrue);
-      expect(c.step, CreateQueueStep.schedule);
+      expect(c.step, CreateQueueStep.alerts);
     });
   });
 
@@ -651,7 +652,128 @@ void main() {
       'capacity',
       'appearance',
       'schedule',
+      'alerts',
       'review',
     ]);
+  });
+
+  group('passo alerts', () {
+    const rule = AlertsConfig(enabled: true, maxWaitMin: 30);
+
+    test('sem alertas, desativado ou com regra é válido', () {
+      final c = _named();
+      expect(c.canContinue(CreateQueueStep.alerts), isTrue);
+      c.update((d) => d.copyWith(alerts: const AlertsConfig()));
+      expect(c.canContinue(CreateQueueStep.alerts), isTrue);
+      c.update((d) => d.copyWith(alerts: rule));
+      expect(c.canContinue(CreateQueueStep.alerts), isTrue);
+    });
+
+    test('ativado sem regra exige ao menos uma', () {
+      final c = _named()
+        ..update((d) => d.copyWith(alerts: const AlertsConfig(enabled: true)));
+      expect(
+        c.errorsFor(CreateQueueStep.alerts)[CreateQueueField.alerts],
+        AlertsError.noRule,
+      );
+      expect(c.canContinue(CreateQueueStep.review), isFalse);
+      expect(c.firstInvalidStep, CreateQueueStep.alerts);
+    });
+
+    test('limites de cada regra', () {
+      AlertsError? err(AlertsConfig a) =>
+          CreateQueueController(
+                draft: CreateQueueDraft(name: 'a', alerts: a),
+              ).errorsFor(CreateQueueStep.alerts)[CreateQueueField.alerts]
+              as AlertsError?;
+      expect(err(const AlertsConfig(enabled: true, maxWaitMin: 1)), isNull);
+      expect(err(const AlertsConfig(enabled: true, maxWaitMin: 240)), isNull);
+      expect(
+        err(const AlertsConfig(enabled: true, maxWaitMin: 0)),
+        AlertsError.maxWait,
+      );
+      expect(
+        err(const AlertsConfig(enabled: true, maxWaitMin: 241)),
+        AlertsError.maxWait,
+      );
+      expect(err(const AlertsConfig(enabled: true, maxNoShowPct: 100)), isNull);
+      expect(
+        err(const AlertsConfig(enabled: true, maxNoShowPct: 101)),
+        AlertsError.maxNoShow,
+      );
+      expect(err(const AlertsConfig(enabled: true, idleMin: 5)), isNull);
+      expect(
+        err(const AlertsConfig(enabled: true, idleMin: 4)),
+        AlertsError.idle,
+      );
+      expect(
+        err(const AlertsConfig(enabled: true, maxWaitMin: 5, cooldownMin: 4)),
+        AlertsError.cooldown,
+      );
+      expect(
+        err(const AlertsConfig(enabled: true, maxWaitMin: 5, cooldownMin: 5)),
+        isNull,
+      );
+    });
+
+    test('skip zera alerts e avança para a revisão', () {
+      final c = CreateQueueController(
+        draft: const CreateQueueDraft(name: 'a', alerts: rule),
+        step: CreateQueueStep.alerts,
+      );
+      expect(c.isOptional(CreateQueueStep.alerts), isTrue);
+      expect(c.skip(), isTrue);
+      expect(c.draft.alerts, isNull);
+      expect(c.step, CreateQueueStep.review);
+    });
+
+    test('toCreateArgs passa alerts ativos e omite os desligados', () {
+      final c = _named()..update((d) => d.copyWith(alerts: rule));
+      expect(c.toCreateArgs().alerts, rule);
+      c.update((d) => d.copyWith(alerts: const AlertsConfig()));
+      expect(c.toCreateArgs().alerts, isNull);
+      c.update((d) => d.copyWith(clearAlerts: true));
+      expect(c.toCreateArgs().alerts, isNull);
+    });
+
+    test('toCreateArgs lança com alerts ativos sem regra', () {
+      final c = _named()
+        ..update((d) => d.copyWith(alerts: const AlertsConfig(enabled: true)));
+      expect(c.toCreateArgs, throwsFormatException);
+    });
+
+    test('round trip preserva alerts e versão é 2', () {
+      const d = CreateQueueDraft(
+        name: 'a',
+        alerts: AlertsConfig(
+          enabled: true,
+          maxWaitMin: 20,
+          idleMin: 15,
+          cooldownMin: 60,
+        ),
+      );
+      final json = jsonDecode(jsonEncode(d.toJson()));
+      expect(json['version'], 2);
+      expect(CreateQueueDraft.fromJson(json), d);
+    });
+
+    test('rascunho versão 1 sem alerts continua válido', () {
+      final json = const CreateQueueDraft(name: 'Fila').toJson()
+        ..['version'] = 1
+        ..remove('alerts')
+        ..['step'] = 'review';
+      final back = CreateQueueController.fromJson(json)!;
+      expect(back.draft.alerts, isNull);
+      expect(back.draft.name, 'Fila');
+      expect(back.step, CreateQueueStep.review);
+    });
+
+    test('alerts inválidos no json são saneados', () {
+      final json = const CreateQueueDraft(name: 'Fila').toJson()
+        ..['alerts'] = {'enabled': true, 'maxWaitMin': 999}
+        ..['step'] = 'review';
+      final back = CreateQueueController.fromJson(json)!;
+      expect(back.step, CreateQueueStep.alerts);
+    });
   });
 }

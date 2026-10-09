@@ -656,5 +656,9 @@
   "cqShortcutAlerts": "Alerts",
   "cqLimitTitle": "Queue limit reached",
   "cqCheckingLimit": "Checking your queue limit",
-  "cqShareLink": "Share link"
+  "cqShareLink": "Share link",
+  "cqAlertsTitle": "Want alerts for this queue?",
+  "cqAlertsHint": "Optional. We notify you when the wait, no-shows or a stalled queue go past the limit you pick.",
+  "cqAlertsPushNote": "Alerts arrive as notifications. Whether this account receives them is an option on the Operational alerts screen, in the queue settings.",
+  "cqSummaryAlerts": "Alerts"
 }

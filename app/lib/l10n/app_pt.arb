@@ -713,5 +713,9 @@
   "cqShortcutAlerts": "Alertas",
   "cqLimitTitle": "Limite de filas atingido",
   "cqCheckingLimit": "Verificando seu limite de filas",
-  "cqShareLink": "Compartilhar link"
+  "cqShareLink": "Compartilhar link",
+  "cqAlertsTitle": "Quer receber alertas desta fila?",
+  "cqAlertsHint": "Opcional. Avisamos você quando a espera, o não comparecimento ou a fila parada passarem do limite que escolher.",
+  "cqAlertsPushNote": "Os avisos chegam por notificação. Se a conta recebe esses avisos é uma opção da tela Alertas operacionais, nas configurações da fila.",
+  "cqSummaryAlerts": "Alertas"
 }

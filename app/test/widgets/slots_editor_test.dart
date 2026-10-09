@@ -188,7 +188,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('09:00'), findsOneWidget);
 
-    await continueSteps(tester, 4);
+    await continueSteps(tester, 5);
     await tapKey(tester, 'create-submit');
     expect(queues.calls, ['create:Clínica:schedule:1']);
     expect(queues.createdSlots!.single.start, '09:00');

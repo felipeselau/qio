@@ -2105,4 +2105,18 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get cqShareLink => 'Compartir enlace';
+
+  @override
+  String get cqAlertsTitle => '¿Quiere recibir alertas de esta fila?';
+
+  @override
+  String get cqAlertsHint =>
+      'Opcional. Le avisamos cuando la espera, la inasistencia o la fila detenida superen el límite que elija.';
+
+  @override
+  String get cqAlertsPushNote =>
+      'Los avisos llegan como notificaciones. Si esta cuenta los recibe es una opción de la pantalla Alertas operativas, en los ajustes de la fila.';
+
+  @override
+  String get cqSummaryAlerts => 'Alertas';
 }
