@@ -1595,4 +1595,10 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get noQueuesMatch => 'Ninguna fila encontrada';
+
+  @override
+  String get privacyPolicy => 'Política de privacidad';
+
+  @override
+  String get termsOfUse => 'Términos de uso';
 }

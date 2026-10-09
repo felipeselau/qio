@@ -554,5 +554,7 @@
   "sortByName": "Nome",
   "sortByRecent": "Mais recentes",
   "sortByWaiting": "Mais espera",
-  "noQueuesMatch": "Nenhuma fila encontrada"
+  "noQueuesMatch": "Nenhuma fila encontrada",
+  "privacyPolicy": "Política de privacidade",
+  "termsOfUse": "Termos de uso"
 }

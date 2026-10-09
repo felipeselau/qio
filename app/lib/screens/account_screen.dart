@@ -13,6 +13,7 @@ import '../services/theme_controller.dart';
 import '../theme/qio_text_styles.dart';
 import '../widgets/qio_avatar.dart';
 import '../widgets/qio_button.dart';
+import '../widgets/legal_links.dart';
 import '../widgets/qio_card.dart';
 import '../widgets/qio_skeleton.dart';
 import '../widgets/qio_responsive_body.dart';
@@ -212,7 +213,9 @@ class _AccountScreenState extends State<AccountScreen> {
             const _AnalyticsCard(),
           ],
         ],
-        const SizedBox(height: 24),
+        const SizedBox(height: 12),
+        const LegalLinks(),
+        const SizedBox(height: 12),
         QioButton(
           label: l10n.signOut,
           variant: QioButtonVariant.danger,

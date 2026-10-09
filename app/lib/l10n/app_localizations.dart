@@ -2919,6 +2919,18 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Nenhuma fila encontrada'**
   String get noQueuesMatch;
+
+  /// No description provided for @privacyPolicy.
+  ///
+  /// In pt, this message translates to:
+  /// **'Política de privacidade'**
+  String get privacyPolicy;
+
+  /// No description provided for @termsOfUse.
+  ///
+  /// In pt, this message translates to:
+  /// **'Termos de uso'**
+  String get termsOfUse;
 }
 
 class _AppLocalizationsDelegate

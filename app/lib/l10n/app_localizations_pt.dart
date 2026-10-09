@@ -1592,4 +1592,10 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get noQueuesMatch => 'Nenhuma fila encontrada';
+
+  @override
+  String get privacyPolicy => 'Política de privacidade';
+
+  @override
+  String get termsOfUse => 'Termos de uso';
 }

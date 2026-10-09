@@ -7,6 +7,7 @@ import '../services/auth_errors.dart';
 import '../services/auth_service.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
+import '../widgets/legal_links.dart';
 import '../widgets/qio_button.dart';
 import '../widgets/qio_input.dart';
 import '../widgets/qio_responsive_body.dart';
@@ -253,6 +254,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ),
+                      const SizedBox(height: 8),
+                      const LegalLinks(),
                     ],
                   ),
                 ),
