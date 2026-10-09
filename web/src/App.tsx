@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import QueuePage from './routes/QueuePage';
 import Landing from './routes/Landing';
+import SlugRedirect from './routes/SlugRedirect';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from './lib/theme';
 import { lazy, Suspense, useState } from 'react';
@@ -89,6 +90,7 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/q/:queueId" element={<QueuePage />} />
           <Route path="/c/:queueId" element={<QueuePage />} />
+          <Route path="/n/:slug" element={<SlugRedirect />} />
           <Route
             path={PRIVACY_PATH}
             element={
