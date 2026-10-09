@@ -54,6 +54,16 @@ describe('RTDB rules', () => {
       await assertSucceeds(set(ref(rtdb(OWNER), path('meta/resumeAt')), 1790000000000));
     });
 
+    it('dono não reabre a fila enquanto meta/deleting for true', async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await update(ref(ctx.database(), path('meta')), { status: 'closed', deleting: true });
+      });
+      await assertFails(set(ref(rtdb(OWNER), path('meta/status')), 'open'));
+      await assertFails(update(ref(rtdb(OWNER), path('meta')), { status: 'open' }));
+      await assertFails(set(ref(rtdb(OWNER), path('meta/deleting')), null));
+      await assertSucceeds(set(ref(rtdb(OPERATOR), path('meta/serving')), 4));
+    });
+
     it('dono grava opensAt numérico; os demais não', async () => {
       await assertSucceeds(set(ref(rtdb(OWNER), path('meta/opensAt')), 1790000000000));
       await assertFails(set(ref(rtdb(OWNER), path('meta/opensAt')), 'amanhã'));

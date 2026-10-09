@@ -3,14 +3,22 @@ import '../../l10n/app_localizations.dart';
 import '../../models/queue_entry.dart';
 import '../../models/queue_slot.dart';
 import '../../theme/qio_text_styles.dart';
+import '../../services/phone_call.dart';
 import '../../widgets/qio_avatar.dart';
+import 'phone_call_button.dart';
 import '../../theme/qio_palette.dart';
 
 class WaitingTile extends StatelessWidget {
-  const WaitingTile({super.key, required this.entry, this.trailing});
+  const WaitingTile({
+    super.key,
+    required this.entry,
+    this.trailing,
+    this.launcher,
+  });
 
   final QueueEntry entry;
   final Widget? trailing;
+  final UrlLauncher? launcher;
 
   @override
   Widget build(BuildContext context) {
@@ -59,14 +67,6 @@ class WaitingTile extends StatelessWidget {
                         ],
                       ],
                     ),
-                    if (entry.manual && (entry.phone ?? '').isNotEmpty)
-                      Text(
-                        entry.phone!,
-                        style: context.qioText.caption.copyWith(
-                          fontSize: 12,
-                          color: context.qio.gray700,
-                        ),
-                      ),
                     if (entry.slotStart != null)
                       Text(
                         l10n.waitTileSlot(
@@ -80,6 +80,14 @@ class WaitingTile extends StatelessWidget {
                           color: context.qio.primaryText,
                         ),
                       ),
+                    if (phoneToTelUri(entry.phone) != null)
+                      Text(
+                        entry.phone!.trim(),
+                        style: context.qioText.caption.copyWith(
+                          fontSize: 12,
+                          color: context.qio.gray700,
+                        ),
+                      ),
                     Text(
                       l10n.waitTileSubtitle(entry.ticket, waitMin),
                       style: context.qioText.caption.copyWith(
@@ -89,6 +97,11 @@ class WaitingTile extends StatelessWidget {
                     ),
                   ],
                 ),
+              ),
+              PhoneCallButton(
+                phone: entry.phone,
+                name: entry.name,
+                launcher: launcher,
               ),
               ?trailing,
             ],

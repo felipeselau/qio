@@ -328,6 +328,84 @@ abstract class AppLocalizations {
   /// **'Não foi possível sair da conta.'**
   String get signOutError;
 
+  /// No description provided for @deleteAccountTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Excluir minha conta'**
+  String get deleteAccountTitle;
+
+  /// No description provided for @deleteAccountZone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Zona de risco'**
+  String get deleteAccountZone;
+
+  /// No description provided for @deleteAccountSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Apaga sua conta, suas filas, históricos, avaliações e dispositivos. Não dá para desfazer.'**
+  String get deleteAccountSubtitle;
+
+  /// No description provided for @deleteAccountWarning.
+  ///
+  /// In pt, this message translates to:
+  /// **'Todas as suas filas, o histórico de atendimentos, as avaliações, os grupos e a sua conta serão apagados de forma permanente. Quem está em uma fila sua perde a senha. Se você é operador de filas de outras pessoas, apenas o seu vínculo é removido.'**
+  String get deleteAccountWarning;
+
+  /// No description provided for @deleteAccountConfirmLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Digite EXCLUIR ou o seu e-mail para confirmar'**
+  String get deleteAccountConfirmLabel;
+
+  /// No description provided for @deleteAccountPasswordLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Senha atual'**
+  String get deleteAccountPasswordLabel;
+
+  /// No description provided for @deleteAccountGoogleHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você vai confirmar sua identidade com o Google antes de excluir.'**
+  String get deleteAccountGoogleHint;
+
+  /// No description provided for @deleteAccountConfirmButton.
+  ///
+  /// In pt, this message translates to:
+  /// **'Excluir definitivamente'**
+  String get deleteAccountConfirmButton;
+
+  /// No description provided for @deleteAccountProgress.
+  ///
+  /// In pt, this message translates to:
+  /// **'Excluindo seus dados. Isso pode levar alguns instantes.'**
+  String get deleteAccountProgress;
+
+  /// No description provided for @deleteAccountReauthFailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível confirmar sua identidade. Confira a senha e tente de novo.'**
+  String get deleteAccountReauthFailed;
+
+  /// No description provided for @deleteAccountError.
+  ///
+  /// In pt, this message translates to:
+  /// **'A exclusão não terminou. Parte dos dados pode já ter sido apagada. Tente novamente para concluir.'**
+  String get deleteAccountError;
+
+  /// No description provided for @deleteAccountRetry.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tentar novamente'**
+  String get deleteAccountRetry;
+
+  /// No description provided for @deleteAccountRecentLogin.
+  ///
+  /// In pt, this message translates to:
+  /// **'Por segurança, confirme sua identidade de novo para concluir a exclusão.'**
+  String get deleteAccountRecentLogin;
+
   /// No description provided for @appearance.
   ///
   /// In pt, this message translates to:
@@ -3039,6 +3117,18 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Este telefone já está na fila.'**
   String get manualAddPhoneDuplicate;
+
+  /// No description provided for @callPhoneTooltip.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ligar para {name}'**
+  String callPhoneTooltip(String name);
+
+  /// No description provided for @callPhoneFailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível abrir o discador'**
+  String get callPhoneFailed;
 }
 
 class _AppLocalizationsDelegate

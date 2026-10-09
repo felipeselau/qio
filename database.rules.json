@@ -4,7 +4,7 @@
       "$queueId": {
         "meta": {
           ".read": "auth != null",
-          ".write": "root.child('owners').child($queueId).child('ownerUid').val() === auth.uid",
+          ".write": "root.child('owners').child($queueId).child('ownerUid').val() === auth.uid && data.child('deleting').val() !== true",
           "serving": {
             ".write": "root.child('queues').child($queueId).child('operatorUids').child(auth.uid).val() === true"
           },
