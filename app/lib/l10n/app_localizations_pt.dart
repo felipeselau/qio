@@ -1937,4 +1937,117 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get dataSubjectReauthButton => 'Confirmar identidade';
+
+  @override
+  String cqStepOf(int current, int total) {
+    return 'Passo $current de $total';
+  }
+
+  @override
+  String get cqContinue => 'Continuar';
+
+  @override
+  String get cqSkip => 'Pular';
+
+  @override
+  String get cqQuickCreate => 'Criar agora';
+
+  @override
+  String get cqMoreDetails => 'Mais detalhes';
+
+  @override
+  String get cqNameTitle => 'Como se chama a fila?';
+
+  @override
+  String get cqNameHint =>
+      'Só o nome já basta. Você ajusta o resto depois no painel.';
+
+  @override
+  String get cqModeTitle => 'Como as pessoas entram?';
+
+  @override
+  String get cqModeQueueHint => 'Quem chega entra no fim da fila.';
+
+  @override
+  String get cqModeScheduleHint =>
+      'Cada pessoa escolhe um dos horários que você define.';
+
+  @override
+  String get cqSuggestionsTitle => 'Sugestões de horários';
+
+  @override
+  String get cqSuggestEvery30 => 'A cada 30 min, das 9h às 17h';
+
+  @override
+  String get cqSuggestEveryHour => 'A cada hora, das 9h às 17h';
+
+  @override
+  String get cqCapacityTitle => 'Tempo médio e limite de espera';
+
+  @override
+  String cqCapacityHint(int minutes) {
+    return 'Usamos o tempo médio para estimar a espera. Se pular, valem $minutes min por atendimento e sem limite de pessoas.';
+  }
+
+  @override
+  String get cqAppearanceTitle => 'Escolha uma cor';
+
+  @override
+  String get cqAppearanceHint =>
+      'Ela aparece na página que o cliente vê. Opcional.';
+
+  @override
+  String get cqScheduleTitle => 'Quando a fila funciona?';
+
+  @override
+  String get cqScheduleHint =>
+      'Por padrão a fila fica sempre aberta. Você pode pausar ou fechar quando quiser.';
+
+  @override
+  String get cqReviewTitle => 'Revise e crie';
+
+  @override
+  String get cqReviewHint => 'Toque em Editar para mudar qualquer item.';
+
+  @override
+  String get cqEdit => 'Editar';
+
+  @override
+  String get cqSummaryEntry => 'Entrada';
+
+  @override
+  String get cqSummaryCapacity => 'Tempo e limite';
+
+  @override
+  String get cqSummarySchedule => 'Funcionamento';
+
+  @override
+  String cqAverageTime(String time) {
+    return 'Tempo médio: $time';
+  }
+
+  @override
+  String cqWaitingLimit(String limit) {
+    return 'Limite de espera: $limit';
+  }
+
+  @override
+  String cqLimitPeople(int count) {
+    return '$count pessoas';
+  }
+
+  @override
+  String get cqAlwaysOpen => 'Sempre aberta';
+
+  @override
+  String get cqNoExpiry => 'Não expirar';
+
+  @override
+  String get cqDefaultColor => 'Padrão';
+
+  @override
+  String get cqGroupChosen => 'Em um grupo';
+
+  @override
+  String get cqSummaryName => 'Nome';
 }

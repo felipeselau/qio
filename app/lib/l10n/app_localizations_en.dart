@@ -1935,4 +1935,117 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dataSubjectReauthButton => 'Confirm identity';
+
+  @override
+  String cqStepOf(int current, int total) {
+    return 'Step $current of $total';
+  }
+
+  @override
+  String get cqContinue => 'Continue';
+
+  @override
+  String get cqSkip => 'Skip';
+
+  @override
+  String get cqQuickCreate => 'Create now';
+
+  @override
+  String get cqMoreDetails => 'More details';
+
+  @override
+  String get cqNameTitle => 'What is the queue called?';
+
+  @override
+  String get cqNameHint =>
+      'The name is enough. You can adjust the rest later in the panel.';
+
+  @override
+  String get cqModeTitle => 'How do people join?';
+
+  @override
+  String get cqModeQueueHint => 'Whoever arrives joins the end of the line.';
+
+  @override
+  String get cqModeScheduleHint =>
+      'Each person picks one of the times you set.';
+
+  @override
+  String get cqSuggestionsTitle => 'Time suggestions';
+
+  @override
+  String get cqSuggestEvery30 => 'Every 30 min, 9am to 5pm';
+
+  @override
+  String get cqSuggestEveryHour => 'Every hour, 9am to 5pm';
+
+  @override
+  String get cqCapacityTitle => 'Average time and waiting limit';
+
+  @override
+  String cqCapacityHint(int minutes) {
+    return 'We use the average time to estimate the wait. If you skip, $minutes min per customer and no limit apply.';
+  }
+
+  @override
+  String get cqAppearanceTitle => 'Pick a color';
+
+  @override
+  String get cqAppearanceHint =>
+      'It shows on the page your customers see. Optional.';
+
+  @override
+  String get cqScheduleTitle => 'When is the queue open?';
+
+  @override
+  String get cqScheduleHint =>
+      'By default the queue is always open. You can pause or close it whenever you want.';
+
+  @override
+  String get cqReviewTitle => 'Review and create';
+
+  @override
+  String get cqReviewHint => 'Tap Edit to change any item.';
+
+  @override
+  String get cqEdit => 'Edit';
+
+  @override
+  String get cqSummaryEntry => 'Joining';
+
+  @override
+  String get cqSummaryCapacity => 'Time and limit';
+
+  @override
+  String get cqSummarySchedule => 'Operation';
+
+  @override
+  String cqAverageTime(String time) {
+    return 'Average time: $time';
+  }
+
+  @override
+  String cqWaitingLimit(String limit) {
+    return 'Waiting limit: $limit';
+  }
+
+  @override
+  String cqLimitPeople(int count) {
+    return '$count people';
+  }
+
+  @override
+  String get cqAlwaysOpen => 'Always open';
+
+  @override
+  String get cqNoExpiry => 'Never expire';
+
+  @override
+  String get cqDefaultColor => 'Default';
+
+  @override
+  String get cqGroupChosen => 'In a group';
+
+  @override
+  String get cqSummaryName => 'Name';
 }
