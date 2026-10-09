@@ -3327,6 +3327,156 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Ao concluir um atendimento, o telefone não é salvo no histórico.'**
   String get anonymizePhoneHint;
+
+  /// No description provided for @dataSubjectTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dados de um cliente'**
+  String get dataSubjectTitle;
+
+  /// No description provided for @dataSubjectSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atenda pedidos de acesso, correção ou eliminação de dados feitos por um cliente (LGPD).'**
+  String get dataSubjectSubtitle;
+
+  /// No description provided for @dataSubjectPhoneLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Telefone do cliente'**
+  String get dataSubjectPhoneLabel;
+
+  /// No description provided for @dataSubjectSearch.
+  ///
+  /// In pt, this message translates to:
+  /// **'Buscar'**
+  String get dataSubjectSearch;
+
+  /// No description provided for @dataSubjectNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum dado encontrado para este telefone nas suas filas.'**
+  String get dataSubjectNone;
+
+  /// No description provided for @dataSubjectFound.
+  ///
+  /// In pt, this message translates to:
+  /// **'Encontrado em {count} fila(s)'**
+  String dataSubjectFound(int count);
+
+  /// No description provided for @dataSubjectQueueCounts.
+  ///
+  /// In pt, this message translates to:
+  /// **'{history} no histórico, {feedback} avaliações, {entries} na fila agora'**
+  String dataSubjectQueueCounts(int history, int feedback, int entries);
+
+  /// No description provided for @dataSubjectPeriod.
+  ///
+  /// In pt, this message translates to:
+  /// **'De {from} a {to}'**
+  String dataSubjectPeriod(String from, String to);
+
+  /// No description provided for @dataSubjectExport.
+  ///
+  /// In pt, this message translates to:
+  /// **'Exportar dados (CSV)'**
+  String get dataSubjectExport;
+
+  /// No description provided for @dataSubjectExportTruncated.
+  ///
+  /// In pt, this message translates to:
+  /// **'A exportação foi limitada aos primeiros 5000 registros.'**
+  String get dataSubjectExportTruncated;
+
+  /// No description provided for @dataSubjectAnonymize.
+  ///
+  /// In pt, this message translates to:
+  /// **'Anonimizar'**
+  String get dataSubjectAnonymize;
+
+  /// No description provided for @dataSubjectDelete.
+  ///
+  /// In pt, this message translates to:
+  /// **'Excluir'**
+  String get dataSubjectDelete;
+
+  /// No description provided for @dataSubjectConfirmTitleAnonymize.
+  ///
+  /// In pt, this message translates to:
+  /// **'Anonimizar dados deste cliente?'**
+  String get dataSubjectConfirmTitleAnonymize;
+
+  /// No description provided for @dataSubjectConfirmTitleDelete.
+  ///
+  /// In pt, this message translates to:
+  /// **'Excluir dados deste cliente?'**
+  String get dataSubjectConfirmTitleDelete;
+
+  /// No description provided for @dataSubjectConfirmBodyAnonymize.
+  ///
+  /// In pt, this message translates to:
+  /// **'O nome vira \"Anônimo\", o telefone é removido do histórico e os comentários de avaliação são apagados. Se o cliente estiver em alguma fila agora, ele é removido. Não dá para desfazer.'**
+  String get dataSubjectConfirmBodyAnonymize;
+
+  /// No description provided for @dataSubjectConfirmBodyDelete.
+  ///
+  /// In pt, this message translates to:
+  /// **'Apaga o histórico e as avaliações deste telefone e remove o cliente de qualquer fila ativa. Não dá para desfazer.'**
+  String get dataSubjectConfirmBodyDelete;
+
+  /// No description provided for @dataSubjectConfirmLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Digite o telefone de novo para confirmar'**
+  String get dataSubjectConfirmLabel;
+
+  /// No description provided for @dataSubjectConfirmButton.
+  ///
+  /// In pt, this message translates to:
+  /// **'Confirmar'**
+  String get dataSubjectConfirmButton;
+
+  /// No description provided for @dataSubjectDone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Concluído: {count} registro(s) tratado(s).'**
+  String dataSubjectDone(int count);
+
+  /// No description provided for @dataSubjectPartial.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alguns registros não foram tratados. Busque de novo e tente outra vez.'**
+  String get dataSubjectPartial;
+
+  /// No description provided for @dataSubjectRateLimited.
+  ///
+  /// In pt, this message translates to:
+  /// **'Muitas consultas seguidas. Aguarde um pouco e tente de novo.'**
+  String get dataSubjectRateLimited;
+
+  /// No description provided for @dataSubjectAuditNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cada consulta fica registrada para auditoria, sem nome nem telefone.'**
+  String get dataSubjectAuditNote;
+
+  /// No description provided for @dataSubjectReauthTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Confirme sua identidade'**
+  String get dataSubjectReauthTitle;
+
+  /// No description provided for @dataSubjectReauthHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você vai confirmar sua identidade com o Google.'**
+  String get dataSubjectReauthHint;
+
+  /// No description provided for @dataSubjectReauthButton.
+  ///
+  /// In pt, this message translates to:
+  /// **'Confirmar identidade'**
+  String get dataSubjectReauthButton;
 }
 
 class _AppLocalizationsDelegate

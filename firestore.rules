@@ -147,6 +147,11 @@ service cloud.firestore {
           && request.resource.data.token.size() <= 4096;
       }
 
+      match /dataRequests/{requestId} {
+        allow read: if request.auth != null && request.auth.uid == uid;
+        allow write: if false;
+      }
+
       match /groups/{groupId} {
         allow read, delete: if request.auth != null && request.auth.uid == uid;
         allow create, update: if request.auth != null

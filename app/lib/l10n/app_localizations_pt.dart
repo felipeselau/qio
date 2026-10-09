@@ -1821,4 +1821,98 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get anonymizePhoneHint =>
       'Ao concluir um atendimento, o telefone não é salvo no histórico.';
+
+  @override
+  String get dataSubjectTitle => 'Dados de um cliente';
+
+  @override
+  String get dataSubjectSubtitle =>
+      'Atenda pedidos de acesso, correção ou eliminação de dados feitos por um cliente (LGPD).';
+
+  @override
+  String get dataSubjectPhoneLabel => 'Telefone do cliente';
+
+  @override
+  String get dataSubjectSearch => 'Buscar';
+
+  @override
+  String get dataSubjectNone =>
+      'Nenhum dado encontrado para este telefone nas suas filas.';
+
+  @override
+  String dataSubjectFound(int count) {
+    return 'Encontrado em $count fila(s)';
+  }
+
+  @override
+  String dataSubjectQueueCounts(int history, int feedback, int entries) {
+    return '$history no histórico, $feedback avaliações, $entries na fila agora';
+  }
+
+  @override
+  String dataSubjectPeriod(String from, String to) {
+    return 'De $from a $to';
+  }
+
+  @override
+  String get dataSubjectExport => 'Exportar dados (CSV)';
+
+  @override
+  String get dataSubjectExportTruncated =>
+      'A exportação foi limitada aos primeiros 5000 registros.';
+
+  @override
+  String get dataSubjectAnonymize => 'Anonimizar';
+
+  @override
+  String get dataSubjectDelete => 'Excluir';
+
+  @override
+  String get dataSubjectConfirmTitleAnonymize =>
+      'Anonimizar dados deste cliente?';
+
+  @override
+  String get dataSubjectConfirmTitleDelete => 'Excluir dados deste cliente?';
+
+  @override
+  String get dataSubjectConfirmBodyAnonymize =>
+      'O nome vira \"Anônimo\", o telefone é removido do histórico e os comentários de avaliação são apagados. Se o cliente estiver em alguma fila agora, ele é removido. Não dá para desfazer.';
+
+  @override
+  String get dataSubjectConfirmBodyDelete =>
+      'Apaga o histórico e as avaliações deste telefone e remove o cliente de qualquer fila ativa. Não dá para desfazer.';
+
+  @override
+  String get dataSubjectConfirmLabel =>
+      'Digite o telefone de novo para confirmar';
+
+  @override
+  String get dataSubjectConfirmButton => 'Confirmar';
+
+  @override
+  String dataSubjectDone(int count) {
+    return 'Concluído: $count registro(s) tratado(s).';
+  }
+
+  @override
+  String get dataSubjectPartial =>
+      'Alguns registros não foram tratados. Busque de novo e tente outra vez.';
+
+  @override
+  String get dataSubjectRateLimited =>
+      'Muitas consultas seguidas. Aguarde um pouco e tente de novo.';
+
+  @override
+  String get dataSubjectAuditNote =>
+      'Cada consulta fica registrada para auditoria, sem nome nem telefone.';
+
+  @override
+  String get dataSubjectReauthTitle => 'Confirme sua identidade';
+
+  @override
+  String get dataSubjectReauthHint =>
+      'Você vai confirmar sua identidade com o Google.';
+
+  @override
+  String get dataSubjectReauthButton => 'Confirmar identidade';
 }

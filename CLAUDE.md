@@ -470,6 +470,28 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   `functions:applyQueueSchedules`) **antes** de distribuir o APK; o APK novo não
   apaga mais direto no Firestore/RTDB.
 
+## Direitos do titular (LGPD)
+
+- Ferramenta do dono em `app/lib/screens/data_subject_screen.dart` (Minha conta, só
+  com filas) + `data_subject_service.dart`. Callables Admin `findCustomerData`,
+  `exportCustomerData` e `eraseCustomerData` (`{phone, mode: 'delete'|'anonymize'}`),
+  lógica pura em `functions/src/dsr.js`. Só filas com `ownerId == uid`; login recente
+  (`assertRecentLogin`, 300 s); 20 pedidos/h por uid em `rateLimits/_dsr/{uid}`.
+- Telefone normalizado (10–11 dígitos) e buscado nas duas formas (`(11) 99999-9999` e só
+  dígitos) em `history` (`where phone in`, lotes de 450) e RTDB `entries`; `feedback`
+  casa pelo mesmo `entryId`. Sem migração de dados antigos. Anonimizar: nome
+  `Anônimo`, `phone: null`, `comment: ''`; excluir apaga. Entries ativas saem de
+  `entries`/`public`.
+- Auditoria sem PII em `owners/{uid}/dataRequests/{id}` (Admin escreve; dono lê; rules).
+  Falha ao gravar o log não derruba a resposta (vai para `logError`); erase parcial grava
+  `failedQueueIds`. O hash do telefone é pseudonimização (pepper opcional
+  `DSR_HASH_PEPPER`). `deleteAccount` apaga `rateLimits/_dsr/{uid}`.
+  App Check: `ENFORCE_APP_CHECK_DSR` (false, não herda `ENFORCE_APP_CHECK`).
+- Limites: history sem telefone (e seu feedback) não é achado; anonymize mantém
+  `feedback.rating/uid/createdAt`; um `left` simultâneo pode recriar history (repetir a
+  busca); a forma só-dígitos é só tolerância a legado. Detalhes em `docs/privacidade.md`.
+- Passo a passo em `docs/privacidade.md`. Deploy: functions → rules do Firestore → APK.
+
 ## Gotchas
 
 - Aviso ao dono quando alguém entra na fila (som + vibração + SnackBar) é
