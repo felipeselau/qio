@@ -19,6 +19,7 @@ import '../theme/qio_colors.dart';
 import '../theme/qio_palette.dart';
 import '../theme/qio_text_styles.dart';
 import '../widgets/create_queue/create_queue_parts.dart';
+import '../widgets/create_queue/queue_limit_gate.dart';
 import '../widgets/group_picker.dart';
 import '../widgets/qio_input.dart';
 import '../widgets/qio_responsive_body.dart';
@@ -29,7 +30,7 @@ import '../widgets/queue_info_fields.dart';
 import '../widgets/queue_panel/panel_notices.dart';
 import '../widgets/queue_panel/queue_limit_tile.dart';
 import '../widgets/queue_panel/slots_editor.dart';
-import 'queue_panel_screen.dart';
+import 'queue_created_screen.dart';
 
 class CreateQueueScreen extends StatefulWidget {
   const CreateQueueScreen({
@@ -69,6 +70,8 @@ class _CreateQueueScreenState extends State<CreateQueueScreen>
   ScheduleFormValue _scheduleValue = const ScheduleFormValue();
   int _shown = 0;
   bool _loading = false;
+  bool _checkingLimit = true;
+  bool _atLimit = false;
   String? _error;
   String? _savedJson;
   bool _finished = false;
@@ -92,6 +95,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen>
       () => _c.update((d) => d.copyWith(maxWaiting: _limitCtrl.text)),
     );
     _offerDraft();
+    _checkLimit();
   }
 
   String? get _draftUid {
@@ -206,6 +210,21 @@ class _CreateQueueScreenState extends State<CreateQueueScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused && !_loading) _saveDraft();
+  }
+
+  Future<void> _checkLimit() async {
+    final service = widget.queues ?? QueueService.instance;
+    var atLimit = false;
+    try {
+      atLimit = await service.isAtQueueLimit(service.currentUid);
+    } on Exception {
+      atLimit = false;
+    }
+    if (!mounted) return;
+    setState(() {
+      _atLimit = atLimit;
+      _checkingLimit = false;
+    });
   }
 
   @override
@@ -389,7 +408,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen>
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (_) =>
-                QueuePanelScreen(queueId: queue.id, queueName: queue.name),
+                QueueCreatedScreen(queue: queue, queues: widget.queues),
           ),
         );
       }
@@ -404,6 +423,9 @@ class _CreateQueueScreenState extends State<CreateQueueScreen>
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final step = _c.step;
+    if (_checkingLimit || _atLimit) {
+      return QueueLimitGate(checking: _checkingLimit);
+    }
     return PopScope(
       canPop: !_loading && _c.isFirst && !_c.isDirty,
       onPopInvokedWithResult: (didPop, _) {

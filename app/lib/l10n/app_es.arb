@@ -651,5 +651,16 @@
   "cqResume": "Continuar",
   "cqDiscardDraft": "Descartar",
   "cqSaveDraft": "Guardar borrador",
-  "cqDraftDiscardBody": "Ya completaste algunos campos. Guarda un borrador para continuar después o descarta lo que escribiste."
+  "cqDraftDiscardBody": "Ya completaste algunos campos. Guarda un borrador para continuar después o descarta lo que escribiste.",
+  "cqCreatedTitle": "Fila creada",
+  "cqCreatedHint": "Comparta el enlace o muestre el QR para que las personas entren.",
+  "cqOpenPanel": "Abrir panel",
+  "cqPolishTitle": "Deje su fila más linda y completa",
+  "cqShortcutLogo": "Logo y color",
+  "cqShortcutShortLink": "Enlace corto",
+  "cqShortcutOperators": "Operadores",
+  "cqShortcutAlerts": "Alertas",
+  "cqLimitTitle": "Límite de filas alcanzado",
+  "cqCheckingLimit": "Verificando su límite de filas",
+  "cqShareLink": "Compartir enlace"
 }

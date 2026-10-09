@@ -3753,6 +3753,72 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Você já preencheu campos. Salve como rascunho para continuar depois ou descarte o que digitou.'**
   String get cqDraftDiscardBody;
+
+  /// No description provided for @cqCreatedTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fila criada'**
+  String get cqCreatedTitle;
+
+  /// No description provided for @cqCreatedHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Compartilhe o link ou mostre o QR para as pessoas entrarem.'**
+  String get cqCreatedHint;
+
+  /// No description provided for @cqOpenPanel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Abrir painel'**
+  String get cqOpenPanel;
+
+  /// No description provided for @cqPolishTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Deixe sua fila mais bonita e completa'**
+  String get cqPolishTitle;
+
+  /// No description provided for @cqShortcutLogo.
+  ///
+  /// In pt, this message translates to:
+  /// **'Logo e cor'**
+  String get cqShortcutLogo;
+
+  /// No description provided for @cqShortcutShortLink.
+  ///
+  /// In pt, this message translates to:
+  /// **'Link curto'**
+  String get cqShortcutShortLink;
+
+  /// No description provided for @cqShortcutOperators.
+  ///
+  /// In pt, this message translates to:
+  /// **'Operadores'**
+  String get cqShortcutOperators;
+
+  /// No description provided for @cqShortcutAlerts.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alertas'**
+  String get cqShortcutAlerts;
+
+  /// No description provided for @cqLimitTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Limite de filas atingido'**
+  String get cqLimitTitle;
+
+  /// No description provided for @cqCheckingLimit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Verificando seu limite de filas'**
+  String get cqCheckingLimit;
+
+  /// No description provided for @cqShareLink.
+  ///
+  /// In pt, this message translates to:
+  /// **'Compartilhar link'**
+  String get cqShareLink;
 }
 
 class _AppLocalizationsDelegate

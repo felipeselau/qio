@@ -708,5 +708,16 @@
   "cqResume": "Continuar",
   "cqDiscardDraft": "Descartar",
   "cqSaveDraft": "Salvar rascunho",
-  "cqDraftDiscardBody": "Você já preencheu campos. Salve como rascunho para continuar depois ou descarte o que digitou."
+  "cqDraftDiscardBody": "Você já preencheu campos. Salve como rascunho para continuar depois ou descarte o que digitou.",
+  "cqCreatedTitle": "Fila criada",
+  "cqCreatedHint": "Compartilhe o link ou mostre o QR para as pessoas entrarem.",
+  "cqOpenPanel": "Abrir painel",
+  "cqPolishTitle": "Deixe sua fila mais bonita e completa",
+  "cqShortcutLogo": "Logo e cor",
+  "cqShortcutShortLink": "Link curto",
+  "cqShortcutOperators": "Operadores",
+  "cqShortcutAlerts": "Alertas",
+  "cqLimitTitle": "Limite de filas atingido",
+  "cqCheckingLimit": "Verificando seu limite de filas",
+  "cqShareLink": "Compartilhar link"
 }

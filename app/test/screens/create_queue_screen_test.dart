@@ -461,6 +461,7 @@ void main() {
         ),
         size: const Size(320, 568),
       );
+      await tester.pumpAndSettle();
       await goToReview(tester);
       expect(byKeyName('create-submit'), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -547,6 +548,7 @@ void main() {
         ),
         size: const Size(320, 568),
       );
+      await tester.pumpAndSettle();
       await typeName(tester, 'Clínica');
       await tapKey(tester, 'create-continue');
       await tapKey(tester, 'create-mode-schedule');

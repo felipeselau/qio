@@ -173,6 +173,7 @@ void main() {
       CreateQueueScreen(queues: queues, groups: FakeGroupService()),
       size: tall,
     );
+    await tester.pumpAndSettle();
     await enterKey(tester, 'create-name', 'Clínica');
     await tapKey(tester, 'create-continue');
     await tapKey(tester, 'create-mode-schedule');
@@ -200,6 +201,7 @@ void main() {
       CreateQueueScreen(queues: queues, groups: FakeGroupService()),
       size: tall,
     );
+    await tester.pumpAndSettle();
     await enterKey(tester, 'create-name', 'Clínica');
     await tapKey(tester, 'create-continue');
     await tapKey(tester, 'create-mode-schedule');
@@ -221,6 +223,7 @@ void main() {
       CreateQueueScreen(queues: FakeQueueService(), groups: FakeGroupService()),
       size: tall,
     );
+    await tester.pumpAndSettle();
     await enterKey(tester, 'create-name', 'Clínica');
     await tapKey(tester, 'create-continue');
     await tapKey(tester, 'create-mode-schedule');

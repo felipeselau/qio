@@ -36,6 +36,7 @@ Future<FakeQueueService> pumpCreate(
     );
   }
   await pumpApp(tester, home, size: size);
+  await tester.pumpAndSettle();
   return service;
 }
 

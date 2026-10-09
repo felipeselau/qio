@@ -651,5 +651,16 @@
   "cqResume": "Continue",
   "cqDiscardDraft": "Discard",
   "cqSaveDraft": "Save draft",
-  "cqDraftDiscardBody": "You have filled in some fields. Save a draft to continue later or discard what you typed."
+  "cqDraftDiscardBody": "You have filled in some fields. Save a draft to continue later or discard what you typed.",
+  "cqCreatedTitle": "Queue created",
+  "cqCreatedHint": "Share the link or show the QR code so people can join.",
+  "cqOpenPanel": "Open panel",
+  "cqPolishTitle": "Make your queue nicer and more complete",
+  "cqShortcutLogo": "Logo and color",
+  "cqShortcutShortLink": "Short link",
+  "cqShortcutOperators": "Operators",
+  "cqShortcutAlerts": "Alerts",
+  "cqLimitTitle": "Queue limit reached",
+  "cqCheckingLimit": "Checking your queue limit",
+  "cqShareLink": "Share link"
 }

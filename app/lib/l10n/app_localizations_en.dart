@@ -2084,4 +2084,38 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get cqDraftDiscardBody =>
       'You have filled in some fields. Save a draft to continue later or discard what you typed.';
+
+  @override
+  String get cqCreatedTitle => 'Queue created';
+
+  @override
+  String get cqCreatedHint =>
+      'Share the link or show the QR code so people can join.';
+
+  @override
+  String get cqOpenPanel => 'Open panel';
+
+  @override
+  String get cqPolishTitle => 'Make your queue nicer and more complete';
+
+  @override
+  String get cqShortcutLogo => 'Logo and color';
+
+  @override
+  String get cqShortcutShortLink => 'Short link';
+
+  @override
+  String get cqShortcutOperators => 'Operators';
+
+  @override
+  String get cqShortcutAlerts => 'Alerts';
+
+  @override
+  String get cqLimitTitle => 'Queue limit reached';
+
+  @override
+  String get cqCheckingLimit => 'Checking your queue limit';
+
+  @override
+  String get cqShareLink => 'Share link';
 }
