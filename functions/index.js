@@ -15,6 +15,9 @@ const {
   pruneTimestamps,
   isRateLimited,
   CLAIM_RATE_LIMIT,
+  CLAIM_PHONE_RATE_LIMIT,
+  claimPhoneKey,
+  uidHash,
   pickClaimable,
   claimEntryUpdate,
 } = require('./src/join');
@@ -268,17 +271,26 @@ exports.joinQueue = onCall(
       );
       if (samePhone.length > 0) {
         const claimNow = Date.now();
-        let claimLimited = false;
-        await db.ref(`rateLimits/${queueId}/claim/${uid}`).transaction((current) => {
-          const recent = pruneTimestamps(current, claimNow, CLAIM_RATE_LIMIT.windowMs);
-          if (isRateLimited(recent, claimNow, CLAIM_RATE_LIMIT)) {
-            claimLimited = true;
-            return recent;
-          }
-          claimLimited = false;
-          return [...recent, claimNow];
-        });
-        if (claimLimited) {
+        const consume = async (path, limit) => {
+          let limited = false;
+          await db.ref(path).transaction((current) => {
+            const recent = pruneTimestamps(current, claimNow, limit.windowMs);
+            if (isRateLimited(recent, claimNow, limit)) {
+              limited = true;
+              return recent;
+            }
+            limited = false;
+            return [...recent, claimNow];
+          });
+          return limited;
+        };
+        const phoneKey = claimPhoneKey(queueId, cleanPhone, process.env.DSR_HASH_PEPPER ?? '');
+        const byUid = await consume(`rateLimits/${queueId}/_claim/uid/${uid}`, CLAIM_RATE_LIMIT);
+        const byPhone = await consume(
+          `rateLimits/${queueId}/_claim/phone/${phoneKey}`,
+          CLAIM_PHONE_RATE_LIMIT,
+        );
+        if (byUid || byPhone) {
           throw new HttpsError(
             'resource-exhausted',
             'Muitas tentativas. Aguarde alguns minutos.',
@@ -294,9 +306,19 @@ exports.joinQueue = onCall(
           .transaction((current) => claimEntryUpdate(current, target.uid, uid));
         const result = claimed.snapshot.val();
         if (!claimed.committed || !result || result.uid !== uid) {
-          throw new HttpsError('already-exists', 'Este telefone já está na fila.');
+          throw new HttpsError(
+            'aborted',
+            'Esta senha mudou enquanto você a recuperava. Tente de novo.',
+            { reason: 'claim-lost' },
+          );
         }
-        logger.info('joinQueue:claimed', { event: 'claim', queueId, entryId: target.entryId });
+        logger.info('joinQueue:claimed', {
+          event: 'claim',
+          claimed: true,
+          queueId,
+          entryId: target.entryId,
+          previousUidHash: uidHash(target.uid),
+        });
         return {
           entryId: target.entryId,
           ticket: result.ticket,

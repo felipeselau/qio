@@ -104,20 +104,32 @@ conhecidas: `docs/qualidade.md`.
 
 ## Reivindicar a própria senha (#145)
 
-- `joinQueue` com telefone igual ao de entry ativa (`waiting`/`called`) de **outro** uid:
-  se o nome também bate (`namesMatch` em `functions/src/join.js`: sem acento, sem caixa,
-  trim, espaços colapsados), a entry é reatribuída ao uid chamador por transação Admin
+- `joinQueue` com telefone igual ao de entry de **outro** uid: só entries `waiting` são
+  reivindicáveis (quem já foi `called` e perdeu o aparelho fala com o balcão). Se o nome
+  também bate (`namesMatch` em `functions/src/join.js`: sem acento, sem caixa, trim,
+  espaços colapsados), a entry é reatribuída ao uid chamador por transação Admin
   (`claimEntryUpdate`: troca `uid`, apaga `fcmToken`; ticket/joinedAt/order intactos) e a
   resposta é `{existing: true, claimed: true}`. O uid antigo perde a leitura na hora (rule
   `uid == auth.uid`). `public/` não tem uid; nada mais depende do uid antigo.
-  Nome diferente: `already-exists` como antes, sem vazar nome/ticket alheios.
-- Limite: 3 tentativas por 10 min por uid (`CLAIM_RATE_LIMIT`), contadas a cada telefone
-  que casa com entry ativa, em `rateLimits/{queueId}/claim/{uid}` (separado dos
-  timestamps de join). Estourou: `resource-exhausted` + `details.reason == 'claim-rate'`.
+  Nome errado ou entry `called`: `already-exists` como antes, sem vazar nome/ticket alheios.
+  Perdeu a corrida (a entry mudou entre a leitura e a transação): `aborted` +
+  `details.reason == 'claim-lost'` (web: `errors.claimLost`).
+- Só reivindica quem informa telefone: entry sem telefone não é reivindicável. A fila precisa
+  estar `open` (a checagem de `meta/status` vem antes). Entries manuais (sem uid) são
+  reivindicáveis. O log guarda `claimed`, `queueId`, `entryId` e `previousUidHash` (hash
+  curto do uid antigo), sem nome/telefone.
+- Limites (mitigação, **não autenticação**): 3 tentativas por 10 min por uid
+  (`CLAIM_RATE_LIMIT`, `rateLimits/{queueId}/_claim/uid/{uid}`) **e** 5 por 10 min por fila +
+  telefone (`CLAIM_PHONE_RATE_LIMIT`, `rateLimits/{queueId}/_claim/phone/{hash}`, hash sha256
+  do telefone com `DSR_HASH_PEPPER` se existir, sem PII em claro; barra uids anônimos novos
+  em série). Cada tentativa consome os dois contadores quando o telefone casa com entry de
+  outro uid. Estourou: `resource-exhausted` + `details.reason == 'claim-rate'`. O prefixo
+  `_claim` não colide com uids; `deleteQueue` apaga `rateLimits/{queueId}` inteiro. Um
+  atacante paciente ainda pode tentar 5 nomes por 10 min por telefone.
 - Web mostra o aviso `queue.claimed` ("Recuperamos a sua senha") na tela da senha.
 - Risco aceito: quem sabe nome **e** telefone de outra pessoa na fila consegue sequestrar a
   senha dela (e ela deixa de ver a entry). Baixa gravidade em fila presencial; verificação
-  por SMS fica em #96. Entries manuais (sem uid) também podem ser reivindicadas.
+  por SMS fica em #96.
 - Deploy: functions (`joinQueue`) → hosting. Sem mudança de rules.
 
 ## Limite de fila e mensagem de status

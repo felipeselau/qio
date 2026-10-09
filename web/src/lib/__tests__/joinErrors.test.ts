@@ -8,6 +8,7 @@ describe('joinErrorKey', () => {
     ['functions/failed-precondition', 'errors.failedPrecondition'],
     ['functions/invalid-argument', 'errors.invalidArgument'],
     ['functions/not-found', 'errors.notFound'],
+    ['functions/aborted', 'errors.claimLost'],
     ['functions/unauthenticated', 'errors.securityCheckFailed'],
   ])('maps %s', (code, key) => {
     expect(joinErrorKey({ code })).toBe(key);

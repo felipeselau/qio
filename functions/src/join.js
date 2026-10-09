@@ -1,3 +1,4 @@
+const crypto = require('node:crypto');
 const MAX_NAME_LENGTH = 60;
 const PHONE_PATTERN = /^\(\d{2}\) \d{4,5}-\d{4}$/;
 const DEFAULT_RATE_LIMIT = { max: 3, windowMs: 10 * 60 * 1000 };
@@ -10,7 +11,8 @@ function normalizeName(name) {
 }
 
 const CLAIM_RATE_LIMIT = { max: 3, windowMs: 10 * 60 * 1000 };
-const ACTIVE_STATUSES = ['waiting', 'called'];
+const CLAIM_PHONE_RATE_LIMIT = { max: 5, windowMs: 10 * 60 * 1000 };
+const CLAIMABLE_STATUS = 'waiting';
 
 function nameKey(name) {
   if (typeof name !== 'string') return '';
@@ -33,7 +35,7 @@ function pickClaimable(entries, name, uid) {
     .filter(
       (e) =>
         e &&
-        ACTIVE_STATUSES.includes(e.status) &&
+        e.status === CLAIMABLE_STATUS &&
         e.uid !== uid &&
         namesMatch(e.name, name),
     )
@@ -43,11 +45,27 @@ function pickClaimable(entries, name, uid) {
 
 function claimEntryUpdate(current, expectedUid, newUid) {
   if (current === null || typeof current !== 'object') return current;
-  if (current.uid !== expectedUid || !ACTIVE_STATUSES.includes(current.status)) {
+  if (current.uid !== expectedUid || current.status !== CLAIMABLE_STATUS) {
     return undefined;
   }
   const { fcmToken, ...rest } = current;
   return { ...rest, uid: newUid };
+}
+
+function hashKey(parts, length) {
+  return crypto
+    .createHash('sha256')
+    .update(parts.join('|'))
+    .digest('hex')
+    .slice(0, length);
+}
+
+function claimPhoneKey(queueId, phone, pepper = '') {
+  return hashKey([pepper, queueId, String(phone).replace(/\D/g, '')], 32);
+}
+
+function uidHash(uid) {
+  return typeof uid === 'string' && uid ? hashKey(['uid', uid], 12) : null;
 }
 
 function isValidPhone(phone) {
@@ -84,6 +102,9 @@ module.exports = {
   MAX_NAME_LENGTH,
   DEFAULT_RATE_LIMIT,
   CLAIM_RATE_LIMIT,
+  CLAIM_PHONE_RATE_LIMIT,
+  claimPhoneKey,
+  uidHash,
   nameKey,
   namesMatch,
   pickClaimable,

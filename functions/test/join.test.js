@@ -11,6 +11,9 @@ const {
   pickClaimable,
   claimEntryUpdate,
   CLAIM_RATE_LIMIT,
+  CLAIM_PHONE_RATE_LIMIT,
+  claimPhoneKey,
+  uidHash,
 } = require('../src/join');
 
 describe('normalizeName', () => {
@@ -145,8 +148,17 @@ describe('pickClaimable', () => {
     { entryId: 'c', uid: 'u3', name: 'Ana Souza', status: 'served', joinedAt: 0 },
   ];
 
-  it('escolhe a ativa mais antiga com nome igual', () => {
-    assert.equal(pickClaimable(entries, 'ANA  souza', 'novo').entryId, 'b');
+  it('escolhe a waiting com nome igual', () => {
+    assert.equal(pickClaimable(entries, 'ANA  souza', 'novo').entryId, 'a');
+  });
+
+  it('não permite reivindicar entry called', () => {
+    assert.equal(pickClaimable([entries[1]], 'Ana Souza', 'novo'), null);
+  });
+
+  it('aceita entry manual sem uid', () => {
+    const manual = { entryId: 'm', name: 'Ana', status: 'waiting', manual: true };
+    assert.equal(pickClaimable([manual], 'ana', 'novo').entryId, 'm');
   });
 
   it('devolve null se o nome diverge', () => {
@@ -154,7 +166,7 @@ describe('pickClaimable', () => {
   });
 
   it('ignora entries do próprio uid e inativas', () => {
-    assert.equal(pickClaimable(entries, 'Ana Souza', 'u1').entryId, 'b');
+    assert.equal(pickClaimable(entries, 'Ana Souza', 'u1'), null);
     assert.equal(pickClaimable([entries[2]], 'Ana Souza', 'novo'), null);
     assert.equal(pickClaimable(null, 'Ana', 'novo'), null);
   });
@@ -182,6 +194,10 @@ describe('claimEntryUpdate', () => {
     assert.equal(entry.uid, 'old');
   });
 
+  it('aborta para entry called', () => {
+    assert.equal(claimEntryUpdate({ ...entry, status: 'called' }, 'old', 'new'), undefined);
+  });
+
   it('aborta se o dono mudou ou a entry não está ativa', () => {
     assert.equal(claimEntryUpdate(entry, 'other', 'new'), undefined);
     assert.equal(claimEntryUpdate({ ...entry, status: 'left' }, 'old', 'new'), undefined);
@@ -193,5 +209,24 @@ describe('claimEntryUpdate', () => {
 
   it('limite de reivindicação é 3 por 10 min', () => {
     assert.deepEqual(CLAIM_RATE_LIMIT, { max: 3, windowMs: 600000 });
+  });
+});
+
+describe('chaves de limite de reivindicação', () => {
+  it('hash do telefone é estável, sem PII e separa filas', () => {
+    const a = claimPhoneKey('q1', '(11) 91234-5678', 'p');
+    assert.equal(a, claimPhoneKey('q1', '11912345678', 'p'));
+    assert.notEqual(a, claimPhoneKey('q2', '(11) 91234-5678', 'p'));
+    assert.notEqual(a, claimPhoneKey('q1', '(11) 91234-5678', 'x'));
+    assert.match(a, /^[0-9a-f]{32}$/);
+  });
+
+  it('uidHash é curto e nulo sem uid', () => {
+    assert.match(uidHash('abc'), /^[0-9a-f]{12}$/);
+    assert.equal(uidHash(undefined), null);
+  });
+
+  it('limite por telefone é 5 por 10 min', () => {
+    assert.deepEqual(CLAIM_PHONE_RATE_LIMIT, { max: 5, windowMs: 600000 });
   });
 });

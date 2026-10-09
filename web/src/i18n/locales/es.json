@@ -104,6 +104,7 @@
     "invalidArgument": "Datos inválidos. Revisa nombre y teléfono.",
     "notFound": "Fila no encontrada.",
     "feedbackFailed": "No se pudo enviar tu calificación. Inténtalo de nuevo.",
+    "claimLost": "El turno cambió mientras se recuperaba. Inténtalo de nuevo.",
     "claimRate": "Demasiados intentos de recuperar el turno. Espera unos minutos.",
     "queueFull": "La fila está llena por ahora. Inténtalo de nuevo en unos minutos.",
     "securityCheckFailed": "Falló la verificación de seguridad. Recarga la página e inténtalo de nuevo.",

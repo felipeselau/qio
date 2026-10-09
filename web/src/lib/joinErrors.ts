@@ -4,6 +4,7 @@ const JOIN_ERROR_KEYS: Record<string, string> = {
   'functions/failed-precondition': 'errors.failedPrecondition',
   'functions/invalid-argument': 'errors.invalidArgument',
   'functions/not-found': 'errors.notFound',
+  'functions/aborted': 'errors.claimLost',
   'functions/unauthenticated': 'errors.securityCheckFailed',
 };
 

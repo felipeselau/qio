@@ -104,6 +104,7 @@
     "invalidArgument": "Dados inválidos. Confira nome e telefone.",
     "notFound": "Fila não encontrada.",
     "feedbackFailed": "Não foi possível enviar a avaliação. Tente novamente.",
+    "claimLost": "Sua senha mudou enquanto era recuperada. Tente de novo.",
     "claimRate": "Muitas tentativas de recuperar a senha. Aguarde alguns minutos.",
     "queueFull": "A fila está lotada no momento. Tente novamente em alguns minutos.",
     "securityCheckFailed": "Falha na verificação de segurança. Recarregue a página e tente novamente.",
