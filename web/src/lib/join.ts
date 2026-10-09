@@ -6,7 +6,7 @@ import i18n from '../i18n';
 import { storeEntryId } from './storage';
 import { feedbackErrorKey, joinErrorKey } from './joinErrors';
 
-export type JoinResult = { entryId: string; ticket: number; existing: boolean };
+export type JoinResult = { entryId: string; ticket: number; existing: boolean; claimed?: boolean };
 
 export async function joinQueue(
   queueId: string,

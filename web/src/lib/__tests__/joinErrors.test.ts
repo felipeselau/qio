@@ -8,9 +8,16 @@ describe('joinErrorKey', () => {
     ['functions/failed-precondition', 'errors.failedPrecondition'],
     ['functions/invalid-argument', 'errors.invalidArgument'],
     ['functions/not-found', 'errors.notFound'],
+    ['functions/aborted', 'errors.claimLost'],
     ['functions/unauthenticated', 'errors.securityCheckFailed'],
   ])('maps %s', (code, key) => {
     expect(joinErrorKey({ code })).toBe(key);
+  });
+
+  it('maps claim-rate on resource-exhausted', () => {
+    expect(
+      joinErrorKey({ code: 'functions/resource-exhausted', details: { reason: 'claim-rate' } }),
+    ).toBe('errors.claimRate');
   });
 
   it('maps queue-full on resource-exhausted', () => {

@@ -1,3 +1,4 @@
+const crypto = require('node:crypto');
 const MAX_NAME_LENGTH = 60;
 const PHONE_PATTERN = /^\(\d{2}\) \d{4,5}-\d{4}$/;
 const DEFAULT_RATE_LIMIT = { max: 3, windowMs: 10 * 60 * 1000 };
@@ -7,6 +8,64 @@ function normalizeName(name) {
   const trimmed = name.trim();
   if (trimmed.length === 0 || trimmed.length > MAX_NAME_LENGTH) return null;
   return trimmed;
+}
+
+const CLAIM_RATE_LIMIT = { max: 3, windowMs: 10 * 60 * 1000 };
+const CLAIM_PHONE_RATE_LIMIT = { max: 5, windowMs: 10 * 60 * 1000 };
+const CLAIMABLE_STATUS = 'waiting';
+
+function nameKey(name) {
+  if (typeof name !== 'string') return '';
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function namesMatch(a, b) {
+  const ka = nameKey(a);
+  return ka.length > 0 && ka === nameKey(b);
+}
+
+function pickClaimable(entries, name, uid) {
+  if (!Array.isArray(entries)) return null;
+  const matches = entries
+    .filter(
+      (e) =>
+        e &&
+        e.status === CLAIMABLE_STATUS &&
+        e.uid !== uid &&
+        namesMatch(e.name, name),
+    )
+    .sort((a, b) => (a.joinedAt ?? 0) - (b.joinedAt ?? 0));
+  return matches[0] ?? null;
+}
+
+function claimEntryUpdate(current, expectedUid, newUid) {
+  if (current === null || typeof current !== 'object') return current;
+  if (current.uid !== expectedUid || current.status !== CLAIMABLE_STATUS) {
+    return undefined;
+  }
+  const { fcmToken, ...rest } = current;
+  return { ...rest, uid: newUid };
+}
+
+function hashKey(parts, length) {
+  return crypto
+    .createHash('sha256')
+    .update(parts.join('|'))
+    .digest('hex')
+    .slice(0, length);
+}
+
+function claimPhoneKey(queueId, phone, pepper = '') {
+  return hashKey([pepper, queueId, String(phone).replace(/\D/g, '')], 32);
+}
+
+function uidHash(uid) {
+  return typeof uid === 'string' && uid ? hashKey(['uid', uid], 12) : null;
 }
 
 function isValidPhone(phone) {
@@ -42,6 +101,14 @@ function rateLimitFromEnv(env = {}) {
 module.exports = {
   MAX_NAME_LENGTH,
   DEFAULT_RATE_LIMIT,
+  CLAIM_RATE_LIMIT,
+  CLAIM_PHONE_RATE_LIMIT,
+  claimPhoneKey,
+  uidHash,
+  nameKey,
+  namesMatch,
+  pickClaimable,
+  claimEntryUpdate,
   rateLimitFromEnv,
   normalizeName,
   isValidPhone,

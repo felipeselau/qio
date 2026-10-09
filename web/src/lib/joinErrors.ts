@@ -4,6 +4,7 @@ const JOIN_ERROR_KEYS: Record<string, string> = {
   'functions/failed-precondition': 'errors.failedPrecondition',
   'functions/invalid-argument': 'errors.invalidArgument',
   'functions/not-found': 'errors.notFound',
+  'functions/aborted': 'errors.claimLost',
   'functions/unauthenticated': 'errors.securityCheckFailed',
 };
 
@@ -17,6 +18,9 @@ const SLOT_ERROR_KEYS: Record<string, string> = {
 export function joinErrorKey(err: unknown): string {
   const e = err as { code?: string; details?: { reason?: string } } | null;
   const code = e?.code ?? '';
+  if (code === 'functions/resource-exhausted' && e?.details?.reason === 'claim-rate') {
+    return 'errors.claimRate';
+  }
   if (code === 'functions/resource-exhausted' && e?.details?.reason === 'queue-full') {
     return 'errors.queueFull';
   }

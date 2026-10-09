@@ -5,6 +5,7 @@ import { connectAuthEmulator, getAuth, signInAnonymously } from 'firebase/auth';
 import { connectFunctionsEmulator, getFunctions, httpsCallable } from 'firebase/functions';
 import { get, ref, set, update } from 'firebase/database';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
 import { QUEUE, setupEnv } from './helpers.js';
 
 const spMinutesOfDay = () => {
@@ -42,7 +43,7 @@ describe('callable joinQueue (emulador)', () => {
     const app = initializeApp({ projectId: 'demo-qio', apiKey: 'fake-key' }, `${name}-${apps.length}`);
     apps.push(app);
     const auth = getAuth(app);
-    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+    connectAuthEmulator(auth, `http://localhost:${process.env.AUTH_EMULATOR_PORT ?? 9099}`, { disableWarnings: true });
     const cred = await signInAnonymously(auth);
     const functions = getFunctions(app);
     connectFunctionsEmulator(functions, FUNCTIONS_HOST, Number(FUNCTIONS_PORT));
@@ -144,6 +145,155 @@ describe('callable joinQueue (emulador)', () => {
     await rejects(b.join({ queueId: QUEUE, name: 'Duda', phone: '(11) 3333-4444' }), 'already-exists');
   });
 
+  describe('reivindicar senha pelo telefone', () => {
+    const readEntry = (id) =>
+      adminDb(async (db) => (await get(ref(db, `queues/${QUEUE}/entries/${id}`))).val());
+    const PHONE = '(11) 98888-7777';
+
+    it('nome igual (sem acento/caixa) reatribui o uid e mantém a senha', async () => {
+      const a = await newClient('claim-old');
+      const b = await newClient('claim-new');
+      const first = await a.join({ queueId: QUEUE, name: 'João Álvares', phone: PHONE });
+      await adminDb((db) =>
+        update(ref(db, `queues/${QUEUE}/entries/${first.entryId}`), { fcmToken: 'tok-antigo', order: 123 }),
+      );
+      const res = await b.join({ queueId: QUEUE, name: '  joao   ALVARES ', phone: PHONE });
+      assert.equal(res.existing, true);
+      assert.equal(res.claimed, true);
+      assert.equal(res.entryId, first.entryId);
+      assert.equal(res.ticket, first.ticket);
+      const entry = await readEntry(first.entryId);
+      assert.equal(entry.uid, b.uid);
+      assert.equal(entry.fcmToken, undefined);
+      assert.equal(entry.order, 123);
+      assert.equal(entry.name, 'João Álvares');
+      const again = await b.join({ queueId: QUEUE, name: 'qualquer', phone: '' });
+      assert.equal(again.entryId, first.entryId);
+      assert.equal(again.claimed, undefined);
+    });
+
+    it('o uid antigo perde a leitura da entry', async () => {
+      const a = await newClient('claim-read-old');
+      const b = await newClient('claim-read-new');
+      const first = await a.join({ queueId: QUEUE, name: 'Lia', phone: PHONE });
+      await b.join({ queueId: QUEUE, name: 'Lia', phone: PHONE });
+      const entry = await readEntry(first.entryId);
+      assert.equal(entry.uid, b.uid);
+      const ctx = env.authenticatedContext(a.uid);
+      await assertFails(get(ref(ctx.database(), `queues/${QUEUE}/entries/${first.entryId}`)));
+      const ctxNew = env.authenticatedContext(b.uid);
+      await assertSucceeds(get(ref(ctxNew.database(), `queues/${QUEUE}/entries/${first.entryId}`)));
+    });
+
+    it('nome diferente continua already-exists e não mexe na entry', async () => {
+      const a = await newClient('claim-no-old');
+      const b = await newClient('claim-no-new');
+      const first = await a.join({ queueId: QUEUE, name: 'Marta', phone: PHONE });
+      await assert.rejects(b.join({ queueId: QUEUE, name: 'Outra', phone: PHONE }), (err) => {
+        assert.equal(err.code, 'functions/already-exists');
+        assert.ok(!String(err.message).includes('Marta'));
+        assert.equal(err.details, undefined);
+        return true;
+      });
+      assert.equal((await readEntry(first.entryId)).uid, a.uid);
+    });
+
+    it('limita tentativas de reivindicação a 3 por 10 min por uid', async () => {
+      const a = await newClient('claim-rate-old');
+      const b = await newClient('claim-rate-new');
+      await a.join({ queueId: QUEUE, name: 'Nina', phone: PHONE });
+      for (let i = 0; i < 3; i++) {
+        await rejects(b.join({ queueId: QUEUE, name: `Errado ${i}`, phone: PHONE }), 'already-exists');
+      }
+      await assert.rejects(b.join({ queueId: QUEUE, name: 'Nina', phone: PHONE }), (err) => {
+        assert.equal(err.code, 'functions/resource-exhausted');
+        assert.equal(err.details?.reason, 'claim-rate');
+        return true;
+      });
+      const stamps = await adminDb(async (db) =>
+        (await get(ref(db, `rateLimits/${QUEUE}/_claim/uid/${b.uid}`))).val(),
+      );
+      assert.equal(stamps.length, 3);
+    });
+
+    it('entry called não pode ser reivindicada', async () => {
+      const a = await newClient('claim-called-old');
+      const b = await newClient('claim-called-new');
+      const first = await a.join({ queueId: QUEUE, name: 'Paulo', phone: PHONE });
+      await adminDb((db) => update(ref(db, `queues/${QUEUE}/entries/${first.entryId}`), { status: 'called' }));
+      await rejects(b.join({ queueId: QUEUE, name: 'Paulo', phone: PHONE }), 'already-exists');
+      assert.equal((await readEntry(first.entryId)).uid, a.uid);
+    });
+
+    it('entry manual sem uid é reivindicável', async () => {
+      const b = await newClient('claim-manual');
+      await adminDb((db) =>
+        set(ref(db, `queues/${QUEUE}/entries/man1`), {
+          ticket: 1,
+          name: 'Quitéria',
+          phone: PHONE,
+          status: 'waiting',
+          joinedAt: Date.now(),
+          manual: true,
+        }),
+      );
+      const res = await b.join({ queueId: QUEUE, name: 'quiteria', phone: PHONE });
+      assert.equal(res.claimed, true);
+      assert.equal(res.entryId, 'man1');
+      assert.equal((await readEntry('man1')).uid, b.uid);
+    });
+
+    it('dois claims simultâneos: um vence, o outro recebe aborted', async () => {
+      const a = await newClient('claim-race-old');
+      const b = await newClient('claim-race-b');
+      const c = await newClient('claim-race-c');
+      const first = await a.join({ queueId: QUEUE, name: 'Rita', phone: PHONE });
+      const results = await Promise.allSettled([
+        b.join({ queueId: QUEUE, name: 'Rita', phone: PHONE }),
+        c.join({ queueId: QUEUE, name: 'Rita', phone: PHONE }),
+      ]);
+      const ok = results.filter((r) => r.status === 'fulfilled');
+      const bad = results.filter((r) => r.status === 'rejected');
+      assert.equal(ok.length + bad.length, 2);
+      assert.ok(ok.length >= 1);
+      assert.equal(ok[0].value.entryId, first.entryId);
+      for (const r of bad) {
+        assert.equal(r.reason.code, 'functions/aborted');
+        assert.equal(r.reason.details?.reason, 'claim-lost');
+      }
+      const entry = await readEntry(first.entryId);
+      assert.ok([b.uid, c.uid].includes(entry.uid));
+    });
+
+    it('uids novos não contornam o limite: o telefone também é limitado', async () => {
+      const a = await newClient('claim-phone-old');
+      await a.join({ queueId: QUEUE, name: 'Sara', phone: PHONE });
+      for (let i = 0; i < 5; i++) {
+        const attacker = await newClient(`claim-phone-${i}`);
+        await rejects(attacker.join({ queueId: QUEUE, name: `Chute ${i}`, phone: PHONE }), 'already-exists');
+      }
+      const last = await newClient('claim-phone-last');
+      await assert.rejects(last.join({ queueId: QUEUE, name: 'Sara', phone: PHONE }), (err) => {
+        assert.equal(err.code, 'functions/resource-exhausted');
+        assert.equal(err.details?.reason, 'claim-rate');
+        return true;
+      });
+      const keys = await adminDb(async (db) => Object.keys((await get(ref(db, `rateLimits/${QUEUE}/_claim/phone`))).val()));
+      assert.equal(keys.length, 1);
+      assert.ok(!keys[0].includes('98888'));
+    });
+
+    it('entry já finalizada não pode ser reivindicada', async () => {
+      const a = await newClient('claim-done-old');
+      const b = await newClient('claim-done-new');
+      const first = await a.join({ queueId: QUEUE, name: 'Otto', phone: PHONE });
+      await adminDb((db) => update(ref(db, `queues/${QUEUE}/entries/${first.entryId}`), { status: 'served' }));
+      const res = await b.join({ queueId: QUEUE, name: 'Otto', phone: PHONE });
+      assert.equal(res.existing, false);
+      assert.notEqual(res.entryId, first.entryId);
+    });
+  });
+
   it('rejeita telefone e nome inválidos', async () => {
     const c = await newClient('e');
     await rejects(c.join({ queueId: QUEUE, name: 'Eva', phone: '11912345678' }), 'invalid-argument');
@@ -240,7 +390,7 @@ describe('callable joinQueue com limite (emulador)', () => {
     const app = initializeApp({ projectId: 'demo-qio', apiKey: 'fake-key' }, `cap-${apps.length}`);
     apps.push(app);
     const auth = getAuth(app);
-    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+    connectAuthEmulator(auth, `http://localhost:${process.env.AUTH_EMULATOR_PORT ?? 9099}`, { disableWarnings: true });
     await signInAnonymously(auth);
     const functions = getFunctions(app);
     connectFunctionsEmulator(functions, FUNCTIONS_HOST, Number(FUNCTIONS_PORT));
@@ -335,7 +485,7 @@ describe('callable joinQueue com slots (emulador)', () => {
     const app = initializeApp({ projectId: 'demo-qio', apiKey: 'fake-key' }, `slot-${apps.length}`);
     apps.push(app);
     const auth = getAuth(app);
-    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+    connectAuthEmulator(auth, `http://localhost:${process.env.AUTH_EMULATOR_PORT ?? 9099}`, { disableWarnings: true });
     const cred = await signInAnonymously(auth);
     const functions = getFunctions(app);
     connectFunctionsEmulator(functions, FUNCTIONS_HOST, Number(FUNCTIONS_PORT));
@@ -508,7 +658,7 @@ describe('callable submitFeedback (emulador)', () => {
     const app = initializeApp({ projectId: 'demo-qio', apiKey: 'fake-key' }, `fb-${apps.length}`);
     apps.push(app);
     const auth = getAuth(app);
-    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+    connectAuthEmulator(auth, `http://localhost:${process.env.AUTH_EMULATOR_PORT ?? 9099}`, { disableWarnings: true });
     await signInAnonymously(auth);
     const functions = getFunctions(app);
     connectFunctionsEmulator(functions, FUNCTIONS_HOST, Number(FUNCTIONS_PORT));
