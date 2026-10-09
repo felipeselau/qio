@@ -2761,7 +2761,7 @@ abstract class AppLocalizations {
   /// No description provided for @slotsTileSummary.
   ///
   /// In pt, this message translates to:
-  /// **'{count} horários'**
+  /// **'{count, plural, =1{1 horário} other{{count} horários}}'**
   String slotsTileSummary(int count);
 
   /// No description provided for @waitTileSlot.
@@ -3513,6 +3513,210 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Confirmar identidade'**
   String get dataSubjectReauthButton;
+
+  /// No description provided for @cqStepOf.
+  ///
+  /// In pt, this message translates to:
+  /// **'Passo {current} de {total}'**
+  String cqStepOf(int current, int total);
+
+  /// No description provided for @cqContinue.
+  ///
+  /// In pt, this message translates to:
+  /// **'Continuar'**
+  String get cqContinue;
+
+  /// No description provided for @cqSkip.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pular'**
+  String get cqSkip;
+
+  /// No description provided for @cqQuickCreate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Criar agora'**
+  String get cqQuickCreate;
+
+  /// No description provided for @cqMoreDetails.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mais detalhes'**
+  String get cqMoreDetails;
+
+  /// No description provided for @cqNameTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Como se chama a fila?'**
+  String get cqNameTitle;
+
+  /// No description provided for @cqNameHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Só o nome já basta. Você ajusta o resto depois no painel.'**
+  String get cqNameHint;
+
+  /// No description provided for @cqModeTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Como as pessoas entram?'**
+  String get cqModeTitle;
+
+  /// No description provided for @cqModeQueueHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quem chega entra no fim da fila.'**
+  String get cqModeQueueHint;
+
+  /// No description provided for @cqModeScheduleHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cada pessoa escolhe um dos horários que você define.'**
+  String get cqModeScheduleHint;
+
+  /// No description provided for @cqSuggestionsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sugestões de horários'**
+  String get cqSuggestionsTitle;
+
+  /// No description provided for @cqSuggestEvery30.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar horários a cada 30 min, das 9h às 17h'**
+  String get cqSuggestEvery30;
+
+  /// No description provided for @cqSuggestEveryHour.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar horários a cada hora, das 9h às 17h'**
+  String get cqSuggestEveryHour;
+
+  /// No description provided for @cqCapacityTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tempo médio e limite de espera'**
+  String get cqCapacityTitle;
+
+  /// No description provided for @cqCapacityHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Usamos o tempo médio para estimar a espera. Se pular, valem {minutes} min por atendimento e sem limite de pessoas.'**
+  String cqCapacityHint(int minutes);
+
+  /// No description provided for @cqAppearanceTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolha uma cor'**
+  String get cqAppearanceTitle;
+
+  /// No description provided for @cqAppearanceHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ela aparece na página que o cliente vê. Opcional.'**
+  String get cqAppearanceHint;
+
+  /// No description provided for @cqScheduleTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quando a fila funciona?'**
+  String get cqScheduleTitle;
+
+  /// No description provided for @cqScheduleHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Por padrão a fila fica sempre aberta. Você pode pausar ou fechar quando quiser.'**
+  String get cqScheduleHint;
+
+  /// No description provided for @cqReviewTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Revise e crie'**
+  String get cqReviewTitle;
+
+  /// No description provided for @cqReviewHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Toque em Editar para mudar qualquer item.'**
+  String get cqReviewHint;
+
+  /// No description provided for @cqEdit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Editar'**
+  String get cqEdit;
+
+  /// No description provided for @cqSummaryEntry.
+  ///
+  /// In pt, this message translates to:
+  /// **'Entrada'**
+  String get cqSummaryEntry;
+
+  /// No description provided for @cqSummaryCapacity.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tempo e limite'**
+  String get cqSummaryCapacity;
+
+  /// No description provided for @cqSummarySchedule.
+  ///
+  /// In pt, this message translates to:
+  /// **'Funcionamento'**
+  String get cqSummarySchedule;
+
+  /// No description provided for @cqAverageTime.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tempo médio: {time}'**
+  String cqAverageTime(String time);
+
+  /// No description provided for @cqWaitingLimit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Limite de espera: {limit}'**
+  String cqWaitingLimit(String limit);
+
+  /// No description provided for @cqLimitPeople.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =1{1 pessoa} other{{count} pessoas}}'**
+  String cqLimitPeople(int count);
+
+  /// No description provided for @cqAlwaysOpen.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sempre aberta'**
+  String get cqAlwaysOpen;
+
+  /// No description provided for @cqNoExpiry.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não expirar'**
+  String get cqNoExpiry;
+
+  /// No description provided for @cqDefaultColor.
+  ///
+  /// In pt, this message translates to:
+  /// **'Padrão'**
+  String get cqDefaultColor;
+
+  /// No description provided for @cqGroupChosen.
+  ///
+  /// In pt, this message translates to:
+  /// **'Em um grupo'**
+  String get cqGroupChosen;
+
+  /// No description provided for @cqSummaryName.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nome'**
+  String get cqSummaryName;
+
+  /// No description provided for @cqCreateTimeout.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem resposta. A fila pode ter sido criada: confira sua lista antes de tentar de novo.'**
+  String get cqCreateTimeout;
 }
 
 class _AppLocalizationsDelegate

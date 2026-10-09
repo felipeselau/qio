@@ -4,6 +4,7 @@ import 'package:qio_app/models/queue_slot.dart';
 import 'package:qio_app/screens/create_queue_screen.dart';
 import 'package:qio_app/widgets/queue_panel/slots_editor.dart';
 
+import '../helpers/create_queue_flow.dart';
 import '../helpers/fake_services.dart';
 import '../helpers/pump_app.dart';
 
@@ -134,7 +135,7 @@ void main() {
       ),
       size: tall,
     );
-    expect(find.textContaining('1 horários'), findsOneWidget);
+    expect(find.textContaining('1 horário'), findsOneWidget);
     await tester.tap(find.byType(QueueSlotsTile));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Salvar'));
@@ -172,31 +173,62 @@ void main() {
       CreateQueueScreen(queues: queues, groups: FakeGroupService()),
       size: tall,
     );
-    await tester.enterText(find.byType(TextFormField).first, 'Clínica');
-    await tester.tap(find.text('Opções avançadas'));
-    await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('Hora marcada'));
-    await tester.tap(find.text('Hora marcada'));
-    await tester.pump();
+    await enterKey(tester, 'create-name', 'Clínica');
+    await tapKey(tester, 'create-continue');
+    await tapKey(tester, 'create-mode-schedule');
 
-    await tester.ensureVisible(find.text('Criar fila'));
-    await tester.tap(find.text('Criar fila'));
-    await tester.pump();
+    await tapKey(tester, 'create-continue');
     expect(find.text('Adicione ao menos um horário'), findsOneWidget);
+    expect(byKeyName('create-mode-schedule'), findsOneWidget);
     expect(queues.calls, isEmpty);
 
-    await tester.ensureVisible(find.text('Adicionar horário'));
-    await tester.tap(find.text('Adicionar horário'));
-    await tester.pumpAndSettle();
+    await tapKey(tester, 'slots-add');
     await tester.tap(find.text('OK'));
     await tester.pumpAndSettle();
     expect(find.text('09:00'), findsOneWidget);
 
-    await tester.ensureVisible(find.text('Criar fila'));
-    await tester.tap(find.text('Criar fila'));
-    await tester.pump();
+    await continueSteps(tester, 4);
+    await tapKey(tester, 'create-submit');
     expect(queues.calls, ['create:Clínica:schedule:1']);
     expect(queues.createdSlots!.single.start, '09:00');
-    await tester.pumpAndSettle();
+  });
+
+  testWidgets('duplicate slots block the mode step', (tester) async {
+    final queues = FakeQueueService();
+    await pumpApp(
+      tester,
+      CreateQueueScreen(queues: queues, groups: FakeGroupService()),
+      size: tall,
+    );
+    await enterKey(tester, 'create-name', 'Clínica');
+    await tapKey(tester, 'create-continue');
+    await tapKey(tester, 'create-mode-schedule');
+    for (var i = 0; i < 2; i++) {
+      await tapKey(tester, 'slots-add');
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+    }
+
+    await tapKey(tester, 'create-continue');
+    expect(find.text('Há horários repetidos'), findsOneWidget);
+    expect(byKeyName('create-mode-schedule'), findsOneWidget);
+    expect(queues.calls, isEmpty);
+  });
+
+  testWidgets('suggestions fill slots without duplicates', (tester) async {
+    await pumpApp(
+      tester,
+      CreateQueueScreen(queues: FakeQueueService(), groups: FakeGroupService()),
+      size: tall,
+    );
+    await enterKey(tester, 'create-name', 'Clínica');
+    await tapKey(tester, 'create-continue');
+    await tapKey(tester, 'create-mode-schedule');
+    await tapKey(tester, 'create-suggest-60');
+    expect(find.byIcon(Icons.delete_outline), findsNWidgets(8));
+    await tapKey(tester, 'create-suggest-30');
+    expect(find.byIcon(Icons.delete_outline), findsNWidgets(16));
+    await tapKey(tester, 'create-suggest-30');
+    expect(find.byIcon(Icons.delete_outline), findsNWidgets(16));
   });
 }

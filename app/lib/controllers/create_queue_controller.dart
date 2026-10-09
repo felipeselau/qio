@@ -149,7 +149,11 @@ class CreateQueueController extends ChangeNotifier {
 
   bool back() {
     if (isFirst) return false;
-    _returnToReview = false;
+    if (_returnToReview) {
+      _returnToReview = false;
+      _go(CreateQueueStep.review);
+      return true;
+    }
     _go(CreateQueueStep.values[_step.index - 1]);
     return true;
   }
@@ -215,9 +219,9 @@ class CreateQueueController extends ChangeNotifier {
       case CreateQueueStep.capacity:
         return _draft.copyWith(avgServiceMin: '', maxWaiting: '');
       case CreateQueueStep.appearance:
-        return _draft.copyWith(clearBrandColor: true, clearGroupId: true);
+        return _draft.copyWith(clearBrandColor: true);
       case CreateQueueStep.schedule:
-        return _draft.copyWith(clearSchedule: true);
+        return _draft.copyWith(clearSchedule: true, clearExpiry: true);
       default:
         return _draft;
     }

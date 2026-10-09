@@ -280,7 +280,7 @@ void main() {
       c.update((d) => d.copyWith(brandColor: '#2563EB', groupId: 'g1'));
       expect(c.skip(), isTrue);
       expect(c.draft.brandColor, isNull);
-      expect(c.draft.groupId, isNull);
+      expect(c.draft.groupId, 'g1');
       c.update(
         (d) => d.copyWith(
           schedule: const QueueSchedule(enabled: true),
@@ -290,7 +290,7 @@ void main() {
       expect(c.skip(), isTrue);
       expect(c.step, CreateQueueStep.review);
       expect(c.draft.schedule, isNull);
-      expect(c.draft.expiry?.enabled, isTrue);
+      expect(c.draft.expiry, isNull);
     });
 
     test('skip em passo obrigatório é recusado', () {
@@ -341,9 +341,24 @@ void main() {
         expect(c.step, CreateQueueStep.capacity);
         c.back();
         expect(c.returningToReview, isFalse);
-        expect(c.step, CreateQueueStep.mode);
+        expect(c.step, CreateQueueStep.review);
+        expect(c.firstInvalidStep, CreateQueueStep.capacity);
       },
     );
+
+    test('back durante retorno à revisão vai direto à revisão', () {
+      final c = _named();
+      for (var i = 0; i < 5; i++) {
+        c.next();
+      }
+      c.jumpTo(CreateQueueStep.capacity);
+      expect(c.returningToReview, isTrue);
+      expect(c.back(), isTrue);
+      expect(c.step, CreateQueueStep.review);
+      expect(c.returningToReview, isFalse);
+      expect(c.back(), isTrue);
+      expect(c.step, CreateQueueStep.schedule);
+    });
   });
 
   group('isDirty', () {

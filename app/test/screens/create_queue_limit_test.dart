@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qio_app/models/queue.dart';
-import 'package:qio_app/screens/create_queue_screen.dart';
 import 'package:qio_app/services/queue_service.dart';
 import 'package:qio_app/widgets/queue_panel/duplicate_queue_tile.dart';
 
+import '../helpers/create_queue_flow.dart';
 import '../helpers/fake_services.dart';
 import '../helpers/pump_app.dart';
 
@@ -12,17 +12,19 @@ const limitText =
     'Limite de 20 filas atingido. Exclua uma fila para criar outra.';
 const genericText = 'Não foi possível concluir a ação. Tente novamente.';
 
-Future<void> submit(WidgetTester tester, FakeQueueService queues) async {
-  await pumpApp(
-    tester,
-    CreateQueueScreen(queues: queues, groups: FakeGroupService()),
-    size: const Size(390, 1800),
-  );
-  final fields = find.byType(TextFormField);
-  await tester.enterText(fields.at(0), 'Clínica');
-  await tester.ensureVisible(find.text('Criar fila'));
-  await tester.tap(find.text('Criar fila'));
-  await tester.pumpAndSettle();
+Future<void> submit(
+  WidgetTester tester,
+  FakeQueueService queues, {
+  bool viaReview = false,
+}) async {
+  await pumpCreate(tester, queues: queues);
+  await typeName(tester, 'Clínica');
+  if (viaReview) {
+    await continueSteps(tester, 5);
+    await tapKey(tester, 'create-submit');
+  } else {
+    await tapKey(tester, 'create-quick');
+  }
 }
 
 void main() {
@@ -40,6 +42,20 @@ void main() {
     );
     expect(find.text(limitText), findsOneWidget);
     expect(find.text(genericText), findsNothing);
+  });
+
+  testWidgets('review step shows limit message and allows retry', (
+    tester,
+  ) async {
+    final queues = FakeQueueService()..createError = const QueueLimitReached();
+    await submit(tester, queues, viaReview: true);
+    expect(find.text(limitText), findsOneWidget);
+    expect(byKeyName('create-submit'), findsOneWidget);
+
+    queues.createError = null;
+    await tapKey(tester, 'create-submit');
+    expect(find.text(limitText), findsNothing);
+    expect(queues.calls, ['create:Clínica:queue:0']);
   });
 
   testWidgets('create screen keeps generic error for other failures', (

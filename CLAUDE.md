@@ -270,10 +270,38 @@ modelos; ainda sem dados): `docs/piloto/`.
 
 ## Criação de fila e botão voltar
 
-- `CreateQueueScreen` exige só o nome; descrição, tempo médio, limite, grupo e modo/slots
-  ficam em "Opções avançadas" (`ExpansionTile` com `maintainState`, reabre sozinho se um
-  campo avançado for inválido). Tempo médio vazio vira o default único
-  `defaultAvgServiceMin` (10, em `models/queue_info.dart`) dentro de `createQueue`.
+- `CreateQueueScreen` é um **wizard de 6 passos** (uma decisão por tela, `PageView` sem
+  swipe, `animateToPage` 250 ms; sem animação se `disableAnimations`): 1 Nome (obrigatório;
+  "Mais detalhes" recolhível com descrição e grupo; "Criar agora" cria direto com defaults),
+  2 Entrada (cartões Fila por chegada / Hora marcada; hora marcada mostra chips de sugestão
+  `suggestSlots` e o `SlotsEditor` com `showModeSelector: false`), 3 Tempo médio e limite
+  (opcional), 4 Cor (`BrandColorPicker`, opcional), 5 Funcionamento (`ScheduleForm` +
+  `ExpiryForm(showExtras: false)`: só `enabled`+`hours`; `clearOnClose`/`resetTicketDaily`
+  ficam nas configurações; opcional), 6 Revisão com "Editar" por seção (volta ao passo e
+  retorna à revisão) e defaults explícitos ("10 min", "Sem limite", "Sempre aberta", "Não
+  expirar"). Alertas, logo, link curto, operadores e mensagem de status ficam **fora** do
+  create. Tempo médio vazio vira `defaultAvgServiceMin` (10, `models/queue_info.dart`).
+- Estado e validação por passo ficam em `CreateQueueController`/`CreateQueueDraft`
+  (`controllers/create_queue_*.dart`); a tela só liga campos ao draft e chama `createQueue`
+  com `controller.toCreateArgs()` (inclui `expiry`). "Pular" restaura os defaults do passo
+  (cor, tempo/limite, horário+expiração; o grupo do passo 1 não é afetado). Botão primário
+  fixo no rodapé (`CreateQueueFooter`), barra com `Semantics('Passo X de Y')` e anúncio da
+  troca de passo; o rodapé reserva o espaço do botão secundário (altura estável). O passo 1
+  fica vivo (`CreateQueueKeepAlive`; sem reabrir o teclado ao voltar). Horários: máx. 20
+  (`maxQueueSlots`); as sugestões **acumulam** (rótulo "Adicionar horários...", sem duplicar
+  nem passar de 20). A revisão mostra grupo (nome via `GroupService`), cor (amostra) e todas
+  as janelas do horário. `createQueue` tem timeout de 20 s (`TimeoutException` →
+  `cqCreateTimeout`); enquanto cria, voltar (sistema e botão) fica **bloqueado** e o botão
+  primário mostra o spinner. Risco conhecido: após o timeout a criação pode ter concluído no
+  servidor, e um retry gera fila duplicada (o aviso manda conferir a lista). Erro de
+  `createQueue` (`queueErrorMessage`) aparece num banner
+  (`create-error`) e a tela segue aberta. Sucesso: `pushReplacement` ao painel.
+- Voltar do sistema e `QueueBackButton` voltam **um passo** (`PopScope(canPop: primeiro
+  passo && !dirty)`); no passo 1 com draft sujo vale a confirmação de descarte. Widgets em
+  `widgets/create_queue/`. Testes usam `ValueKey` (`create-name`, `create-continue`,
+  `create-skip`, `create-quick`, `create-submit`, `create-back`, `create-mode-schedule`,
+  `create-edit-<seção>`, `slots-add`...) e `test/helpers/create_queue_flow.dart`; evite
+  seletores posicionais.
 - Voltar do painel/criação/edição é `QueueBackButton` (`BackButton` do Material, tooltip e
   semântica localizados, usa `maybePop` e portanto respeita o `PopScope`).
 

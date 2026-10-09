@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
@@ -18,6 +20,7 @@ String queueErrorMessage(Object error, AppLocalizations l10n) {
   if (error is QueueLimitReached) {
     return l10n.queueLimitReached(maxQueuesPerOwner);
   }
+  if (error is TimeoutException) return l10n.cqCreateTimeout;
   if (error is FormatException) {
     final info = QueueInfoError.values.asNameMap()[error.message];
     if (info != null) return queueInfoErrorText(info, l10n)!;
@@ -31,11 +34,17 @@ class QueueNameField extends StatelessWidget {
     required this.controller,
     this.enabled = true,
     this.initial,
+    this.autofocus = false,
+    this.onSubmitted,
+    this.textInputAction,
   });
 
   final TextEditingController controller;
   final bool enabled;
   final String? initial;
+  final bool autofocus;
+  final ValueChanged<String>? onSubmitted;
+  final TextInputAction? textInputAction;
 
   @override
   Widget build(BuildContext context) {
@@ -45,6 +54,9 @@ class QueueNameField extends StatelessWidget {
       hint: l10n.queueNameHint,
       controller: controller,
       enabled: enabled,
+      autofocus: autofocus,
+      onSubmitted: onSubmitted,
+      textInputAction: textInputAction,
       validator: (v) => initial != null && v?.trim() == initial!.trim()
           ? null
           : queueInfoErrorText(QueueInfo.validateName(v), l10n),

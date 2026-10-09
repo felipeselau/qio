@@ -11,11 +11,13 @@ class ExpiryForm extends StatelessWidget {
     required this.value,
     required this.onChanged,
     this.enabled = true,
+    this.showExtras = true,
   });
 
   final ExpiryConfig value;
   final ValueChanged<ExpiryConfig> onChanged;
   final bool enabled;
+  final bool showExtras;
 
   @override
   Widget build(BuildContext context) {
@@ -27,32 +29,34 @@ class ExpiryForm extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: 8,
       children: [
-        Row(
-          children: [
-            Icon(Icons.timer_off_outlined, color: context.qio.primaryText),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.expiryTitle,
-                    style: context.qioText.bodyMedium.copyWith(
-                      color: context.qio.textPrimary,
+        MergeSemantics(
+          child: Row(
+            children: [
+              Icon(Icons.timer_off_outlined, color: context.qio.primaryText),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.expiryTitle,
+                      style: context.qioText.bodyMedium.copyWith(
+                        color: context.qio.textPrimary,
+                      ),
                     ),
-                  ),
-                  Text(l10n.expiryHint, style: context.qioText.caption),
-                ],
+                    Text(l10n.expiryHint, style: context.qioText.caption),
+                  ],
+                ),
               ),
-            ),
-            Switch(
-              key: const ValueKey('expiry-enabled'),
-              value: config.enabled,
-              onChanged: enabled
-                  ? (v) => onChanged(config.copyWith(enabled: v))
-                  : null,
-            ),
-          ],
+              Switch(
+                key: const ValueKey('expiry-enabled'),
+                value: config.enabled,
+                onChanged: enabled
+                    ? (v) => onChanged(config.copyWith(enabled: v))
+                    : null,
+              ),
+            ],
+          ),
         ),
         if (config.enabled) ...[
           Row(
@@ -80,53 +84,55 @@ class ExpiryForm extends StatelessWidget {
               ),
             ],
           ),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  l10n.expiryClearOnClose,
-                  style: context.qioText.bodyMedium.copyWith(
-                    color: context.qio.textPrimary,
+          if (showExtras) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    l10n.expiryClearOnClose,
+                    style: context.qioText.bodyMedium.copyWith(
+                      color: context.qio.textPrimary,
+                    ),
                   ),
                 ),
-              ),
-              Switch(
-                key: const ValueKey('expiry-clear'),
-                value: config.clearOnClose,
-                onChanged: enabled
-                    ? (v) => onChanged(config.copyWith(clearOnClose: v))
-                    : null,
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.expiryResetTicketDaily,
-                      style: context.qioText.bodyMedium.copyWith(
-                        color: context.qio.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      l10n.expiryResetTicketDailyHint,
-                      style: context.qioText.caption,
-                    ),
-                  ],
+                Switch(
+                  key: const ValueKey('expiry-clear'),
+                  value: config.clearOnClose,
+                  onChanged: enabled
+                      ? (v) => onChanged(config.copyWith(clearOnClose: v))
+                      : null,
                 ),
-              ),
-              Switch(
-                key: const ValueKey('expiry-reset'),
-                value: config.resetTicketDaily,
-                onChanged: enabled
-                    ? (v) => onChanged(config.copyWith(resetTicketDaily: v))
-                    : null,
-              ),
-            ],
-          ),
+              ],
+            ),
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.expiryResetTicketDaily,
+                        style: context.qioText.bodyMedium.copyWith(
+                          color: context.qio.textPrimary,
+                        ),
+                      ),
+                      Text(
+                        l10n.expiryResetTicketDailyHint,
+                        style: context.qioText.caption,
+                      ),
+                    ],
+                  ),
+                ),
+                Switch(
+                  key: const ValueKey('expiry-reset'),
+                  value: config.resetTicketDaily,
+                  onChanged: enabled
+                      ? (v) => onChanged(config.copyWith(resetTicketDaily: v))
+                      : null,
+                ),
+              ],
+            ),
+          ],
         ],
       ],
     );

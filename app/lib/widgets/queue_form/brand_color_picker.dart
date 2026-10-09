@@ -17,8 +17,8 @@ class BrandColorPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Wrap(
-      spacing: 10,
-      runSpacing: 10,
+      spacing: 2,
+      runSpacing: 2,
       children: [
         for (final c in brandPalette)
           Semantics(
@@ -28,16 +28,22 @@ class BrandColorPicker extends StatelessWidget {
             child: InkWell(
               customBorder: const CircleBorder(),
               onTap: enabled ? () => onChanged(c.hex) : null,
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: c.color,
-                  shape: BoxShape.circle,
+              child: SizedBox(
+                width: 48,
+                height: 48,
+                child: Center(
+                  child: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: c.color,
+                      shape: BoxShape.circle,
+                    ),
+                    child: value == c.hex
+                        ? const Icon(Icons.check, color: Colors.white)
+                        : null,
+                  ),
                 ),
-                child: value == c.hex
-                    ? const Icon(Icons.check, color: Colors.white)
-                    : null,
               ),
             ),
           ),
