@@ -264,9 +264,13 @@ Conferir antes se já foi feito: `firebase functions:list --project qio-app`.
 - [ ] `onQueueOpened` (trigger RTDB; avisos "me avise quando abrir").
 - [ ] `deleteQueue`, `deleteAccount` (antes de distribuir o APK; `ENFORCE_APP_CHECK_DELETE=false`).
 - [ ] Demais já documentadas: `submitFeedback`, `updateServiceEstimate`, `evaluateQueueAlerts`,
-      `applyQueueSchedules`, `onEntryCalled`, `onEntryJoined`, `onQueueAdvanced`,
-      `syncPublicTicket`, `reconcileWaitingCounts`, `purgeOldHistory`, `addManualEntry`.
+      `applyQueueSchedules`, `syncPublicTicket` (roteador único de `entries/{id}`: sync do
+      `public`, push de nova entry, "é a sua vez" e "você é o próximo"),
+      `reconcileWaitingCounts`, `purgeOldHistory`, `addManualEntry`.
       Um deploy completo de `functions` cobre todas.
+- [ ] Consolidação dos triggers de entries (#165): `firebase deploy --only functions --force`
+      remove `onEntryCalled`, `onEntryJoined` e `onQueueAdvanced` (ver CLAUDE.md, "Estrutura
+      das functions"). Faça num único deploy completo, não com `--only` parcial.
 
 ### Rules e índices
 

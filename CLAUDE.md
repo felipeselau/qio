@@ -432,7 +432,7 @@ modelos; ainda sem dados): `docs/piloto/`.
   App Check; APK fora da Play Store não passa no Play Integrity). Diferente de
   `ENFORCE_APP_CHECK_JOIN`/`ENFORCE_APP_CHECK_FEEDBACK`, ela ignora `ENFORCE_APP_CHECK`
   e não tem flag; a proteção é auth + posse da fila + os limites acima.
-- Deploy: functions (`addManualEntry`, `onEntryJoined`) → rules do RTDB → APK. Rules antes
+- Deploy: functions (`addManualEntry`, `syncPublicTicket`) → rules do RTDB → APK. Rules antes
   das functions deixaria entries manuais sem criador; o APK antigo lê entry sem `uid`
   como `''` e não mostra o selo.
 - Limitações: duas pessoas manuais com o mesmo nome/telefone são permitidas; limite de
@@ -577,6 +577,55 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   `feedback.rating/uid/createdAt`; um `left` simultâneo pode recriar history (repetir a
   busca); a forma só-dígitos é só tolerância a legado. Detalhes em `docs/privacidade.md`.
 - Passo a passo em `docs/privacidade.md`. Deploy: functions → rules do Firestore → APK.
+
+## Estrutura das functions e roteador de entries
+
+- `functions/index.js` é só ponto de registro: `initializeApp()` e `exports.X =
+  require('./src/handlers/<dominio>').X`. Uma função nova entra com um arquivo próprio em
+  `src/handlers/` e **uma linha** no `index.js` (sem mexer nos outros handlers).
+- Handlers por domínio (`functions/src/handlers/`): `join`, `manual`, `feedback`, `slug`,
+  `delete` (`deleteQueue`/`deleteAccount`), `dsr`, `entries` (`syncPublicTicket` + `reconcileWaitingCounts`),
+  `push` (envio de FCM de entry, sem export de função), `schedule`, `alerts`, `expire`,
+  `openwatch`, `estimate`, `history` (`purgeOldHistory`). `_shared.js` guarda o que é comum
+  (`findActive`, `resolveSlot`, `archiveLeftEntry`, `expireDeps`). Lógica pura continua em
+  `functions/src/*.js`; nomes exportados, região, timeout, memória, `retry`,
+  `guarded`/`isEnforced` e mensagens de `logError` não mudaram.
+- **Roteador de entries**: `syncPublicTicket` (`handlers/entries.js`) é o **único** trigger
+  em `queues/{queueId}/entries/{entryId}` (RTDB `onValueWritten`). Lê before/after uma vez e
+  `routeEntryWrite` (`src/entryRouter.js`, puro e testado) despacha em paralelo
+  (`Promise.allSettled`; a falha de um passo não impede os outros e é repropagada):
+  `sync` (`applyEntryChange`, sempre), `joined` (create; era `onEntryJoined`), `called`
+  (`shouldRenotify`; era `onEntryCalled`) e `advanced` (`advancedFromWaiting`; era
+  `onQueueAdvanced`). Os passos de push estão em `handlers/push.js` e mantêm os mesmos
+  guards e logs. `onEntryJoined`, `onEntryCalled` e `onQueueAdvanced` **deixaram de ser
+  exports**: mencionados neste guia e em `docs/` como nome de lógica, não de função deployada.
+- Invocações por escrita em `entries/{id}`: **4 → 1** (contagem de triggers registrados:
+  `test/exports.test.js` falha se mais de uma função escutar o path). Cada escrita
+  de entry (join, chamada, `fcmToken`, `order`, `left`...) custava 4 invocações, a maioria
+  retornando `null` logo no início.
+- Verificação: `node functions/scripts/dump-exports.js <arquivo.json>` grava nome e `__endpoint`
+  (região, timeout, memória, trigger, retry) de cada export; compare com um dump da `main`
+  via `diff`. Na migração a única diferença foi a remoção das 3 funções acima.
+- **Deploy da consolidação**: `firebase deploy --only functions` com `--force` (o CLI pede
+  confirmação para apagar `onEntryCalled`, `onEntryJoined`, `onQueueAdvanced`; sem TTY o deploy
+  falha sem `--force`). Faça num único deploy: o `syncPublicTicket` novo já cobre os
+  quatro caminhos, então entre o update dele e a remoção das antigas pode haver segundos com
+  push duplicado de "É a sua vez" (o aviso "Você é o próximo" é protegido por
+  `nextNotifiedAt`). Deploy parcial `--only functions:syncPublicTicket` **não** remove as
+  antigas (duplicaria push até apagá-las com `firebase functions:delete onEntryCalled
+  onEntryJoined onQueueAdvanced --region us-central1 --force`). Rollback: `git revert` e novo
+  deploy recria as três.
+- **`minInstances: 1` em `onEntryCalled` (avaliado, não ligado)**: o cold start de Node 22 em
+  gen2 costuma ser de ~1–3 s sobre um evento RTDB que já tem latência variável de alguns
+  segundos; o push "É a sua vez" não é interativo. Custo de manter 1 instância ociosa é fixo
+  (poucos dólares/mês na memória padrão, estimativa: confirmar na calculadora do GCP) contra
+  o orçamento de R$20/mês do projeto (`docs/monitoring.md`). A consolidação já ajuda: um único
+  trigger recebe todo o tráfego de entries, então a instância fica quente com mais frequência
+  e o número de cold starts cai. Reavaliar com medição (p95 de `execution_times` do
+  `syncPublicTicket` e latência chamada→push em aparelho real); se passar ~5 s com fila ativa,
+  ligar `minInstances: 1` **no `syncPublicTicket`** (agora é o dono do caminho), não em função
+  nova. `onQueueAdvanced` ainda lê todas as entries `waiting` (índice `status`) a cada saída da
+  espera; filas grandes (>1000 waiting) deveriam trocar por consulta limitada em futuro trabalho.
 
 ## Gotchas
 

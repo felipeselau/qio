@@ -20,9 +20,9 @@
 O projeto está no plano **Blaze (pay-as-you-go)** desde 01/10/2026 (Cloud
 Functions não rodam no plano Spark grátis — `cloudbuild.googleapis.com` só
 habilita com billing) e as functions v2 estão publicadas: `joinQueue`,
-`submitFeedback`, `syncPublicTicket`, `onEntryCalled`, `onEntryJoined`,
-`onQueueAdvanced`, `updateServiceEstimate`, `applyQueueSchedules` e
-`evaluateQueueAlerts` (lista em `functions/index.js`). O custo esperado
+`submitFeedback`, `syncPublicTicket` (roteador que também envia os pushes de
+nova entry, "é a sua vez" e "você é o próximo"), `updateServiceEstimate`,
+`applyQueueSchedules` e `evaluateQueueAlerts` (lista em `functions/index.js`). O custo esperado
 fica dentro da cota gratuita no volume do TCC. A `VITE_VAPID_KEY` já está
 configurada (Actions variables e bundle publicado); falta só validar o push em
 segundo plano num aparelho real.
@@ -39,7 +39,7 @@ web: som + vibração + tela verde quando a senha é chamada).
 
 ## O que já está pronto (commit XXXX)
 
-- `functions/index.js` — Cloud Function v2 `onEntryCalled`: trigger RTDB
+- `functions/src/handlers/push.js` (`notifyEntryCalled`, roteado por `syncPublicTicket`): trigger RTDB
   `queues/{queueId}/entries/{entryId}`, quando status vira `called` → envia FCM
   push com título "É a sua vez!" + senha + nome da fila (lido de `meta/name`),
   com `webpush.fcmOptions.link` apontando pra `https://qio.web.app/q/{queueId}`.
