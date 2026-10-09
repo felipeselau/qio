@@ -7,6 +7,24 @@ import { get, ref, set, update } from 'firebase/database';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { QUEUE, setupEnv } from './helpers.js';
 
+const spMinutesOfDay = () => {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'America/Sao_Paulo',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(new Date());
+  const get = (type) => Number(parts.find((p) => p.type === type).value);
+  return get('hour') * 60 + get('minute');
+};
+const hhmm = (minutes) =>
+  `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+const PAST_OFFSET_MIN = 30;
+const pastSlotStart = () => {
+  const now = spMinutesOfDay();
+  return now >= PAST_OFFSET_MIN ? hhmm(now - PAST_OFFSET_MIN) : '00:00';
+};
+
 const [FUNCTIONS_HOST, FUNCTIONS_PORT] = (process.env.FUNCTIONS_EMULATOR_HOST ?? 'localhost:5001').split(':');
 
 describe('callable joinQueue (emulador)', () => {
@@ -359,7 +377,7 @@ describe('callable joinQueue com slots (emulador)', () => {
               slots: {
                 late: { start: '23:59', capacity: 1 },
                 big: { start: '23:58', capacity: 3 },
-                past: { start: '00:00', capacity: 1 },
+                past: { start: pastSlotStart(), capacity: 1 },
               },
             },
           },
@@ -413,14 +431,23 @@ describe('callable joinQueue com slots (emulador)', () => {
     assert.equal(again.entryId, first.entryId);
   });
 
-  it('recusa horário que já passou', async () => {
-    const a = await newClient();
-    await rejectsWith(
-      a.join({ queueId: QUEUE, name: 'Ana', phone: '', slotId: 'past' }),
-      'failed-precondition',
-      'slot-passed',
-    );
-  });
+  it(
+    'recusa horário que já passou',
+    {
+      skip:
+        spMinutesOfDay() < PAST_OFFSET_MIN
+          ? 'sem horário passado possível nos primeiros 30 min do dia (America/Sao_Paulo)'
+          : false,
+    },
+    async () => {
+      const a = await newClient();
+      await rejectsWith(
+        a.join({ queueId: QUEUE, name: 'Ana', phone: '', slotId: 'past' }),
+        'failed-precondition',
+        'slot-passed',
+      );
+    },
+  );
 
   it('editar o horário do slot com entries ativas não zera a contagem', async () => {
     const a = await newClient();
