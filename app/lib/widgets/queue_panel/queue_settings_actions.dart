@@ -6,6 +6,29 @@ import '../../services/group_service.dart';
 import '../../services/queue_service.dart';
 import '../../theme/qio_palette.dart';
 
+Future<void> openQueueSettings(
+  BuildContext context, {
+  required String queueId,
+  required String queueName,
+  required bool isOwner,
+  QueueService? queues,
+  GroupService? groups,
+  VoidCallback? onQueueGone,
+}) async {
+  final exit = await Navigator.of(context).push<QueueSettingsExit>(
+    MaterialPageRoute<QueueSettingsExit>(
+      builder: (_) => QueueSettingsScreen(
+        queueId: queueId,
+        queueName: queueName,
+        isOwner: isOwner,
+        queues: queues,
+        groups: groups,
+      ),
+    ),
+  );
+  if (exit == QueueSettingsExit.queueGone) onQueueGone?.call();
+}
+
 class QueueSettingsActions extends StatelessWidget {
   const QueueSettingsActions({
     super.key,
@@ -28,20 +51,15 @@ class QueueSettingsActions extends StatelessWidget {
   final GroupService? groups;
   final VoidCallback? onQueueGone;
 
-  Future<void> _open(BuildContext context) async {
-    final exit = await Navigator.of(context).push<QueueSettingsExit>(
-      MaterialPageRoute<QueueSettingsExit>(
-        builder: (_) => QueueSettingsScreen(
-          queueId: queueId,
-          queueName: queueName,
-          isOwner: isOwner,
-          queues: queues,
-          groups: groups,
-        ),
-      ),
-    );
-    if (exit == QueueSettingsExit.queueGone) onQueueGone?.call();
-  }
+  Future<void> _open(BuildContext context) => openQueueSettings(
+    context,
+    queueId: queueId,
+    queueName: queueName,
+    isOwner: isOwner,
+    queues: queues,
+    groups: groups,
+    onQueueGone: onQueueGone,
+  );
 
   @override
   Widget build(BuildContext context) {

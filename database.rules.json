@@ -70,8 +70,8 @@
           ],
           "$entryId": {
             ".read": "(root.child('owners').child($queueId).child('ownerUid').val() === auth.uid) || (root.child('queues').child($queueId).child('operatorUids').child(auth.uid).val() === true) || data.child('uid').val() === auth.uid",
-            ".write": "(data.child('uid').val() === auth.uid && (!newData.exists() || (newData.child('ticket').val() === data.child('ticket').val() && newData.child('name').val() === data.child('name').val() && newData.child('phone').val() === data.child('phone').val() && newData.child('joinedAt').val() === data.child('joinedAt').val() && newData.child('calledAt').val() === data.child('calledAt').val() && newData.child('operatorId').val() === data.child('operatorId').val() && newData.child('order').val() === data.child('order').val() && newData.child('recalls').val() === data.child('recalls').val() && newData.child('skips').val() === data.child('skips').val() && newData.child('recalledAt').val() === data.child('recalledAt').val() && newData.child('lang').val() === data.child('lang').val() && newData.child('nextNotifiedAt').val() === data.child('nextNotifiedAt').val() && newData.child('slotId').val() === data.child('slotId').val() && newData.child('slotStart').val() === data.child('slotStart').val() && newData.child('uid').val() === data.child('uid').val() && (newData.child('status').val() === data.child('status').val() || newData.child('status').val() === 'left')))) || (root.child('owners').child($queueId).child('ownerUid').val() === auth.uid) || (root.child('queues').child($queueId).child('operatorUids').child(auth.uid).val() === true)",
-            ".validate": "newData.hasChildren(['ticket', 'status', 'uid']) && (data.exists() || newData.child('name').exists())",
+            ".write": "(data.child('uid').val() === auth.uid && (!newData.exists() || (newData.child('ticket').val() === data.child('ticket').val() && newData.child('name').val() === data.child('name').val() && newData.child('phone').val() === data.child('phone').val() && newData.child('joinedAt').val() === data.child('joinedAt').val() && newData.child('calledAt').val() === data.child('calledAt').val() && newData.child('operatorId').val() === data.child('operatorId').val() && newData.child('order').val() === data.child('order').val() && newData.child('recalls').val() === data.child('recalls').val() && newData.child('skips').val() === data.child('skips').val() && newData.child('recalledAt').val() === data.child('recalledAt').val() && newData.child('lang').val() === data.child('lang').val() && newData.child('nextNotifiedAt').val() === data.child('nextNotifiedAt').val() && newData.child('slotId').val() === data.child('slotId').val() && newData.child('slotStart').val() === data.child('slotStart').val() && newData.child('manual').val() === data.child('manual').val() && newData.child('uid').val() === data.child('uid').val() && (newData.child('status').val() === data.child('status').val() || newData.child('status').val() === 'left')))) || (root.child('owners').child($queueId).child('ownerUid').val() === auth.uid) || (root.child('queues').child($queueId).child('operatorUids').child(auth.uid).val() === true)",
+            ".validate": "newData.hasChildren(['ticket', 'status']) && (newData.child('uid').exists() || newData.child('manual').val() === true) && (data.exists() || newData.child('name').exists())",
             "ticket": {
               ".validate": "newData.isNumber()"
             },
@@ -122,6 +122,9 @@
             },
             "slotStart": {
               ".validate": "newData.isNumber()"
+            },
+            "manual": {
+              ".validate": "newData.isBoolean()"
             },
             "$other": {
               ".validate": false
