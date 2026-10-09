@@ -69,3 +69,64 @@ describe('buildManualEntry', () => {
     assert.equal(e.order, 9);
   });
 });
+
+const {
+  MANUAL_RATE_LIMIT,
+  MAX_ACTIVE_ENTRIES,
+  manualRateKey,
+  nextManualRateState,
+  isActiveCeilingReached,
+} = require('../src/manual');
+const { publicTicketFor, shouldRenotify } = require('../src/ticket');
+const { pickNextWaiting, advancedFromWaiting } = require('../src/webpush');
+
+describe('rate limit manual', () => {
+  it('chave própria por uid', () => {
+    assert.equal(manualRateKey('abc'), 'manual-abc');
+  });
+
+  it('bloqueia a 31a chamada na janela', () => {
+    let stamps = [];
+    for (let i = 0; i < MANUAL_RATE_LIMIT.max; i += 1) {
+      const s = nextManualRateState(stamps, 1000 + i);
+      assert.equal(s.limited, false);
+      stamps = s.timestamps;
+    }
+    const blocked = nextManualRateState(stamps, 2000);
+    assert.equal(blocked.limited, true);
+    assert.equal(blocked.timestamps.length, MANUAL_RATE_LIMIT.max);
+  });
+
+  it('libera depois da janela', () => {
+    const stamps = Array.from({ length: 30 }, (_, i) => 1000 + i);
+    const s = nextManualRateState(stamps, 1000 + MANUAL_RATE_LIMIT.windowMs + 100);
+    assert.equal(s.limited, false);
+  });
+});
+
+describe('teto de entries ativas', () => {
+  it('só vale sem maxWaiting', () => {
+    assert.equal(isActiveCeilingReached(0, MAX_ACTIVE_ENTRIES), true);
+    assert.equal(isActiveCeilingReached(undefined, MAX_ACTIVE_ENTRIES - 1), false);
+    assert.equal(isActiveCeilingReached(50, 5000), false);
+  });
+});
+
+describe('entry manual nas funções puras', () => {
+  const manual = { ticket: 4, name: 'Ana', phone: '', manual: true, status: 'waiting', joinedAt: 10 };
+
+  it('publicTicketFor não depende de uid', () => {
+    assert.deepEqual(publicTicketFor(manual), { ticket: 4, status: 'waiting', order: 10 });
+  });
+
+  it('shouldRenotify funciona sem fcmToken', () => {
+    assert.equal(shouldRenotify(manual, { ...manual, status: 'called' }), true);
+  });
+
+  it('pickNextWaiting e advancedFromWaiting toleram entry sem uid/fcmToken', () => {
+    const next = pickNextWaiting({ m1: manual });
+    assert.equal(next.id, 'm1');
+    assert.equal(next.fcmToken, undefined);
+    assert.equal(typeof advancedFromWaiting(manual, { ...manual, status: 'called' }), 'boolean');
+  });
+});

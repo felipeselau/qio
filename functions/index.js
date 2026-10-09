@@ -56,7 +56,14 @@ const {
   buildAlertPush,
   wantsAlertPush,
 } = require('./src/alerts');
-const { parseManualInput, isQueueStaff, buildManualEntry } = require('./src/manual');
+const {
+  parseManualInput,
+  isQueueStaff,
+  buildManualEntry,
+  manualRateKey,
+  nextManualRateState,
+  isActiveCeilingReached,
+} = require('./src/manual');
 const { logError, logAppCheck } = require('./src/log');
 const { guarded } = require('./src/guard');
 const { isEnforced } = require('./src/appcheck');
@@ -337,6 +344,15 @@ exports.addManualEntry = onCall(
 
     const entriesRef = db.ref(`queues/${queueId}/entries`);
 
+    if (phone) {
+      const samePhone = findActive(
+        await entriesRef.orderByChild('phone').equalTo(phone).once('value'),
+      );
+      if (samePhone.length > 0) {
+        throw new HttpsError('already-exists', 'Este telefone já está na fila.');
+      }
+    }
+
     let mode = normalizeMode(metaSnap.child('mode').val());
     let rawSlots = metaSnap.child('slots').val();
     if (!metaSnap.child('mode').exists()) {
@@ -367,6 +383,38 @@ exports.addManualEntry = onCall(
           reason: 'queue-full',
         });
       }
+    }
+
+    if (!maxWaiting) {
+      const [waitingSnap, calledSnap] = await Promise.all([
+        entriesRef.orderByChild('status').equalTo('waiting').once('value'),
+        entriesRef.orderByChild('status').equalTo('called').once('value'),
+      ]);
+      if (
+        isActiveCeilingReached(
+          maxWaiting,
+          waitingSnap.numChildren() + calledSnap.numChildren(),
+        )
+      ) {
+        throw new HttpsError('resource-exhausted', 'Fila lotada no momento.', {
+          reason: 'queue-full',
+        });
+      }
+    }
+
+    const rateNow = Date.now();
+    let limited = false;
+    await db.ref(`rateLimits/${queueId}/${manualRateKey(uid)}`).transaction((current) => {
+      const state = nextManualRateState(current, rateNow);
+      limited = state.limited;
+      return state.timestamps;
+    });
+    if (limited) {
+      throw new HttpsError(
+        'resource-exhausted',
+        'Muitas adições. Aguarde alguns minutos.',
+        { reason: 'rate-limited' },
+      );
     }
 
     const ticketResult = await db

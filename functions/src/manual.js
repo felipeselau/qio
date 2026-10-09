@@ -1,4 +1,23 @@
-const { normalizeName, isValidPhone } = require('./join');
+const { normalizeName, isValidPhone, pruneTimestamps, isRateLimited } = require('./join');
+const { normalizeMaxWaiting } = require('./capacity');
+
+const MANUAL_RATE_LIMIT = { max: 30, windowMs: 10 * 60 * 1000 };
+const MAX_ACTIVE_ENTRIES = 1000;
+
+function manualRateKey(uid) {
+  return `manual-${uid}`;
+}
+
+function nextManualRateState(current, now, options = MANUAL_RATE_LIMIT) {
+  const recent = pruneTimestamps(current, now, options.windowMs);
+  if (isRateLimited(recent, now, options)) return { limited: true, timestamps: recent };
+  return { limited: false, timestamps: [...recent, now] };
+}
+
+function isActiveCeilingReached(maxWaiting, activeCount, ceiling = MAX_ACTIVE_ENTRIES) {
+  if (normalizeMaxWaiting(maxWaiting) !== 0) return false;
+  return activeCount >= ceiling;
+}
 
 function isValidQueueId(value) {
   return (
@@ -46,4 +65,13 @@ function buildManualEntry({ ticket, name, phone, now, slotFields }) {
   };
 }
 
-module.exports = { parseManualInput, isQueueStaff, buildManualEntry };
+module.exports = {
+  MANUAL_RATE_LIMIT,
+  MAX_ACTIVE_ENTRIES,
+  manualRateKey,
+  nextManualRateState,
+  isActiveCeilingReached,
+  parseManualInput,
+  isQueueStaff,
+  buildManualEntry,
+};
