@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../l10n/app_localizations.dart';
+import '../../models/queue_info.dart';
 import '../../services/queue_service.dart';
 import '../../theme/qio_colors.dart';
 import '../../theme/qio_text_styles.dart';
@@ -8,13 +9,8 @@ import '../qio_card.dart';
 import '../qio_input.dart';
 import '../../theme/qio_palette.dart';
 
-String? validateMaxWaiting(String? value, AppLocalizations l10n) {
-  final text = value?.trim() ?? '';
-  if (text.isEmpty) return null;
-  final n = int.tryParse(text);
-  if (n == null || n < 1 || n > 1000) return l10n.maxWaitingInvalid;
-  return null;
-}
+String? validateMaxWaiting(String? value, AppLocalizations l10n) =>
+    validateMaxWaitingText(value) == null ? null : l10n.maxWaitingInvalid;
 
 class QueueLimitTile extends StatelessWidget {
   const QueueLimitTile({

@@ -98,6 +98,23 @@ SlotsError? validateSlots(QueueMode mode, List<QueueSlot> slots) {
   return null;
 }
 
+enum ScheduleError { noWindows, days, time, invalidTime, invalidDay }
+
+ScheduleError? validateSchedule(QueueSchedule? schedule) {
+  if (schedule == null || !schedule.enabled) return null;
+  if (schedule.windows.isEmpty) return ScheduleError.noWindows;
+  for (final w in schedule.windows) {
+    if (w.days.any((d) => d < 1 || d > 7)) return ScheduleError.invalidDay;
+    if (!isValidSlotTime(w.open) || !isValidSlotTime(w.close)) {
+      return ScheduleError.invalidTime;
+    }
+    final problem = validateWindow(w.days, w.open, w.close);
+    if (problem == 'days') return ScheduleError.days;
+    if (problem != null) return ScheduleError.time;
+  }
+  return null;
+}
+
 String formatSlotStart(int millis) {
   final sp = DateTime.fromMillisecondsSinceEpoch(
     millis,
