@@ -59,6 +59,8 @@ class Queue {
     this.schedule,
     this.brandColor,
     this.logoUrl,
+    this.slug,
+    this.posterTitle,
     this.groupId,
     this.alerts,
     this.mode = QueueMode.queue,
@@ -82,6 +84,8 @@ class Queue {
   final QueueSchedule? schedule;
   final String? brandColor;
   final String? logoUrl;
+  final String? slug;
+  final String? posterTitle;
   final String? groupId;
   final AlertsConfig? alerts;
   final QueueMode mode;
@@ -114,6 +118,8 @@ class Queue {
       schedule: QueueSchedule.fromMap(data['schedule']),
       brandColor: data['brandColor'] as String?,
       logoUrl: data['logoUrl'] as String?,
+      slug: data['slug'] as String?,
+      posterTitle: data['posterTitle'] as String?,
       groupId: data['groupId'] as String?,
       alerts: AlertsConfig.fromMap(data['alerts']),
       mode: QueueModeX.fromValue(data['mode'] as String?),

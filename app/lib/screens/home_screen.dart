@@ -13,6 +13,7 @@ import '../models/queue.dart';
 import '../services/action_errors.dart';
 import '../services/auth_service.dart';
 import '../services/deep_link.dart';
+import '../services/join_url.dart';
 import '../services/home_prompts.dart';
 import '../services/push_service.dart';
 import '../services/queue_sort.dart';
@@ -594,7 +595,15 @@ class _QueueCardState extends State<_QueueCard> {
       MaterialPageRoute<void>(
         builder: (_) => QrPosterScreen(
           queueName: q.name,
-          joinUrl: widget.queues.queueJoinUrl(q.id),
+          joinUrl: q.slug == null
+              ? widget.queues.queueJoinUrl(q.id)
+              : shortUrl(q.slug!),
+          queueId: q.id,
+          logoUrl: q.logoUrl,
+          brandColor: q.brandColor,
+          posterTitle: q.posterTitle,
+          canEdit: true,
+          queues: widget.queues,
         ),
       ),
     );

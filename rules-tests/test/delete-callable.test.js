@@ -51,6 +51,13 @@ describe('callables deleteQueue e deleteAccount (emulador)', () => {
 
   const fsExists = (path) => inCtx(async (ctx) => (await getDoc(doc(ctx.firestore(), path))).exists());
 
+  const slugState = (slug) =>
+    inCtx(async (ctx) => {
+      const snap = await getDoc(doc(ctx.firestore(), 'queueSlugs', slug));
+      if (!snap.exists()) return 'missing';
+      return snap.get('released') === true && snap.get('releasedAt') ? 'released' : 'active';
+    });
+
   const rtdbExists = (path) => inCtx(async (ctx) => (await get(ref(ctx.database(), path))).exists());
 
   const countHistory = (queueId) =>
@@ -76,6 +83,7 @@ describe('callables deleteQueue e deleteAccount (emulador)', () => {
         operatorInviteCode: `INV${queueId}`,
       });
       await setDoc(doc(fs, 'operatorInvites', `INV${queueId}`), { ownerId, queueId });
+      await setDoc(doc(fs, 'queueSlugs', `slug-${queueId}`), { ownerId, queueId });
       await setDoc(doc(fs, 'queues', queueId, 'operators', 'op1'), { uid: 'op1' });
       await setDoc(doc(fs, 'queues', queueId, 'feedback', 'f1'), { rating: 5 });
       for (let start = 0; start < historyCount; start += 400) {
@@ -107,6 +115,7 @@ describe('callables deleteQueue e deleteAccount (emulador)', () => {
     assert.equal(await fsExists(`queues/${queueId}/feedback/f1`), false);
     assert.equal(await fsExists(`queues/${queueId}/operators/op1`), false);
     assert.equal(await fsExists(`operatorInvites/INV${queueId}`), false);
+    assert.equal(await slugState(`slug-${queueId}`), 'released');
     assert.equal(await rtdbExists(`queues/${queueId}`), false);
     assert.equal(await rtdbExists(`owners/${queueId}`), false);
     assert.equal(await rtdbExists(`tickets/${queueId}`), false);
@@ -178,6 +187,15 @@ describe('callables deleteQueue e deleteAccount (emulador)', () => {
     await owner.deleteQueue(Q);
     assert.equal(await fsExists(`operatorInvites/INV${Q2}`), true);
     assert.equal(await fsExists(`operatorInvites/INV${Q}`), false);
+  });
+
+  it('slug de outra fila não é apagado', async () => {
+    const owner = await newClient();
+    await seedQueue(Q, owner.uid, 1);
+    await seedQueue(Q2, owner.uid, 1);
+    await owner.deleteQueue(Q);
+    assert.equal(await slugState(`slug-${Q}`), 'released');
+    assert.equal(await slugState(`slug-${Q2}`), 'active');
   });
 
   it('joinQueue recusa fila marcada como deleting mesmo com status open', async () => {

@@ -123,5 +123,11 @@
     "ownerLink": "Descarga la app de Qio para crear tu fila",
     "documentTitle": "Qio — Fila presencial, sin instalar nada",
     "metaDescription": "Entra en la fila del local desde tu celular sin instalar nada: escanea el código QR y sigue tu posición en tiempo real."
+  },
+  "slug": {
+    "opening": "Abriendo la fila...",
+    "failed": "No se pudo abrir el enlace",
+    "failedHint": "Revisa tu conexión e inténtalo de nuevo.",
+    "retry": "Reintentar"
   }
 }
