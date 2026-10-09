@@ -41,40 +41,49 @@ class QueueLimitGate extends StatelessWidget {
                   ),
                 ),
               )
-            : Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.block, size: 48, color: context.qio.gray500),
-                    const SizedBox(height: 16),
-                    Semantics(
-                      liveRegion: true,
-                      child: Text(
-                        l10n.cqLimitTitle,
-                        key: const ValueKey('create-limit-title'),
-                        textAlign: TextAlign.center,
-                        style: context.qioText.heading2.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: context.qio.textPrimary,
+            : LayoutBuilder(
+                builder: (context, box) => SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: box.maxHeight - 48 < 0
+                          ? 0
+                          : box.maxHeight - 48,
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.block, size: 48, color: context.qio.gray500),
+                        const SizedBox(height: 16),
+                        Semantics(
+                          liveRegion: true,
+                          child: Text(
+                            l10n.cqLimitTitle,
+                            key: const ValueKey('create-limit-title'),
+                            textAlign: TextAlign.center,
+                            style: context.qioText.heading2.copyWith(
+                              fontWeight: FontWeight.w700,
+                              color: context.qio.textPrimary,
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.queueLimitReached(maxQueuesPerOwner),
+                          key: const ValueKey('create-limit-message'),
+                          textAlign: TextAlign.center,
+                          style: context.qioText.body,
+                        ),
+                        const SizedBox(height: 24),
+                        QioButton(
+                          key: const ValueKey('create-limit-back'),
+                          label: l10n.back,
+                          isFullWidth: true,
+                          onPressed: () => Navigator.of(context).maybePop(),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      l10n.queueLimitReached(maxQueuesPerOwner),
-                      key: const ValueKey('create-limit-message'),
-                      textAlign: TextAlign.center,
-                      style: context.qioText.body,
-                    ),
-                    const SizedBox(height: 24),
-                    QioButton(
-                      key: const ValueKey('create-limit-back'),
-                      label: l10n.back,
-                      isFullWidth: true,
-                      onPressed: () => Navigator.of(context).maybePop(),
-                    ),
-                  ],
+                  ),
                 ),
               ),
       ),

@@ -7,6 +7,8 @@ import '../../theme/qio_text_styles.dart';
 import '../qio_button.dart';
 import '../qio_responsive_body.dart';
 
+const createQueueMaxWidth = 560.0;
+
 class CreateQueueKeepAlive extends StatefulWidget {
   const CreateQueueKeepAlive({super.key, required this.child});
 
@@ -73,6 +75,7 @@ class CreateQueueStepPage extends StatelessWidget {
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
       child: QioResponsiveBody(
+        maxWidth: createQueueMaxWidth,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -128,9 +131,10 @@ class CreateQueueFooter extends StatelessWidget {
       ),
       child: SafeArea(
         top: false,
-        child: QioResponsiveBody(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+          child: QioResponsiveBody(
+            maxWidth: createQueueMaxWidth,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,

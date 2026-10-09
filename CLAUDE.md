@@ -320,6 +320,29 @@ modelos; ainda sem dados): `docs/piloto/`.
   seletores posicionais.
 - Voltar do painel/criação/edição é `QueueBackButton` (`BackButton` do Material, tooltip e
   semântica localizados, usa `maybePop` e portanto respeita o `PopScope`).
+- **Rascunho persistente**: `CreateQueueDraftStore` (`services/create_queue_draft_store.dart`,
+  interface injetável `load/save/clear` por `uid`; implementação
+  `SharedPrefsCreateQueueDraftStore`, chave `create_queue_draft_<uid>`, JSON de
+  `CreateQueueController.toJson`; JSON corrompido vira `null` e é apagado). A tela recebe
+  `draftStore` e `uid` (padrão: `AuthService.instance.currentUser`; sem uid ou sem Firebase o
+  rascunho fica desligado). Grava a cada troca de passo (Continuar/Voltar/Pular/Editar) e ao
+  app ir para `paused` (`WidgetsBindingObserver`), **nunca por tecla**; as gravações são
+  enfileiradas e falhas são engolidas. Ao abrir, carrega o rascunho, revalida com
+  `CreateQueueController.fromJson(validGroupIds: grupos do dono via fetchGroups; sem lista se a
+  busca falhar)` e, se existir e não for vazio, mostra o diálogo "Continuar de onde parou?"
+  (Continuar restaura campos/passo via `restoreFrom`; Descartar apaga). Inválido, de outro
+  formato, versão futura/antiga ou vazio é ignorado **e apagado**, sem diálogo e sem crash.
+  Limpa logo após o `await createQueue` bem-sucedido, antes de navegar; erro/timeout mantém.
+- Sair no passo 1 com draft sujo: se o estado atual já foi gravado (mesmo JSON), sai sem
+  perguntar e o rascunho fica; senão o diálogo "Descartar alterações?" tem 3 ações: Continuar
+  editando, Descartar (apaga o rascunho) e Salvar rascunho (grava e sai). Sem uid o diálogo
+  volta a ter só as duas primeiras. Enquanto cria (`_loading`) o voltar segue bloqueado.
+- **Layout largo**: passos, rodapé e banner de erro usam `QioResponsiveBody(maxWidth:
+  createQueueMaxWidth)` (560 dp) com o padding de 20 **fora** dele (conteúdo e botões
+  alinhados), centralizados em telas largas. A revisão continua em **uma coluna** (duas
+  colunas foi descartado por ser desnecessário). Testes de largura/texto grande em
+  `test/screens/create_queue_layout_test.dart` (320/390/900 px, texto 1.0/1.3/2.0x, 20
+  horários com teclado aberto).
 
 ## Contador de espera no meta
 

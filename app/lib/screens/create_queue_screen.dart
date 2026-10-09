@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 
@@ -8,7 +10,9 @@ import '../models/queue_group.dart';
 import '../models/queue_info.dart';
 import '../models/queue_schedule.dart';
 import '../models/queue_slot.dart';
+import '../services/auth_service.dart';
 import '../services/brand_palette.dart';
+import '../services/create_queue_draft_store.dart';
 import '../services/group_service.dart';
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
@@ -18,6 +22,7 @@ import '../widgets/create_queue/create_queue_parts.dart';
 import '../widgets/create_queue/queue_limit_gate.dart';
 import '../widgets/group_picker.dart';
 import '../widgets/qio_input.dart';
+import '../widgets/qio_responsive_body.dart';
 import '../widgets/queue_form/brand_color_picker.dart';
 import '../widgets/queue_form/expiry_form.dart';
 import '../widgets/queue_form/schedule_form.dart';
@@ -28,16 +33,27 @@ import '../widgets/queue_panel/slots_editor.dart';
 import 'queue_created_screen.dart';
 
 class CreateQueueScreen extends StatefulWidget {
-  const CreateQueueScreen({super.key, this.queues, this.groups});
+  const CreateQueueScreen({
+    super.key,
+    this.queues,
+    this.groups,
+    this.draftStore,
+    this.uid,
+  });
 
   final QueueService? queues;
   final GroupService? groups;
+  final CreateQueueDraftStore? draftStore;
+  final String? uid;
 
   @override
   State<CreateQueueScreen> createState() => _CreateQueueScreenState();
 }
 
-class _CreateQueueScreenState extends State<CreateQueueScreen> {
+enum _DiscardChoice { keep, discard, save }
+
+class _CreateQueueScreenState extends State<CreateQueueScreen>
+    with WidgetsBindingObserver {
   static const createTimeout = Duration(seconds: 20);
   static const _pageDuration = Duration(milliseconds: 250);
 
@@ -57,10 +73,14 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
   bool _checkingLimit = true;
   bool _atLimit = false;
   String? _error;
+  String? _savedJson;
+  bool _finished = false;
+  Future<void> _draftWork = Future.value();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _c.addListener(_onController);
     _nameCtrl.addListener(
       () => _c.update((d) => d.copyWith(name: _nameCtrl.text)),
@@ -74,7 +94,122 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
     _limitCtrl.addListener(
       () => _c.update((d) => d.copyWith(maxWaiting: _limitCtrl.text)),
     );
+    _offerDraft();
     _checkLimit();
+  }
+
+  String? get _draftUid {
+    final given = widget.uid;
+    if (given != null) return given.isEmpty ? null : given;
+    try {
+      final uid = AuthService.instance.currentUser?.uid;
+      return uid == null || uid.isEmpty ? null : uid;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  CreateQueueDraftStore get _store =>
+      widget.draftStore ?? const SharedPrefsCreateQueueDraftStore();
+
+  void _enqueueDraft(Future<void> Function() work) {
+    _draftWork = _draftWork.then((_) => work()).catchError((Object _) {});
+  }
+
+  void _saveDraft() {
+    final uid = _draftUid;
+    if (uid == null || _finished) return;
+    if (!_c.isDirty) {
+      _clearDraft();
+      return;
+    }
+    final json = _c.toJson();
+    _savedJson = jsonEncode(json);
+    _enqueueDraft(() => _store.save(uid, json));
+  }
+
+  void _clearDraft() {
+    final uid = _draftUid;
+    _savedJson = null;
+    if (uid == null) return;
+    _enqueueDraft(() => _store.clear(uid));
+  }
+
+  bool get _draftSaved =>
+      _savedJson != null && _savedJson == jsonEncode(_c.toJson());
+
+  Future<void> _offerDraft() async {
+    final uid = _draftUid;
+    if (uid == null) return;
+    CreateQueueController? restored;
+    try {
+      final raw = await _store.load(uid);
+      if (raw == null) return;
+      Set<String>? groupIds;
+      try {
+        final groups = await (widget.groups ?? GroupService.instance)
+            .fetchGroups();
+        groupIds = {for (final g in groups) g.id};
+      } catch (_) {
+        groupIds = null;
+      }
+      restored = CreateQueueController.fromJson(raw, validGroupIds: groupIds);
+    } catch (_) {
+      restored = null;
+    }
+    if (!mounted) return;
+    if (restored == null || restored.draft.trimmed() == _c.initial.trimmed()) {
+      _clearDraft();
+      return;
+    }
+    if (_c.isDirty) return;
+    final l10n = AppLocalizations.of(context);
+    final resume = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        key: const ValueKey('create-resume-dialog'),
+        title: Text(l10n.cqResumeTitle),
+        content: Text(l10n.cqResumeBody),
+        actions: [
+          TextButton(
+            key: const ValueKey('create-resume-discard'),
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cqDiscardDraft),
+          ),
+          TextButton(
+            key: const ValueKey('create-resume-continue'),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.cqResume),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return;
+    if (resume == true) {
+      _applyDraft(restored);
+    } else {
+      _clearDraft();
+    }
+  }
+
+  void _applyDraft(CreateQueueController restored) {
+    final d = restored.draft;
+    _nameCtrl.text = d.name;
+    _descCtrl.text = d.description;
+    _avgCtrl.text = d.avgServiceMin;
+    _limitCtrl.text = d.maxWaiting;
+    _scheduleValue = ScheduleFormValue.fromSchedule(d.schedule);
+    _c.restoreFrom(restored);
+    if (d.description.trim().isNotEmpty || d.groupId != null) {
+      _moreCtrl.expand();
+    }
+    _savedJson = jsonEncode(_c.toJson());
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused && !_loading) _saveDraft();
   }
 
   Future<void> _checkLimit() async {
@@ -94,6 +229,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _c.removeListener(_onController);
     _c.dispose();
     _pages.dispose();
@@ -110,6 +246,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
     setState(() => _error = null);
     if (_c.stepIndex == _shown) return;
     _shown = _c.stepIndex;
+    _saveDraft();
     FocusManager.instance.primaryFocus?.unfocus();
     if (MediaQuery.disableAnimationsOf(context)) {
       _pages.jumpToPage(_shown);
@@ -188,25 +325,53 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
   }
 
   Future<void> _confirmDiscard() async {
+    if (_draftSaved) {
+      Navigator.of(context).pop();
+      return;
+    }
     final l10n = AppLocalizations.of(context);
-    final discard = await showDialog<bool>(
+    final canSave = _draftUid != null;
+    final choice = await showDialog<_DiscardChoice>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: Text(l10n.discardTitle),
-        content: Text(l10n.discardBody),
+        content: Text(canSave ? l10n.cqDraftDiscardBody : l10n.discardBody),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
+            key: const ValueKey('create-discard-keep'),
+            onPressed: () => Navigator.of(ctx).pop(_DiscardChoice.keep),
             child: Text(l10n.keepEditing),
           ),
           TextButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
+            key: const ValueKey('create-discard-drop'),
+            onPressed: () => Navigator.of(ctx).pop(_DiscardChoice.discard),
             child: Text(l10n.discard),
           ),
+          if (canSave)
+            TextButton(
+              key: const ValueKey('create-discard-save'),
+              onPressed: () => Navigator.of(ctx).pop(_DiscardChoice.save),
+              child: Text(l10n.cqSaveDraft),
+            ),
         ],
       ),
     );
-    if (discard == true && mounted) Navigator.of(context).pop();
+    if (!mounted) return;
+    switch (choice) {
+      case _DiscardChoice.save:
+        _saveDraft();
+        Navigator.of(context).pop();
+      case _DiscardChoice.discard:
+        _clearDraft();
+        Navigator.of(context).pop();
+      case _DiscardChoice.keep || null:
+        break;
+    }
+  }
+
+  Future<void> _draftClearedFuture() {
+    _clearDraft();
+    return _draftWork;
   }
 
   Future<void> _submit() async {
@@ -237,6 +402,8 @@ class _CreateQueueScreenState extends State<CreateQueueScreen> {
             expiry: args.expiry,
           )
           .timeout(createTimeout);
+      _finished = true;
+      await _draftClearedFuture();
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
@@ -703,19 +870,24 @@ class _ErrorBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       liveRegion: true,
-      child: Container(
-        key: const ValueKey('create-error'),
-        width: double.infinity,
-        margin: const EdgeInsets.fromLTRB(20, 12, 20, 0),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: QioColors.error.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Text(
-          message,
-          style: context.qioText.bodyMedium.copyWith(
-            color: context.qio.statusClosedText,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+        child: QioResponsiveBody(
+          maxWidth: createQueueMaxWidth,
+          child: Container(
+            key: const ValueKey('create-error'),
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: QioColors.error.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              message,
+              style: context.qioText.bodyMedium.copyWith(
+                color: context.qio.statusClosedText,
+              ),
+            ),
           ),
         ),
       ),

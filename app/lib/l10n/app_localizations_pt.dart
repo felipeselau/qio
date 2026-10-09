@@ -2070,6 +2070,26 @@ class AppLocalizationsPt extends AppLocalizations {
       'Sem resposta. A fila pode ter sido criada: confira sua lista antes de tentar de novo.';
 
   @override
+  String get cqResumeTitle => 'Continuar de onde parou?';
+
+  @override
+  String get cqResumeBody =>
+      'Você tem uma fila em andamento que não foi criada. Quer continuar de onde parou ou descartar?';
+
+  @override
+  String get cqResume => 'Continuar';
+
+  @override
+  String get cqDiscardDraft => 'Descartar';
+
+  @override
+  String get cqSaveDraft => 'Salvar rascunho';
+
+  @override
+  String get cqDraftDiscardBody =>
+      'Você já preencheu campos. Salve como rascunho para continuar depois ou descarte o que digitou.';
+
+  @override
   String get cqCreatedTitle => 'Fila criada';
 
   @override
