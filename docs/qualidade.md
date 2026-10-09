@@ -10,7 +10,7 @@ foi medido está marcado como "não medido". Comandos de cada módulo: `CLAUDE.m
 | --- | --- | --- | --- | --- | --- |
 | `app/` (unidade, widget e goldens) | `flutter test` | 56 | 451 | 451 | 0 |
 | `functions/` (lógica pura em `src/`) | `npm test` (`node --test`) | 14 | 155 | 155 | 0 |
-| `rules-tests/` — rules (Firestore, RTDB, Storage) | `npm run test:rules` | 3 | 167 | 167 | 0 |
+| `rules-tests/` — rules (Firestore, RTDB, Storage) | `npm run test:rules` | 3 | 168 | 168 | 0 |
 | `rules-tests/` — callable `joinQueue` nos emulators | `npm run test:callable` | 1 | 28 | 28 | 0 |
 | `web/` | — | 0 | sem testes automatizados | — | — |
 | **Total automatizado** | | **74** | **801** | **801** | **0** |
@@ -115,6 +115,24 @@ Consistência
   O limite de 20 grupos por dono é checado só no app.
 - Alertas operacionais: se o envio FCM falhar depois da gravação de `alertState`, o
   alerta se perde até o fim do cooldown.
+
+
+Margem do create de `queues/{id}` (#212)
+
+- O wizard pode gravar tudo num único `add()`: o teste "create do wizard no pior caso
+  cabe num único add()" (`rules-tests/test/firestore.test.js`) passa com `mode: 'schedule'`
+  + 20 slots (capacity 50), `alerts` completo, `schedule` (3 janelas), `groupId` (40),
+  `brandColor`, `expiry`, `retentionDays` 730, `anonymizePhone`, nome 60, descrição 300,
+  `avgServiceMin` 240 e `maxWaiting` 1000. `createQueue` hoje não grava `expiry` nem
+  privacidade; entraram para cobrir o wizard.
+- O emulator não informa o número de expressões. Medido: numa cópia das rules (fora do
+  repo) acrescentou-se `&& (true && true ...)` ao `allow create` e rodou-se o mesmo
+  `addDoc` até aparecer `maximum of 1000 expressions to evaluate has been reached`.
+  Passou com 9 termos e falhou com 10 (com `request.auth.uid != 'zz'`, passou com 4 e
+  falhou com 5). Folga estimada: ~10 a 20 expressões (~2% do limite).
+- Consequência: não somar validação ao `allow create` (`schedule`, `brandColor` e `expiry`
+  seguem validados só no cliente, como pede o escopo). Se algum campo novo precisar de
+  regra, repetir a medição; se estourar, gravar `slots` num `update` logo após o `add()`.
 
 Segurança
 
