@@ -330,10 +330,49 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
 `localStorage` quando a entry some do RTDB (`useQueue.ts`) e mantém a tela
 "Você saiu da fila" com estado local (`hasLeft`) após `leaveQueue`.
 - `watchWaitingCount` (home) lê `queues/{id}/public` (sem PII), não `entries`.
-- `deleteQueue`: remove do RTDB entries, `public`, `meta`, `tickets`,
-  `deleteOperatorData` (operatorUids + docs de operadores/convite) e por último
-  `owners/{id}` (rules de meta/entries dependem dele); só então apaga history e
-  o doc da fila no Firestore. O dono pode remover `public` (rule só permite delete).
+- O dono ainda pode remover `public` (rule só permite delete); as rules não mudaram
+  com a exclusão via callable (Admin ignora rules, nada foi afrouxado).
+
+## Exclusão de fila e de conta
+
+- Callables Admin em `functions/index.js` (us-central1, timeout 540 s), lógica pura e
+  ordem em `functions/src/delete.js` (deps injetadas; testes em
+  `functions/test/delete.test.js`; emulator em `rules-tests/test/delete-callable.test.js`).
+  O app chama via `app/lib/services/delete_service.dart` (`cloud_functions`);
+  `QueueService.deleteQueue(queueId)` só delega a ele.
+- `deleteQueue({queueId})`: só o dono (`queues/{id}.ownerId == auth.uid`, senão
+  `permission-denied`; `queueId` precisa casar `[A-Za-z0-9_-]{1,128}`). Ordem: (1) marca
+  `deleting: true` + `status: 'closed'` no doc e no `meta` (o `joinQueue` recusa
+  `meta/deleting`; as rules do RTDB impedem o dono de escrever em `meta` enquanto
+  `meta/deleting == true`; `applyQueueSchedules` ignora filas `deleting`); (2) RTDB
+  `entries`, `public`, `operatorUids`, `tickets/{id}`, `rateLimits/{id}` e só então
+  `meta`; (3) `recursiveDelete` de cada subcoleção de `queues/{id}`; (4) convites
+  `operatorInvites` com `queueId == id` e `ownerId == dono` (consulta, não confia no
+  `operatorInviteCode`); (5) Storage `queue-logos/{id}/` no bucket
+  `STORAGE_BUCKET` || bucket do app Admin || `qio-app.firebasestorage.app`; bucket
+  inexistente gera log de erro `delete-queue:bucket-missing` e a exclusão segue; (6) RTDB
+  `owners/{id}`; (7) `recursiveDelete` do doc da fila (pega subcoleções criadas na janela),
+  por último. Falhou no meio: o doc segue vivo e o dono repete a chamada (idempotente;
+  doc já inexistente devolve `alreadyGone: true`). O app esconde filas `deleting` da home.
+- `deleteAccount()`: autenticado. Apaga todas as filas do uid (mesma rotina), remove
+  `operators`/`operatorRequests` do uid em filas de terceiros (collectionGroup por
+  `uid` + `operatorUids/{uid}` no RTDB; a fila alheia fica intacta), depois
+  `owners/{uid}` recursivo (devices, groups) e por fim `auth.deleteUser`. Se qualquer
+  fila ou vínculo falhar, **não** apaga owner nem conta e responde `aborted` com
+  `details.reason == 'partial'`; repetir conclui. Login recente é exigido no
+  **servidor** (`assertRecentLogin`: `auth_time` de até 300 s, senão `failed-precondition`
+  com `details.reason == 'recent-login'`, que o app trata pedindo nova reautenticação) e
+  também no **cliente** (`AccountScreen` → `DeleteAccountDialog`: confirmação digitando EXCLUIR
+  ou o e-mail, senha ou Google de novo e só então a callable; ao fim, `signOut`).
+- Limites: histórico no `history` de filas alheias com `operatorId`/`calledBy` do uid
+  e `feedback.uid` de avaliações dadas por esse uid como cliente não são varridos; uma
+  entry criada por join concorrente durante a exclusão pode sobrar por instantes
+  (`joinQueue` recusa `meta/deleting`; a janela é o join já em andamento).
+- App Check: `deleteQueue`/`deleteAccount` usam `ENFORCE_APP_CHECK_DELETE` e **não**
+  herdam `ENFORCE_APP_CHECK` (o app Flutter não usa App Check). Mantenha `false`.
+- Deploy: `--only functions:deleteQueue,functions:deleteAccount` (e
+  `functions:applyQueueSchedules`) **antes** de distribuir o APK; o APK novo não
+  apaga mais direto no Firestore/RTDB.
 
 ## Gotchas
 

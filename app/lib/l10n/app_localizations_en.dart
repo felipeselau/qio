@@ -128,6 +128,53 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signOutError => 'Couldn\'t sign out.';
 
   @override
+  String get deleteAccountTitle => 'Delete my account';
+
+  @override
+  String get deleteAccountZone => 'Danger zone';
+
+  @override
+  String get deleteAccountSubtitle =>
+      'Erases your account, queues, history, ratings and devices. This can\'t be undone.';
+
+  @override
+  String get deleteAccountWarning =>
+      'All your queues, service history, ratings, groups and your account will be permanently erased. People waiting in your queues lose their ticket. If you are an operator on other people\'s queues, only your link is removed.';
+
+  @override
+  String get deleteAccountConfirmLabel =>
+      'Type DELETE or your email to confirm';
+
+  @override
+  String get deleteAccountPasswordLabel => 'Current password';
+
+  @override
+  String get deleteAccountGoogleHint =>
+      'You will confirm your identity with Google before deleting.';
+
+  @override
+  String get deleteAccountConfirmButton => 'Delete permanently';
+
+  @override
+  String get deleteAccountProgress =>
+      'Deleting your data. This may take a moment.';
+
+  @override
+  String get deleteAccountReauthFailed =>
+      'Couldn\'t confirm your identity. Check your password and try again.';
+
+  @override
+  String get deleteAccountError =>
+      'Deletion didn\'t finish. Some data may already be gone. Try again to complete it.';
+
+  @override
+  String get deleteAccountRetry => 'Try again';
+
+  @override
+  String get deleteAccountRecentLogin =>
+      'For your security, confirm your identity again to finish the deletion.';
+
+  @override
   String get appearance => 'Appearance';
 
   @override

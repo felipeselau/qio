@@ -29,7 +29,16 @@ class FakeUser implements User {
 }
 
 class FakeAuthService implements AuthService {
-  FakeAuthService({this.user, this.error, this.signOutError});
+  FakeAuthService({
+    this.user,
+    this.error,
+    this.signOutError,
+    this.reauthError,
+    this.passwordProvider = true,
+  });
+
+  Object? reauthError;
+  bool passwordProvider;
 
   User? user;
   Object? error;
@@ -65,6 +74,21 @@ class FakeAuthService implements AuthService {
     calls.add('google');
     if (error != null) throw error!;
     return user;
+  }
+
+  @override
+  bool get hasPasswordProvider => passwordProvider;
+
+  @override
+  Future<void> reauthenticateWithPassword(String password) async {
+    calls.add('reauth:password:$password');
+    if (reauthError != null) throw reauthError!;
+  }
+
+  @override
+  Future<void> reauthenticateWithGoogle() async {
+    calls.add('reauth:google');
+    if (reauthError != null) throw reauthError!;
   }
 
   @override

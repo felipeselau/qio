@@ -6,11 +6,13 @@ import '../l10n/app_localizations.dart';
 import '../services/account_format.dart';
 import '../services/analytics_service.dart';
 import '../services/auth_service.dart';
+import '../services/delete_service.dart';
 import '../services/haptics.dart';
 import '../services/push_service.dart';
 import '../services/locale_controller.dart';
 import '../services/theme_controller.dart';
 import '../theme/qio_text_styles.dart';
+import '../widgets/delete_account_dialog.dart';
 import '../widgets/qio_avatar.dart';
 import '../widgets/qio_button.dart';
 import '../widgets/legal_links.dart';
@@ -25,6 +27,7 @@ class AccountScreen extends StatefulWidget {
     this.auth,
     this.loadOwner,
     this.loadQueueCount,
+    this.deleteService,
   });
 
   final AuthService? auth;
@@ -32,6 +35,8 @@ class AccountScreen extends StatefulWidget {
   final Future<Map<String, dynamic>?> Function(String uid)? loadOwner;
   @visibleForTesting
   final Future<int?> Function(String uid)? loadQueueCount;
+  @visibleForTesting
+  final DeleteService? deleteService;
 
   @override
   State<AccountScreen> createState() => _AccountScreenState();
@@ -90,6 +95,24 @@ class _AccountScreenState extends State<AccountScreen> {
         SnackBar(content: Text(AppLocalizations.of(context).signOutError)),
       );
     }
+  }
+
+  Future<void> _deleteAccount() async {
+    final deleted = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => DeleteAccountDialog(
+        auth: _auth,
+        email: _user?.email,
+        deleteService: widget.deleteService ?? DeleteService.instance,
+      ),
+    );
+    if (deleted != true || !mounted) return;
+    try {
+      await _auth.signOut();
+    } catch (_) {}
+    if (!mounted) return;
+    Navigator.of(context).popUntil((route) => route.isFirst);
   }
 
   String _displayName(Map<String, dynamic>? owner) {
@@ -222,6 +245,34 @@ class _AccountScreenState extends State<AccountScreen> {
           isFullWidth: true,
           isLoading: _signingOut,
           onPressed: _signingOut ? null : _signOut,
+        ),
+        const SizedBox(height: 32),
+        Text(
+          l10n.deleteAccountZone,
+          style: context.qioText.bodyMedium.copyWith(
+            color: context.qio.textSecondary,
+          ),
+        ),
+        const SizedBox(height: 8),
+        QioCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.deleteAccountSubtitle,
+                style: context.qioText.body.copyWith(
+                  color: context.qio.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 12),
+              QioButton(
+                label: l10n.deleteAccountTitle,
+                variant: QioButtonVariant.dangerSoft,
+                isFullWidth: true,
+                onPressed: _signingOut ? null : _deleteAccount,
+              ),
+            ],
+          ),
         ),
       ],
     );
