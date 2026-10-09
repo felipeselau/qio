@@ -9,6 +9,47 @@ function normalizeName(name) {
   return trimmed;
 }
 
+const CLAIM_RATE_LIMIT = { max: 3, windowMs: 10 * 60 * 1000 };
+const ACTIVE_STATUSES = ['waiting', 'called'];
+
+function nameKey(name) {
+  if (typeof name !== 'string') return '';
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function namesMatch(a, b) {
+  const ka = nameKey(a);
+  return ka.length > 0 && ka === nameKey(b);
+}
+
+function pickClaimable(entries, name, uid) {
+  if (!Array.isArray(entries)) return null;
+  const matches = entries
+    .filter(
+      (e) =>
+        e &&
+        ACTIVE_STATUSES.includes(e.status) &&
+        e.uid !== uid &&
+        namesMatch(e.name, name),
+    )
+    .sort((a, b) => (a.joinedAt ?? 0) - (b.joinedAt ?? 0));
+  return matches[0] ?? null;
+}
+
+function claimEntryUpdate(current, expectedUid, newUid) {
+  if (current === null || typeof current !== 'object') return current;
+  if (current.uid !== expectedUid || !ACTIVE_STATUSES.includes(current.status)) {
+    return undefined;
+  }
+  const { fcmToken, ...rest } = current;
+  return { ...rest, uid: newUid };
+}
+
 function isValidPhone(phone) {
   if (typeof phone !== 'string') return false;
   return phone === '' || PHONE_PATTERN.test(phone);
@@ -42,6 +83,11 @@ function rateLimitFromEnv(env = {}) {
 module.exports = {
   MAX_NAME_LENGTH,
   DEFAULT_RATE_LIMIT,
+  CLAIM_RATE_LIMIT,
+  nameKey,
+  namesMatch,
+  pickClaimable,
+  claimEntryUpdate,
   rateLimitFromEnv,
   normalizeName,
   isValidPhone,

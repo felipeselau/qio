@@ -102,6 +102,24 @@ conhecidas: `docs/qualidade.md`.
   APK v1.1.0 (dono/operador) continua compatível com as rules novas. Web antigo em
   cache falha ao entrar na fila até recarregar.
 
+## Reivindicar a própria senha (#145)
+
+- `joinQueue` com telefone igual ao de entry ativa (`waiting`/`called`) de **outro** uid:
+  se o nome também bate (`namesMatch` em `functions/src/join.js`: sem acento, sem caixa,
+  trim, espaços colapsados), a entry é reatribuída ao uid chamador por transação Admin
+  (`claimEntryUpdate`: troca `uid`, apaga `fcmToken`; ticket/joinedAt/order intactos) e a
+  resposta é `{existing: true, claimed: true}`. O uid antigo perde a leitura na hora (rule
+  `uid == auth.uid`). `public/` não tem uid; nada mais depende do uid antigo.
+  Nome diferente: `already-exists` como antes, sem vazar nome/ticket alheios.
+- Limite: 3 tentativas por 10 min por uid (`CLAIM_RATE_LIMIT`), contadas a cada telefone
+  que casa com entry ativa, em `rateLimits/{queueId}/claim/{uid}` (separado dos
+  timestamps de join). Estourou: `resource-exhausted` + `details.reason == 'claim-rate'`.
+- Web mostra o aviso `queue.claimed` ("Recuperamos a sua senha") na tela da senha.
+- Risco aceito: quem sabe nome **e** telefone de outra pessoa na fila consegue sequestrar a
+  senha dela (e ela deixa de ver a entry). Baixa gravidade em fila presencial; verificação
+  por SMS fica em #96. Entries manuais (sem uid) também podem ser reivindicadas.
+- Deploy: functions (`joinQueue`) → hosting. Sem mudança de rules.
+
 ## Limite de fila e mensagem de status
 
 - `queues/{id}/meta/maxWaiting` (0 = sem limite, 1–1000), `statusMessage` (≤120) e

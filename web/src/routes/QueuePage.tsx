@@ -143,6 +143,7 @@ export default function QueuePage() {
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const [hasLeft, setHasLeft] = useState(false);
+  const [claimed, setClaimed] = useState(false);
   const [fcmDone, setFcmDone] = useState(false);
   const installPrompt = useInstallPrompt();
   const [feedbackId, setFeedbackId] = useState<string | null>(() => getPendingFeedback(queueId));
@@ -272,6 +273,7 @@ export default function QueuePage() {
         phone.trim(),
         scheduled ? slotId : null,
       );
+      setClaimed(result.claimed === true);
       setEntryId(result.entryId);
     } catch (err: any) {
       setError(err?.message ?? t('errors.joinFailed'));
@@ -297,6 +299,7 @@ export default function QueuePage() {
   function handleRejoin() {
     clearStoredEntryId(queueId);
     setEntryId(null);
+    setClaimed(false);
     setHasLeft(false);
     setLeaving(false);
     setConfirmLeave(false);
@@ -651,6 +654,12 @@ export default function QueuePage() {
               {meta?.name}
             </p>
           </div>
+
+          {claimed && (
+            <div className="notice notice-warning" role="status">
+              {t('queue.claimed')}
+            </div>
+          )}
 
           {scheduled && myEntry.slotStart != null && (
             <div className="card slot-time" role="status">

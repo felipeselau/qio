@@ -14,6 +14,9 @@ const {
   isValidPhone,
   pruneTimestamps,
   isRateLimited,
+  CLAIM_RATE_LIMIT,
+  pickClaimable,
+  claimEntryUpdate,
 } = require('./src/join');
 const { historyFromLeftEntry } = require('./src/history');
 const { isQueueFull } = require('./src/capacity');
@@ -264,7 +267,42 @@ exports.joinQueue = onCall(
         await entriesRef.orderByChild('phone').equalTo(cleanPhone).once('value'),
       );
       if (samePhone.length > 0) {
-        throw new HttpsError('already-exists', 'Este telefone já está na fila.');
+        const claimNow = Date.now();
+        let claimLimited = false;
+        await db.ref(`rateLimits/${queueId}/claim/${uid}`).transaction((current) => {
+          const recent = pruneTimestamps(current, claimNow, CLAIM_RATE_LIMIT.windowMs);
+          if (isRateLimited(recent, claimNow, CLAIM_RATE_LIMIT)) {
+            claimLimited = true;
+            return recent;
+          }
+          claimLimited = false;
+          return [...recent, claimNow];
+        });
+        if (claimLimited) {
+          throw new HttpsError(
+            'resource-exhausted',
+            'Muitas tentativas. Aguarde alguns minutos.',
+            { reason: 'claim-rate' },
+          );
+        }
+        const target = pickClaimable(samePhone, name, uid);
+        if (!target) {
+          throw new HttpsError('already-exists', 'Este telefone já está na fila.');
+        }
+        const claimed = await entriesRef
+          .child(target.entryId)
+          .transaction((current) => claimEntryUpdate(current, target.uid, uid));
+        const result = claimed.snapshot.val();
+        if (!claimed.committed || !result || result.uid !== uid) {
+          throw new HttpsError('already-exists', 'Este telefone já está na fila.');
+        }
+        logger.info('joinQueue:claimed', { event: 'claim', queueId, entryId: target.entryId });
+        return {
+          entryId: target.entryId,
+          ticket: result.ticket,
+          existing: true,
+          claimed: true,
+        };
       }
     }
 
