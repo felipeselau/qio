@@ -647,6 +647,11 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   `messagingModule.ts`): `null` (em cache) = sem suporte; falha de rede ao baixar o
   chunk rejeita com `MessagingLoadError` e não é cacheada (retry). Nunca importe
   `firebase/messaging` estaticamente nem chame `getMessaging` no topo de um módulo.
+- `web/src/routes/QueuePage.tsx` é só o orquestrador (hooks, estado, efeitos e handlers);
+  cada fase é um componente de apresentação em `web/src/routes/queue/` (`JoinForm`,
+  `TicketView`, `CalledView`, `FeedbackView`, `StateViews` com erro/carregando/inexistente/
+  fechada/obrigado/saiu, `Banners`, `QueueLogo`). Estado e ordem dos hooks ficam na página;
+  a conta das opções de horário é `buildSlotOptions` (`lib/slots.ts`, testada).
 - A landing `/` carrega o bundle inteiro (Auth/Database/Functions/App Check): a
   `QueuePage` não usa `React.lazy` porque o caminho do QR é o principal e o lazy
   adicionaria uma ida e volta de rede nele.
