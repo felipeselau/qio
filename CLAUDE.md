@@ -77,35 +77,45 @@ modelos; ainda sem dados): `docs/piloto/`.
   (`meta` + `owners/{queueId}`). `_ensureOwnerMirror` reconcilia antes de escritas;
   `_ensureOwnerMirrorIfOwner` fica em cache por sessão (`uid/queueId`).
 - **Trigger de espelho (issue #164, rede de segurança):** `mirrorQueueToRtdb`
-  (`onDocumentWritten('queues/{queueId}')`, us-central1, lógica pura em
-  `functions/src/mirror.js`, testes `functions/test/mirror.test.js` e
-  `rules-tests/test/mirror-callable.test.js`) replica Firestore → RTDB via Admin de forma
-  convergente: `owners/{id}/ownerUid` e, em `meta`, só `name`, `description`, `avgServiceMin`,
-  `maxWaiting`, `status`, `statusMessage`, `resumeAt`, `brandColor`, `logoUrl`, `mode`, `slots`,
-  com a mesma normalização do app (`QueueInfo.forMirror`: nome 60 ou "Fila", descrição ≤300,
-  tempo fora de 1–240 vira 10; slots inválidos descartados, máx. 24; valores que as rules
-  recusariam viram "ausente" para não derrubar o `update`). `buildMetaPatch` devolve só os
-  campos divergentes: sem divergência, nenhuma escrita (e o trigger só escreve no RTDB, então
-  não há eco). **Nunca** toca `nextTicket` (só inicializa), `serving`, `updatedAt` (só na
-  criação), `avgServiceMinAuto`, `waitingCount`, `opensAt`, `deleting`, `nextNotifiedAt`.
-  Ignora doc apagado e doc/meta com `deleting` (não recria nada durante `deleteQueue`).
-  Decisão: se o doc existe, não está `deleting` e falta `meta`, ele é criado (transação, só se
-  continuar ausente), igual ao `ensureMirror`; isso reseta `nextTicket/serving` para 0 de uma
-  fila cujo `meta` sumiu. Segundo trigger `mirrorOperatorToRtdb`
-  (`queues/{id}/operators/{uid}`): criar/atualizar → `operatorUids/{uid} = true` (só se a fila
-  existe e não está `deleting`), apagar → remove. Custo: um trigger + uma leitura de `meta` e
-  de `owners` por escrita na fila. Eventos fora de ordem são raros e o evento seguinte
-  reconverge. Escritas do trigger em `meta/status` disparam `onQueueOpened` apenas se o valor
-  de fato mudou.
-  - **Migração gradual:** (1) deploy das functions (este PR; APKs antigos seguem com
-    dual-write e o trigger só confirma); (2) APK novo para de escrever `meta`/`owners`/
-    `operatorUids` (precisa do passo 1 em produção antes); (3) quando o APK antigo sumir,
-    rules do RTDB restringem `meta` (menos `serving`/`updatedAt` de operador) e `owners` ao
-    Admin.
+  (`onDocumentWritten('queues/{queueId}')`, us-central1) replica Firestore → RTDB via Admin.
+  Estrutura: lógica pura em `functions/src/mirror.js`, handlers com `deps` injetadas em
+  `functions/src/handlers/mirror.js`, wiring em `functions/src/triggers/mirror.js` e só
+  `Object.assign(exports, require('./src/triggers/mirror'))` no `index.js`. Testes:
+  `functions/test/mirror*.test.js` e `rules-tests/test/mirror-callable.test.js`.
+  - **Não confia no evento:** o `after` só decide *se* agir. Ele compara `before`/`after` nos
+    campos espelhados (`changedFields`) e retorna cedo se nenhum mudou (updates só de
+    `alertState`, `scheduleLastDesired`, `lastTicketResetDay` etc. não custam leitura nem
+    escrita). Se algo mudou, relê `queues/{id}` atual e `meta` atual e calcula o patch sobre
+    eles, só nos campos que mudaram (eventos fora de ordem convergem para o estado atual).
+    Doc inexistente, `deleting` ou `meta.deleting` → nada.
+  - **Campos:** `owners/{id}/ownerUid` e, em `meta`, `name`, `description`, `avgServiceMin`,
+    `maxWaiting`, `status`, `statusMessage`, `resumeAt`, `brandColor`, `logoUrl`, `mode`, `slots`.
+    Normalização como `QueueInfo.forMirror` e `Queue.fromDoc` (nome 60 ou "Fila", descrição ≤300,
+    `avgServiceMin`/`maxWaiting` fracionário truncam como o `toInt()` do app, tempo fora de 1–240
+    vira 10). `status` desconhecido é ignorado (não vira `open`); `resumeAt` só inteiro finito;
+    valores que as rules do RTDB recusariam viram "ausente" para não derrubar o `update`. Slots:
+    id `[A-Za-z0-9_-]{1,20}`, início `HH:mm`, capacidade 1–50, ordenados por início e cortados
+    em `MAX_SLOTS` de `functions/src/slots.js` (o mesmo corte da `joinQueue`, hoje 20).
+  - **Nunca toca** `nextTicket` (só inicializa), `serving`, `updatedAt` (só grava na criação),
+    `avgServiceMinAuto`, `waitingCount`, `opensAt`, `deleting`, `nextNotifiedAt`.
+  - **`meta` ausente:** criado (transação, só se continuar ausente) **somente** quando o evento
+    é a criação do doc (`!before.exists`) e o doc relido existe e não está `deleting`. Fila
+    existente sem `meta` só gera log de aviso; o `ensureMirror` do app repara. O trigger nunca
+    zera `serving`/`nextTicket` de fila existente.
+  - **Operadores:** `mirrorOperatorToRtdb` (`queues/{id}/operators/{uid}`) relê o doc do
+    operador: existe → `operatorUids/{uid} = true` (só se a fila existe e não está `deleting`);
+    não existe → remove. Evento de add atrasado depois de remove não re-adiciona.
+  - Custo: ao mudar campo espelhado, 1 leitura do doc + `meta` (+ `owners` se `ownerId`
+    mudou) e escrita só se diverge. O trigger escreve só no RTDB (sem eco). Escritas em
+    `meta/status` disparam `onQueueOpened` apenas se o valor de fato mudou.
+  - **Migração gradual:** (1) deploy das functions (este PR; APKs antigos seguem com dual-write
+    e o trigger só confirma); (2) APK novo para de escrever `meta`/`owners`/`operatorUids`
+    (precisa do passo 1 em produção); (3) quando o APK antigo sumir, rules do RTDB restringem
+    `meta` (menos `serving`/`updatedAt` de operador) e `owners` ao Admin.
   - **Fora deste PR:** alterar o cliente Flutter, endurecer rules do RTDB, backfill em massa
-    das filas existentes (o trigger só age quando o doc é escrito; `ensureMirror` segue
-    reparando), espelhar `updatedAt`/`opensAt`. Deploy: `--only
-    functions:mirrorQueueToRtdb,functions:mirrorOperatorToRtdb` antes de qualquer APK.
+    (o trigger só age quando o doc é escrito), espelhar `updatedAt`/`opensAt`, recriar `meta`
+    de fila existente. Deploy: `--only functions:mirrorQueueToRtdb,functions:mirrorOperatorToRtdb`
+    antes de qualquer APK.
 
 ## Entrada na fila (join)
 
