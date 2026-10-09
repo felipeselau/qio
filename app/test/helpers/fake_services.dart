@@ -279,6 +279,8 @@ class FakeQueueService implements QueueService {
     calls.add('create:$name:${mode.value}:${slots.length}');
     createdMode = mode;
     createdSlots = slots;
+    createdSchedule = schedule;
+    createdBrandColor = brandColor;
     createdArgs = (
       name: name,
       description: description,
@@ -292,6 +294,8 @@ class FakeQueueService implements QueueService {
   }
 
   Queue? createResult;
+  QueueSchedule? createdSchedule;
+  String? createdBrandColor;
   ({
     String name,
     String? description,

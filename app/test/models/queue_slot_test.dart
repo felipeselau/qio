@@ -202,4 +202,32 @@ void main() {
       expect(plain.slotStart, isNull);
     });
   });
+
+  group('suggestSlots', () {
+    test('gera horários no intervalo e válidos', () {
+      final slots = suggestSlots(
+        fromMinutes: 9 * 60,
+        toMinutes: 11 * 60,
+        stepMinutes: 30,
+      );
+      expect(slots.map((s) => s.start), ['09:00', '09:30', '10:00', '10:30']);
+      expect(validateSlots(QueueMode.schedule, slots), isNull);
+    });
+
+    test('pula horários já existentes e respeita o máximo', () {
+      final existing = [
+        for (var i = 0; i < 18; i++)
+          slot('e$i', '${(i + 1).toString().padLeft(2, '0')}:00'),
+      ];
+      final slots = suggestSlots(
+        fromMinutes: 9 * 60,
+        toMinutes: 17 * 60,
+        stepMinutes: 30,
+        existing: existing,
+      );
+      expect(slots, hasLength(maxQueueSlots));
+      expect(validateSlots(QueueMode.schedule, slots), isNull);
+      expect(slots.take(18).map((s) => s.id), existing.map((s) => s.id));
+    });
+  });
 }
