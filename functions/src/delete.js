@@ -41,6 +41,12 @@ function invitesToDelete(invites, queueId, ownerId) {
     .map((i) => i.code);
 }
 
+function slugsToDelete(slugs, queueId, ownerId) {
+  return slugs
+    .filter((s) => s && s.queueId === queueId && s.ownerId === ownerId)
+    .map((s) => s.slug);
+}
+
 async function deleteLogoFiles(bucket, queueId, warn = () => {}) {
   const [exists] = await bucket.exists();
   if (!exists) {
@@ -66,6 +72,11 @@ async function deleteQueueData(queueId, ownerId, deps, log = () => {}) {
   const invites = await deps.listInvites(queueId);
   for (const code of invitesToDelete(invites, queueId, ownerId)) {
     await deps.deleteInvite(code);
+  }
+
+  const slugs = await deps.listSlugs(queueId);
+  for (const slug of slugsToDelete(slugs, queueId, ownerId)) {
+    await deps.deleteSlug(slug);
   }
 
   await deps.deleteLogos(queueId);
@@ -132,6 +143,7 @@ module.exports = {
   isSafeId,
   assertRecentLogin,
   invitesToDelete,
+  slugsToDelete,
   deleteLogoFiles,
   deleteQueueData,
   deleteOwnedQueue,

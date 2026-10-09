@@ -77,6 +77,7 @@ const {
   deleteOwnedQueue,
   deleteAccountData,
 } = require('./src/delete');
+const { parseSlug, slugRateLimited } = require('./src/slug');
 
 initializeApp();
 
@@ -548,6 +549,18 @@ function deleteDeps() {
         ownerId: d.get('ownerId'),
       }));
     },
+    listSlugs: async (queueId) => {
+      const snap = await firestore
+        .collection('queueSlugs')
+        .where('queueId', '==', queueId)
+        .get();
+      return snap.docs.map((d) => ({
+        slug: d.id,
+        queueId: d.get('queueId'),
+        ownerId: d.get('ownerId'),
+      }));
+    },
+    deleteSlug: (slug) => firestore.doc(`queueSlugs/${slug}`).delete(),
     deleteInvite: (code) => firestore.doc(`operatorInvites/${code}`).delete(),
     deleteLogos: async (queueId) => {
       await deleteLogoFiles(logoBucket(), queueId, (event, ctx) =>
@@ -586,6 +599,36 @@ function deleteDeps() {
     },
   };
 }
+
+const slugBuckets = new Map();
+
+exports.resolveSlug = onCall(
+  {
+    region: 'us-central1',
+    invoker: 'public',
+    enforceAppCheck: isEnforced('resolveSlug'),
+  },
+  guarded('resolveSlug', async (request) => {
+    logAppCheck('resolveSlug', request);
+    const uid = request.auth?.uid;
+    if (!uid) {
+      throw new HttpsError('unauthenticated', 'Faça login para abrir o link.');
+    }
+    const slug = parseSlug(request.data?.slug);
+    if (!slug) {
+      throw new HttpsError('not-found', 'Fila não encontrada.');
+    }
+    if (slugRateLimited(slugBuckets, uid, Date.now())) {
+      throw new HttpsError('resource-exhausted', 'Muitas tentativas. Aguarde um instante.');
+    }
+    const snap = await getFirestore().doc(`queueSlugs/${slug}`).get();
+    const queueId = snap.exists ? snap.get('queueId') : null;
+    if (!isSafeId(queueId)) {
+      throw new HttpsError('not-found', 'Fila não encontrada.');
+    }
+    return { queueId };
+  }),
+);
 
 exports.deleteQueue = onCall(
   {

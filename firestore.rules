@@ -153,6 +153,27 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
     }
 
+    function validSlugId(slug) {
+      return slug.matches('^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$')
+        && !(slug in ['admin', 'api', 'app', 'q', 'c', 'w', 'n', 'privacidade', 'termos', 'assets', 'fonts', 'icons']);
+    }
+
+    match /queueSlugs/{slug} {
+      allow get: if signedIn() && resource.data.ownerId == request.auth.uid;
+      allow list: if false;
+      allow create: if signedIn()
+        && validSlugId(slug)
+        && !exists(/databases/$(database)/documents/queueSlugs/$(slug))
+        && request.resource.data.keys().hasOnly(['queueId', 'ownerId', 'createdAt'])
+        && request.resource.data.keys().hasAll(['queueId', 'ownerId', 'createdAt'])
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.queueId is string
+        && request.resource.data.createdAt == request.time
+        && isQueueOwner(request.resource.data.queueId);
+      allow update: if false;
+      allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
     match /queues/{queueId} {
       allow get: if signedIn()
         && (resource.data.ownerId == request.auth.uid || isQueueOperator(queueId));

@@ -5,6 +5,7 @@ const {
   isSafeId,
   assertRecentLogin,
   invitesToDelete,
+  slugsToDelete,
   deleteLogoFiles,
   deleteQueueData,
   deleteOwnedQueue,
@@ -24,6 +25,8 @@ function fakeDeps(overrides = {}) {
     deleteSubcollections: rec('deleteSubcollections'),
     listInvites: async () => [{ code: 'ABC123', queueId: 'q1', ownerId: 'u1' }],
     deleteInvite: rec('deleteInvite'),
+    listSlugs: async () => [{ slug: 'minha-fila', queueId: 'q1', ownerId: 'u1' }],
+    deleteSlug: rec('deleteSlug'),
     deleteLogos: rec('deleteLogos'),
     deleteQueueDoc: rec('deleteQueueDoc'),
     listOwnedQueueIds: async () => ['a', 'b'],
@@ -78,6 +81,17 @@ describe('invitesToDelete', () => {
   });
 });
 
+describe('slugsToDelete', () => {
+  it('filtra por fila e dono', () => {
+    const list = [
+      { slug: 'a-fila', queueId: 'q1', ownerId: 'u1' },
+      { slug: 'b-fila', queueId: 'q2', ownerId: 'u1' },
+      { slug: 'c-fila', queueId: 'q1', ownerId: 'u2' },
+    ];
+    assert.deepEqual(slugsToDelete(list, 'q1', 'u1'), ['a-fila']);
+  });
+});
+
 describe('deleteLogoFiles', () => {
   it('apaga pelo prefixo quando o bucket existe', async () => {
     const calls = [];
@@ -122,10 +136,31 @@ describe('deleteQueueData', () => {
       ...QUEUE_RTDB_PATHS('q1').map((p) => `rtdb:${p}`),
       'deleteSubcollections',
       'deleteInvite',
+      'deleteSlug',
       'deleteLogos',
       'rtdb:owners/q1',
       'deleteQueueDoc',
     ]);
+  });
+
+  it('apaga o slug da fila e ignora slug de outra fila', async () => {
+    const deps = fakeDeps({
+      listSlugs: async () => [
+        { slug: 'minha-fila', queueId: 'q1', ownerId: 'u1' },
+        { slug: 'outra', queueId: 'q2', ownerId: 'u1' },
+      ],
+    });
+    await deleteQueueData('q1', 'u1', deps);
+    assert.deepEqual(
+      deps.calls.filter((c) => c[0] === 'deleteSlug'),
+      [['deleteSlug', 'minha-fila']],
+    );
+  });
+
+  it('sem slug não chama deleteSlug', async () => {
+    const deps = fakeDeps({ listSlugs: async () => [] });
+    await deleteQueueData('q1', 'u1', deps);
+    assert.ok(!names(deps.calls).includes('deleteSlug'));
   });
 
   it('meta é o último caminho do RTDB removido', () => {
