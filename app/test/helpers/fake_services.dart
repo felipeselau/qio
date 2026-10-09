@@ -56,6 +56,7 @@ class FakeManualEntryService implements ManualEntryService {
 
   Object? error;
   int ticket;
+  Future<void>? gate;
   final List<Map<String, String?>> calls = [];
 
   @override
@@ -71,6 +72,7 @@ class FakeManualEntryService implements ManualEntryService {
       'phone': phone,
       'slotId': slotId,
     });
+    await gate;
     if (error != null) throw error!;
     return ticket;
   }

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:qio_app/models/queue_slot.dart';
@@ -101,6 +103,49 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('A fila está lotada no momento.'), findsOneWidget);
     expect(find.text('Adicionar pessoa à fila'), findsOneWidget);
+  });
+
+  testWidgets('telefone duplicado e rate limit mostram a mensagem própria', (
+    tester,
+  ) async {
+    final service = FakeManualEntryService(
+      error: const ManualEntryException(ManualEntryError.phoneDuplicate),
+    );
+    await open(tester, service);
+    await tester.enterText(find.byType(TextField).first, 'Maria');
+    await tester.tap(find.text('Adicionar'));
+    await tester.pumpAndSettle();
+    expect(find.text('Este telefone já está na fila.'), findsOneWidget);
+    service.error = const ManualEntryException(ManualEntryError.rateLimited);
+    await tester.tap(find.text('Adicionar'));
+    await tester.pumpAndSettle();
+    expect(
+      find.text('Muitas adições em pouco tempo. Aguarde alguns minutos.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('durante a chamada não fecha por toque fora nem por voltar', (
+    tester,
+  ) async {
+    final gate = Completer<void>();
+    final service = FakeManualEntryService(ticket: 3)..gate = gate.future;
+    ManualAddResult? result;
+    await open(tester, service, onResult: (r) => result = r);
+    await tester.enterText(find.byType(TextField).first, 'Maria');
+    await tester.tap(find.text('Adicionar'));
+    await tester.pump();
+    await tester.tapAt(const Offset(5, 5));
+    await tester.pump();
+    expect(find.text('Adicionar pessoa à fila'), findsOneWidget);
+    await tester.binding.handlePopRoute();
+    await tester.pump();
+    expect(find.text('Adicionar pessoa à fila'), findsOneWidget);
+    expect(find.text('Cancelar'), findsOneWidget);
+    gate.complete();
+    await tester.pumpAndSettle();
+    expect(find.text('Adicionar pessoa à fila'), findsNothing);
+    expect(result?.ticket, 3);
   });
 
   testWidgets('horário lotado usa a mensagem de slot-full', (tester) async {

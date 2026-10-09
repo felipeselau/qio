@@ -57,6 +57,7 @@ Future<ManualAddResult?> showAddPersonDialog(
 }) {
   return showDialog<ManualAddResult>(
     context: context,
+    barrierDismissible: false,
     builder: (_) => AddPersonDialog(
       queueId: queueId,
       service: service,
@@ -144,98 +145,101 @@ class _AddPersonDialogState extends State<AddPersonDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return AlertDialog(
-      title: Text(l10n.addPersonTitle),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(l10n.addPersonHint, style: context.qioText.caption),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _name,
-              enabled: !_loading,
-              autofocus: true,
-              maxLength: 60,
-              textCapitalization: TextCapitalization.words,
-              textInputAction: TextInputAction.next,
-              onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(
-                labelText: l10n.nameLabel,
-                errorText: _submitted && !_nameValid
-                    ? l10n.manualNameRequired
-                    : null,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _phone,
-              enabled: !_loading,
-              keyboardType: TextInputType.phone,
-              inputFormatters: const [BrPhoneFormatter()],
-              onChanged: (_) => setState(() {}),
-              decoration: InputDecoration(
-                labelText: l10n.manualPhoneLabel,
-                hintText: '(00) 00000-0000',
-                errorText: _submitted && !_phoneValid
-                    ? l10n.manualPhoneInvalid
-                    : null,
-              ),
-            ),
-            if (widget.scheduled) ...[
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                initialValue: _slotId,
-                isExpanded: true,
+    return PopScope(
+      canPop: !_loading,
+      child: AlertDialog(
+        title: Text(l10n.addPersonTitle),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.addPersonHint, style: context.qioText.caption),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _name,
+                enabled: !_loading,
+                autofocus: true,
+                maxLength: 60,
+                textCapitalization: TextCapitalization.words,
+                textInputAction: TextInputAction.next,
+                onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
-                  labelText: l10n.manualSlotLabel,
-                  errorText: _submitted && !_slotValid
-                      ? l10n.manualSlotRequiredField
+                  labelText: l10n.nameLabel,
+                  errorText: _submitted && !_nameValid
+                      ? l10n.manualNameRequired
                       : null,
                 ),
-                items: [
-                  for (final slot in widget.slots)
-                    DropdownMenuItem(
-                      value: slot.id,
-                      child: Text(
-                        l10n.manualSlotOption(slot.start, slot.capacity),
-                      ),
-                    ),
-                ],
-                onChanged: _loading
-                    ? null
-                    : (value) => setState(() => _slotId = value),
               ),
-            ],
-            if (_error != null) ...[
-              const SizedBox(height: 12),
-              Text(
-                _error!,
-                style: context.qioText.caption.copyWith(
-                  color: context.qio.statusClosedText,
+              const SizedBox(height: 8),
+              TextField(
+                controller: _phone,
+                enabled: !_loading,
+                keyboardType: TextInputType.phone,
+                inputFormatters: const [BrPhoneFormatter()],
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  labelText: l10n.manualPhoneLabel,
+                  hintText: '(00) 00000-0000',
+                  errorText: _submitted && !_phoneValid
+                      ? l10n.manualPhoneInvalid
+                      : null,
                 ),
               ),
+              if (widget.scheduled) ...[
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  initialValue: _slotId,
+                  isExpanded: true,
+                  decoration: InputDecoration(
+                    labelText: l10n.manualSlotLabel,
+                    errorText: _submitted && !_slotValid
+                        ? l10n.manualSlotRequiredField
+                        : null,
+                  ),
+                  items: [
+                    for (final slot in widget.slots)
+                      DropdownMenuItem(
+                        value: slot.id,
+                        child: Text(
+                          l10n.manualSlotOption(slot.start, slot.capacity),
+                        ),
+                      ),
+                  ],
+                  onChanged: _loading
+                      ? null
+                      : (value) => setState(() => _slotId = value),
+                ),
+              ],
+              if (_error != null) ...[
+                const SizedBox(height: 12),
+                Text(
+                  _error!,
+                  style: context.qioText.caption.copyWith(
+                    color: context.qio.statusClosedText,
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
+        actions: [
+          TextButton(
+            onPressed: _loading ? null : () => Navigator.of(context).pop(),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: _loading ? null : _submit,
+            child: _loading
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(l10n.manualAddConfirm),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: _loading ? null : () => Navigator.of(context).pop(),
-          child: Text(l10n.cancel),
-        ),
-        FilledButton(
-          onPressed: _loading ? null : _submit,
-          child: _loading
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              : Text(l10n.manualAddConfirm),
-        ),
-      ],
     );
   }
 }

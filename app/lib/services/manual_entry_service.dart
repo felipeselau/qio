@@ -8,6 +8,8 @@ enum ManualEntryError {
   slotRequired,
   slotInvalid,
   slotPassed,
+  rateLimited,
+  phoneDuplicate,
   notOpen,
   invalidInput,
   accessEnded,
@@ -33,10 +35,14 @@ ManualEntryError manualEntryErrorFrom(String code, Object? reason) {
       return ManualEntryError.slotInvalid;
     case 'slot-passed':
       return ManualEntryError.slotPassed;
+    case 'rate-limited':
+      return ManualEntryError.rateLimited;
   }
   switch (code) {
     case 'failed-precondition':
       return ManualEntryError.notOpen;
+    case 'already-exists':
+      return ManualEntryError.phoneDuplicate;
     case 'invalid-argument':
       return ManualEntryError.invalidInput;
     case 'permission-denied':
@@ -56,6 +62,8 @@ extension ManualEntryErrorMessage on ManualEntryError {
     ManualEntryError.slotRequired ||
     ManualEntryError.slotInvalid => l10n.manualAddSlotRequired,
     ManualEntryError.slotPassed => l10n.manualAddSlotPassed,
+    ManualEntryError.rateLimited => l10n.manualAddRateLimited,
+    ManualEntryError.phoneDuplicate => l10n.manualAddPhoneDuplicate,
     ManualEntryError.notOpen => l10n.manualAddNotOpen,
     ManualEntryError.invalidInput => l10n.manualAddInvalid,
     ManualEntryError.accessEnded => l10n.actionErrorAccessEnded,
@@ -86,7 +94,11 @@ class ManualEntryService {
         'phone': phone ?? '',
         'slotId': ?slotId,
       });
-      return (result.data['ticket'] as num?)?.toInt() ?? 0;
+      final ticket = (result.data['ticket'] as num?)?.toInt();
+      if (ticket == null || ticket <= 0) {
+        throw const ManualEntryException(ManualEntryError.generic);
+      }
+      return ticket;
     } on FirebaseFunctionsException catch (e) {
       final details = e.details;
       final reason = details is Map ? details['reason'] : null;

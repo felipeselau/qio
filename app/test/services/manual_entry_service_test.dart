@@ -24,6 +24,17 @@ void main() {
       );
     });
 
+    test('rate-limited e telefone duplicado', () {
+      expect(
+        manualEntryErrorFrom('resource-exhausted', 'rate-limited'),
+        ManualEntryError.rateLimited,
+      );
+      expect(
+        manualEntryErrorFrom('already-exists', null),
+        ManualEntryError.phoneDuplicate,
+      );
+    });
+
     test('mapeia códigos sem reason', () {
       expect(
         manualEntryErrorFrom('failed-precondition', null),

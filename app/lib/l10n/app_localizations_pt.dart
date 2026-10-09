@@ -1651,4 +1651,11 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get manualAddInvalid => 'Confira o nome e o telefone informados.';
+
+  @override
+  String get manualAddRateLimited =>
+      'Muitas adições em pouco tempo. Aguarde alguns minutos.';
+
+  @override
+  String get manualAddPhoneDuplicate => 'Este telefone já está na fila.';
 }

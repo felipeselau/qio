@@ -1650,4 +1650,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get manualAddInvalid => 'Check the name and phone you entered.';
+
+  @override
+  String get manualAddRateLimited =>
+      'Too many additions in a short time. Wait a few minutes.';
+
+  @override
+  String get manualAddPhoneDuplicate => 'This phone is already in the queue.';
 }

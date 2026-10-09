@@ -574,5 +574,7 @@
   "manualAddSlotRequired": "Escolha um horário válido.",
   "manualAddSlotPassed": "Este horário já passou.",
   "manualAddNotOpen": "A fila precisa estar aberta para adicionar pessoas.",
-  "manualAddInvalid": "Confira o nome e o telefone informados."
+  "manualAddInvalid": "Confira o nome e o telefone informados.",
+  "manualAddRateLimited": "Muitas adições em pouco tempo. Aguarde alguns minutos.",
+  "manualAddPhoneDuplicate": "Este telefone já está na fila."
 }

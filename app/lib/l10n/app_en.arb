@@ -526,5 +526,7 @@
   "manualAddSlotRequired": "Choose a valid time slot.",
   "manualAddSlotPassed": "This time slot has already passed.",
   "manualAddNotOpen": "The queue must be open to add people.",
-  "manualAddInvalid": "Check the name and phone you entered."
+  "manualAddInvalid": "Check the name and phone you entered.",
+  "manualAddRateLimited": "Too many additions in a short time. Wait a few minutes.",
+  "manualAddPhoneDuplicate": "This phone is already in the queue."
 }

@@ -197,7 +197,7 @@ class _QueuePanelScreenState extends State<QueuePanelScreen>
             IconButton(
               icon: const Icon(Icons.person_add_alt_1_outlined),
               tooltip: AppLocalizations.of(context).addPerson,
-              onPressed: _addPerson,
+              onPressed: _actionLoading ? null : _addPerson,
             ),
             if (!isPanelWide(MediaQuery.sizeOf(context).width))
               QueueSettingsActions(
@@ -318,11 +318,16 @@ class _QueuePanelScreenState extends State<QueuePanelScreen>
       slots: queue?.slots ?? const [],
       scheduled: queue?.isScheduled ?? false,
     );
-    if (result == null || !mounted) return;
+    if (result == null) return;
     Haptics.instance.light();
-    _notify(
-      AppLocalizations.of(context).manualAdded(result.name, result.ticket),
-    );
+    final messenger = _messenger;
+    final l10n = _l10n;
+    if (messenger == null || l10n == null || !messenger.mounted) return;
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(l10n.manualAdded(result.name, result.ticket))),
+      );
   }
 
   Future<void> _moveToEnd(QueueEntry entry) async {

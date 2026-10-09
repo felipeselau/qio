@@ -3027,6 +3027,18 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Confira o nome e o telefone informados.'**
   String get manualAddInvalid;
+
+  /// No description provided for @manualAddRateLimited.
+  ///
+  /// In pt, this message translates to:
+  /// **'Muitas adições em pouco tempo. Aguarde alguns minutos.'**
+  String get manualAddRateLimited;
+
+  /// No description provided for @manualAddPhoneDuplicate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este telefone já está na fila.'**
+  String get manualAddPhoneDuplicate;
 }
 
 class _AppLocalizationsDelegate

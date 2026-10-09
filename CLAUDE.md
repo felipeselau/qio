@@ -306,7 +306,12 @@ conhecidas: `docs/qualidade.md`.
   `meta/status == 'open'` (pausada/fechada recusa com `failed-precondition`, igual ao
   join), `maxWaiting` (`queue-full`) e, em fila `schedule`, `slotId` válido com
   capacidade (`slot-required|slot-invalid|slot-passed|slot-full`). Ticket por transação
-  Admin em `tickets/{queueId}`. Sem rate limit nem checagem de telefone repetido.
+  Admin em `tickets/{queueId}`.
+- Limites: telefone não vazio já ativo na fila (inclusive de cliente da web) →
+  `already-exists`; rate limit de 30 adições / 10 min por uid em
+  `rateLimits/{queueId}/manual-{uid}` (`resource-exhausted`, `reason: 'rate-limited'`;
+  Admin escreve sem rule, `rateLimits` é fechado a clientes); sem `maxWaiting`, teto
+  absoluto de 1000 entries `waiting`+`called` (`queue-full`). Lógica em `manual.js`.
 - A entry é criada por Admin com `manual: true`, **sem `uid` e sem `fcmToken`/`lang`**.
   Rules: `manual` booleano permitido; o create exige `uid` **ou** `manual == true`; o
   cliente não escreve em entry sem `uid` e `manual` é imutável para ele. Dono/operador
@@ -314,8 +319,10 @@ conhecidas: `docs/qualidade.md`.
 - `syncPublicTicket` espelha normalmente em `public/`; `onEntryJoined` ignora entries
   manuais (não notifica quem acabou de adicionar). History/métricas não usam `uid`.
   Sem cliente, não há `left`, push nem feedback.
-- `enforceAppCheck` fica **sempre `false`** nesta callable (o app Flutter não usa App
-  Check); ignora `ENFORCE_APP_CHECK`.
+- `enforceAppCheck: false` é **fixo e deliberado** nesta callable (o app Flutter não usa
+  App Check; APK fora da Play Store não passa no Play Integrity). Diferente de
+  `ENFORCE_APP_CHECK_JOIN`/`ENFORCE_APP_CHECK_FEEDBACK`, ela ignora `ENFORCE_APP_CHECK`
+  e não tem flag; a proteção é auth + posse da fila + os limites acima.
 - Deploy: functions (`addManualEntry`, `onEntryJoined`) → rules do RTDB → APK. Rules antes
   das functions deixaria entries manuais sem criador; o APK antigo lê entry sem `uid`
   como `''` e não mostra o selo.
