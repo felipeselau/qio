@@ -128,6 +128,53 @@ class AppLocalizationsPt extends AppLocalizations {
   String get signOutError => 'Não foi possível sair da conta.';
 
   @override
+  String get deleteAccountTitle => 'Excluir minha conta';
+
+  @override
+  String get deleteAccountZone => 'Zona de risco';
+
+  @override
+  String get deleteAccountSubtitle =>
+      'Apaga sua conta, suas filas, históricos, avaliações e dispositivos. Não dá para desfazer.';
+
+  @override
+  String get deleteAccountWarning =>
+      'Todas as suas filas, o histórico de atendimentos, as avaliações, os grupos e a sua conta serão apagados de forma permanente. Quem está em uma fila sua perde a senha. Se você é operador de filas de outras pessoas, apenas o seu vínculo é removido.';
+
+  @override
+  String get deleteAccountConfirmLabel =>
+      'Digite EXCLUIR ou o seu e-mail para confirmar';
+
+  @override
+  String get deleteAccountPasswordLabel => 'Senha atual';
+
+  @override
+  String get deleteAccountGoogleHint =>
+      'Você vai confirmar sua identidade com o Google antes de excluir.';
+
+  @override
+  String get deleteAccountConfirmButton => 'Excluir definitivamente';
+
+  @override
+  String get deleteAccountProgress =>
+      'Excluindo seus dados. Isso pode levar alguns instantes.';
+
+  @override
+  String get deleteAccountReauthFailed =>
+      'Não foi possível confirmar sua identidade. Confira a senha e tente de novo.';
+
+  @override
+  String get deleteAccountError =>
+      'A exclusão não terminou. Parte dos dados pode já ter sido apagada. Tente novamente para concluir.';
+
+  @override
+  String get deleteAccountRetry => 'Tentar novamente';
+
+  @override
+  String get deleteAccountRecentLogin =>
+      'Por segurança, confirme sua identidade de novo para concluir a exclusão.';
+
+  @override
   String get appearance => 'Aparência';
 
   @override

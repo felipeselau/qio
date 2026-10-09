@@ -301,19 +301,4 @@ class OperatorService {
           snap.docs.isEmpty ? null : {for (final d in snap.docs) d.id: true},
         );
   }
-
-  Future<void> deleteOperatorData(String queueId) async {
-    final queueRef = _queueDoc(queueId);
-    final queueSnap = await queueRef.get();
-    final code = queueSnap.data()?['operatorInviteCode'] as String?;
-    final operators = await queueRef.collection('operators').get();
-    final requests = await queueRef.collection('operatorRequests').get();
-    final batch = _firestore.batch();
-    if (code != null) batch.delete(_invites.doc(code));
-    for (final d in [...operators.docs, ...requests.docs]) {
-      batch.delete(d.reference);
-    }
-    await batch.commit();
-    await _rtdb.ref('queues/$queueId/operatorUids').remove();
-  }
 }
