@@ -1,5 +1,5 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../models/queue_schedule.dart';
@@ -7,46 +7,11 @@ import '../../services/queue_service.dart';
 import '../../theme/qio_colors.dart';
 import '../../theme/qio_text_styles.dart';
 import '../qio_card.dart';
+import '../queue_form/schedule_form.dart';
 import '../../theme/qio_palette.dart';
 
-List<(int, int)> compactDays(List<int> days) {
-  final sorted = {...days}.where((d) => d >= 1 && d <= 7).toList()..sort();
-  final ranges = <(int, int)>[];
-  for (final d in sorted) {
-    if (ranges.isNotEmpty && ranges.last.$2 == d - 1) {
-      ranges.last = (ranges.last.$1, d);
-    } else {
-      ranges.add((d, d));
-    }
-  }
-  return ranges;
-}
-
-String dayLabel(int day, String locale) =>
-    DateFormat.E(locale).format(DateTime(2024, 1, day));
-
-String daysSummary(List<int> days, String locale) {
-  return compactDays(days)
-      .map(
-        (r) => r.$1 == r.$2
-            ? dayLabel(r.$1, locale)
-            : r.$2 == r.$1 + 1
-            ? '${dayLabel(r.$1, locale)}, ${dayLabel(r.$2, locale)}'
-            : '${dayLabel(r.$1, locale)}–${dayLabel(r.$2, locale)}',
-      )
-      .join(', ');
-}
-
-TimeOfDay parseHm(String value) {
-  final parts = value.split(':');
-  return TimeOfDay(
-    hour: int.tryParse(parts.first) ?? 8,
-    minute: int.tryParse(parts.last) ?? 0,
-  );
-}
-
-String formatHm(TimeOfDay t) =>
-    '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}';
+export '../queue_form/schedule_form.dart'
+    show compactDays, dayLabel, daysSummary, formatHm, parseHm;
 
 class QueueScheduleTile extends StatelessWidget {
   const QueueScheduleTile({
@@ -137,38 +102,21 @@ class _ScheduleDialog extends StatefulWidget {
 }
 
 class _ScheduleDialogState extends State<_ScheduleDialog> {
-  late bool _enabled = widget.initial?.enabled ?? false;
-  late final Set<int> _days = {
-    ...(widget.initial?.windows.firstOrNull?.days ?? const [1, 2, 3, 4, 5]),
-  };
-  late TimeOfDay _open = parseHm(
-    widget.initial?.windows.firstOrNull?.open ?? '08:00',
-  );
-  late TimeOfDay _close = parseHm(
-    widget.initial?.windows.firstOrNull?.close ?? '18:00',
+  late ScheduleFormValue _value = ScheduleFormValue.fromSchedule(
+    widget.initial,
   );
   String? _error;
 
-  Future<void> _pick(bool open) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: open ? _open : _close,
-    );
-    if (picked == null || !mounted) return;
-    setState(() => open ? _open = picked : _close = picked);
+  void _change(ScheduleFormValue next) {
+    setState(() {
+      if (!setEquals(next.days, _value.days)) _error = null;
+      _value = next;
+    });
   }
 
   void _save() {
     final l10n = AppLocalizations.of(context);
-    if (!_enabled) {
-      Navigator.of(context).pop(const _ScheduleResult(null));
-      return;
-    }
-    final problem = validateWindow(
-      _days.toList(),
-      formatHm(_open),
-      formatHm(_close),
-    );
+    final problem = _value.problem;
     if (problem != null) {
       setState(
         () => _error = problem == 'days'
@@ -177,87 +125,19 @@ class _ScheduleDialogState extends State<_ScheduleDialog> {
       );
       return;
     }
-    Navigator.of(context).pop(
-      _ScheduleResult(
-        QueueSchedule(
-          enabled: true,
-          windows: [
-            ScheduleWindow(
-              days: _days.toList()..sort(),
-              open: formatHm(_open),
-              close: formatHm(_close),
-            ),
-          ],
-        ),
-      ),
-    );
+    Navigator.of(context).pop(_ScheduleResult(_value.toSchedule()));
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final locale = Localizations.localeOf(context).toString();
     return AlertDialog(
       title: Text(l10n.scheduleTitle),
       content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(l10n.scheduleEnabled),
-              value: _enabled,
-              onChanged: (v) => setState(() => _enabled = v),
-            ),
-            if (_enabled) ...[
-              Text(l10n.scheduleDays, style: context.qioText.label),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 6,
-                children: [
-                  for (var d = 1; d <= 7; d++)
-                    FilterChip(
-                      label: Text(dayLabel(d, locale)),
-                      selected: _days.contains(d),
-                      onSelected: (v) => setState(() {
-                        v ? _days.add(d) : _days.remove(d);
-                        _error = null;
-                      }),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => _pick(true),
-                      child: Text('${l10n.scheduleOpens} ${formatHm(_open)}'),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => _pick(false),
-                      child: Text('${l10n.scheduleCloses} ${formatHm(_close)}'),
-                    ),
-                  ),
-                ],
-              ),
-              if (_error != null) ...[
-                const SizedBox(height: 8),
-                Text(
-                  _error!,
-                  style: context.qioText.caption.copyWith(
-                    color: context.qio.statusClosedText,
-                  ),
-                ),
-              ],
-              const SizedBox(height: 12),
-              Text(l10n.scheduleNote, style: context.qioText.caption),
-            ],
-          ],
+        child: ScheduleForm(
+          value: _value,
+          onChanged: _change,
+          errorText: _error,
         ),
       ),
       actions: [

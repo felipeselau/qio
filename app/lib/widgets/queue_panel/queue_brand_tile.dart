@@ -7,6 +7,7 @@ import '../../services/queue_service.dart';
 import '../../theme/qio_colors.dart';
 import '../../theme/qio_text_styles.dart';
 import '../qio_card.dart';
+import '../queue_form/brand_color_picker.dart';
 import '../../theme/qio_palette.dart';
 
 class QueueBrandTile extends StatelessWidget {
@@ -181,32 +182,10 @@ class _BrandDialogState extends State<_BrandDialog> {
           children: [
             Text(l10n.brandColorLabel, style: context.qioText.label),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                for (final c in brandPalette)
-                  Semantics(
-                    button: true,
-                    selected: _color == c.hex,
-                    label: c.hex,
-                    child: InkWell(
-                      customBorder: const CircleBorder(),
-                      onTap: _busy ? null : () => _setColor(c.hex),
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: c.color,
-                          shape: BoxShape.circle,
-                        ),
-                        child: _color == c.hex
-                            ? const Icon(Icons.check, color: Colors.white)
-                            : null,
-                      ),
-                    ),
-                  ),
-              ],
+            BrandColorPicker(
+              value: _color,
+              enabled: !_busy,
+              onChanged: _setColor,
             ),
             const SizedBox(height: 20),
             Text(l10n.brandLogoLabel, style: context.qioText.label),
