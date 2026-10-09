@@ -27,7 +27,7 @@ describe('callables deleteQueue e deleteAccount (emulador)', () => {
     return {
       uid: cred.user.uid,
       deleteQueue: async (queueId) => (await httpsCallable(functions, 'deleteQueue')({ queueId })).data,
-      deleteAccount: async () => (await httpsCallable(functions, 'deleteAccount')({})).data,
+      deleteAccount: async (data = {}) => (await httpsCallable(functions, 'deleteAccount')(data)).data,
     };
   }
 
@@ -156,10 +156,41 @@ describe('callables deleteQueue e deleteAccount (emulador)', () => {
     assert.equal(await rtdbExists(`queues/${Q}/meta`), true);
   });
 
-  it('recusa id inválido', async () => {
+  it('recusa queueId malicioso e não apaga nada', async () => {
     const owner = await newClient();
-    await rejects(owner.deleteQueue('a/b'), 'invalid-argument');
-    await rejects(owner.deleteQueue(''), 'invalid-argument');
+    await seedQueue(Q, owner.uid, 3);
+    for (const bad of ['', 'a/b', '..', '*', 'a.b', null, 42, {}, 'x'.repeat(129)]) {
+      await rejects(owner.deleteQueue(bad), 'invalid-argument');
+    }
+    assert.equal(await fsExists(`queues/${Q}`), true);
+    assert.equal(await countHistory(Q), 3);
+    assert.equal(await rtdbExists(`queues/${Q}/meta`), true);
+    assert.equal(await logoExists(Q), true);
+  });
+
+  it('convite apontado por outra fila não é apagado', async () => {
+    const owner = await newClient();
+    await seedQueue(Q, owner.uid, 1);
+    await seedQueue(Q2, owner.uid, 1);
+    await inCtx(async (ctx) => {
+      await setDoc(doc(ctx.firestore(), 'queues', Q), { operatorInviteCode: `INV${Q2}` }, { merge: true });
+    });
+    await owner.deleteQueue(Q);
+    assert.equal(await fsExists(`operatorInvites/INV${Q2}`), true);
+    assert.equal(await fsExists(`operatorInvites/INV${Q}`), false);
+  });
+
+  it('joinQueue recusa fila marcada como deleting mesmo com status open', async () => {
+    const owner = await newClient();
+    await seedQueue(Q, owner.uid, 1);
+    await inCtx(async (ctx) => {
+      await set(ref(ctx.database(), `queues/${Q}/meta/deleting`), true);
+    });
+    const functions = getFunctions(apps[0]);
+    await rejects(
+      httpsCallable(functions, 'joinQueue')({ queueId: Q, name: 'Ana', phone: '' }),
+      'failed-precondition',
+    );
   });
 
   it('deleteAccount apaga filas, dados do dono e vínculos de operador em filas alheias', async () => {
@@ -175,8 +206,14 @@ describe('callables deleteQueue e deleteAccount (emulador)', () => {
       await setDoc(doc(fs, 'queues', Q2, 'operatorRequests', owner.uid), { uid: owner.uid, status: 'approved' });
       await set(ref(ctx.database(), `queues/${Q2}/operatorUids/${owner.uid}`), true);
     });
-    const res = await owner.deleteAccount();
+    const res = await owner.deleteAccount({ queueId: Q2, uid: 'outro-dono', ownerId: owner.uid });
     assert.equal(res.ok, true);
+    assert.equal(await countHistory(Q2), 2);
+    assert.equal(await fsExists(`queues/${Q2}/feedback/f1`), true);
+    assert.equal(await fsExists(`operatorInvites/INV${Q2}`), true);
+    assert.equal(await rtdbExists(`queues/${Q2}/entries/e1`), true);
+    assert.equal(await rtdbExists(`tickets/${Q2}`), true);
+    assert.equal(await logoExists(Q2), true);
     await expectQueueGone(Q);
     assert.equal(await fsExists(`owners/${owner.uid}`), false);
     assert.equal(await fsExists(`owners/${owner.uid}/devices/tok`), false);

@@ -1,25 +1,57 @@
 const QUEUE_RTDB_PATHS = (queueId) => [
-  `queues/${queueId}/meta`,
   `queues/${queueId}/entries`,
   `queues/${queueId}/public`,
   `queues/${queueId}/operatorUids`,
   `tickets/${queueId}`,
   `rateLimits/${queueId}`,
+  `queues/${queueId}/meta`,
 ];
 
 const MAX_ID = 128;
+const SAFE_ID = /^[A-Za-z0-9_-]+$/;
+const DEFAULT_MAX_LOGIN_AGE_SEC = 300;
 
 function isSafeId(value) {
-  return (
-    typeof value === 'string' &&
-    value.length > 0 &&
-    value.length <= MAX_ID &&
-    !value.includes('/') &&
-    !/[.#$\[\]]/.test(value)
-  );
+  return typeof value === 'string' && value.length <= MAX_ID && SAFE_ID.test(value);
 }
 
-async function deleteQueueData(queueId, deps, log = () => {}) {
+function assertRecentLogin(
+  authTimeSec,
+  nowSec,
+  maxAgeSec = DEFAULT_MAX_LOGIN_AGE_SEC,
+  makeError = (message, details) => {
+    const err = new Error(message);
+    err.code = 'failed-precondition';
+    err.details = details;
+    return err;
+  },
+) {
+  const valid =
+    typeof authTimeSec === 'number' &&
+    Number.isFinite(authTimeSec) &&
+    nowSec - authTimeSec <= maxAgeSec;
+  if (!valid) {
+    throw makeError('Confirme sua identidade novamente.', { reason: 'recent-login' });
+  }
+}
+
+function invitesToDelete(invites, queueId, ownerId) {
+  return invites
+    .filter((i) => i && i.queueId === queueId && i.ownerId === ownerId)
+    .map((i) => i.code);
+}
+
+async function deleteLogoFiles(bucket, queueId, warn = () => {}) {
+  const [exists] = await bucket.exists();
+  if (!exists) {
+    warn('delete-queue:bucket-missing', { queueId });
+    return false;
+  }
+  await bucket.deleteFiles({ prefix: `queue-logos/${queueId}/`, force: true });
+  return true;
+}
+
+async function deleteQueueData(queueId, ownerId, deps, log = () => {}) {
   await deps.markDeleting(queueId);
   log('delete-queue:marked', { queueId });
 
@@ -31,8 +63,10 @@ async function deleteQueueData(queueId, deps, log = () => {}) {
   await deps.deleteSubcollections(queueId);
   log('delete-queue:subcollections', { queueId });
 
-  const code = await deps.inviteCodeOf(queueId);
-  if (code) await deps.deleteInvite(code);
+  const invites = await deps.listInvites(queueId);
+  for (const code of invitesToDelete(invites, queueId, ownerId)) {
+    await deps.deleteInvite(code);
+  }
 
   await deps.deleteLogos(queueId);
   log('delete-queue:storage', { queueId });
@@ -46,7 +80,7 @@ async function deleteOwnedQueue(queueId, uid, deps, log = () => {}) {
   const queue = await deps.getQueue(queueId);
   if (!queue) return { deleted: false, alreadyGone: true };
   if (queue.ownerId !== uid) return { deleted: false, forbidden: true };
-  await deleteQueueData(queueId, deps, log);
+  await deleteQueueData(queueId, uid, deps, log);
   return { deleted: true, alreadyGone: false };
 }
 
@@ -57,7 +91,7 @@ async function deleteAccountData(uid, deps, log = () => {}) {
   let queuesDeleted = 0;
   for (const queueId of queueIds) {
     try {
-      await deleteQueueData(queueId, deps, log);
+      await deleteQueueData(queueId, uid, deps, log);
       queuesDeleted += 1;
     } catch (err) {
       failures.queues += 1;
@@ -96,6 +130,9 @@ async function deleteAccountData(uid, deps, log = () => {}) {
 module.exports = {
   QUEUE_RTDB_PATHS,
   isSafeId,
+  assertRecentLogin,
+  invitesToDelete,
+  deleteLogoFiles,
   deleteQueueData,
   deleteOwnedQueue,
   deleteAccountData,

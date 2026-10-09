@@ -2,7 +2,7 @@ const { onValueWritten, onValueCreated } = require('firebase-functions/v2/databa
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { onDocumentCreated } = require('firebase-functions/v2/firestore');
-const { initializeApp } = require('firebase-admin/app');
+const { initializeApp, getApp } = require('firebase-admin/app');
 const { getMessaging } = require('firebase-admin/messaging');
 const { getDatabase } = require('firebase-admin/database');
 const { getFirestore, FieldValue, Timestamp } = require('firebase-admin/firestore');
@@ -62,7 +62,13 @@ const logger = require('firebase-functions/logger');
 const { logError, logAppCheck } = require('./src/log');
 const { guarded } = require('./src/guard');
 const { isEnforced } = require('./src/appcheck');
-const { isSafeId, deleteOwnedQueue, deleteAccountData } = require('./src/delete');
+const {
+  isSafeId,
+  assertRecentLogin,
+  deleteLogoFiles,
+  deleteOwnedQueue,
+  deleteAccountData,
+} = require('./src/delete');
 
 initializeApp();
 
@@ -200,6 +206,9 @@ exports.joinQueue = onCall(
       throw new HttpsError('not-found', 'Fila não encontrada.');
     }
     if (metaSnap.child('status').val() !== 'open') {
+      throw new HttpsError('failed-precondition', 'Fila fechada ou pausada.');
+    }
+    if (metaSnap.child('deleting').val() === true) {
       throw new HttpsError('failed-precondition', 'Fila fechada ou pausada.');
     }
 
@@ -342,13 +351,19 @@ function logDelete(event, ctx) {
   logger.info(event, { event, ...ctx });
 }
 
+const DEFAULT_STORAGE_BUCKET = 'qio-app.firebasestorage.app';
+
 function logoBucket() {
-  try {
-    return getStorage().bucket();
-  } catch (_) {
-    const project = process.env.GCLOUD_PROJECT;
-    return getStorage().bucket(`${project}.firebasestorage.app`);
-  }
+  const name =
+    process.env.STORAGE_BUCKET ||
+    getApp().options.storageBucket ||
+    DEFAULT_STORAGE_BUCKET;
+  const bucket = getStorage().bucket(name);
+  if (!process.env.FIREBASE_STORAGE_EMULATOR_HOST) return bucket;
+  return {
+    exists: async () => [true],
+    deleteFiles: (opts) => bucket.deleteFiles(opts),
+  };
 }
 
 function isNotFound(err) {
@@ -380,20 +395,24 @@ function deleteDeps() {
         await firestore.recursiveDelete(col);
       }
     },
-    inviteCodeOf: async (queueId) => {
-      const snap = await firestore.doc(`queues/${queueId}`).get();
-      const code = snap.exists ? snap.get('operatorInviteCode') : null;
-      return typeof code === 'string' && isSafeId(code) ? code : null;
+    listInvites: async (queueId) => {
+      const snap = await firestore
+        .collection('operatorInvites')
+        .where('queueId', '==', queueId)
+        .get();
+      return snap.docs.map((d) => ({
+        code: d.id,
+        queueId: d.get('queueId'),
+        ownerId: d.get('ownerId'),
+      }));
     },
     deleteInvite: (code) => firestore.doc(`operatorInvites/${code}`).delete(),
     deleteLogos: async (queueId) => {
-      try {
-        await logoBucket().deleteFiles({ prefix: `queue-logos/${queueId}/`, force: true });
-      } catch (err) {
-        if (!isNotFound(err)) throw err;
-      }
+      await deleteLogoFiles(logoBucket(), queueId, (event, ctx) =>
+        logError(event, new Error('storage bucket not found'), ctx),
+      );
     },
-    deleteQueueDoc: (queueId) => firestore.doc(`queues/${queueId}`).delete(),
+    deleteQueueDoc: (queueId) => firestore.recursiveDelete(firestore.doc(`queues/${queueId}`)),
     listOwnedQueueIds: async (uid) => {
       const snap = await firestore.collection('queues').where('ownerId', '==', uid).get();
       return snap.docs.map((d) => d.id);
@@ -466,6 +485,12 @@ exports.deleteAccount = onCall(
     if (!uid) {
       throw new HttpsError('unauthenticated', 'Faça login para excluir a conta.');
     }
+    assertRecentLogin(
+      request.auth?.token?.auth_time,
+      Math.floor(Date.now() / 1000),
+      300,
+      (message, details) => new HttpsError('failed-precondition', message, details),
+    );
     const result = await deleteAccountData(uid, deleteDeps(), logDelete);
     if (!result.complete) {
       throw new HttpsError('aborted', 'Exclusão parcial. Tente novamente.', {
