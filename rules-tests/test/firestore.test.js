@@ -288,6 +288,72 @@ describe('Firestore rules', () => {
     });
   });
 
+  describe('retenção e anonimização', () => {
+    const ref = () => doc(db(OWNER), 'queues', QUEUE);
+
+    it('dono grava retentionDays 30–730 e anonymizePhone booleano', async () => {
+      await assertSucceeds(updateDoc(ref(), { retentionDays: 30 }));
+      await assertSucceeds(updateDoc(ref(), { retentionDays: 730 }));
+      await assertSucceeds(updateDoc(ref(), { retentionDays: 180, anonymizePhone: true }));
+      await assertSucceeds(updateDoc(ref(), { anonymizePhone: false }));
+    });
+
+    it('nega retentionDays e anonymizePhone inválidos', async () => {
+      for (const bad of [
+        { retentionDays: 29 },
+        { retentionDays: 731 },
+        { retentionDays: 0 },
+        { retentionDays: 90.5 },
+        { retentionDays: '90' },
+        { retentionDays: null },
+      ]) {
+        await assertFails(updateDoc(ref(), bad));
+      }
+      for (const bad of [{ anonymizePhone: 'true' }, { anonymizePhone: 1 }, { anonymizePhone: null }]) {
+        await assertFails(updateDoc(ref(), bad));
+      }
+    });
+
+    it('atualiza anonymizePhone e retentionDays em fila com 24 slots', async () => {
+      const slots = Array.from({ length: 24 }, (_, i) => ({
+        id: `s${i}`,
+        start: `${String(i).padStart(2, '0')}:00`,
+        capacity: 2,
+      }));
+      await assertSucceeds(updateDoc(ref(), { mode: 'schedule', slots }));
+      await assertSucceeds(updateDoc(ref(), { anonymizePhone: true }));
+      await assertSucceeds(updateDoc(ref(), { retentionDays: 365 }));
+      await assertSucceeds(updateDoc(ref(), { status: 'paused' }));
+    });
+
+    it('valor legado inalterado não bloqueia outras atualizações', async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), 'queues', 'legacy3'), {
+          ownerId: OWNER,
+          name: 'x',
+          status: 'open',
+          retentionDays: 5,
+        });
+      });
+      await assertSucceeds(updateDoc(doc(db(OWNER), 'queues', 'legacy3'), { status: 'paused' }));
+    });
+
+    it('create valida os campos', async () => {
+      const base = { ownerId: OWNER, name: 'Nova', status: 'open' };
+      const q = (id) => doc(db(OWNER), 'queues', id);
+      await assertSucceeds(setDoc(q('p1'), { ...base, retentionDays: 90, anonymizePhone: true }));
+      await assertFails(setDoc(q('p2'), { ...base, retentionDays: 10 }));
+      await assertFails(setDoc(q('p3'), { ...base, anonymizePhone: 'x' }));
+    });
+
+    it('operador e estranho não gravam', async () => {
+      for (const uid of [OPERATOR, STRANGER]) {
+        await assertFails(updateDoc(doc(db(uid), 'queues', QUEUE), { anonymizePhone: true }));
+        await assertFails(updateDoc(doc(db(uid), 'queues', QUEUE), { retentionDays: 60 }));
+      }
+    });
+  });
+
   describe('modo agendado e slots', () => {
     const queueRef = () => doc(db(OWNER), 'queues', QUEUE);
     const slot = (n, start = '09:00', capacity = 2) => ({ id: `s${n}`, start, capacity });
