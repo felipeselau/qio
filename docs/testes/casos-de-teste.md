@@ -1,6 +1,6 @@
 # Casos de teste — Qio
 
-Versão atual do app em `main`: 1.4.0+5 (`app/pubspec.yaml`). Os testes automatizados
+Versão atual do app em `main`: 1.5.0+6 (`app/pubspec.yaml`). Os testes automatizados
 (AUT-01 a AUT-08) foram reexecutados em 08/10/2026 sobre `main` (commit `8948214`).
 Os casos manuais e de integração (CLI, DON, OPE, CON, INT) foram executados entre
 30/09 e 01/10/2026 contra o ambiente de produção (`https://qio.web.app`, hosting

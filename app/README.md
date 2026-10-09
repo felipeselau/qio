@@ -1,7 +1,7 @@
 # Qio — app do proprietário
 
 App Flutter (Android/iOS) para donos e operadores de fila. Versão atual em
-`pubspec.yaml`: 1.4.0+5. Visão geral e comandos do monorepo: [`../README.md`](../README.md) e
+`pubspec.yaml`: 1.5.0+6. Visão geral e comandos do monorepo: [`../README.md`](../README.md) e
 [`../CLAUDE.md`](../CLAUDE.md).
 
 ## Comandos

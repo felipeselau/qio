@@ -39,7 +39,7 @@ qio/
 
 | Módulo       | Tecnologia                                              |
 | ------------ | ------------------------------------------------------- |
-| **App Owner**  | Flutter (CI com 3.44.3; versão do app em `app/pubspec.yaml`: 1.4.0+5) + Firebase (Auth, Firestore, RTDB, Messaging, Analytics, Crashlytics) + Provider |
+| **App Owner**  | Flutter (CI com 3.44.3; versão do app em `app/pubspec.yaml`: 1.5.0+6) + Firebase (Auth, Firestore, RTDB, Messaging, Analytics, Crashlytics) + Provider |
 | **Web Client** | React 19 + TypeScript + Vite + Firebase JS SDK (Auth, RTDB, Functions, FCM, App Check, Analytics) |
 | **Backend**    | Firebase: Auth, Firestore, RTDB, Cloud Functions v2 (Node 22), Storage, Hosting, FCM |
 

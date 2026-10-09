@@ -4,33 +4,111 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Não lançado]
 
-Mudanças em `main` depois da 1.4.0+5 (versão em `app/pubspec.yaml` ainda 1.4.0+5).
+## [1.5.0] - 2026-10-09 (teste)
+
+Versão do app: 1.5.0+6.
+
+<!-- TODO #164: incluir aqui o espelho Firestore→RTDB por trigger (branch feat/mirror-trigger) quando o PR for mergeado -->
 
 ### Adicionado
 - Métricas por atendente no painel gerencial (#124).
 - Exportação das métricas em CSV e PDF (#125).
 - Métricas de espera (mediana, P90 e faixas) e de re-chamadas (#126).
+- Demanda por dia da semana e heatmap dia×hora (#129).
+- Tendência diária e comparação com o período anterior nas métricas (#133).
 - Alertas operacionais para o dono: espera alta, não comparecimento alto e fila
   parada, com push e configuração por fila (function `evaluateQueueAlerts`, #127).
-- Monitoramento técnico (logging estruturado sem PII nas functions) e analytics
-  com opt-out no app e na web (#128, `docs/monitoring.md`).
-- Demanda por dia da semana e heatmap dia×hora (#129).
 - Grupos de filas e indicadores por grupo (#130).
-- Tendência diária e comparação com o período anterior nas métricas (#133).
+- Agendamento por horário (slots diários, fuso `America/Sao_Paulo`): fila em modo
+  hora marcada, editor de horários no app e escolha de horário na web (#136).
+- Editar e duplicar fila; a criação passou a exigir só o nome, com opções
+  avançadas recolhidas, e o botão voltar ficou padronizado (#180).
+- Entrada manual pelo operador (cliente sem celular): callable `addManualEntry`,
+  botão "Adicionar pessoa" e selo "Balcão" no painel (#190).
+- Exclusão robusta de fila e exclusão de conta pelo app, via callables Admin
+  `deleteQueue` e `deleteAccount`, com login recente (#191).
+- Operador vê o telefone do cliente e liga com um toque (#192).
+- Desfazer "Atendido" e "Não compareceu" por 5 s e mensagens de erro específicas
+  no painel (#179).
+- Cartaz de QR (A4, A5 e cartão de mesa) com impressão e compartilhamento, e link
+  curto `qio.web.app/n/{slug}` (callable `resolveSlug`, #197).
+- Widget público de espera `/w/{id|slug}`, para embed por iframe (#202,
+  `docs/embed.md`).
+- Aviso "me avise quando abrir" na web para fila fechada ou pausada (trigger
+  `onQueueOpened`, #200).
+- Recuperar a própria senha por telefone e nome ao entrar de novo na fila
+  (`joinQueue`, #201).
+- Expirar entradas esquecidas, limpar a fila ao fechar e reiniciar a senha por
+  dia, por fila (function `expireStaleEntries`, #199).
+- Contador agregado `meta/waitingCount` na home, sem listener pesado por card
+  (function `reconcileWaitingCounts` e backfill, #195).
+- Web: espera visível antes de entrar, "Tentar de novo", aviso de falta de
+  conexão, wake lock e "Entrar de novo" (#176); landing em `/` e Messaging
+  carregado sob demanda (#182).
+- App: home enxuta com ações rápidas, busca e ordenação (#183) e painel que
+  prioriza a fila no celular, com QR e configurações em tela própria (#184).
 - App Check nas callables `joinQueue` e `submitFeedback` com log de chamadas,
   debug token e flags de enforcement por callable (#134, `docs/APPCHECK.md`);
   enforcement continua desligado (`ENFORCE_APP_CHECK=false`).
-- Agendamento por horário (slots diários, fuso `America/Sao_Paulo`): fila em modo
-  hora marcada, editor de horários no app e escolha de horário na web (#136).
+- Monitoramento técnico (logging estruturado sem PII nas functions) e analytics
+  com opt-out no app e na web (#128, `docs/monitoring.md`).
+
+### Segurança e privacidade
+- Política de privacidade e termos (minuta técnica) em `/privacidade` e
+  `/termos`, aviso no formulário de entrada e links no app (#193,
+  `docs/privacidade.md`).
+- Retenção real do histórico: `purgeOldHistory` apaga `history` e `feedback` com
+  mais de 180 dias; exportação sem telefone por padrão; opção de não guardar
+  telefone no histórico (#196).
+- Ferramenta de direitos do titular (LGPD): consulta, exportação e eliminação
+  por telefone, com auditoria (`findCustomerData`, `exportCustomerData`,
+  `eraseCustomerData`, #198).
+- Limite de filas por dono (20, só no cliente) e convites de operador restritos a
+  contas não anônimas (#181).
+- Rules do Firestore: `ownerId`, `deleting` e `alertState` deixam de ser
+  escrevíveis pelo cliente (#196).
+- `calledAt` passa a usar o relógio do servidor (`ServerValue.timestamp`), sem
+  depender do aparelho do operador (#205).
 
 ### Alterado
+- Limite de horários por fila caiu de 24 para 20 (limite de expressões das rules
+  do Firestore); filas existentes com 21–24 seguem funcionando (#196).
+- Refactor das functions: `index.js` dividido por domínio e triggers de `entries`
+  consolidados em `syncPublicTicket` (4 → 1 invocação por escrita); removidas
+  `onEntryCalled`, `onEntryJoined` e `onQueueAdvanced` (#208).
+- Refactor da web: `QueuePage` dividida em componentes por fase (#207).
 - `QioColors` passou a ser um `ThemeExtension` (`QioPalette`) (#135).
-- Rules: aceitam `lang` e `nextNotifiedAt` na entry (#114).
-- Testes: widget tests das telas principais (#131), goldens das telas principais
-  em claro/escuro (#137) e rules rodando em duas passadas, sem functions na
-  primeira (#132).
+- Fonte única do `firebaseConfig` (service worker gerado no build) e da URL de
+  join (#187).
 - Ajustes da auditoria da epic #97: voltar preditivo, tour, docs de VAPID,
   contraste, fonte Inter na web e painel (#174).
+
+### Corrigido
+- Rules: aceitam `lang` e `nextNotifiedAt` na entry; "Chamar próximo" falhava em
+  entradas novas (#114).
+- Teste de slot passado em `rules-tests` não depende mais da hora do dia (#194).
+- Teste do teto de entries manuais estabilizado (o seed de 1000 entries derrubava
+  o emulator, #206).
+- Rules rodando em duas passadas, sem functions na primeira, eliminam o flaky de
+  `entries` (#132).
+
+### Infra e CI
+- CI: lint da web, `dart format`, `firebase-tools` fixo e reuso do build no
+  deploy (#175); cobertura de testes no resumo e build de APK debug em PRs que
+  mudam dependências (#185).
+- Deploy assistido (`workflow_dispatch`, dry-run por padrão, environment
+  `production` com aprovação, ordem fixa), `docs/deploy.md` (#204).
+- Testes: vitest na web (#178), widget tests das telas principais (#131) e
+  goldens em claro/escuro (#137).
+- Scripts e documentação de backup, orçamento e restauração (#186, `docs/backup.md`).
+
+### Documentação
+- Quadro de qualidade e alinhamento das docs com o `main` (#177,
+  `docs/qualidade.md`).
+- Roteiro de usabilidade (SUS), comparativo, diagramas, modelo de ameaças e
+  limitações (#188).
+- Kit do piloto: plano, checklist, treinamento, consentimento, diário e relatório
+  (#203, `docs/piloto/`).
 
 ## [1.4.0] - 2026-10-06 (teste)
 
