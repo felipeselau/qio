@@ -601,5 +601,12 @@
   "exportPhoneWarning": "O telefone é dado pessoal (LGPD). Por padrão a exportação não o inclui. Inclua apenas se precisar e proteja o arquivo.",
   "exportPhoneConfirm": "Incluir telefone",
   "anonymizePhoneTitle": "Não guardar telefone no histórico",
-  "anonymizePhoneHint": "Ao concluir um atendimento, o telefone não é salvo no histórico."
+  "anonymizePhoneHint": "Ao concluir um atendimento, o telefone não é salvo no histórico.",
+  "expiryTitle": "Expirar entradas esquecidas",
+  "expiryHint": "Remove da fila quem ficou aguardando sem atividade. Não afeta quem já foi chamado.",
+  "expiryAfterHours": "Expirar após {hours} h",
+  "@expiryAfterHours": {"placeholders": {"hours": {"type": "int"}}},
+  "expiryClearOnClose": "Limpar a fila ao fechar por horário",
+  "expiryResetTicketDaily": "Reiniciar a senha todo dia",
+  "expiryResetTicketDailyHint": "Só zera quando não há ninguém na fila."
 }

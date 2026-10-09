@@ -11,6 +11,7 @@ import 'operators_tile.dart';
 import 'queue_brand_tile.dart';
 import 'queue_group_tile.dart';
 import 'anonymize_phone_tile.dart';
+import 'expiry_tile.dart';
 import 'queue_limit_tile.dart';
 import 'queue_qr_card.dart';
 import 'queue_schedule_tile.dart';
@@ -70,6 +71,7 @@ class QueueSettingsSections extends StatelessWidget {
             value: current?.anonymizePhone ?? false,
             queues: queues,
           ),
+          ExpiryTile(queueId: queueId, config: current?.expiry, queues: queues),
           QueueSlotsTile(
             queueId: queueId,
             mode: current?.mode ?? QueueMode.queue,

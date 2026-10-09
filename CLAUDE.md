@@ -470,6 +470,41 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   `functions:applyQueueSchedules`) **antes** de distribuir o APK; o APK novo não
   apaga mais direto no Firestore/RTDB.
 
+## Expiração de entradas
+
+- Opt-in por fila: `queues/{id}.expiry = {enabled, hours 1–48 (padrão 12), clearOnClose,
+  resetTicketDaily}` (Firestore, só o dono escreve; sem espelho no RTDB). As rules só exigem
+  `expiry is map` (validar os campos estourava o limite de 1000 expressões do update de
+  `queues`); `normalizeExpiry` (`functions/src/expire.js`) corrige valores inválidos
+  (horas fora de 1–48 viram 12). `enabled` é o interruptor mestre: `clearOnClose` e
+  `resetTicketDaily` só valem com ele ligado.
+- `expireStaleEntries` (a cada 15 min, us-central1): por fila com `expiry.enabled` e sem
+  `deleting`, lê `entries` (Admin) e arquiva como `result: 'left'` + `reason: 'expired'` as
+  `waiting` cuja última atividade (`max(joinedAt, order, recalledAt)`) tem ≥ N h. `called`
+  nunca expira. Reaproveita `archiveLeftEntry`/`historyFromLeftEntry` (respeita
+  `anonymizePhone`; `create` idempotente), depois remove `entries/{id}` por transação
+  (só se ainda `waiting` e velha) e `public/{id}`. Lotes de 25; erros por entry vão para
+  `logError` só com IDs. Corrida residual: se a entry for chamada entre a leitura e a
+  remoção, a transação aborta mas o doc `history` já criado fica (janela de ms).
+- "Limpar ao fechar": quando `applyQueueSchedules` fecha a fila por horário e
+  `clearOnClose` está ligado, arquiva as `waiting` restantes com `reason: 'closed'`
+  (`called` fica). Só dispara na virada de fechamento por horário, não em fechamento manual.
+  Se a limpeza falhar, não há retry (a virada já foi gravada); as entries seguem sujeitas à
+  expiração por horas.
+- Reinício diário da senha: em `expireStaleEntries`, se o dia em `America/Sao_Paulo` mudou
+  em relação a `queues/{id}.lastTicketResetDay` (escrito via Admin) e a fila não tem
+  `waiting`/`called` (depois da expiração), remove `tickets/{id}` e grava o dia. Primeira
+  execução só marca o dia. Com entries ativas adia até a fila esvaziar (pode zerar no meio
+  do dia seguinte). Sem transação entre o reset e `joinQueue`: um join na mesma janela de
+  ms pode receber a senha antiga + 1.
+- Web: a entry some do RTDB sem passar por `called`, então `derivePhase` cai em `join`
+  (não há `feedback`/`left`); o cliente não sabe o motivo e não há mensagem "senha expirou"
+  (exigiria tombstone em `public/`). Quem já tinha sido chamado segue o fluxo normal.
+- App: tile "Expirar entradas esquecidas" (`expiry_tile.dart`) em `QueueSettingsSections`.
+- **Deploy**: `--only functions:expireStaleEntries,functions:applyQueueSchedules` →
+  `--only firestore:rules` → APK. Requer Cloud Scheduler (Blaze). Rules antigas aceitam
+  `expiry` sem validar (não há lista de campos), então a ordem só evita config inválida.
+
 ## Gotchas
 
 - Aviso ao dono quando alguém entra na fila (som + vibração + SnackBar) é

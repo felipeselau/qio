@@ -1741,4 +1741,26 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get anonymizePhoneHint =>
       'When a service is completed, the phone number is not saved to the history.';
+
+  @override
+  String get expiryTitle => 'Expire forgotten entries';
+
+  @override
+  String get expiryHint =>
+      'Removes people who kept waiting with no activity. Does not affect people already called.';
+
+  @override
+  String expiryAfterHours(int hours) {
+    return 'Expire after $hours h';
+  }
+
+  @override
+  String get expiryClearOnClose => 'Clear the queue when closing on schedule';
+
+  @override
+  String get expiryResetTicketDaily => 'Reset the ticket number every day';
+
+  @override
+  String get expiryResetTicketDailyHint =>
+      'Only resets when nobody is in the queue.';
 }

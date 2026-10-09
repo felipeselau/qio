@@ -553,5 +553,12 @@
   "exportPhoneWarning": "El teléfono es un dato personal (LGPD). Por defecto la exportación no lo incluye. Inclúyelo solo si lo necesitas y protege el archivo.",
   "exportPhoneConfirm": "Incluir teléfono",
   "anonymizePhoneTitle": "No guardar el teléfono en el historial",
-  "anonymizePhoneHint": "Al terminar una atención, el teléfono no se guarda en el historial."
+  "anonymizePhoneHint": "Al terminar una atención, el teléfono no se guarda en el historial.",
+  "expiryTitle": "Expirar entradas olvidadas",
+  "expiryHint": "Quita de la fila a quien quedó esperando sin actividad. No afecta a quien ya fue llamado.",
+  "expiryAfterHours": "Expirar tras {hours} h",
+  "@expiryAfterHours": {"placeholders": {"hours": {"type": "int"}}},
+  "expiryClearOnClose": "Vaciar la fila al cerrar por horario",
+  "expiryResetTicketDaily": "Reiniciar el número cada día",
+  "expiryResetTicketDailyHint": "Solo reinicia cuando no hay nadie en la fila."
 }

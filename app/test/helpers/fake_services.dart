@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:qio_app/models/alerts_config.dart';
+import 'package:qio_app/models/expiry_config.dart';
 import 'package:qio_app/models/history_entry.dart';
 import 'package:qio_app/models/operator.dart';
 import 'package:qio_app/models/queue.dart';
@@ -300,6 +301,13 @@ class FakeQueueService implements QueueService {
   @override
   Future<void> updateAnonymizePhone(String queueId, bool value) async {
     calls.add('anonymize:$queueId:$value');
+  }
+
+  @override
+  Future<void> updateExpiry(String queueId, ExpiryConfig config) async {
+    calls.add(
+      'expiry:$queueId:${config.enabled}:${config.hours}:${config.clearOnClose}:${config.resetTicketDaily}',
+    );
   }
 
   @override
