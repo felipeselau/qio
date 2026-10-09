@@ -74,9 +74,25 @@ modelos; ainda sem dados): `docs/piloto/`.
   callable `joinQueue`), `rateLimits/{queueId}/{uid}` (timestamps dos joins).
   Rules: `database.rules.json`.
 - Rules do RTDB validam `queues/{id}/entries/{entryId}`: `ticket` número, `status` ∈ waiting/called/served/no_show/left, `uid` imutável, `name` 1–60 chars e `phone` vazio ou `(DD) 9999-9999`/`(DD) 99999-9999` (os dois só são checados na criação ou quando mudam), campos fora de ticket/name/phone/uid/fcmToken/status/joinedAt/calledAt/operatorId (mais os de ordem/push e `slotId`/`slotStart`) são rejeitados. `.validate` não roda em `remove()`.
-- O app faz **dual-write**: Firestore (fonte da verdade) + espelho no RTDB
-  (`meta` + `owners/{queueId}`). `_ensureOwnerMirror` reconcilia antes de escritas;
-  `_ensureOwnerMirrorIfOwner` fica em cache por sessão (`uid/queueId`).
+- **Espelho Firestore → RTDB (issue #164, etapa 2):** a partir do APK 1.5.0 o app **não faz
+  mais dual-write nos setters** (`updateQueueStatus`, `updateQueueInfo`, `updateMaxWaiting`,
+  `updateBrandColor`, `uploadLogo`/`removeLogo`, `updateModeAndSlots`, aprovar/remover operador):
+  escrevem só no Firestore e os triggers `mirrorQueueToRtdb`/`mirrorOperatorToRtdb` replicam
+  `meta`, `owners/{id}/ownerUid` e `operatorUids`. Continuam no RTDB, de propósito: (a) o write
+  inicial de `createQueue` (`owners` + `meta`; `duplicateQueue` herda), porque o dono usa a fila
+  na hora (QR, rules de `entries` dependem de `owners/{id}/ownerUid`, a web precisa de `meta`) e
+  o trigger leva segundos; (b) `ensureMirror`/`_ensureOwnerMirror`/`syncOperatorMirror` como
+  **reparo** (só escrevem se diverge; rede de segurança de filas legadas; `ensureMirror` só
+  cobre name/description/avgServiceMin/mode/slots, o resto fica com o trigger);
+  `_ensureOwnerMirrorIfOwner` fica em cache por sessão (`uid/queueId`); (c) campos que são do
+  app e não espelho: `meta/serving`, `meta/updatedAt` (só `callNext`/entries; setters de fila
+  **não bumpam mais** `updatedAt`, então edições do dono deixam de adiar o alerta de "fila
+  parada"), `entries`. **Ordem de deploy OBRIGATÓRIA:** functions `mirror*` (no ar e
+  verificadas) → … → APK. APK novo com functions antigas deixa o RTDB desatualizado (web
+  mostra status/nome/limite velhos). APK antigo continua funcionando (faz dual-write; o trigger
+  só confirma). Latência: web vê a mudança de status/limite segundos depois (cold start do
+  trigger). Rules do RTDB **não** foram alteradas: restringir `meta` (menos `serving`/
+  `updatedAt` de operador) e `owners` ao Admin só quando o APK antigo sumir.
 - **Trigger de espelho (issue #164, rede de segurança):** `mirrorQueueToRtdb`
   (`onDocumentWritten('queues/{queueId}')`, us-central1) replica Firestore → RTDB via Admin.
   Estrutura: lógica pura em `functions/src/mirror.js`, handlers com `deps` injetadas em
@@ -110,10 +126,10 @@ modelos; ainda sem dados): `docs/piloto/`.
     mudou) e escrita só se diverge. O trigger escreve só no RTDB (sem eco). Escritas em
     `meta/status` disparam `onQueueOpened` apenas se o valor de fato mudou.
   - **Migração gradual:** (1) deploy das functions (este PR; APKs antigos seguem com dual-write
-    e o trigger só confirma); (2) APK novo para de escrever `meta`/`owners`/`operatorUids`
-    (precisa do passo 1 em produção); (3) quando o APK antigo sumir, rules do RTDB restringem
+    e o trigger só confirma); (2) APK novo (1.5.0, **feito no código**; precisa do passo 1
+    em produção) para de escrever `meta`/`owners`/`operatorUids` nos setters; (3) quando o APK antigo sumir, rules do RTDB restringem
     `meta` (menos `serving`/`updatedAt` de operador) e `owners` ao Admin.
-  - **Fora deste PR:** alterar o cliente Flutter, endurecer rules do RTDB, backfill em massa
+  - **Fora deste PR (etapa 1; o cliente foi tratado na etapa 2):** alterar o cliente Flutter, endurecer rules do RTDB, backfill em massa
     (o trigger só age quando o doc é escrito), espelhar `updatedAt`/`opensAt`, recriar `meta`
     de fila existente. Deploy: `--only functions:mirrorQueueToRtdb,functions:mirrorOperatorToRtdb`
     antes de qualquer APK.

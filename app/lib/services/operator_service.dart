@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 
@@ -34,16 +35,23 @@ class OperatorInviteException implements Exception {
 }
 
 class OperatorService {
-  OperatorService._();
+  OperatorService._()
+    : _firestore = FirebaseFirestore.instance,
+      _rtdb = FirebaseDatabase.instance,
+      _auth = FirebaseAuth.instance;
+
+  @visibleForTesting
+  OperatorService.forTesting(this._firestore, this._rtdb, this._auth);
+
   static final OperatorService instance = OperatorService._();
 
   static const Duration defaultInviteValidity = Duration(hours: 24);
   static const String _codeAlphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   static const int _codeLength = 6;
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseDatabase _rtdb = FirebaseDatabase.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore;
+  final FirebaseDatabase _rtdb;
+  final FirebaseAuth _auth;
   final Random _random = Random.secure();
 
   String get _uid => _auth.currentUser?.uid ?? '';
@@ -261,7 +269,6 @@ class OperatorService {
       'respondedAt': FieldValue.serverTimestamp(),
     });
     await batch.commit();
-    await syncOperatorMirror(queueId);
   }
 
   Future<void> rejectOperatorRequest(String queueId, String uid) async {
@@ -284,7 +291,6 @@ class OperatorService {
       });
     }
     await batch.commit();
-    await syncOperatorMirror(queueId);
   }
 
   Future<List<QueueOperator>> fetchOperators(String queueId) async {
@@ -292,13 +298,28 @@ class OperatorService {
     return snap.docs.map((d) => QueueOperator.fromDoc(d.id, d.data())).toList();
   }
 
+  // Reparo (só escreve quando diverge) do espelho de operadores; aprovar e
+  // remover não escrevem mais no RTDB, quem espelha é mirrorOperatorToRtdb.
   Future<void> syncOperatorMirror(String queueId) async {
     final snap = await _queueDoc(queueId).collection('operators').get();
-    await _rtdb.ref('owners/$queueId').update({'ownerUid': _uid});
-    await _rtdb
-        .ref('queues/$queueId/operatorUids')
-        .set(
-          snap.docs.isEmpty ? null : {for (final d in snap.docs) d.id: true},
-        );
+    final expected = {for (final d in snap.docs) d.id: true};
+    final mirrorRef = _rtdb.ref('queues/$queueId/operatorUids');
+    final ownerSnap = await _rtdb.ref('owners/$queueId').get();
+    final owner = ownerSnap.value as Map<dynamic, dynamic>?;
+    if (owner == null || owner['ownerUid'] != _uid) {
+      await _rtdb.ref('owners/$queueId').update({'ownerUid': _uid});
+    }
+    final current = (await mirrorRef.get()).value;
+    final currentKeys = current is Map
+        ? {
+            for (final e in current.entries)
+              if (e.value == true) '${e.key}',
+          }
+        : <String>{};
+    final same =
+        currentKeys.length == expected.length &&
+        currentKeys.containsAll(expected.keys) &&
+        (current is! Map || current.length == currentKeys.length);
+    if (!same) await mirrorRef.set(expected.isEmpty ? null : expected);
   }
 }

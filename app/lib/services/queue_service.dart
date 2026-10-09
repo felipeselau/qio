@@ -39,12 +39,19 @@ class SlugTaken implements Exception {
 }
 
 class QueueService {
-  QueueService._();
+  QueueService._()
+    : _firestore = FirebaseFirestore.instance,
+      _rtdb = FirebaseDatabase.instance,
+      _auth = FirebaseAuth.instance;
+
+  @visibleForTesting
+  QueueService.forTesting(this._firestore, this._rtdb, this._auth);
+
   static final QueueService instance = QueueService._();
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseDatabase _rtdb = FirebaseDatabase.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore;
+  final FirebaseDatabase _rtdb;
+  final FirebaseAuth _auth;
   final Map<String, bool> _anonymizeKnown = {};
 
   @visibleForTesting
@@ -122,6 +129,9 @@ class QueueService {
     });
 
     final queueId = docRef.id;
+    // Escrita inicial mantida de propósito: o dono usa a fila na hora (QR,
+    // rules de entries dependem de owners/{id}/ownerUid e a web precisa de
+    // meta) e o trigger mirrorQueueToRtdb leva segundos. O trigger confirma.
     try {
       await _rtdb.ref('owners/$queueId').set({'ownerUid': _uid});
       await _rtdb.ref('queues/$queueId/meta').set({
@@ -165,6 +175,8 @@ class QueueService {
     );
   }
 
+  // Reparo de posse para escritas de entries/serving (que o app ainda faz no
+  // RTDB); os setters de fila não chamam mais, quem espelha é o trigger.
   Future<void> _ensureOwnerMirror(String queueId) async {
     final snap = await _rtdb.ref('owners/$queueId').get();
     final val = snap.value as Map<dynamic, dynamic>?;
@@ -185,6 +197,8 @@ class QueueService {
     _mirrorChecked.add(key);
   }
 
+  // Reparo (só escreve quando diverge) e rede de segurança para filas legadas
+  // ou criadas antes do trigger; chamado ao abrir o painel.
   Future<void> ensureMirror(String queueId) async {
     final ownerSnap = await _rtdb.ref('owners/$queueId').get();
     final metaRef = _rtdb.ref('queues/$queueId/meta');
@@ -249,13 +263,6 @@ class QueueService {
           ? Timestamp.fromDate(until)
           : FieldValue.delete(),
     });
-    await _ensureOwnerMirror(queueId);
-    await _rtdb.ref('queues/$queueId/meta').update({
-      'status': status.value,
-      'statusMessage': text,
-      'resumeAt': until?.millisecondsSinceEpoch,
-      'updatedAt': ServerValue.timestamp,
-    });
   }
 
   Future<void> updateSchedule(String queueId, QueueSchedule? schedule) async {
@@ -277,11 +284,6 @@ class QueueService {
     await _firestore.collection('queues').doc(queueId).update({
       'brandColor': hex ?? FieldValue.delete(),
     });
-    await _ensureOwnerMirror(queueId);
-    await _rtdb.ref('queues/$queueId/meta').update({
-      'brandColor': hex,
-      'updatedAt': ServerValue.timestamp,
-    });
   }
 
   Future<String> uploadLogo(String queueId, Uint8List bytes) async {
@@ -292,11 +294,6 @@ class QueueService {
     await ref.putData(bytes, SettableMetadata(contentType: 'image/jpeg'));
     final url = await ref.getDownloadURL();
     await _firestore.collection('queues').doc(queueId).update({'logoUrl': url});
-    await _ensureOwnerMirror(queueId);
-    await _rtdb.ref('queues/$queueId/meta').update({
-      'logoUrl': url,
-      'updatedAt': ServerValue.timestamp,
-    });
     return url;
   }
 
@@ -310,11 +307,6 @@ class QueueService {
     }
     await _firestore.collection('queues').doc(queueId).update({
       'logoUrl': FieldValue.delete(),
-    });
-    await _ensureOwnerMirror(queueId);
-    await _rtdb.ref('queues/$queueId/meta').update({
-      'logoUrl': null,
-      'updatedAt': ServerValue.timestamp,
     });
   }
 
@@ -408,11 +400,6 @@ class QueueService {
     await _firestore.collection('queues').doc(queueId).update({
       'maxWaiting': maxWaiting,
     });
-    await _ensureOwnerMirror(queueId);
-    await _rtdb.ref('queues/$queueId/meta').update({
-      'maxWaiting': maxWaiting,
-      'updatedAt': ServerValue.timestamp,
-    });
   }
 
   Future<void> updateAnonymizePhone(String queueId, bool value) async {
@@ -449,12 +436,6 @@ class QueueService {
       'mode': mode.value,
       'slots': [for (final s in sorted) s.toMap()],
     });
-    await _ensureOwnerMirror(queueId);
-    await _rtdb.ref('queues/$queueId/meta').update({
-      'mode': mode.value,
-      'slots': slotsMirror(sorted),
-      'updatedAt': ServerValue.timestamp,
-    });
   }
 
   Future<void> updateQueueInfo(
@@ -484,11 +465,6 @@ class QueueService {
     if (changes.isEmpty) return;
     final infoError = next.errorForChanges(changes);
     if (infoError != null) throw FormatException(infoError.name);
-    await _ensureOwnerMirror(queueId);
-    await _rtdb.ref('queues/$queueId/meta').update({
-      ...changes,
-      'updatedAt': ServerValue.timestamp,
-    });
     await docRef.update(changes);
   }
 
