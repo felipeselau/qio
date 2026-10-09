@@ -272,6 +272,7 @@ class FakeQueueService implements QueueService {
     QueueSchedule? schedule,
     String? brandColor,
     AlertsConfig? alerts,
+    ExpiryConfig? expiry,
   }) async {
     final error = createError;
     if (error != null) throw error;
@@ -284,6 +285,7 @@ class FakeQueueService implements QueueService {
       avgServiceMin: avgServiceMin,
       maxWaiting: maxWaiting,
       groupId: groupId,
+      expiry: expiry,
     );
     if (createResult != null) return createResult!;
     throw Exception('stop before navigation');
@@ -296,6 +298,7 @@ class FakeQueueService implements QueueService {
     int? avgServiceMin,
     int maxWaiting,
     String? groupId,
+    ExpiryConfig? expiry,
   })?
   createdArgs;
   Object? updateInfoError;

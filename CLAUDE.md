@@ -255,7 +255,7 @@ modelos; ainda sem dados): `docs/piloto/`.
   trigger `mirrorQueueToRtdb` replica no `meta`). O `queueId` (e o QR) não muda. Painel: tiles "Editar fila" e
   "Duplicar fila" (só dono).
 - `duplicateQueue` cria fila nova `<nome> (cópia)` copiando descrição, tempo médio, limite,
-  grupo, modo/slots, horário de funcionamento, cor e alertas. Não copia entries, history,
+  grupo, modo/slots, horário de funcionamento, cor, alertas e expiração (`expiry`). Não copia entries, history,
   operadores, logo, mensagem de status nem `alertState`.
 - Rules validam `name`/`description`/`avgServiceMin` no Firestore (create, e update só de cada
   campo que mudou, para não travar docs legados) e em `meta/{name,description,avgServiceMin}`
@@ -618,6 +618,9 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   (não há `feedback`/`left`); o cliente não sabe o motivo e não há mensagem "senha expirou"
   (exigiria tombstone em `public/`). Quem já tinha sido chamado segue o fluxo normal.
 - App: tile "Expirar entradas esquecidas" (`expiry_tile.dart`) em `QueueSettingsSections`.
+  `QueueService.createQueue({ExpiryConfig? expiry})` grava `expiry` (`toMap()`) só quando
+  `expiry != null && expiry.enabled`; desligado/ausente não cria o campo. `duplicateQueue` copia
+  `expiry` da origem.
 - **Deploy**: `--only functions:expireStaleEntries,functions:applyQueueSchedules` →
   `--only firestore:rules` → APK. Requer Cloud Scheduler (Blaze). Rules antigas aceitam
   `expiry` sem validar (não há lista de campos), então a ordem só evita config inválida.
