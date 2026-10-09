@@ -4,9 +4,8 @@ import '../../l10n/app_localizations.dart';
 import '../../models/expiry_config.dart';
 import '../../services/queue_service.dart';
 import '../../theme/qio_colors.dart';
-import '../../theme/qio_palette.dart';
-import '../../theme/qio_text_styles.dart';
 import '../qio_card.dart';
+import '../queue_form/expiry_form.dart';
 
 class ExpiryTile extends StatefulWidget {
   const ExpiryTile({
@@ -53,118 +52,8 @@ class _ExpiryTileState extends State<ExpiryTile> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final config = _current;
-    final hours = config.hours;
-    final options = {...ExpiryConfig.hourOptions, hours}.toList()..sort();
     return QioCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        spacing: 8,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.timer_off_outlined, color: context.qio.primaryText),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.expiryTitle,
-                      style: context.qioText.bodyMedium.copyWith(
-                        color: context.qio.textPrimary,
-                      ),
-                    ),
-                    Text(l10n.expiryHint, style: context.qioText.caption),
-                  ],
-                ),
-              ),
-              Switch(
-                key: const ValueKey('expiry-enabled'),
-                value: config.enabled,
-                onChanged: _busy
-                    ? null
-                    : (v) => _save(config.copyWith(enabled: v)),
-              ),
-            ],
-          ),
-          if (config.enabled) ...[
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    l10n.expiryAfterHours(hours),
-                    style: context.qioText.bodyMedium.copyWith(
-                      color: context.qio.textPrimary,
-                    ),
-                  ),
-                ),
-                DropdownButton<int>(
-                  key: const ValueKey('expiry-hours'),
-                  value: hours,
-                  items: [
-                    for (final h in options)
-                      DropdownMenuItem(value: h, child: Text('$h h')),
-                  ],
-                  onChanged: _busy
-                      ? null
-                      : (v) {
-                          if (v != null) _save(config.copyWith(hours: v));
-                        },
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    l10n.expiryClearOnClose,
-                    style: context.qioText.bodyMedium.copyWith(
-                      color: context.qio.textPrimary,
-                    ),
-                  ),
-                ),
-                Switch(
-                  key: const ValueKey('expiry-clear'),
-                  value: config.clearOnClose,
-                  onChanged: _busy
-                      ? null
-                      : (v) => _save(config.copyWith(clearOnClose: v)),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        l10n.expiryResetTicketDaily,
-                        style: context.qioText.bodyMedium.copyWith(
-                          color: context.qio.textPrimary,
-                        ),
-                      ),
-                      Text(
-                        l10n.expiryResetTicketDailyHint,
-                        style: context.qioText.caption,
-                      ),
-                    ],
-                  ),
-                ),
-                Switch(
-                  key: const ValueKey('expiry-reset'),
-                  value: config.resetTicketDaily,
-                  onChanged: _busy
-                      ? null
-                      : (v) => _save(config.copyWith(resetTicketDaily: v)),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
+      child: ExpiryForm(value: _current, enabled: !_busy, onChanged: _save),
     );
   }
 }
