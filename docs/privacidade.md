@@ -10,7 +10,7 @@ Minuta técnica, não é parecer jurídico. Decisões assumidas (#172): o estabe
 | `uid` anônimo, ticket, status, `lang`, `joinedAt`, `calledAt`, slot | Mesma entry | Idem | Idem | Execução do serviço |
 | `fcmToken` do cliente (opcional) | Mesma entry | Idem; usado por `onEntryCalled`/`onQueueAdvanced` | Idem | Consentimento (botão "Ativar aviso") |
 | Espelho público (ticket, status, order) | RTDB `queues/{id}/public/{entryId}` | Qualquer usuário autenticado; sem nome nem telefone | Enquanto `waiting`/`called` | Execução do serviço |
-| Histórico (ticket, nome, telefone, resultado, horários, `calledBy`, `operatorId`, `recalls`, `skips`) | Firestore `queues/{id}/history/{entryId}` (app; `left` via trigger Admin) | Dono (leitura/escrita); operador cria `served`/`no_show` | 180 dias por padrão (`queues/{id}.retentionDays`, 30-730), expurgo diário por `purgeOldHistory`; apagado em `deleteQueue`; telefone omitido se `anonymizePhone` | Interesse do controlador / execução; revisar |
+| Histórico (ticket, nome, telefone, resultado, horários, `calledBy`, `operatorId`, `recalls`, `skips`) | Firestore `queues/{id}/history/{entryId}` (app; `left` via trigger Admin) | Dono (leitura/escrita); operador cria `served`/`no_show` | 180 dias por padrão (`queues/{id}.retentionDays`, 30-730), expurgo diário por `purgeOldHistory`; apagado em `deleteQueue`; telefone omitido se `anonymizePhone` (inclusive `left` arquivado pelo trigger Admin) | Interesse do controlador / execução; revisar |
 | Avaliação (nota, comentário, `uid`, `createdAt`) | Firestore `queues/{id}/feedback/{entryId}` (callable `submitFeedback`) | Só o dono lê/apaga | Mesmo prazo do `history` (`createdAt`), expurgo por `purgeOldHistory`; ou até o dono apagar / `deleteQueue` | Consentimento (envio voluntário) |
 | Limite de tentativas (timestamps por `uid`) | RTDB `rateLimits/{queueId}/{uid}` | Só Admin (rules fecham leitura/escrita) | **Não removido por `deleteQueue`** nem expurgado | Segurança / abuso |
 | Sessão anônima | Firebase Authentication (navegador) | Firebase/Google | Até limpar dados do site | Execução do serviço |
@@ -23,7 +23,7 @@ Suboperador: Firebase/Google Cloud (Auth, RTDB, Firestore, Functions, FCM, Hosti
 ## Lacunas encontradas no código
 
 - `deleteQueue` não limpa `rateLimits/{queueId}`.
-- `history` guarda telefone completo, salvo se o dono ligar "Não guardar telefone no histórico" (`anonymizePhone`); registros já arquivados não são alterados. CSV/PDF saem sem telefone; incluir exige confirmação explícita.
+- `history` guarda telefone completo, salvo se o dono ligar "Não guardar telefone no histórico" (`anonymizePhone`); registros já arquivados não são alterados. `retentionDays` não tem tela: só Admin/console. CSV/PDF saem sem telefone; incluir exige confirmação explícita.
 - Exclusão de conta no app é a #161.
 
 ## Pendências do dono

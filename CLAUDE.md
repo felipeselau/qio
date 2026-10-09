@@ -117,7 +117,7 @@ conhecidas: `docs/qualidade.md`.
 ## Agendamento por horário (slots)
 
 - `queues/{id}.mode` (`'queue'` padrão | `'schedule'`) e `slots = [{id, start:'HH:mm',
-  capacity 1–50}]` (máx. 24, horários únicos, ids estáveis) no Firestore (fonte da verdade,
+  capacity 1–50}]` (máx. 20, horários únicos, ids estáveis) no Firestore (fonte da verdade,
   só o dono escreve). Espelho no RTDB: `meta/mode` e `meta/slots/{slotId} = {start,
   capacity}` (dual-write em `QueueService.updateModeAndSlots`/`createQueue`). Os slots são
   **diários** (repetem todo dia) e o fuso é fixo `America/Sao_Paulo`. Filas antigas e
@@ -134,9 +134,9 @@ conhecidas: `docs/qualidade.md`.
 - Sem transação de contagem: joins simultâneos podem passar a capacidade em 1–2 vagas
   (igual `maxWaiting`).
 - Rules: RTDB valida `meta/mode` e `meta/slots` (só dono; start `HH:mm`, capacity 1–50, id
-  `[A-Za-z0-9_-]{1,20}`), mas **não limita a 24** (RTDB rules não têm `numChildren`; a
-  function corta em 24 ao ler). `slotId`/`slotStart` da entry são imutáveis para o cliente
-  e há `.indexOn` em `slotId`. Firestore valida `mode`, `slots` (lista ≤ 24, `start`
+  `[A-Za-z0-9_-]{1,20}`), mas **não limita a 20** (RTDB rules não têm `numChildren`; a
+  function corta em 20 ao ler). `slotId`/`slotStart` da entry são imutáveis para o cliente
+  e há `.indexOn` em `slotId`. Firestore valida `mode`, `slots` (lista ≤ 20, `start`
   `HH:mm`, `capacity` int 1–50); não valida chaves extras, `id` nem unicidade (estourava o
   limite de 1000 expressões das rules) — o app valida tudo isso antes de gravar.
 - App: seletor de modo + lista de horários (`SlotsEditor`) na criação e no painel
@@ -166,8 +166,10 @@ conhecidas: `docs/qualidade.md`.
   RTDB primeiro e Firestore por último; `ensureMirror` repara divergência de
   name/description/avgServiceMin no `meta` (normalizados por `QueueInfo.forMirror`: nome
   truncado a 60 ou "Fila", descrição a 300, tempo fora de 1–240 vira o default). O tempo
-  manual só vale até existir `avgServiceMinAuto`. O Firestore limita a 1000 expressões por avaliação e `validSlots` já consome quase
-  tudo: cuidado ao somar checagens no `update` de `queues/{id}`. Deploy: rules antes do APK.
+  manual só vale até existir `avgServiceMinAuto`. O Firestore limita a 1000 expressões por avaliação; `MAX_SLOTS`/`maxQueueSlots` = 20
+  (rules, app, functions e web iguais) é o maior valor que cabe no pior caso testado
+  (create/update com slots + alerts + groupId + nome/descrição + privacidade). Subir o limite
+  ou somar checagens em `queues/{id}` exige rodar o teste "pior caso" em rules-tests. Deploy: rules antes do APK.
 
 ## Criação de fila e botão voltar
 
@@ -304,15 +306,21 @@ conhecidas: `docs/qualidade.md`.
   Sem índice composto novo (usa o índice single-field automático). Idempotente; loga só
   contagens (`event: purgeOldHistory`) e `logError` por fila, sem PII.
 - `queues/{id}.anonymizePhone` (bool, tile "Não guardar telefone no histórico" nas
-  configurações): `_archiveEntry` grava `phone: null` no history. Só Firestore (sem espelho
-  RTDB); vale para arquivamentos novos. O `left` arquivado pelo trigger Admin continua com
-  telefone (expurgo cobre).
+  configurações): `_archiveEntry` grava `phone: null` no history, e o trigger Admin que
+  arquiva `left` também respeita o campo. Só Firestore (sem espelho RTDB); vale para
+  arquivamentos novos. O valor vem do `watchQueue` já assinado pelo painel (cache em
+  `QueueService`), com `get` só se não houver cache; se a leitura falhar, grava `phone: null`
+  (falha fechada, `history_privacy.dart`).
+- `retentionDays` não tem UI: é configurável só por Admin/console (ou rules do dono via
+  cliente próprio). Padrão 180.
 - Exportação CSV/PDF do Histórico **sem telefone por padrão**; os itens "Exportar ... com
   telefone" pedem confirmação com aviso LGPD. `metrics_export.dart` nunca exporta telefone.
 - Rules do Firestore: `retentionDays` e `anonymizePhone` só são validados quando mudam.
   O update de `queues` valida tudo por campo alterado (`queueUpdateFieldsOk`, um único
-  `diff`), inclusive `mode`/`slots`/`alerts`/`alertState`, por causa do limite de 1000
-  expressões; não volte a validar `slots` em todo update.
+  `diff`), inclusive `mode`/`slots`/`alerts`, por causa do limite de 1000 expressões; não
+  volte a validar `slots` em todo update. O cliente não escreve `ownerId`, `deleting` nem
+  `alertState` (só Admin); campos desconhecidos continuam permitidos (ex.: `slug`).
+  `validSlots` usa `concat` para repetir a lista e evitar um teste de tamanho por slot.
 - Deploy: `--only functions:purgeOldHistory` → `--only firestore:rules` → APK. Sem a
   function nada é apagado; as rules novas só adicionam validação dos dois campos.
 

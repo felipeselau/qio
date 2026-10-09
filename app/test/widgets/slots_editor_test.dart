@@ -88,9 +88,9 @@ void main() {
     expect(find.text('10:00'), findsOneWidget);
   });
 
-  testWidgets('add button is disabled at 24 slots', (tester) async {
+  testWidgets('add button is disabled at 20 slots', (tester) async {
     final slots = [
-      for (var i = 0; i < 24; i++)
+      for (var i = 0; i < 20; i++)
         slot('s$i', '${i.toString().padLeft(2, '0')}:00'),
     ];
     await pumpApp(

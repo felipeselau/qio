@@ -6,7 +6,7 @@ const TIME_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const SP_OFFSET_MS = 3 * 60 * 60 * 1000;
 const DAY_MS = 24 * 60 * 60 * 1000;
 export const SLOT_GRACE_MS = 15 * 60 * 1000;
-export const MAX_SLOTS = 24;
+export const MAX_SLOTS = 20;
 
 export function parseSlots(raw: unknown): Slot[] {
   if (!raw || typeof raw !== 'object') return [];

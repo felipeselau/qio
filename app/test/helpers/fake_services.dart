@@ -160,14 +160,22 @@ class FakeQueueService implements QueueService {
   }
 
   @override
-  Future<void> markServed(String queueId, QueueEntry entry) async {
+  Future<void> markServed(
+    String queueId,
+    QueueEntry entry, {
+    bool? anonymizePhone,
+  }) async {
     if (finishGate != null) await finishGate;
     if (finishError != null) throw finishError!;
     calls.add('served:${entry.id}');
   }
 
   @override
-  Future<void> markNoShow(String queueId, QueueEntry entry) async {
+  Future<void> markNoShow(
+    String queueId,
+    QueueEntry entry, {
+    bool? anonymizePhone,
+  }) async {
     if (finishGate != null) await finishGate;
     if (finishError != null) throw finishError!;
     calls.add('noShow:${entry.id}');
