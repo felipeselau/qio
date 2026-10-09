@@ -28,6 +28,7 @@ const bundle: LegalBundle = {
           'Identificador anônimo de sessão (Firebase Authentication anônimo), criado automaticamente ao abrir a página da fila. Não está ligado a e-mail ou conta.',
           'Dados da senha: número da senha, situação (aguardando, chamado, atendido, não compareceu, saiu), horários de entrada e chamada, idioma e, se escolhida, a faixa de horário.',
           'Token de notificação push, opcional, somente se você tocar em "Ativar aviso".',
+          'Pedido "Me avise quando abrir", opcional: token de push, idioma e data do pedido, ligados ao identificador anônimo de sessão, sem nome nem telefone.',
           'Avaliação (nota de 1 a 5 e comentário opcional) enviada após o atendimento.',
           'Estatísticas de uso do site (Google Analytics), apenas se configuradas pelo estabelecimento, sem coleta quando o navegador envia Do Not Track ou quando você desliga no rodapé.',
         ],
@@ -56,6 +57,7 @@ const bundle: LegalBundle = {
         heading: '6. Por quanto tempo guardamos',
         items: [
           'Entrada ativa na fila (nome, telefone, token de push): somente enquanto você está na fila; é removida ao ser atendido, ao sair ou quando a fila é apagada.',
+          'Pedido "Me avise quando abrir" (token de push, idioma e data): até a fila abrir (apagado após o aviso), por no máximo 24 horas, até você cancelar ou até a fila ser apagada.',
           'Histórico de atendimentos do estabelecimento (nome, telefone, resultado e horários): prazo-alvo de 180 dias. A rotina automática de exclusão ainda depende de implementação.',
           'Avaliações: mantidas pelo estabelecimento até que ele as apague ou apague a fila.',
           'Registros de limite de tentativas (identificador anônimo e horários): técnicos, sem nome nem telefone.',

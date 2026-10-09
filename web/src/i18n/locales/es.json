@@ -89,7 +89,13 @@
     "aheadCount_one": "{{count}} persona delante",
     "aheadCount_other": "{{count}} personas delante",
     "noQueueNow": "Sin fila ahora",
-    "pausedNoJoin": "No es posible entrar mientras la fila está en pausa."
+    "pausedNoJoin": "No es posible entrar mientras la fila está en pausa.",
+    "notifyOpen": "Avísame cuando abra",
+    "notifyOpenHint": "Recibe un aviso en el celular cuando la fila abra. No pedimos tu teléfono.",
+    "notifyOpenOn": "Te avisaremos cuando la fila abra (hasta 24 horas).",
+    "notifyOpenCancel": "Cancelar aviso",
+    "notifyOpenDenied": "Los avisos están bloqueados en el navegador. Permítelos en la configuración del sitio para recibirlos.",
+    "notifyOpenFailed": "No se pudo activar el aviso. Inténtalo de nuevo."
   },
   "errors": {
     "nameRequired": "Ingresa tu nombre",

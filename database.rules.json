@@ -142,6 +142,27 @@
             ".read": "auth != null && auth.uid === $uid",
             ".validate": "newData.isBoolean()"
           }
+        },
+        "openWatchers": {
+          ".indexOn": ["createdAt"],
+          ".read": "root.child('owners').child($queueId).child('ownerUid').val() === auth.uid",
+          "$uid": {
+            ".read": "auth != null && auth.uid === $uid",
+            ".write": "auth != null && auth.uid === $uid && (!newData.exists() || (root.child('queues').child($queueId).child('meta').child('name').exists() && root.child('queues').child($queueId).child('meta').child('deleting').val() !== true))",
+            ".validate": "newData.hasChildren(['fcmToken', 'lang', 'createdAt'])",
+            "fcmToken": {
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 4096"
+            },
+            "lang": {
+              ".validate": "newData.isString() && (newData.val() === 'pt' || newData.val() === 'en' || newData.val() === 'es')"
+            },
+            "createdAt": {
+              ".validate": "newData.val() === now"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
         }
       }
     },
