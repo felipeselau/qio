@@ -138,5 +138,14 @@
     "failed": "Could not open the link",
     "failedHint": "Check your connection and try again.",
     "retry": "Try again"
+  },
+  "widget": {
+    "loading": "Loading...",
+    "empty": "No queue right now",
+    "inQueue_one": "person in line",
+    "inQueue_other": "people in line",
+    "estimate": "wait ~{{minutes}} min",
+    "beingServed_one": "{{count}} being served",
+    "beingServed_other": "{{count}} being served"
   }
 }

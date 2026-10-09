@@ -2,7 +2,6 @@ import { initializeApp } from 'firebase/app';
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
 import { connectAuthEmulator, getAuth } from 'firebase/auth';
 import { connectDatabaseEmulator, getDatabase } from 'firebase/database';
-import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
 
 import { firebaseConfig } from './firebaseConfig';
 
@@ -33,10 +32,8 @@ if (recaptchaSiteKey && import.meta.env.VITE_USE_EMULATORS !== 'true') {
 
 export const auth = getAuth(app);
 export const db = getDatabase(app);
-export const functions = getFunctions(app);
 
 if (import.meta.env.VITE_USE_EMULATORS === 'true') {
   connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
   connectDatabaseEmulator(db, 'localhost', 9000);
-  connectFunctionsEmulator(functions, 'localhost', Number(import.meta.env.VITE_FUNCTIONS_EMULATOR_PORT ?? 5001));
 }

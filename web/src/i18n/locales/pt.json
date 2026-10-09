@@ -138,5 +138,14 @@
     "failed": "Não foi possível abrir o link",
     "failedHint": "Verifique sua conexão e tente novamente.",
     "retry": "Tentar de novo"
+  },
+  "widget": {
+    "loading": "Carregando...",
+    "empty": "Sem fila no momento",
+    "inQueue_one": "pessoa na fila",
+    "inQueue_other": "pessoas na fila",
+    "estimate": "espera ~{{minutes}} min",
+    "beingServed_one": "{{count}} em atendimento",
+    "beingServed_other": "{{count}} em atendimento"
   }
 }
