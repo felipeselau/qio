@@ -222,6 +222,34 @@ describe('RTDB rules', () => {
       await assertSucceeds(update(ref(rtdb(OWNER), path('meta')), { maxWaiting: 5 }));
     });
 
+    it('dono pode remover meta/waitingCount, mas não escrever valor', async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await set(ref(ctx.database(), path('meta/waitingCount')), 2);
+      });
+      await assertFails(set(ref(rtdb(OWNER), path('meta/waitingCount')), 3));
+      await assertSucceeds(remove(ref(rtdb(OWNER), path('meta/waitingCount'))));
+      const snap = await get(ref(rtdb(OWNER), path('meta/waitingCount')));
+      assert.equal(snap.exists(), false);
+    });
+
+    it('set completo do meta pelo dono funciona e apaga waitingCount', async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await set(ref(ctx.database(), path('meta/waitingCount')), 2);
+      });
+      await assertSucceeds(
+        set(ref(rtdb(OWNER), path('meta')), { name: 'Balcão', status: 'open', serving: 3, updatedAt: 1 }),
+      );
+      const snap = await get(ref(rtdb(OWNER), path('meta')));
+      assert.equal(snap.val().waitingCount, undefined);
+      assert.equal(snap.val().name, 'Balcão');
+    });
+
+    it('set completo do meta que inclua waitingCount é negado', async () => {
+      await assertFails(
+        set(ref(rtdb(OWNER), path('meta')), { name: 'Balcão', status: 'open', serving: 3, updatedAt: 1, waitingCount: 4 }),
+      );
+    });
+
     it('operador não escreve meta/name', async () => {
       await assertFails(set(ref(rtdb(OPERATOR), path('meta/name')), 'Hack'));
     });

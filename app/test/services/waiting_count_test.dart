@@ -98,6 +98,44 @@ void main() {
       await sub.cancel();
     });
 
+    test(
+      'campo ausente, presente e ausente de novo troca de listener',
+      () async {
+        var listens = 0;
+        var cancels = 0;
+        late StreamController<Object?> fallback;
+        final values = <int>[];
+        final sub = waitingCountStream(
+          metaCount: meta.stream,
+          publicNode: () {
+            listens++;
+            fallback = StreamController<Object?>(onCancel: () => cancels++);
+            return fallback.stream;
+          },
+        ).listen(values.add);
+        meta.add(null);
+        await pumpEventQueue();
+        fallback.add({
+          'a': {'status': 'waiting'},
+        });
+        await pumpEventQueue();
+        meta.add(5);
+        await pumpEventQueue();
+        meta.add(null);
+        await pumpEventQueue();
+        fallback.add({
+          'a': {'status': 'waiting'},
+          'b': {'status': 'waiting'},
+        });
+        await pumpEventQueue();
+        expect(values, [1, 5, 2]);
+        expect(listens, 2);
+        expect(cancels, 1);
+        await sub.cancel();
+        expect(cancels, 2);
+      },
+    );
+
     test('cancelar encerra meta e public', () async {
       var metaCancelled = false;
       final m = StreamController<Object?>(onCancel: () => metaCancelled = true);

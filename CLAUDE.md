@@ -181,23 +181,33 @@ conhecidas: `docs/qualidade.md`.
 ## Contador de espera no meta
 
 - `queues/{id}/meta/waitingCount` = número de entries `waiting` (só `waiting`; `called`
-  não conta, igual à contagem antiga da home). Escrito só pela function
-  `syncPublicTicket` (Admin); a rule do RTDB tem `.validate: false` no campo, então
-  dono/operador/cliente não conseguem escrever (leitura como o resto do `meta`).
-- Estratégia: **recontagem**, não delta. Quando o status da entry entra/sai de
-  `waiting` (`waitingChanged` em `functions/src/ticket.js`), a trigger lê `public/`
-  (só `{ticket,status,order}`) e grava `countWaiting(public)`. Reentrega de trigger
-  é inofensiva (idempotente) e não há deriva acumulada; custo é O(tamanho da fila)
-  só nas transições de `waiting`, aceitável para filas pequenas. Corrida entre dois
-  eventos simultâneos pode gravar um valor velho até o evento seguinte corrigir.
-  Não recria `meta` se a fila foi apagada (`meta/name` ausente).
+  não conta, igual à contagem antiga da home). Escrito pela function (Admin); a rule
+  do RTDB tem `.validate: false` no campo, então ninguém grava um valor pelo cliente
+  (leitura como o resto do `meta`). Ressalva: o dono pode **apagar** o campo
+  (`remove`/`null`, `.validate` não roda em remoção) e o app cai no fallback; um
+  `set` completo do `meta` pelo dono (ensureMirror/createQueue com `meta` ausente)
+  também o apaga até a próxima trigger ou reconciliação.
+- Estratégia: **recontagem**, não delta (`functions/src/waiting.js`). Quando a entry
+  entra/sai de `waiting` (`waitingChanged`), `syncPublicTicket` lê `public/` (só
+  `{ticket,status,order}`), grava, **relê** e regrava se mudou (até 2 escritas), o
+  que cobre corrida entre eventos. Reentrega é idempotente. Roda também quando o
+  arquivamento do `left` falha (depois de remover `public/`), e então a trigger relança.
+- A escrita é `transaction` no nó `meta`: aborta se `meta` não existe, não tem `name`
+  ou tem `deleting === true` (não recria fila apagada nem mexe em fila sendo apagada);
+  com `meta` nulo no cache local devolve o valor inalterado para o SDK reconferir no servidor.
+- Reconciliação: `reconcileWaitingCounts` (a cada 15 min) lista as filas pelo
+  Firestore (só ids, sem ler `entries`), recontagem de `public/` com concorrência 5 e
+  corrige divergência.
 - App: `QueueService.watchWaitingCount` lê só `meta/waitingCount` (um número por
-  card). Se o campo não existe (fila antiga), cai para a contagem por `public/`
-  (`app/lib/services/waiting_count.dart`) e abandona o `public/` assim que o campo
-  aparece. Web continua contando por `public/`.
-- Backfill: `node functions/scripts/backfill-waiting-count.js` (conta `entries`
-  waiting de cada fila com `meta/name`). **Ordem de deploy**: functions → backfill →
-  rules do RTDB → APK.
+  card). Se o campo não existe, cai para a contagem por `public/`
+  (`app/lib/services/waiting_count.dart`) e abandona o `public/` quando o campo
+  aparece (e volta a ele se sumir). Web continua contando por `public/`. APK antigo
+  segue contando por `public/`.
+- Backfill: `GOOGLE_CLOUD_PROJECT=qio-app node functions/scripts/backfill-waiting-count.js
+  [--dry-run]` (opcional `FIREBASE_DATABASE_URL`). Conta a partir de `public/` com a
+  mesma regra da trigger, pula filas sem `meta/name` ou com `deleting`, pula valores
+  já corretos e grava só o campo, via a mesma transação. **Ordem de deploy**:
+  functions → backfill → rules do RTDB → APK.
 
 ## Ordem da fila, chamar de novo e mover
 
