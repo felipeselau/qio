@@ -123,5 +123,11 @@
     "ownerLink": "Get the Qio app to create your queue",
     "documentTitle": "Qio — In-person queues, nothing to install",
     "metaDescription": "Join a venue's queue from your phone without installing an app: scan the QR code and follow your position in real time."
+  },
+  "slug": {
+    "opening": "Opening the queue...",
+    "failed": "Could not open the link",
+    "failedHint": "Check your connection and try again.",
+    "retry": "Try again"
   }
 }

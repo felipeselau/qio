@@ -673,6 +673,68 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
 - Retenção-alvo do `history`: 180 dias, **ainda não aplicada pelo código**. Mapa de
   dados e pendências do dono em `docs/privacidade.md`. Export sem telefone é a #160.
 
+## Link curto e cartaz
+
+- **Slug**: `queueSlugs/{slug}` no Firestore `{queueId, ownerId, createdAt}`. O
+  slug é o ID do doc, então a unicidade vem das rules. Formato `[a-z0-9-]{3,40}`
+  sem `-` no início/fim; reservados: admin, api, app, q, c, w, n, privacidade,
+  termos, assets, fonts, icons. Regras duplicadas em `app/lib/services/slug.dart`,
+  `functions/src/slug.js`, `web/src/lib/slug.ts` e `firestore.rules`
+  (`validSlugId`); `functions/test/slug.test.js` exige que os 4 tenham
+  exatamente o mesmo conjunto de reservados, e os 3 módulos testam os mesmos casos.
+- **Tombstone (30 dias)**: trocar/remover o slug (app) ou excluir fila/conta
+  (`deleteQueue`/`deleteAccount`, `slugsToRelease`) **não apaga** o doc: grava
+  `released: true` + `releasedAt` (serverTimestamp), mantendo `createdAt`. Durante
+  30 dias só o dono anterior retoma o slug; depois qualquer dono não anônimo pode
+  tomá-lo. Isso evita sequestro de QR já impresso. Ninguém apaga doc de slug
+  (`delete: false`).
+- **Rules**: `get` do slug ativo só pelo dono; tombstone e doc inexistente são
+  legíveis por qualquer logado (o app usa isso para checar disponibilidade). `list`
+  negado. `create` (e a retomada de tombstone, que é um `update`) exige `notAnonymous()`,
+  `ownerId == auth.uid`, `queueId` casando `^[A-Za-z0-9_-]{1,128}$`, as 3 chaves,
+  `createdAt == request.time` e dono da fila (`get(queues/{queueId})`, um único
+  `get` por escrita). Retomar exige `released == true` e (mesmo dono ou
+  `request.time > releasedAt + 30d`). Liberar (`update`) só pelo dono do doc, só
+  `released`/`releasedAt == request.time`. Nenhuma validação nova no `update` de
+  `queues` (limite de 1000 expressões; `history-retention` reescreve essa regra):
+  `slug` e `posterTitle` (≤ 60) são campos livres lá, e o `posterTitle` só é
+  validado no app. Um slug por fila: `setSlug` substitui o anterior.
+- **App**: tile "Link curto" em Configurações (`queue_slug_tile.dart`), com aviso
+  de que trocar o link invalida QRs impressos e que o antigo fica reservado por 30
+  dias. `QueueService.setSlug` lê o doc novo (livre / meu tombstone / tombstone
+  vencido = ok; ativo ou tombstone de outro dentro de 30 dias = `SlugTaken`) e o
+  atual (só vira tombstone se existir, for meu, ativo e da mesma fila; senão é
+  ignorado), e grava tudo em um batch com `queues/{id}.slug`. Se o batch der
+  `permission-denied`, relê o novo e só então reporta "em uso". Slug vazio remove.
+  Com slug, QR, copiar e compartilhar usam `https://qio.web.app/n/{slug}`; sem
+  slug, `/q/{id}`.
+- **Web**: `/n/:slug` (`SlugRedirect.tsx`) chama a callable `resolveSlug` (auth
+  anônima) e faz `replace` para `/q/{queueId}`. Slug inexistente, inválido ou
+  tombstone mostra "Fila não encontrada". A web **não** inicializa o Firestore SDK
+  (pesaria no bundle); por isso a callable. `/q/{id}` e `/c/{id}` seguem iguais.
+- **Rate limit de `resolveSlug`**: persistido no RTDB como no join (timestamps em
+  transação Admin): `rateLimits/slug/{uid}` (30/min) e `rateLimits/slugIp/{hash}`
+  (120/min; hash SHA-256 truncado de `request.rawRequest.ip`, sem IP em claro).
+  `parseSlug` roda antes de qualquer contagem ou leitura, então slug inválido não
+  custa nada. IP é fraco atrás de NAT/proxy compartilhado. O freio mais efetivo é
+  o App Check (`ENFORCE_APP_CHECK`), que continua **desligado**; não ligue sem
+  ativar App Check no web.
+- **Cartaz** (`qr_poster_screen.dart`, PDF em `services/poster.dart`): A4, A5 e
+  cartão de mesa (100×150 mm), faixa na cor da fila (`brandColor`, senão a cor do
+  QR), logo (`logoUrl` só se `https://firebasestorage.googleapis.com/`; baixado
+  pelo SDK do Storage com teto de 1 MB e timeout de 6 s; qualquer falha segue sem
+  logo), nome (fallback "Fila"), frase opcional `posterTitle`, instruções pt/en/es
+  e o link. O PDF usa a fonte padrão (Latin-1): `pdfSafeText` troca ★/—/aspas etc.
+  e descarta emoji/CJK, e a tela avisa quando isso acontece. Compartilhar imagem
+  (PNG da prévia), compartilhar PDF e imprimir.
+- **Deploy**: functions (`resolveSlug`, `deleteQueue`, `deleteAccount`) → rules do
+  Firestore → hosting → APK. Hosting antes das functions deixa `/n/` sem resolver;
+  APK antes das rules falha ao salvar slug.
+- **Limitações**: QR impresso com `/q/{id}` continua válido; QR impresso com
+  `/n/{slug}` para de resolver se o dono trocar/remover o slug (o antigo só é
+  reservado, não redireciona). O Android App Link cobre só `/q/*`, então `/n/`
+  abre no navegador (que redireciona para `/q/`). Goldens não cobrem o cartaz.
+
 ## Tooling (adaptado do OpenCode)
 
 O framework de agentes (product → builder → reviewer → advisor) e as regras de

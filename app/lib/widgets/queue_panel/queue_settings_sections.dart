@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/queue.dart';
 import '../../models/queue_slot.dart';
 import '../../services/group_service.dart';
+import '../../services/join_url.dart';
 import '../../services/queue_service.dart';
 import 'alerts_tile.dart';
 import 'duplicate_queue_tile.dart';
@@ -14,6 +15,7 @@ import 'anonymize_phone_tile.dart';
 import 'queue_limit_tile.dart';
 import 'queue_qr_card.dart';
 import 'queue_schedule_tile.dart';
+import 'queue_slug_tile.dart';
 import 'slots_editor.dart';
 
 const kPanelWideBreakpoint = 900.0;
@@ -50,14 +52,22 @@ class QueueSettingsSections extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final current = queue;
+    final slug = current?.slug;
+    final link = slug == null ? joinUrl : shortUrl(slug);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 16,
       children: [
         QueueQrCard(
           key: qrKey,
+          queueId: queueId,
           queueName: current?.name ?? queueName,
-          joinUrl: joinUrl,
+          joinUrl: link,
+          logoUrl: current?.logoUrl,
+          brandColor: current?.brandColor,
+          posterTitle: current?.posterTitle,
+          canEdit: isOwner,
+          queues: queues,
         ),
         if (isOwner) ...[
           OperatorsTile(queueId: queueId),
@@ -89,6 +99,7 @@ class QueueSettingsSections extends StatelessWidget {
             brandColor: current?.brandColor,
             logoUrl: current?.logoUrl,
           ),
+          QueueSlugTile(queueId: queueId, slug: slug, queues: queues),
           if (current != null) ...[
             EditQueueTile(queue: current, queues: queues),
             DuplicateQueueTile(queue: current, queues: queues, groups: groups),

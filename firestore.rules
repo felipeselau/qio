@@ -176,6 +176,57 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
     }
 
+    function validSlugId(slug) {
+      return slug.matches('^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$')
+        && !(slug in ['admin', 'api', 'app', 'q', 'c', 'w', 'n', 'privacidade', 'termos', 'assets', 'fonts', 'icons']);
+    }
+
+    function validSlugQueueId(id) {
+      return id is string && id.matches('^[A-Za-z0-9_-]{1,128}$');
+    }
+
+    function newSlugDocOk() {
+      let d = request.resource.data;
+      return notAnonymous()
+        && d.keys().hasOnly(['queueId', 'ownerId', 'createdAt'])
+        && d.keys().hasAll(['queueId', 'ownerId', 'createdAt'])
+        && d.ownerId == request.auth.uid
+        && validSlugQueueId(d.queueId)
+        && d.createdAt == request.time
+        && isQueueOwner(d.queueId);
+    }
+
+    function slugReclaimable() {
+      return resource.data.get('released', false) == true
+        && (resource.data.ownerId == request.auth.uid
+          || request.time > resource.data.releasedAt + duration.value(30, 'd'));
+    }
+
+    function slugReleaseOk() {
+      let d = request.resource.data;
+      return resource.data.ownerId == request.auth.uid
+        && resource.data.get('released', false) == false
+        && d.keys().hasOnly(['queueId', 'ownerId', 'createdAt', 'released', 'releasedAt'])
+        && d.released == true
+        && d.releasedAt == request.time
+        && d.queueId == resource.data.queueId
+        && d.ownerId == resource.data.ownerId
+        && d.createdAt == resource.data.createdAt;
+    }
+
+    match /queueSlugs/{slug} {
+      allow get: if signedIn()
+        && (resource == null
+          || resource.data.ownerId == request.auth.uid
+          || resource.data.get('released', false) == true);
+      allow list: if false;
+      allow create: if validSlugId(slug) && newSlugDocOk();
+      allow update: if signedIn()
+        && ((validSlugId(slug) && slugReclaimable() && newSlugDocOk())
+          || slugReleaseOk());
+      allow delete: if false;
+    }
+
     match /queues/{queueId} {
       allow get: if signedIn()
         && (resource.data.ownerId == request.auth.uid || isQueueOperator(queueId));

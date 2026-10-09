@@ -21,6 +21,7 @@ import 'delete_service.dart';
 import 'finish_entry.dart';
 import 'join_url.dart';
 import 'mirror.dart';
+import 'slug.dart';
 import 'waiting_count.dart';
 
 const maxQueuesPerOwner = 20;
@@ -29,6 +30,10 @@ bool isQueueLimitReached(int count) => count >= maxQueuesPerOwner;
 
 class QueueLimitReached implements Exception {
   const QueueLimitReached();
+}
+
+class SlugTaken implements Exception {
+  const SlugTaken();
 }
 
 class QueueService {
@@ -308,6 +313,92 @@ class QueueService {
     await _rtdb.ref('queues/$queueId/meta').update({
       'logoUrl': null,
       'updatedAt': ServerValue.timestamp,
+    });
+  }
+
+  Future<DocumentSnapshot<Map<String, dynamic>>?> _readSlug(String slug) async {
+    try {
+      return await _firestore.collection('queueSlugs').doc(slug).get();
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') return null;
+      rethrow;
+    }
+  }
+
+  SlugAvailability _availabilityOf(
+    DocumentSnapshot<Map<String, dynamic>>? snap,
+  ) {
+    if (snap == null) return SlugAvailability.taken;
+    final data = snap.data();
+    final releasedAt = data?['releasedAt'];
+    return slugAvailability(
+      exists: snap.exists,
+      uid: _uid,
+      now: DateTime.now(),
+      released: data?['released'] == true,
+      ownerId: data?['ownerId'] as String?,
+      releasedAt: releasedAt is Timestamp ? releasedAt.toDate() : null,
+    );
+  }
+
+  Future<void> setSlug(
+    String queueId, {
+    String? currentSlug,
+    String? newSlug,
+  }) async {
+    if (newSlug == currentSlug) return;
+    final slugs = _firestore.collection('queueSlugs');
+    if (newSlug != null &&
+        _availabilityOf(await _readSlug(newSlug)) == SlugAvailability.taken) {
+      throw const SlugTaken();
+    }
+    var releaseCurrent = false;
+    if (currentSlug != null) {
+      final snap = await _readSlug(currentSlug);
+      final data = snap?.data();
+      releaseCurrent =
+          snap != null &&
+          canReleaseSlug(
+            exists: snap.exists,
+            uid: _uid,
+            queueId: queueId,
+            released: data?['released'] == true,
+            ownerId: data?['ownerId'] as String?,
+            docQueueId: data?['queueId'] as String?,
+          );
+    }
+    final batch = _firestore.batch();
+    if (newSlug != null) {
+      batch.set(slugs.doc(newSlug), {
+        'queueId': queueId,
+        'ownerId': _uid,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    }
+    if (releaseCurrent) {
+      batch.update(slugs.doc(currentSlug!), {
+        'released': true,
+        'releasedAt': FieldValue.serverTimestamp(),
+      });
+    }
+    batch.update(_firestore.collection('queues').doc(queueId), {
+      'slug': newSlug ?? FieldValue.delete(),
+    });
+    try {
+      await batch.commit();
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied' &&
+          newSlug != null &&
+          _availabilityOf(await _readSlug(newSlug)) == SlugAvailability.taken) {
+        throw const SlugTaken();
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> updatePosterTitle(String queueId, String? title) async {
+    await _firestore.collection('queues').doc(queueId).update({
+      'posterTitle': title ?? FieldValue.delete(),
     });
   }
 
