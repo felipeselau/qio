@@ -1,0 +1,392 @@
+{
+  "addManualEntry": {
+    "availableMemoryMb": null,
+    "timeoutSeconds": null,
+    "minInstances": null,
+    "maxInstances": null,
+    "ingressSettings": null,
+    "concurrency": null,
+    "serviceAccountEmail": null,
+    "vpc": null,
+    "platform": "gcfv2",
+    "region": [
+      "us-central1"
+    ],
+    "labels": {},
+    "callableTrigger": {}
+  },
+  "applyQueueSchedules": {
+    "availableMemoryMb": null,
+    "timeoutSeconds": 300,
+    "minInstances": null,
+    "maxInstances": null,
+    "ingressSettings": null,
+    "concurrency": null,
+    "serviceAccountEmail": null,
+    "vpc": null,
+    "platform": "gcfv2",
+    "region": [
+      "us-central1"
+    ],
+    "labels": {},
+    "scheduleTrigger": {
+      "schedule": "every 5 minutes",
+      "retryConfig": {},
+      "timeZone": "UTC"
+    }
+  },
+  "deleteAccount": {
+    "availableMemoryMb": 512,
+    "timeoutSeconds": 540,
+    "minInstances": null,
+    "maxInstances": null,
+    "ingressSettings": null,
+    "concurrency": null,
+    "serviceAccountEmail": null,
+    "vpc": null,
+    "platform": "gcfv2",
+    "region": [
+      "us-central1"
+    ],
+    "labels": {},
+    "callableTrigger": {}
+  },
+  "deleteQueue": {
+    "availableMemoryMb": 512,
+    "timeoutSeconds": 540,
+    "minInstances": null,
+    "maxInstances": null,
+    "ingressSettings": null,
+    "concurrency": null,
+    "serviceAccountEmail": null,
+    "vpc": null,
+    "platform": "gcfv2",
+    "region": [
+      "us-central1"
+    ],
+    "labels": {},
+    "callableTrigger": {}
+  },
+  "eraseCustomerData": {
+    "availableMemoryMb": 512,
+    "timeoutSeconds": 300,
+    "minInstances": null,
+    "maxInstances": null,
+    "ingressSettings": null,
+    "concurrency": null,
+    "serviceAccountEmail": null,
+    "vpc": null,
+    "platform": "gcfv2",
+    "region": [
+      "us-central1"
+    ],
+    "labels": {},
+    "callableTrigger": {}
+  },
+  "evaluateQueueAlerts": {
+    "availableMemoryMb": null,
+    "timeoutSeconds": 300,
+    "minInstances": null,
+    "maxInstances": null,
+    "ingressSettings": null,
+    "concurrency": null,
+    "serviceAccountEmail": null,
+    "vpc": null,
+    "platform": "gcfv2",
+    "region": [
+      "us-central1"
+    ],
+    "labels": {},
+    "scheduleTrigger": {
+      "schedule": "every 5 minutes",
+      "retryConfig": {},
+      "timeZone": "UTC"
+    }
+  },
+  "expireStaleEntries": {
+    "availableMemoryMb": null,
+    "timeoutSeconds": 540,
+    "minInstances": null,
+    "maxInstances": null,
+    "ingressSettings": null,
+    "concurrency": null,
+    "serviceAccountEmail": null,
+    "vpc": null,
+    "platform": "gcfv2",
+    "region": [
+      "us-central1"
+    ],
+    "labels": {},
+    "scheduleTrigger": {
+      "schedule": "every 15 minutes",
+      "retryConfig": {},
+      "timeZone": "UTC"
+    }
+  },
+  "exportCustomerData": {
+    "availableMemoryMb": 512,
+    "timeoutSeconds": 300,
+    "minInstances": null,
+    "maxInstances": null,
+    "ingressSettings": null,
+    "concurrency": null,
+    "serviceAccountEmail": null,
+    "vpc": null,
+    "platform": "gcfv2",
+    "region": [
+      "us-central1"
+    ],
+    "labels": {},
+    "callableTrigger": {}
+  },
+  "findCustomerData": {
+    "availableMemoryMb": 512,
+    "timeoutSeconds": 300,
+    "minInstances": null,
+    "maxInstances": null,
+    "ingressSettings": null,
+    "concurrency": null,
+    "serviceAccountEmail": null,
+    "vpc": null,
+    "platform": "gcfv2",
+    "region": [
+      "us-central1"
+    ],
+    "labels": {},
+    "callableTrigger": {}
+  },
+  "joinQueue": {
+    "availableMemoryMb": null,
+    "timeoutSeconds": null,
+    "minInstances": null,
+    "maxInstances": null,
+    "ingressSettings": null,
+    "concurrency": null,
+    "serviceAccountEmail": null,
+    "vpc": null,
+    "platform": "gcfv2",
+    "region": [
+      "us-central1"
+    ],
+    "labels": {},
+    "callableTrigger": {}
+  },
+  "onEntryCalled": {
+    "availableMemoryMb": null,
+    "timeoutSeconds": null,
+    "minInstances": null,
+    "maxInstances": null,
+    "ingressSettings": null,
+    "concurrency": null,
+    "serviceAccountEmail": null,
+    "vpc": null,
+    "platform": "gcfv2",
+    "region": [
+      "us-central1"
+    ],
+    "labels": {},
+    "eventTrigger": {
+      "eventType": "google.firebase.database.ref.v1.written",
+      "eventFilters": {},
+      "eventFilterPathPatterns": {
+        "ref": "queues/{queueId}/entries/{entryId}",
+        "instance": "*"
+      },
+      "retry": false
+    }
+  },
+  "onEntryJoined": {
+    "availableMemoryMb": null,
+    "timeoutSeconds": null,
+    "minInstances": null,
+    "maxInstances": null,
+    "ingressSettings": null,
+    "concurrency": null,
+    "serviceAccountEmail": null,
+    "vpc": null,
+    "platform": "gcfv2",
+    "region": [
+      "us-central1"
+    ],
+    "labels": {},
+    "eventTrigger": {
+      "eventType": "google.firebase.database.ref.v1.created",
+      "eventFilters": {},
+      "eventFilterPathPatterns": {
+        "ref": "queues/{queueId}/entries/{entryId}",
+        "instance": "*"
+      },
+      "retry": false
+    }
+  },
+  "onQueueAdvanced": {
+    "availableMemoryMb": null,
+    "timeoutSeconds": null,
+    "minInstances": null,
+    "maxInstances": null,
+    "ingressSettings": null,
+    "concurrency": null,
+    "serviceAccountEmail": null,
+    "vpc": null,
+    "platform": "gcfv2",
+    "region": [
+      "us-central1"
+    ],
+    "labels": {},
+    "eventTrigger": {
+      "eventType": "google.firebase.database.ref.v1.written",
+      "eventFilters": {},
+      "eventFilterPathPatterns": {
+        "ref": "queues/{queueId}/entries/{entryId}",
+        "instance": "*"
+      },
+      "retry": false
+    }
+  },
+  "onQueueOpened": {
+    "availableMemoryMb": null,
+    "timeoutSeconds": null,
+    "minInstances": null,
+    "maxInstances": null,
+    "ingressSettings": null,
+    "concurrency": null,
+    "serviceAccountEmail": null,
+    "vpc": null,
+    "platform": "gcfv2",
+    "region": [
+      "us-central1"
+    ],
+    "labels": {},
+    "eventTrigger": {
+      "eventType": "google.firebase.database.ref.v1.written",
+      "eventFilters": {},
+      "eventFilterPathPatterns": {
+        "ref": "queues/{queueId}/meta/status",
+        "instance": "*"
+      },
+      "retry": true
+    }
+  },
+  "purgeOldHistory": {
+    "availableMemoryMb": null,
+    "timeoutSeconds": 540,
+    "minInstances": null,
+    "maxInstances": null,
+    "ingressSettings": null,
+    "concurrency": null,
+    "serviceAccountEmail": null,
+    "vpc": null,
+    "platform": "gcfv2",
+    "region": [
+      "us-central1"
+    ],
+    "labels": {},
+    "scheduleTrigger": {
+      "schedule": "every day 03:30",
+      "retryConfig": {},
+      "timeZone": "America/Sao_Paulo"
+    }
+  },
+  "reconcileWaitingCounts": {
+    "availableMemoryMb": null,
+    "timeoutSeconds": null,
+    "minInstances": null,
+    "maxInstances": null,
+    "ingressSettings": null,
+    "concurrency": null,
+    "serviceAccountEmail": null,
+    "vpc": null,
+    "platform": "gcfv2",
+    "region": [
+      "us-central1"
+    ],
+    "labels": {},
+    "scheduleTrigger": {
+      "schedule": "every 15 minutes",
+      "retryConfig": {},
+      "timeZone": "UTC"
+    }
+  },
+  "resolveSlug": {
+    "availableMemoryMb": null,
+    "timeoutSeconds": null,
+    "minInstances": null,
+    "maxInstances": null,
+    "ingressSettings": null,
+    "concurrency": null,
+    "serviceAccountEmail": null,
+    "vpc": null,
+    "platform": "gcfv2",
+    "region": [
+      "us-central1"
+    ],
+    "labels": {},
+    "callableTrigger": {}
+  },
+  "submitFeedback": {
+    "availableMemoryMb": null,
+    "timeoutSeconds": null,
+    "minInstances": null,
+    "maxInstances": null,
+    "ingressSettings": null,
+    "concurrency": null,
+    "serviceAccountEmail": null,
+    "vpc": null,
+    "platform": "gcfv2",
+    "region": [
+      "us-central1"
+    ],
+    "labels": {},
+    "callableTrigger": {}
+  },
+  "syncPublicTicket": {
+    "availableMemoryMb": null,
+    "timeoutSeconds": null,
+    "minInstances": null,
+    "maxInstances": null,
+    "ingressSettings": null,
+    "concurrency": null,
+    "serviceAccountEmail": null,
+    "vpc": null,
+    "platform": "gcfv2",
+    "region": [
+      "us-central1"
+    ],
+    "labels": {},
+    "eventTrigger": {
+      "eventType": "google.firebase.database.ref.v1.written",
+      "eventFilters": {},
+      "eventFilterPathPatterns": {
+        "ref": "queues/{queueId}/entries/{entryId}",
+        "instance": "*"
+      },
+      "retry": false
+    }
+  },
+  "updateServiceEstimate": {
+    "availableMemoryMb": null,
+    "timeoutSeconds": null,
+    "minInstances": null,
+    "maxInstances": null,
+    "ingressSettings": null,
+    "concurrency": null,
+    "serviceAccountEmail": null,
+    "vpc": null,
+    "platform": "gcfv2",
+    "region": [
+      "us-central1"
+    ],
+    "labels": {},
+    "eventTrigger": {
+      "eventType": "google.cloud.firestore.document.v1.created",
+      "eventFilters": {
+        "database": "(default)",
+        "namespace": "(default)"
+      },
+      "eventFilterPathPatterns": {
+        "document": "queues/{queueId}/history/{entryId}"
+      },
+      "retry": false
+    }
+  }
+}

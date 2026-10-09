@@ -252,7 +252,7 @@ modelos; ainda sem dados): `docs/piloto/`.
   `entries/{id}/order = now` e `skips++` (a senha não muda). `public/{id}` agora é
   `{ticket, status, order}` (`functions/src/ticket.js`); o web calcula a posição
   com `positionInQueue` e cai para a comparação por senha se `order` faltar.
-- "Chamar de novo" grava `recalledAt = now` e `recalls++`; `onEntryCalled`
+- "Chamar de novo" grava `recalledAt = now` e `recalls++`; `syncPublicTicket` (passo `called`)
   reenvia o push quando `recalledAt` muda (`shouldRenotify`) e o web repete
   som/vibração. "Chamar agora" reaproveita `_claimEntry`.
 - Só dono/operador escrevem `order/recalls/skips/recalledAt` (o cliente tem esses
@@ -425,7 +425,7 @@ modelos; ainda sem dados): `docs/piloto/`.
   Rules: `manual` booleano permitido; o create exige `uid` **ou** `manual == true`; o
   cliente não escreve em entry sem `uid` e `manual` é imutável para ele. Dono/operador
   já tinham write total em `entries`.
-- `syncPublicTicket` espelha normalmente em `public/`; `onEntryJoined` ignora entries
+- `syncPublicTicket` espelha normalmente em `public/`; o passo `joined` do `syncPublicTicket` ignora entries
   manuais (não notifica quem acabou de adicionar). History/métricas não usam `uid`.
   Sem cliente, não há `left`, push nem feedback.
 - `enforceAppCheck: false` é **fixo e deliberado** nesta callable (o app Flutter não usa
@@ -599,16 +599,23 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   `onQueueAdvanced`). Os passos de push estão em `handlers/push.js` e mantêm os mesmos
   guards e logs. `onEntryJoined`, `onEntryCalled` e `onQueueAdvanced` **deixaram de ser
   exports**: mencionados neste guia e em `docs/` como nome de lógica, não de função deployada.
+- **NUNCA ligar `retry: true` em `syncPublicTicket`**: a reentrega repetiria os passos `called` e
+  `joined` (push duplicado; `joined` não tem dedupe) e reaplicaria `sync`. O roteador relança o
+  erro de um passo só para ele ficar visível no log.
 - Invocações por escrita em `entries/{id}`: **4 → 1** (contagem de triggers registrados:
   `test/exports.test.js` falha se mais de uma função escutar o path). Cada escrita
   de entry (join, chamada, `fcmToken`, `order`, `left`...) custava 4 invocações, a maioria
   retornando `null` logo no início.
 - Verificação: `node functions/scripts/dump-exports.js <arquivo.json>` grava nome e `__endpoint`
   (região, timeout, memória, trigger, retry) de cada export; compare com um dump da `main`
-  via `diff`. Na migração a única diferença foi a remoção das 3 funções acima.
+  via `diff`. Dumps versionados: `functions/scripts/exports-before.main.json` (main antes da #165) e
+  `exports-after.json`. Na migração a única diferença foi a remoção das 3 funções acima.
 - **Deploy da consolidação**: `firebase deploy --only functions` com `--force` (o CLI pede
   confirmação para apagar `onEntryCalled`, `onEntryJoined`, `onQueueAdvanced`; sem TTY o deploy
-  falha sem `--force`). Faça num único deploy: o `syncPublicTicket` novo já cobre os
+  falha sem `--force`; `.github/scripts/deploy-target.sh` passa `--force` só no deploy real de
+  `functions`/`all-ordered`, e `--force` apaga qualquer função ausente do código). Alertas por
+  `function_name` das três antigas devem apontar para `syncPublicTicket` (mensagens `logError`
+  preservadas). Faça num único deploy: o `syncPublicTicket` novo já cobre os
   quatro caminhos, então entre o update dele e a remoção das antigas pode haver segundos com
   push duplicado de "É a sua vez" (o aviso "Você é o próximo" é protegido por
   `nextNotifiedAt`). Deploy parcial `--only functions:syncPublicTicket` **não** remove as
@@ -689,7 +696,7 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   `FIREBASE_TOKEN`. Não há staging. Setup, ordem, rollback, o que o CI não faz e ações manuais acumuladas: `docs/deploy.md`.
   O CI usa `firebase-tools` fixo (15.33.0) e o deploy reaproveita o artefato `web-dist`
   do job `web`.
-- Projeto no plano **Blaze** desde 01/10/2026; `onEntryCalled` publicada. A
+- Projeto no plano **Blaze** desde 01/10/2026; o roteador `syncPublicTicket` (que envia o push de "é a sua vez", antes `onEntryCalled`) publicado. A
   `VITE_VAPID_KEY` já está nas Actions variables e no bundle publicado. Falta o
   teste manual do push em segundo plano (ação do dono, checklist em
   `docs/FCM.md`).
@@ -759,13 +766,13 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
 - **Dono:** o app registra o token em `owners/{uid}/devices/{token}`
   (`PushService`, `{token, platform, lang, updatedAt}`; rules só do próprio uid)
   depois do opt-in; `owners/{uid}.notifyNewEntries` (padrão ligado) desliga. Sair
-  da conta apaga o token. Só mobile. A function `onEntryJoined` avisa dono +
+  da conta apaga o token. Só mobile. O passo `joined` do `syncPublicTicket` (antes `onEntryJoined`) avisa dono +
   `operatorUids`, agrupa por idioma, usa `collapseKey/tag = queueId` e apaga
   tokens inválidos (`functions/src/push.js`). Canal Android `qio_new_entries`
   criado no `MainActivity`; permissão `POST_NOTIFICATIONS`; o toque abre o painel.
 - **Cliente (web):** o botão "Ativar aviso" na tela da senha pede a permissão e
-  grava `fcmToken` na entry; `joinQueue` grava `lang`; `onEntryCalled` e
-  `onQueueAdvanced` ("Você é o próximo", uma vez por `nextNotifiedAt`) enviam em
+  grava `fcmToken` na entry; `joinQueue` grava `lang`; os passos `called` e
+  `advanced` do `syncPublicTicket` ("Você é o próximo", uma vez por `nextNotifiedAt`) enviam em
   pt/en/es (`functions/src/webpush.js`). Precisa de `VITE_VAPID_KEY` no build
   (variável do GitHub Actions + `web/.env.local`). iOS: só com a PWA instalada.
   Detalhes em `docs/FCM.md`.

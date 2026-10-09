@@ -7,7 +7,7 @@
   antes, o token é registrado sozinho; se foi negada, a página mostra um texto.
 - `joinQueue` grava o idioma (`lang`) na entry e as notificações saem em
   pt/en/es (`functions/src/webpush.js`).
-- `onQueueAdvanced`: quando alguém sai da espera (chamado, saiu, removido), o novo
+- Passo `advanced` do `syncPublicTicket` (antes `onQueueAdvanced`): quando alguém sai da espera (chamado, saiu, removido), o novo
   primeiro da fila recebe **"Você é o próximo"** uma única vez (`nextNotifiedAt`).
 - O service worker só desenha a notificação quando o payload não traz
   `notification` (evita duplicar o aviso que o FCM já exibe).

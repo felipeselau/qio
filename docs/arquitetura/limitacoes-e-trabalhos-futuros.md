@@ -20,7 +20,7 @@ Fontes: [`../qualidade.md`](../qualidade.md) §5, `CLAUDE.md`, a issue #96 (back
 
 - **Dual-write** Firestore + RTDB sem transação entre os dois; divergência possível até o próximo `ensureMirror`.
 - Contagem de `maxWaiting` e de vagas por slot sem transação (passa 1 a 2 vagas).
-- Triggers separados sobre `entries` (`syncPublicTicket`, `onEntryCalled`, `onQueueAdvanced`) e `functions/index.js` e `QueuePage.tsx` grandes (#165).
+- `QueuePage.tsx` grande (#165). Os triggers de `entries` já foram consolidados em `syncPublicTicket`, mas o passo `advanced` ainda lê todas as entries `waiting` a cada saída da espera.
 - Reserva da chamada e avanço de `meta/serving` são transações separadas.
 - Slots diários em fuso fixo `America/Sao_Paulo`, sem data nem reagendamento.
 

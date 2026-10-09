@@ -59,3 +59,46 @@ test('configs preservadas: timeouts, memoria e retry', () => {
   assert.equal(ep('onQueueOpened').eventTrigger.retry, true);
   assert.equal(ep('syncPublicTicket').eventTrigger.retry, false);
 });
+
+test('enforceAppCheck por callable: mesma origem (isEnforced) do original', () => {
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const { isEnforced } = require('../src/appcheck');
+  const read = (file) =>
+    fs.readFileSync(path.join(__dirname, '..', 'src', 'handlers', `${file}.js`), 'utf8');
+
+  const viaIsEnforced = {
+    joinQueue: 'join',
+    submitFeedback: 'feedback',
+    resolveSlug: 'slug',
+    deleteQueue: 'delete',
+    deleteAccount: 'delete',
+  };
+  for (const [name, file] of Object.entries(viaIsEnforced)) {
+    assert.match(read(file), new RegExp(`enforceAppCheck: isEnforced\\('${name}'\\)`), name);
+  }
+
+  const dsr = read('dsr');
+  assert.match(dsr, /enforceAppCheck: isEnforced\(name\)/);
+  for (const name of ['findCustomerData', 'exportCustomerData', 'eraseCustomerData']) {
+    assert.match(dsr, new RegExp(`dsrCallable\\('${name}'`), name);
+  }
+
+  const manual = read('manual');
+  assert.match(manual, /enforceAppCheck: false/);
+  assert.doesNotMatch(manual, /isEnforced/);
+
+  const on = { ENFORCE_APP_CHECK: 'true' };
+  assert.equal(isEnforced('joinQueue', on), true);
+  assert.equal(isEnforced('submitFeedback', on), true);
+  assert.equal(isEnforced('resolveSlug', on), true);
+  for (const name of [
+    'deleteQueue',
+    'deleteAccount',
+    'findCustomerData',
+    'exportCustomerData',
+    'eraseCustomerData',
+  ]) {
+    assert.equal(isEnforced(name, on), false, `${name} nao herda ENFORCE_APP_CHECK`);
+  }
+});

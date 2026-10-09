@@ -268,9 +268,16 @@ Conferir antes se já foi feito: `firebase functions:list --project qio-app`.
       `public`, push de nova entry, "é a sua vez" e "você é o próximo"),
       `reconcileWaitingCounts`, `purgeOldHistory`, `addManualEntry`.
       Um deploy completo de `functions` cobre todas.
-- [ ] Consolidação dos triggers de entries (#165): `firebase deploy --only functions --force`
-      remove `onEntryCalled`, `onEntryJoined` e `onQueueAdvanced` (ver CLAUDE.md, "Estrutura
-      das functions"). Faça num único deploy completo, não com `--only` parcial.
+- [ ] Consolidação dos triggers de entries (#165): o deploy completo de `functions` apaga
+      `onEntryCalled`, `onEntryJoined` e `onQueueAdvanced` (ver CLAUDE.md, "Estrutura das
+      functions"). Sem TTY o CLI recusa apagar funções; por isso `deploy-target.sh` passa
+      `--force` **só** no deploy real (não no dry-run) dos alvos `functions` e `all-ordered`,
+      nunca em rules/hosting/índices. Atenção: `--force` remove do projeto **qualquer** função
+      que não exista mais no código, não só estas três. A remoção das 3 antigas é um passo
+      único, no primeiro deploy após o merge. Durante a transição (segundos) o push de "nova
+      entry" (`onEntryJoined` não tem dedupe) e o de "é a sua vez" podem chegar duplicados;
+      "você é o próximo" é protegido por `nextNotifiedAt`. Não use `--only functions:syncPublicTicket`
+      isolado (as antigas continuariam e duplicariam push até serem apagadas).
 
 ### Rules e índices
 
