@@ -136,6 +136,26 @@ void main() {
     expect(find.byType(SnackBar), findsOneWidget);
   });
 
+  testWidgets('phone export asks for confirmation and cancel does nothing', (
+    tester,
+  ) async {
+    await pumpApp(tester, screen(withData()), size: tall);
+    await tick(tester);
+    await tester.tap(find.byIcon(Icons.file_download_outlined));
+    await tick(tester);
+    expect(find.text('Exportar CSV'), findsOneWidget);
+    expect(find.text('Exportar CSV com telefone'), findsOneWidget);
+    expect(find.text('Exportar PDF com telefone'), findsOneWidget);
+    await tester.tap(find.text('Exportar CSV com telefone'));
+    await tick(tester);
+    expect(find.text('Incluir telefone?'), findsOneWidget);
+    expect(find.textContaining('LGPD'), findsOneWidget);
+    await tester.tap(find.text('Cancelar'));
+    await tick(tester);
+    expect(find.text('Incluir telefone?'), findsNothing);
+    expect(find.byType(SnackBar), findsNothing);
+  });
+
   testWidgets('renders in English dark at 320 width', (tester) async {
     await pumpApp(
       tester,

@@ -76,10 +76,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
   }
 
-  Future<void> _exportCsv() => _export(() async {
+  Future<void> _exportCsv({bool includePhone = false}) => _export(() async {
     final l10n = AppLocalizations.of(context);
     final bytes = Uint8List.fromList(
-      utf8.encode(buildHistoryCsv(l10n, _filtered)),
+      utf8.encode(buildHistoryCsv(l10n, _filtered, includePhone: includePhone)),
     );
     final fileName = '$_baseName.csv';
     await SharePlus.instance.share(
@@ -90,15 +90,55 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   });
 
-  Future<void> _exportPdf() => _export(() async {
+  Future<void> _exportPdf({bool includePhone = false}) => _export(() async {
     final bytes = await buildHistoryPdf(
       l10n: AppLocalizations.of(context),
       queueName: widget.queueName,
       entries: _filtered,
       generatedAt: DateTime.now(),
+      includePhone: includePhone,
     );
     await Printing.sharePdf(bytes: bytes, filename: '$_baseName.pdf');
   });
+
+  Future<void> _onExportSelected(String value) async {
+    switch (value) {
+      case 'csv':
+        await _exportCsv();
+      case 'pdf':
+        await _exportPdf();
+      case 'csv_phone':
+      case 'pdf_phone':
+        if (!await _confirmPhoneExport() || !mounted) return;
+        if (value == 'csv_phone') {
+          await _exportCsv(includePhone: true);
+        } else {
+          await _exportPdf(includePhone: true);
+        }
+    }
+  }
+
+  Future<bool> _confirmPhoneExport() async {
+    final l10n = AppLocalizations.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.exportPhoneTitle),
+        content: Text(l10n.exportPhoneWarning),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.exportPhoneConfirm),
+          ),
+        ],
+      ),
+    );
+    return ok ?? false;
+  }
 
   @override
   void initState() {
@@ -135,10 +175,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
             tooltip: l10n.exportTooltip,
             icon: const Icon(Icons.file_download_outlined),
             enabled: !_exporting,
-            onSelected: (v) => v == 'csv' ? _exportCsv() : _exportPdf(),
+            onSelected: _onExportSelected,
             itemBuilder: (_) => [
               PopupMenuItem(value: 'csv', child: Text(l10n.exportCsv)),
               PopupMenuItem(value: 'pdf', child: Text(l10n.exportPdf)),
+              const PopupMenuDivider(),
+              PopupMenuItem(
+                value: 'csv_phone',
+                child: Text(l10n.exportCsvWithPhone),
+              ),
+              PopupMenuItem(
+                value: 'pdf_phone',
+                child: Text(l10n.exportPdfWithPhone),
+              ),
             ],
           ),
         ],

@@ -572,5 +572,12 @@
   "@callPhoneTooltip": {"placeholders": {"name": {"type": "String"}}},
   "callPhoneFailed": "Não foi possível abrir o discador",
   "privacyPolicy": "Política de privacidade",
-  "termsOfUse": "Termos de uso"
+  "termsOfUse": "Termos de uso",
+  "exportCsvWithPhone": "Exportar CSV com telefone",
+  "exportPdfWithPhone": "Exportar PDF com telefone",
+  "exportPhoneTitle": "Incluir telefone?",
+  "exportPhoneWarning": "O telefone é dado pessoal (LGPD). Por padrão a exportação não o inclui. Inclua apenas se precisar e proteja o arquivo.",
+  "exportPhoneConfirm": "Incluir telefone",
+  "anonymizePhoneTitle": "Não guardar telefone no histórico",
+  "anonymizePhoneHint": "Ao concluir um atendimento, o telefone não é salvo no histórico."
 }

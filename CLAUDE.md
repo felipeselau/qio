@@ -294,6 +294,28 @@ conhecidas: `docs/qualidade.md`.
   funcionando. APK novo + rules antigas: só falta o endurecimento dos convites.
   As rules não quebram nenhum APK.
 
+## Retenção e anonimização
+
+- Política efetiva: `history` e `feedback` com mais de **180 dias** são apagados. A function
+  agendada `purgeOldHistory` (diária 03:30 America/Sao_Paulo, `functions/src/retention.js`)
+  percorre as filas (ignora `deleting`) e apaga em lotes de 450, paginando com
+  `where(f,'<',cutoff).orderBy(f).limit(450)`: `history.finishedAt` e `feedback.createdAt`.
+  Prazo por fila em `queues/{id}.retentionDays` (int 30-730; ausente/0/inválido = 180).
+  Sem índice composto novo (usa o índice single-field automático). Idempotente; loga só
+  contagens (`event: purgeOldHistory`) e `logError` por fila, sem PII.
+- `queues/{id}.anonymizePhone` (bool, tile "Não guardar telefone no histórico" nas
+  configurações): `_archiveEntry` grava `phone: null` no history. Só Firestore (sem espelho
+  RTDB); vale para arquivamentos novos. O `left` arquivado pelo trigger Admin continua com
+  telefone (expurgo cobre).
+- Exportação CSV/PDF do Histórico **sem telefone por padrão**; os itens "Exportar ... com
+  telefone" pedem confirmação com aviso LGPD. `metrics_export.dart` nunca exporta telefone.
+- Rules do Firestore: `retentionDays` e `anonymizePhone` só são validados quando mudam.
+  O update de `queues` valida tudo por campo alterado (`queueUpdateFieldsOk`, um único
+  `diff`), inclusive `mode`/`slots`/`alerts`/`alertState`, por causa do limite de 1000
+  expressões; não volte a validar `slots` em todo update.
+- Deploy: `--only functions:purgeOldHistory` → `--only firestore:rules` → APK. Sem a
+  function nada é apagado; as rules novas só adicionam validação dos dois campos.
+
 ## Operadores
 
 - **Convite**: `operatorInvites/{code}` (6 chars, validade padrão 24 h) é a fonte

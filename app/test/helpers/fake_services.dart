@@ -258,6 +258,11 @@ class FakeQueueService implements QueueService {
   }
 
   @override
+  Future<void> updateAnonymizePhone(String queueId, bool value) async {
+    calls.add('anonymize:$queueId:$value');
+  }
+
+  @override
   Future<Queue> duplicateQueue(String queueId, {required String name}) async {
     calls.add('duplicate:$queueId:$name');
     duplicatedName = name;

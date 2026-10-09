@@ -1653,4 +1653,27 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get termsOfUse => 'Termos de uso';
+
+  @override
+  String get exportCsvWithPhone => 'Exportar CSV com telefone';
+
+  @override
+  String get exportPdfWithPhone => 'Exportar PDF com telefone';
+
+  @override
+  String get exportPhoneTitle => 'Incluir telefone?';
+
+  @override
+  String get exportPhoneWarning =>
+      'O telefone é dado pessoal (LGPD). Por padrão a exportação não o inclui. Inclua apenas se precisar e proteja o arquivo.';
+
+  @override
+  String get exportPhoneConfirm => 'Incluir telefone';
+
+  @override
+  String get anonymizePhoneTitle => 'Não guardar telefone no histórico';
+
+  @override
+  String get anonymizePhoneHint =>
+      'Ao concluir um atendimento, o telefone não é salvo no histórico.';
 }

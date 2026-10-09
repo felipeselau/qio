@@ -524,5 +524,12 @@
   "@callPhoneTooltip": {"placeholders": {"name": {"type": "String"}}},
   "callPhoneFailed": "Could not open the dialer",
   "privacyPolicy": "Privacy policy",
-  "termsOfUse": "Terms of use"
+  "termsOfUse": "Terms of use",
+  "exportCsvWithPhone": "Export CSV with phone",
+  "exportPdfWithPhone": "Export PDF with phone",
+  "exportPhoneTitle": "Include phone number?",
+  "exportPhoneWarning": "The phone number is personal data (LGPD). Exports leave it out by default. Include it only if you need it and protect the file.",
+  "exportPhoneConfirm": "Include phone",
+  "anonymizePhoneTitle": "Do not keep phone in history",
+  "anonymizePhoneHint": "When a service is completed, the phone number is not saved to the history."
 }

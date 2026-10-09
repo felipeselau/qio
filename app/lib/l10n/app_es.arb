@@ -524,5 +524,12 @@
   "@callPhoneTooltip": {"placeholders": {"name": {"type": "String"}}},
   "callPhoneFailed": "No se pudo abrir el marcador",
   "privacyPolicy": "Política de privacidad",
-  "termsOfUse": "Términos de uso"
+  "termsOfUse": "Términos de uso",
+  "exportCsvWithPhone": "Exportar CSV con teléfono",
+  "exportPdfWithPhone": "Exportar PDF con teléfono",
+  "exportPhoneTitle": "¿Incluir teléfono?",
+  "exportPhoneWarning": "El teléfono es un dato personal (LGPD). Por defecto la exportación no lo incluye. Inclúyelo solo si lo necesitas y protege el archivo.",
+  "exportPhoneConfirm": "Incluir teléfono",
+  "anonymizePhoneTitle": "No guardar el teléfono en el historial",
+  "anonymizePhoneHint": "Al terminar una atención, el teléfono no se guarda en el historial."
 }

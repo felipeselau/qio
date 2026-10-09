@@ -10,6 +10,7 @@ import 'edit_queue_tile.dart';
 import 'operators_tile.dart';
 import 'queue_brand_tile.dart';
 import 'queue_group_tile.dart';
+import 'anonymize_phone_tile.dart';
 import 'queue_limit_tile.dart';
 import 'queue_qr_card.dart';
 import 'queue_schedule_tile.dart';
@@ -63,6 +64,11 @@ class QueueSettingsSections extends StatelessWidget {
           QueueLimitTile(
             queueId: queueId,
             maxWaiting: current?.maxWaiting ?? 0,
+          ),
+          AnonymizePhoneTile(
+            queueId: queueId,
+            value: current?.anonymizePhone ?? false,
+            queues: queues,
           ),
           QueueSlotsTile(
             queueId: queueId,

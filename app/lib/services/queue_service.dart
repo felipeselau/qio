@@ -319,6 +319,21 @@ class QueueService {
     });
   }
 
+  Future<void> updateAnonymizePhone(String queueId, bool value) async {
+    await _firestore.collection('queues').doc(queueId).update({
+      'anonymizePhone': value,
+    });
+  }
+
+  Future<bool> _shouldAnonymizePhone(String queueId) async {
+    try {
+      final snap = await _firestore.collection('queues').doc(queueId).get();
+      return snap.data()?['anonymizePhone'] == true;
+    } on FirebaseException {
+      return false;
+    }
+  }
+
   Future<void> updateModeAndSlots(
     String queueId,
     QueueMode mode,
@@ -640,6 +655,7 @@ class QueueService {
     QueueEntry entry,
     EntryStatus result,
   ) async {
+    final anonymize = await _shouldAnonymizePhone(queueId);
     try {
       await _firestore
           .collection('queues')
@@ -649,7 +665,7 @@ class QueueService {
           .set({
             'ticket': entry.ticket,
             'name': entry.name,
-            'phone': entry.phone,
+            'phone': anonymize ? null : entry.phone,
             'result': result.value,
             'joinedAt': Timestamp.fromDate(entry.joinedAt),
             'calledAt': entry.calledAt != null
