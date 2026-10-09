@@ -94,7 +94,7 @@
               ".validate": "newData.isNumber()"
             },
             "calledAt": {
-              ".validate": "newData.isNumber()"
+              ".validate": "newData.isNumber() && newData.parent().child('status').exists()"
             },
             "operatorId": {
               ".validate": "newData.isString()"

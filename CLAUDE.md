@@ -262,6 +262,19 @@ modelos; ainda sem dados): `docs/piloto/`.
   (seguro). `finishedAt` segue `serverTimestamp`: o tempo de atendimento inclui até
   ~5 s da janela de desfazer (viés pequeno e conhecido; as rules do history não
   validam `finishedAt` e relógio de cliente distorceria ordenação/estimativa).
+- `calledAt` usa o relógio do **servidor estimado**: `_claimEntry` lê
+  `.info/serverTimeOffset` (timeout 2 s, offset 0 se falhar) e a transação de claim por
+  status grava `calledAt = DateTime.now() + offset` (`serverNowMs`/`claimedEntryData`,
+  `services/claim_entry.dart`). Erro < 1 RTT, independente do relógio do aparelho; sem
+  segundo write, sem releitura. Não se usa `ServerValue.timestamp` dentro do
+  `runTransaction` (suporte nativo não verificado). O `_archiveEntry` converte o ms para
+  `Timestamp` (`historyTimestamp`). Espera e atendimento (`calledAt − joinedAt`,
+  `finishedAt − calledAt`) deixam de depender do relógio do operador. Rules:
+  `entries/*/calledAt` exige número e `status` existente na entry (impede nó fantasma).
+  `shouldRenotify` ignora `calledAt`. O `CalledTimer` do web compara `calledAt` com
+  `Date.now()` do cliente (clamp em 0 via `elapsedSince`): relógio errado do cliente
+  distorce só o contador na tela. Deploy: rules do RTDB antes do APK; APK antigo segue
+  compatível com as rules novas (grava `calledAt` numérico junto do `status`).
 - `_finishEntry`: `get` valida `called` → `_archiveEntry` → transação de status
   (idempotente; `null` devolve `success(null)` p/ forçar round-trip com cache
   frio) → `remove`. Archive falho deixa a entry `called` (repetível). Corrida
