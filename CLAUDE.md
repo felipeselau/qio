@@ -18,6 +18,7 @@ entra pela web sem instalar nada. TCC.
 npm ci
 npm run dev        # dev server
 npm run build      # tsc -b && vite build  (roda no CI)
+npm test           # vitest (roda no CI)
 npm run lint       # oxlint
 ```
 
@@ -59,7 +60,7 @@ volte a subir functions junto das rules.
 callable `addManualEntry` falhava com `functions/internal` no CI (teste "teto absoluto").
 
 Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
-`~/.claude/CLAUDE.md`). Não há testes em `web/`. Contagem de testes, cobertura e limitações
+`~/.claude/CLAUDE.md`). Em `web/` há testes vitest (`npm test`, `npm run test:coverage`); o CI roda lint, testes e build. Contagem de testes, cobertura e limitações
 conhecidas: `docs/qualidade.md`. Kit do piloto em estabelecimento real (plano, checklist,
 modelos; ainda sem dados): `docs/piloto/`.
 
@@ -144,7 +145,7 @@ modelos; ainda sem dados): `docs/piloto/`.
   ex. `GOOGLE_APPLICATION_CREDENTIALS`/`GOOGLE_CLOUD_PROJECT=qio-app`).
 - **Ordem de deploy**: functions → backfill → hosting → database rules. Rules por
   último, senão o web antigo perde a escrita/leitura antes de o novo estar no ar.
-  APK v1.1.0 (dono/operador) continua compatível com as rules novas. Web antigo em
+  APK antigo (dono/operador) continua compatível com as rules do join (conferir a ordem de deploy de cada feature). Web antigo em
   cache falha ao entrar na fila até recarregar.
 
 ## Reivindicar a própria senha (#145)

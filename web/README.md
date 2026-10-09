@@ -15,7 +15,7 @@ npm run build          # tsc -b && vite build (roda no CI)
 npm run lint           # oxlint
 ```
 
-Não há testes automatizados neste módulo; o CI roda apenas `npm run build`.
+Testes: `npm test` (vitest, lógica pura e máquina de fases); o CI roda lint, testes e build.
 
 ## Variáveis de ambiente
 
