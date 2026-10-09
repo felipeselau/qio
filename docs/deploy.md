@@ -262,6 +262,9 @@ Conferir antes se já foi feito: `firebase functions:list --project qio-app`.
       `DSR_HASH_PEPPER` opcional como segredo, ver `functions/.env`).
 - [ ] `expireStaleEntries` (agendada; exige Cloud Scheduler / Blaze).
 - [ ] `onQueueOpened` (trigger RTDB; avisos "me avise quando abrir").
+- [ ] `mirrorQueueToRtdb`, `mirrorOperatorToRtdb` (#164; triggers Firestore -> RTDB; antes de qualquer
+      APK; `--only functions:mirrorQueueToRtdb,functions:mirrorOperatorToRtdb`; só escrevem no RTDB,
+      rollback = `firebase functions:delete` das duas, o dual-write do app segue valendo).
 - [ ] `deleteQueue`, `deleteAccount` (antes de distribuir o APK; `ENFORCE_APP_CHECK_DELETE=false`).
 - [ ] Demais já documentadas: `submitFeedback`, `updateServiceEstimate`, `evaluateQueueAlerts`,
       `applyQueueSchedules`, `syncPublicTicket` (roteador único de `entries/{id}`: sync do

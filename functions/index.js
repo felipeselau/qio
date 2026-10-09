@@ -26,3 +26,5 @@ exports.expireStaleEntries = require('./src/handlers/expire').expireStaleEntries
 exports.purgeOldHistory = require('./src/handlers/history').purgeOldHistory;
 exports.onQueueOpened = require('./src/handlers/openwatch').onQueueOpened;
 exports.evaluateQueueAlerts = require('./src/handlers/alerts').evaluateQueueAlerts;
+
+Object.assign(exports, require('./src/triggers/mirror'));

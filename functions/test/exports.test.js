@@ -16,6 +16,8 @@ const EXPECTED = [
   'exportCustomerData',
   'findCustomerData',
   'joinQueue',
+  'mirrorOperatorToRtdb',
+  'mirrorQueueToRtdb',
   'onQueueOpened',
   'purgeOldHistory',
   'reconcileWaitingCounts',
@@ -40,6 +42,18 @@ test('uma unica funcao escuta queues/{queueId}/entries/{entryId}', () => {
       'queues/{queueId}/entries/{entryId}',
   );
   assert.deepEqual(listeners, ['syncPublicTicket']);
+});
+
+test('triggers de espelho (#164): documentos e regiao', () => {
+  const trigger = (name) => mod[name].__endpoint.eventTrigger;
+  assert.equal(trigger('mirrorQueueToRtdb').eventFilterPathPatterns.document, 'queues/{queueId}');
+  assert.equal(
+    trigger('mirrorOperatorToRtdb').eventFilterPathPatterns.document,
+    'queues/{queueId}/operators/{uid}',
+  );
+  for (const name of ['mirrorQueueToRtdb', 'mirrorOperatorToRtdb']) {
+    assert.match(trigger(name).eventType, /firestore.*written/);
+  }
 });
 
 test('configs preservadas: timeouts, memoria e retry', () => {
