@@ -507,6 +507,9 @@
   "sortByRecent": "Most recent",
   "sortByWaiting": "Longest wait",
   "noQueuesMatch": "No queues found",
+  "callPhoneTooltip": "Call {name}",
+  "@callPhoneTooltip": {"placeholders": {"name": {"type": "String"}}},
+  "callPhoneFailed": "Could not open the dialer",
   "privacyPolicy": "Privacy policy",
   "termsOfUse": "Terms of use"
 }

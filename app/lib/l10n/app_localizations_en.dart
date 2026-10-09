@@ -1593,6 +1593,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get noQueuesMatch => 'No queues found';
 
   @override
+  String callPhoneTooltip(String name) {
+    return 'Call $name';
+  }
+
+  @override
+  String get callPhoneFailed => 'Could not open the dialer';
+
+  @override
   String get privacyPolicy => 'Privacy policy';
 
   @override

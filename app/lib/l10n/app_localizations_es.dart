@@ -1597,6 +1597,14 @@ class AppLocalizationsEs extends AppLocalizations {
   String get noQueuesMatch => 'Ninguna fila encontrada';
 
   @override
+  String callPhoneTooltip(String name) {
+    return 'Llamar a $name';
+  }
+
+  @override
+  String get callPhoneFailed => 'No se pudo abrir el marcador';
+
+  @override
   String get privacyPolicy => 'Política de privacidad';
 
   @override

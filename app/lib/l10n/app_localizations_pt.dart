@@ -1594,6 +1594,14 @@ class AppLocalizationsPt extends AppLocalizations {
   String get noQueuesMatch => 'Nenhuma fila encontrada';
 
   @override
+  String callPhoneTooltip(String name) {
+    return 'Ligar para $name';
+  }
+
+  @override
+  String get callPhoneFailed => 'Não foi possível abrir o discador';
+
+  @override
   String get privacyPolicy => 'Política de privacidade';
 
   @override
