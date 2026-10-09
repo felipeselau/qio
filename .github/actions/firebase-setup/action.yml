@@ -1,0 +1,63 @@
+name: Firebase setup
+description: Instala firebase-tools (versão fixa) e autentica via WIF, chave de service account ou FIREBASE_TOKEN.
+inputs:
+  workload-identity-provider:
+    description: Provider do Workload Identity Federation (vars.GCP_WORKLOAD_IDENTITY_PROVIDER)
+    required: false
+    default: ''
+  service-account:
+    description: E-mail da service account (vars.GCP_SERVICE_ACCOUNT)
+    required: false
+    default: ''
+  credentials-json:
+    description: Chave JSON da service account (secrets.GCP_SA_KEY), fallback sem WIF
+    required: false
+    default: ''
+  firebase-token:
+    description: Token legado (secrets.FIREBASE_TOKEN), último fallback
+    required: false
+    default: ''
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+    - shell: bash
+      run: npm install -g firebase-tools@15.33.0
+    - id: mode
+      shell: bash
+      env:
+        WIF: ${{ inputs.workload-identity-provider }}
+        SA: ${{ inputs.service-account }}
+        KEY: ${{ inputs.credentials-json }}
+        TOKEN: ${{ inputs.firebase-token }}
+      run: |
+        if [ -n "$WIF" ] && [ -n "$SA" ]; then
+          echo "mode=wif" >> "$GITHUB_OUTPUT"
+        elif [ -n "$KEY" ]; then
+          echo "mode=key" >> "$GITHUB_OUTPUT"
+        elif [ -n "$TOKEN" ]; then
+          echo "mode=token" >> "$GITHUB_OUTPUT"
+          echo "::warning::Autenticando com FIREBASE_TOKEN (obsoleto). Migre para WIF (docs/deploy.md)."
+        else
+          echo "mode=none" >> "$GITHUB_OUTPUT"
+          echo "::error::Nenhuma credencial configurada (GCP_WORKLOAD_IDENTITY_PROVIDER + GCP_SERVICE_ACCOUNT, GCP_SA_KEY ou FIREBASE_TOKEN). Veja docs/deploy.md."
+          exit 1
+        fi
+    - if: steps.mode.outputs.mode == 'wif'
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: ${{ inputs.workload-identity-provider }}
+        service_account: ${{ inputs.service-account }}
+    - if: steps.mode.outputs.mode == 'key'
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ inputs.credentials-json }}
+    - if: steps.mode.outputs.mode == 'token'
+      shell: bash
+      env:
+        TOKEN: ${{ inputs.firebase-token }}
+      run: |
+        echo "::add-mask::$TOKEN"
+        echo "FIREBASE_TOKEN=$TOKEN" >> "$GITHUB_ENV"
