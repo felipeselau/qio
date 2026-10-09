@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../models/queue_entry.dart';
 import '../../models/queue_slot.dart';
+import '../../services/phone_call.dart';
 import '../../theme/qio_colors.dart';
 import '../../theme/qio_text_styles.dart';
 import '../../widgets/qio_card.dart';
 import '../../theme/qio_palette.dart';
+import 'phone_call_button.dart';
 
 class CurrentCalledCard extends StatelessWidget {
   const CurrentCalledCard({
@@ -13,11 +15,13 @@ class CurrentCalledCard extends StatelessWidget {
     this.entry,
     required this.queueId,
     this.onRecall,
+    this.launcher,
   });
 
   final QueueEntry? entry;
   final String queueId;
   final VoidCallback? onRecall;
+  final UrlLauncher? launcher;
 
   @override
   Widget build(BuildContext context) {
@@ -81,6 +85,26 @@ class CurrentCalledCard extends StatelessWidget {
               color: Colors.white,
             ),
           ),
+          if (phoneToTelUri(e.phone) != null) ...[
+            const SizedBox(height: 4),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  e.phone!.trim(),
+                  style: context.qioText.caption.copyWith(
+                    color: Colors.white.withValues(alpha: 0.85),
+                  ),
+                ),
+                PhoneCallButton(
+                  phone: e.phone,
+                  name: e.name,
+                  launcher: launcher,
+                  color: Colors.white,
+                ),
+              ],
+            ),
+          ],
           if (e.slotStart != null) ...[
             const SizedBox(height: 4),
             Text(

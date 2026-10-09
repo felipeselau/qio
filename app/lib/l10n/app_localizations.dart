@@ -2919,6 +2919,18 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Nenhuma fila encontrada'**
   String get noQueuesMatch;
+
+  /// No description provided for @callPhoneTooltip.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ligar para {name}'**
+  String callPhoneTooltip(String name);
+
+  /// No description provided for @callPhoneFailed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não foi possível abrir o discador'**
+  String get callPhoneFailed;
 }
 
 class _AppLocalizationsDelegate

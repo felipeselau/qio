@@ -1595,4 +1595,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get noQueuesMatch => 'Ninguna fila encontrada';
+
+  @override
+  String callPhoneTooltip(String name) {
+    return 'Llamar a $name';
+  }
+
+  @override
+  String get callPhoneFailed => 'No se pudo abrir el marcador';
 }
