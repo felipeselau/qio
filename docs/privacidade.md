@@ -17,6 +17,7 @@ Minuta técnica, não é parecer jurídico. Decisões assumidas (#172): o estabe
 | Preferências e referência da entry | `localStorage`: `qio:entries`, `qio:feedback`, `qio:lang`, `qio:theme`, `qio:install-dismissed`, `qio:analytics-optout` | Só o navegador do titular | Até limpar dados do site | Execução / preferência |
 | Estatísticas de uso | Google Analytics, só em build de produção com `VITE_MEASUREMENT_ID`, sem Do Not Track e sem opt-out | Estabelecimento/projeto via GA4 | Conforme configuração do GA4 | Consentimento (opt-out no rodapé) |
 | Token push do dono | Firestore `owners/{uid}/devices/{token}` | Só o próprio dono | Até sair da conta ou token inválido | Consentimento (opt-in no app) |
+| Pedido "avise quando abrir" (token FCM, idioma, `createdAt`; sem nome/telefone) | RTDB `queues/{id}/openWatchers/{uid}` | O próprio `uid` lê/grava/apaga; dono lê; trigger Admin envia | Até a fila abrir (apagado após o envio), 24 h (ignorado depois disso) ou `deleteQueue` | Consentimento (opt-in no navegador) |
 
 Suboperador: Firebase/Google Cloud (Auth, RTDB, Firestore, Functions, FCM, Hosting, Analytics). Região das functions: us-central1; confirmar localização do RTDB/Firestore.
 

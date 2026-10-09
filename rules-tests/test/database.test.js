@@ -1,7 +1,16 @@
 import assert from 'node:assert/strict';
 import { after, before, beforeEach, describe, it } from 'node:test';
 import { assertFails, assertSucceeds } from '@firebase/rules-unit-testing';
-import { get, onValue, ref, remove, runTransaction, set, update } from 'firebase/database';
+import {
+  get,
+  onValue,
+  ref,
+  remove,
+  runTransaction,
+  serverTimestamp,
+  set,
+  update,
+} from 'firebase/database';
 import { OPERATOR, OWNER, QUEUE, STRANGER, setupEnv } from './helpers.js';
 
 describe('RTDB rules', () => {
@@ -499,6 +508,91 @@ describe('RTDB rules', () => {
         await assertFails(get(ref(rtdb(uid), `rateLimits/${QUEUE}/client1`)));
         await assertFails(set(ref(rtdb(uid), `rateLimits/${QUEUE}/client1`), []));
       }
+    });
+  });
+
+  describe('openWatchers', () => {
+    const watcher = (over = {}) => ({
+      fcmToken: 'tok',
+      lang: 'pt',
+      createdAt: serverTimestamp(),
+      ...over,
+    });
+    const wpath = (uid) => path(`openWatchers/${uid}`);
+
+    it('cliente cria o próprio pedido', async () => {
+      await assertSucceeds(set(ref(rtdb('c1'), wpath('c1')), watcher()));
+    });
+
+    it('cliente não cria pedido de outro uid', async () => {
+      await assertFails(set(ref(rtdb('c1'), wpath('c2')), watcher()));
+    });
+
+    it('sem auth não cria', async () => {
+      const unauth = env.unauthenticatedContext().database();
+      await assertFails(set(ref(unauth, wpath('c1')), watcher()));
+    });
+
+    it('valida fcmToken, lang e createdAt', async () => {
+      const db = rtdb('c1');
+      await assertFails(set(ref(db, wpath('c1')), watcher({ fcmToken: '' })));
+      await assertFails(set(ref(db, wpath('c1')), watcher({ fcmToken: 'x'.repeat(4097) })));
+      await assertFails(set(ref(db, wpath('c1')), watcher({ fcmToken: 5 })));
+      await assertFails(set(ref(db, wpath('c1')), watcher({ lang: 'fr' })));
+      await assertFails(set(ref(db, wpath('c1')), watcher({ createdAt: 1 })));
+      await assertFails(set(ref(db, wpath('c1')), watcher({ phone: '1' })));
+      await assertFails(set(ref(db, wpath('c1')), { fcmToken: 'tok', lang: 'pt' }));
+      await assertSucceeds(set(ref(db, wpath('c1')), watcher({ fcmToken: 'x'.repeat(4096) })));
+    });
+
+    it('não cria em fila inexistente ou em exclusão', async () => {
+      await assertFails(set(ref(rtdb('c1'), 'queues/nope/openWatchers/c1'), watcher()));
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await set(ref(ctx.database(), path('meta/deleting')), true);
+      });
+      await assertFails(set(ref(rtdb('c1'), wpath('c1')), watcher()));
+    });
+
+    it('cliente renova o próprio pedido', async () => {
+      await assertSucceeds(set(ref(rtdb('c1'), wpath('c1')), watcher()));
+      await assertSucceeds(set(ref(rtdb('c1'), wpath('c1')), watcher({ fcmToken: 'novo' })));
+      const snap = await get(ref(rtdb('c1'), wpath('c1')));
+      assert.equal(snap.val().fcmToken, 'novo');
+    });
+
+    it('dono e operador não escrevem pedido alheio', async () => {
+      await assertFails(set(ref(rtdb(OWNER), wpath('c1')), watcher()));
+      await assertFails(set(ref(rtdb(OPERATOR), wpath('c1')), watcher()));
+    });
+
+    it('createdAt falso (passado ou futuro) é negado', async () => {
+      await assertFails(set(ref(rtdb('c1'), wpath('c1')), watcher({ createdAt: Date.now() })));
+      await assertFails(
+        set(ref(rtdb('c1'), wpath('c1')), watcher({ createdAt: Date.now() + 86_400_000 })),
+      );
+    });
+
+    it('fila em exclusão ainda deixa o cliente apagar o pedido', async () => {
+      await assertSucceeds(set(ref(rtdb('c1'), wpath('c1')), watcher()));
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await set(ref(ctx.database(), path('meta/deleting')), true);
+      });
+      await assertSucceeds(remove(ref(rtdb('c1'), wpath('c1'))));
+    });
+
+    it('cliente lê e apaga só o próprio pedido', async () => {
+      await assertSucceeds(set(ref(rtdb('c1'), wpath('c1')), watcher()));
+      await assertSucceeds(get(ref(rtdb('c1'), wpath('c1'))));
+      await assertFails(get(ref(rtdb('c2'), wpath('c1'))));
+      await assertFails(remove(ref(rtdb('c2'), wpath('c1'))));
+      await assertSucceeds(remove(ref(rtdb('c1'), wpath('c1'))));
+    });
+
+    it('cliente e operador não listam; dono lista', async () => {
+      await assertSucceeds(set(ref(rtdb('c1'), wpath('c1')), watcher()));
+      await assertFails(get(ref(rtdb('c1'), path('openWatchers'))));
+      await assertFails(get(ref(rtdb(OPERATOR), path('openWatchers'))));
+      await assertSucceeds(get(ref(rtdb(OWNER), path('openWatchers'))));
     });
   });
 

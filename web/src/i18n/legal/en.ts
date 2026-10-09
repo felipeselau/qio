@@ -25,6 +25,7 @@ const bundle: LegalBundle = {
           'An anonymous session identifier (anonymous Firebase Authentication).',
           'Ticket data: number, status, join and call times, language, chosen time slot.',
           'Optional push notification token, only if you tap "Enable alerts".',
+          'Optional "Notify me when it opens" request: push token, language and request date, tied to the anonymous session identifier, with no name or phone number.',
           'Optional rating and comment after service.',
           'Usage statistics (Google Analytics) only if enabled, with opt-out in the footer and Do Not Track respected.',
         ],
@@ -45,6 +46,7 @@ const bundle: LegalBundle = {
         heading: 'Retention',
         items: [
           'Active queue entry: only while you are in the queue.',
+          '"Notify me when it opens" request (push token, language and date): until the queue opens (deleted after the alert), for 24 hours at most, until you cancel it, or until the queue is deleted.',
           'Service history (name, phone, result, times): target of 180 days; the automatic deletion routine is still pending.',
         ],
       },

@@ -31,6 +31,7 @@ import { playAlertSound, unlockAudio } from '../lib/alert';
 import { holdWakeLock } from '../lib/wakeLock';
 import { useOnline } from '../lib/useOnline';
 import { useInstallPrompt } from '../lib/useInstallPrompt';
+import NotifyOpen from './NotifyOpen';
 import { formatSlotTime, isSlotFull, isSlotPast, slotTaken } from '../lib/slots';
 
 function formatOpening(ms: number, language: string): string {
@@ -504,6 +505,7 @@ export default function QueuePage() {
         <span className="badge badge-closed">{t('queue.closedBadge')}</span>
         <StatusNotice meta={meta} />
         <p className="muted">{t('queue.closedHint')}</p>
+        <NotifyOpen queueId={queueId} />
       </div>
     );
   }
@@ -865,9 +867,12 @@ export default function QueuePage() {
         )}
 
         {meta?.status === 'paused' ? (
-          <p className="muted" style={{ textAlign: 'center' }}>
-            {t('queue.pausedNoJoin')}
-          </p>
+          <>
+            <p className="muted" style={{ textAlign: 'center' }}>
+              {t('queue.pausedNoJoin')}
+            </p>
+            <NotifyOpen queueId={queueId} />
+          </>
         ) : (
         <form
           onSubmit={handleSubmit}

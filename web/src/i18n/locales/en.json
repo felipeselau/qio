@@ -89,7 +89,13 @@
     "aheadCount_one": "{{count}} person ahead",
     "aheadCount_other": "{{count}} people ahead",
     "noQueueNow": "No line right now",
-    "pausedNoJoin": "You can't join while the queue is paused."
+    "pausedNoJoin": "You can't join while the queue is paused.",
+    "notifyOpen": "Notify me when it opens",
+    "notifyOpenHint": "Get a phone alert when the queue opens. We don't ask for your phone number.",
+    "notifyOpenOn": "You'll be alerted when the queue opens (for up to 24 hours).",
+    "notifyOpenCancel": "Cancel alert",
+    "notifyOpenDenied": "Alerts are blocked in your browser. Allow them in site settings to be notified.",
+    "notifyOpenFailed": "Couldn't turn on the alert. Please try again."
   },
   "errors": {
     "nameRequired": "Enter your name",

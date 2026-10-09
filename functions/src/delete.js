@@ -2,6 +2,7 @@ const QUEUE_RTDB_PATHS = (queueId) => [
   `queues/${queueId}/entries`,
   `queues/${queueId}/public`,
   `queues/${queueId}/operatorUids`,
+  `queues/${queueId}/openWatchers`,
   `tickets/${queueId}`,
   `rateLimits/${queueId}`,
   `queues/${queueId}/meta`,
