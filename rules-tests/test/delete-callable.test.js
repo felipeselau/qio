@@ -20,7 +20,7 @@ describe('callables deleteQueue e deleteAccount (emulador)', () => {
     const app = initializeApp({ projectId: 'demo-qio', apiKey: 'fake-key' }, `del-${apps.length}`);
     apps.push(app);
     const auth = getAuth(app);
-    connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+    connectAuthEmulator(auth, `http://localhost:${process.env.AUTH_EMULATOR_PORT ?? 9099}`, { disableWarnings: true });
     const cred = await signInAnonymously(auth);
     const functions = getFunctions(app);
     connectFunctionsEmulator(functions, FUNCTIONS_HOST, Number(FUNCTIONS_PORT));
@@ -223,6 +223,8 @@ describe('callables deleteQueue e deleteAccount (emulador)', () => {
       await setDoc(doc(fs, 'queues', Q2, 'operators', owner.uid), { uid: owner.uid });
       await setDoc(doc(fs, 'queues', Q2, 'operatorRequests', owner.uid), { uid: owner.uid, status: 'approved' });
       await set(ref(ctx.database(), `queues/${Q2}/operatorUids/${owner.uid}`), true);
+      await set(ref(ctx.database(), `rateLimits/_dsr/${owner.uid}`), [Date.now()]);
+      await setDoc(doc(fs, 'owners', owner.uid, 'dataRequests', 'r1'), { action: 'find' });
     });
     const res = await owner.deleteAccount({ queueId: Q2, uid: 'outro-dono', ownerId: owner.uid });
     assert.equal(res.ok, true);
@@ -236,6 +238,8 @@ describe('callables deleteQueue e deleteAccount (emulador)', () => {
     assert.equal(await fsExists(`owners/${owner.uid}`), false);
     assert.equal(await fsExists(`owners/${owner.uid}/devices/tok`), false);
     assert.equal(await fsExists(`owners/${owner.uid}/groups/g1`), false);
+    assert.equal(await fsExists(`owners/${owner.uid}/dataRequests/r1`), false);
+    assert.equal(await rtdbExists(`rateLimits/_dsr/${owner.uid}`), false);
     assert.equal(await fsExists(`queues/${Q2}/operators/${owner.uid}`), false);
     assert.equal(await fsExists(`queues/${Q2}/operatorRequests/${owner.uid}`), false);
     assert.equal(await rtdbExists(`queues/${Q2}/operatorUids/${owner.uid}`), false);

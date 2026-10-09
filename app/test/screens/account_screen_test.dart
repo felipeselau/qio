@@ -47,6 +47,41 @@ void main() {
     expect(find.text('10/03/2025'), findsOneWidget);
   });
 
+  testWidgets('shows the customer data entry only for owners with queues', (
+    tester,
+  ) async {
+    final auth = FakeAuthService(user: FakeUser(displayName: 'Maria'));
+    await pumpApp(
+      tester,
+      AccountScreen(
+        auth: auth,
+        loadOwner: (_) async => null,
+        loadQueueCount: (_) async => 2,
+      ),
+      size: tall,
+    );
+    await tick(tester);
+    expect(find.text('Dados de um cliente'), findsOneWidget);
+    await tester.tap(find.text('Dados de um cliente'));
+    await tester.pumpAndSettle();
+    expect(find.text('Telefone do cliente'), findsOneWidget);
+  });
+
+  testWidgets('hides the customer data entry without queues', (tester) async {
+    final auth = FakeAuthService(user: FakeUser(displayName: 'Maria'));
+    await pumpApp(
+      tester,
+      AccountScreen(
+        auth: auth,
+        loadOwner: (_) async => null,
+        loadQueueCount: (_) async => 0,
+      ),
+      size: tall,
+    );
+    await tick(tester);
+    expect(find.text('Dados de um cliente'), findsNothing);
+  });
+
   testWidgets('falls back to auth display name when owner doc is missing', (
     tester,
   ) async {

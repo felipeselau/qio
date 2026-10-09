@@ -1843,4 +1843,96 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get expiryResetTicketDailyHint =>
       'Resets the first time the queue is empty each new day.';
+
+  @override
+  String get dataSubjectTitle => 'Customer data';
+
+  @override
+  String get dataSubjectSubtitle =>
+      'Handle access, correction or erasure requests for a customer\'s data (LGPD).';
+
+  @override
+  String get dataSubjectPhoneLabel => 'Customer phone';
+
+  @override
+  String get dataSubjectSearch => 'Search';
+
+  @override
+  String get dataSubjectNone => 'No data found for this phone in your queues.';
+
+  @override
+  String dataSubjectFound(int count) {
+    return 'Found in $count queue(s)';
+  }
+
+  @override
+  String dataSubjectQueueCounts(int history, int feedback, int entries) {
+    return '$history in history, $feedback ratings, $entries in line now';
+  }
+
+  @override
+  String dataSubjectPeriod(String from, String to) {
+    return 'From $from to $to';
+  }
+
+  @override
+  String get dataSubjectExport => 'Export data (CSV)';
+
+  @override
+  String get dataSubjectExportTruncated =>
+      'The export was limited to the first 5000 records.';
+
+  @override
+  String get dataSubjectAnonymize => 'Anonymize';
+
+  @override
+  String get dataSubjectDelete => 'Delete';
+
+  @override
+  String get dataSubjectConfirmTitleAnonymize =>
+      'Anonymize this customer\'s data?';
+
+  @override
+  String get dataSubjectConfirmTitleDelete => 'Delete this customer\'s data?';
+
+  @override
+  String get dataSubjectConfirmBodyAnonymize =>
+      'The name becomes \"Anonymous\", the phone is removed from the history and rating comments are erased. If the customer is in a line right now, they are removed. This cannot be undone.';
+
+  @override
+  String get dataSubjectConfirmBodyDelete =>
+      'Deletes the history and ratings for this phone and removes the customer from any active line. This cannot be undone.';
+
+  @override
+  String get dataSubjectConfirmLabel => 'Type the phone again to confirm';
+
+  @override
+  String get dataSubjectConfirmButton => 'Confirm';
+
+  @override
+  String dataSubjectDone(int count) {
+    return 'Done: $count record(s) handled.';
+  }
+
+  @override
+  String get dataSubjectPartial =>
+      'Some records were not handled. Search again and retry.';
+
+  @override
+  String get dataSubjectRateLimited =>
+      'Too many requests in a row. Wait a moment and try again.';
+
+  @override
+  String get dataSubjectAuditNote =>
+      'Each request is logged for auditing, without name or phone.';
+
+  @override
+  String get dataSubjectReauthTitle => 'Confirm your identity';
+
+  @override
+  String get dataSubjectReauthHint =>
+      'You will confirm your identity with Google.';
+
+  @override
+  String get dataSubjectReauthButton => 'Confirm identity';
 }

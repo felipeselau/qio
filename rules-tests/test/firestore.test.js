@@ -135,6 +135,36 @@ describe('Firestore rules', () => {
     });
   });
 
+  describe('dataRequests (auditoria de pedidos do titular)', () => {
+    const log = { action: 'erase', phoneHash: 'abc', complete: true };
+    const ref = (uid, id = 'r1') => doc(db(uid), 'owners', OWNER, 'dataRequests', id);
+
+    beforeEach(async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), 'owners', OWNER, 'dataRequests', 'r1'), log);
+      });
+    });
+
+    it('dono lê e lista', async () => {
+      await assertSucceeds(getDoc(ref(OWNER)));
+      await assertSucceeds(getDocs(collection(db(OWNER), 'owners', OWNER, 'dataRequests')));
+    });
+
+    it('ninguém escreve, nem o dono', async () => {
+      await assertFails(setDoc(ref(OWNER, 'r2'), log));
+      await assertFails(updateDoc(ref(OWNER), { complete: false }));
+      await assertFails(deleteDoc(ref(OWNER)));
+    });
+
+    it('outro uid e operador não leem nem escrevem', async () => {
+      for (const uid of [STRANGER, OPERATOR]) {
+        await assertFails(getDoc(ref(uid)));
+        await assertFails(getDocs(collection(db(uid), 'owners', OWNER, 'dataRequests')));
+        await assertFails(setDoc(ref(uid, 'r3'), log));
+      }
+    });
+  });
+
   describe('grupos de filas', () => {
     const group = { name: 'Loja Centro', createdAt: 1 };
     const ref = (uid, id = 'g1') => doc(db(uid), 'owners', OWNER, 'groups', id);

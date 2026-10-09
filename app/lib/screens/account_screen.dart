@@ -6,6 +6,7 @@ import '../l10n/app_localizations.dart';
 import '../services/account_format.dart';
 import '../services/analytics_service.dart';
 import '../services/auth_service.dart';
+import '../services/data_subject_service.dart';
 import '../services/delete_service.dart';
 import '../services/haptics.dart';
 import '../services/push_service.dart';
@@ -20,6 +21,7 @@ import '../widgets/qio_card.dart';
 import '../widgets/qio_skeleton.dart';
 import '../widgets/qio_responsive_body.dart';
 import '../theme/qio_palette.dart';
+import 'data_subject_screen.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({
@@ -28,6 +30,7 @@ class AccountScreen extends StatefulWidget {
     this.loadOwner,
     this.loadQueueCount,
     this.deleteService,
+    this.dataSubjectService,
   });
 
   final AuthService? auth;
@@ -37,6 +40,8 @@ class AccountScreen extends StatefulWidget {
   final Future<int?> Function(String uid)? loadQueueCount;
   @visibleForTesting
   final DeleteService? deleteService;
+  @visibleForTesting
+  final DataSubjectService? dataSubjectService;
 
   @override
   State<AccountScreen> createState() => _AccountScreenState();
@@ -113,6 +118,15 @@ class _AccountScreenState extends State<AccountScreen> {
     } catch (_) {}
     if (!mounted) return;
     Navigator.of(context).popUntil((route) => route.isFirst);
+  }
+
+  void _openDataSubject() {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) =>
+            DataSubjectScreen(auth: _auth, service: widget.dataSubjectService),
+      ),
+    );
   }
 
   String _displayName(Map<String, dynamic>? owner) {
@@ -223,6 +237,32 @@ class _AccountScreenState extends State<AccountScreen> {
               ),
             ],
           ),
+        ),
+        FutureBuilder<int?>(
+          future: _countFuture,
+          builder: (context, snap) {
+            if ((snap.data ?? 0) <= 0) return const SizedBox.shrink();
+            return Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: QioCard(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                  leading: const Icon(Icons.manage_search),
+                  title: Text(
+                    l10n.dataSubjectTitle,
+                    style: context.qioText.bodyMedium,
+                  ),
+                  subtitle: Text(
+                    l10n.dataSubjectSubtitle,
+                    style: context.qioText.caption,
+                  ),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: _openDataSubject,
+                ),
+              ),
+            );
+          },
         ),
         const SizedBox(height: 12),
         const _ThemeCard(),

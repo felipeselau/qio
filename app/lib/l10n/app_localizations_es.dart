@@ -1847,4 +1847,99 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get expiryResetTicketDailyHint =>
       'Se reinicia la primera vez que la fila queda vacía cada día nuevo.';
+
+  @override
+  String get dataSubjectTitle => 'Datos de un cliente';
+
+  @override
+  String get dataSubjectSubtitle =>
+      'Atiende solicitudes de acceso, corrección o eliminación de datos hechas por un cliente (LGPD).';
+
+  @override
+  String get dataSubjectPhoneLabel => 'Teléfono del cliente';
+
+  @override
+  String get dataSubjectSearch => 'Buscar';
+
+  @override
+  String get dataSubjectNone =>
+      'No se encontraron datos para este teléfono en tus filas.';
+
+  @override
+  String dataSubjectFound(int count) {
+    return 'Encontrado en $count fila(s)';
+  }
+
+  @override
+  String dataSubjectQueueCounts(int history, int feedback, int entries) {
+    return '$history en el historial, $feedback valoraciones, $entries en la fila ahora';
+  }
+
+  @override
+  String dataSubjectPeriod(String from, String to) {
+    return 'Del $from al $to';
+  }
+
+  @override
+  String get dataSubjectExport => 'Exportar datos (CSV)';
+
+  @override
+  String get dataSubjectExportTruncated =>
+      'La exportación se limitó a los primeros 5000 registros.';
+
+  @override
+  String get dataSubjectAnonymize => 'Anonimizar';
+
+  @override
+  String get dataSubjectDelete => 'Eliminar';
+
+  @override
+  String get dataSubjectConfirmTitleAnonymize =>
+      '¿Anonimizar los datos de este cliente?';
+
+  @override
+  String get dataSubjectConfirmTitleDelete =>
+      '¿Eliminar los datos de este cliente?';
+
+  @override
+  String get dataSubjectConfirmBodyAnonymize =>
+      'El nombre pasa a \"Anónimo\", el teléfono se quita del historial y los comentarios de valoración se borran. Si el cliente está en alguna fila ahora, se le quita. No se puede deshacer.';
+
+  @override
+  String get dataSubjectConfirmBodyDelete =>
+      'Borra el historial y las valoraciones de este teléfono y quita al cliente de cualquier fila activa. No se puede deshacer.';
+
+  @override
+  String get dataSubjectConfirmLabel =>
+      'Escribe el teléfono de nuevo para confirmar';
+
+  @override
+  String get dataSubjectConfirmButton => 'Confirmar';
+
+  @override
+  String dataSubjectDone(int count) {
+    return 'Listo: $count registro(s) tratado(s).';
+  }
+
+  @override
+  String get dataSubjectPartial =>
+      'Algunos registros no se trataron. Busca de nuevo e inténtalo otra vez.';
+
+  @override
+  String get dataSubjectRateLimited =>
+      'Demasiadas consultas seguidas. Espera un poco e inténtalo de nuevo.';
+
+  @override
+  String get dataSubjectAuditNote =>
+      'Cada consulta queda registrada para auditoría, sin nombre ni teléfono.';
+
+  @override
+  String get dataSubjectReauthTitle => 'Confirma tu identidad';
+
+  @override
+  String get dataSubjectReauthHint =>
+      'Vas a confirmar tu identidad con Google.';
+
+  @override
+  String get dataSubjectReauthButton => 'Confirmar identidad';
 }

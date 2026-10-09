@@ -35,3 +35,26 @@ Suboperador: Firebase/Google Cloud (Auth, RTDB, Firestore, Functions, FCM, Hosti
 5. Confirmar o texto sobre menores de 12 anos, a base legal e a localização dos dados.
 6. Fazer deploy do hosting; no Play Console, usar a URL `https://qio.web.app/privacidade` se publicar.
 7. Regerar os goldens do login (`test/goldens/login_*`) pelo artifact do CI, pois a tela ganhou os links.
+
+## Como atender um pedido do titular (acesso, correção, eliminação)
+
+O cliente é anônimo e não tem conta, então o canal do titular é o estabelecimento (controlador). O Qio (operador) fornece a ferramenta "Dados de um cliente" no app do dono (Minha conta). Só o dono usa; operadores não veem. Prazo legal sugerido para responder: 15 dias.
+
+1. Confirme a identidade do titular por um meio seu (por exemplo, ligar para o telefone informado). A ferramenta não prova identidade.
+2. No app: Minha conta, "Dados de um cliente". Digite o telefone (a máscara é automática) e toque em Buscar. O app pede login recente (até 5 min) e pode pedir a senha de novo.
+3. O resultado mostra, por fila sua, quantos registros de histórico, avaliações e entradas ativas existem e o período. Não mostra dados de outros donos.
+4. Acesso: "Exportar dados (CSV)" gera nome, telefone, horários, resultado, nota e comentário. Entregue o arquivo ao titular por canal seguro.
+5. Correção: o histórico é registro de atendimento. Para corrigir um nome ou telefone errado, anonimize ou exclua os registros e, se o titular quiser, ele entra na fila de novo com os dados corretos.
+6. Eliminação: "Anonimizar" troca o nome por "Anônimo", remove o telefone do histórico e apaga o comentário da avaliação (a nota fica, sem vínculo). "Excluir" apaga histórico e avaliações. Nos dois casos a entrada ativa na fila é removida. Para confirmar, digite o telefone de novo. Não dá para desfazer.
+7. Responda ao titular dentro do prazo e guarde o registro: cada consulta, exportação e eliminação grava `owners/{uid}/dataRequests/{id}` (ação, modo, contagens por fila, hash do telefone e data), sem nome nem telefone. Só o dono lê.
+
+Limites conhecidos:
+
+- A busca é exata pelo telefone, nas duas formas: máscara `(11) 99999-9999` (a única que o `joinQueue`, o `addManualEntry` e as rules gravam hoje) e só dígitos. A forma só-dígitos é mantida só por tolerância a dados legados que não conseguimos descartar; não migramos dados antigos.
+- Registros de `history` sem telefone (fila com `anonymizePhone`, ou já anonimizados) não são encontrados. Por isso o `feedback` desses atendimentos também não: ele só é alcançado pelo `entryId` de um history achado pelo telefone.
+- "Anonimizar" apaga o comentário do feedback, mas mantém `rating`, `uid` (anônimo do navegador) e `createdAt`. Se isso for demais para o caso, use "Excluir".
+- Corrida com o trigger `syncPublicTicket`: se o cliente sair da fila (`left`) no instante da eliminação, o trigger pode gravar um `history` novo com o telefone depois da varredura. Repita a busca após alguns segundos e elimine de novo se aparecer.
+- Se a gravação do log de auditoria falhar, a ação continua valendo e a resposta é devolvida; o erro vai para o log de erros (sem PII). Em eliminação parcial o log traz `failedQueueIds`.
+- O limite é de 20 pedidos por hora por conta (`rateLimits/_dsr/{uid}`, apagado junto com a conta).
+- Backups (`docs/backup.md`) podem reter os dados até expirarem.
+- O hash do telefone no log é pseudonimização, não anonimização: SHA-256 de `pepper:uid:telefone`. O pepper (`DSR_HASH_PEPPER`, opcional, segredo) dificulta a reversão por força bruta; sem ele, trate o log como dado pessoal. Excluir a conta apaga o log.
