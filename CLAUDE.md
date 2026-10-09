@@ -270,20 +270,20 @@ modelos; ainda sem dados): `docs/piloto/`.
 
 ## Criação de fila e botão voltar
 
-- `CreateQueueScreen` é um **wizard de 6 passos** (uma decisão por tela, `PageView` sem
+- `CreateQueueScreen` é um **wizard de 7 passos** (uma decisão por tela, `PageView` sem
   swipe, `animateToPage` 250 ms; sem animação se `disableAnimations`): 1 Nome (obrigatório;
   "Mais detalhes" recolhível com descrição e grupo; "Criar agora" cria direto com defaults),
   2 Entrada (cartões Fila por chegada / Hora marcada; hora marcada mostra chips de sugestão
   `suggestSlots` e o `SlotsEditor` com `showModeSelector: false`), 3 Tempo médio e limite
   (opcional), 4 Cor (`BrandColorPicker`, opcional), 5 Funcionamento (`ScheduleForm` +
   `ExpiryForm(showExtras: false)`: só `enabled`+`hours`; `clearOnClose`/`resetTicketDaily`
-  ficam nas configurações; opcional), 6 Revisão com "Editar" por seção (volta ao passo e
+  ficam nas configurações; opcional), 6 Alertas (opcional; `AlertsForm`, ver abaixo), 7 Revisão com "Editar" por seção (volta ao passo e
   retorna à revisão) e defaults explícitos ("10 min", "Sem limite", "Sempre aberta", "Não
-  expirar"). Alertas, logo, link curto, operadores e mensagem de status ficam **fora** do
+  expirar", "Desligado"). Logo, link curto, operadores e mensagem de status ficam **fora** do
   create. Tempo médio vazio vira `defaultAvgServiceMin` (10, `models/queue_info.dart`).
 - Estado e validação por passo ficam em `CreateQueueController`/`CreateQueueDraft`
   (`controllers/create_queue_*.dart`); a tela só liga campos ao draft e chama `createQueue`
-  com `controller.toCreateArgs()` (inclui `expiry`). "Pular" restaura os defaults do passo
+  com `controller.toCreateArgs()` (inclui `expiry` e `alerts`). "Pular" restaura os defaults do passo
   (cor, tempo/limite, horário+expiração; o grupo do passo 1 não é afetado). Botão primário
   fixo no rodapé (`CreateQueueFooter`), barra com `Semantics('Passo X de Y')` e anúncio da
   troca de passo; o rodapé reserva o espaço do botão secundário (altura estável). O passo 1
@@ -296,6 +296,20 @@ modelos; ainda sem dados): `docs/piloto/`.
   servidor, e um retry gera fila duplicada (o aviso manda conferir a lista). Erro de
   `createQueue` (`queueErrorMessage`) aparece num banner
   (`create-error`) e a tela segue aberta. Sucesso: `pushReplacement` para `QueueCreatedScreen`.
+- **Passo Alertas (#225):** `CreateQueueStep.alerts` entre Funcionamento e Revisão, opcional
+  ("Pular" zera `draft.alerts`). Usa `AlertsForm({value, onChanged})`
+  (`widgets/queue_form/alerts_form.dart`), o mesmo formulário de `AlertsSettingsScreen`
+  (liga/desliga, espera 1–240, no-show 1–100, parada 5–240, intervalo mínimo; defaults 30/30/15
+  e 30 min; com o texto grande o seletor de intervalo empilha). `AlertsConfig.validate()`
+  devolve `AlertsError` (`noRule` se ativado sem regra; faixas; `cooldownRange` 5–1440); o
+  controller expõe em `CreateQueueField.alerts`. Desligar o interruptor limpa o draft e
+  `toCreateArgs` só manda `alerts` quando `enabled` (o create não ganhou validação nas
+  rules: o `alerts` já era validado e o orçamento de ~10–20 expressões do `add()` do
+  Firestore ficou intacto). O passo só explica em texto que o push depende de
+  `owners/{uid}.notifyAlerts` (decidido em `AlertsSettingsScreen`); o wizard não pede
+  permissão nem pergunta push. Rascunho: `createQueueDraftVersion = 2` com `alerts`;
+  rascunhos v1 continuam válidos (sem alerts); alerts inválidos no JSON são saneados por
+  `AlertsConfig.fromMap` e, se ativados sem regra, o controller volta ao passo Alertas.
 - **Limite antecipado (#222):** ao abrir o wizard, `initState` chama
   `QueueService.isAtQueueLimit(uid)` (mesmo `count()` do `ensureUnderQueueLimit`, que passou a
   usá-lo). Enquanto checa, `QueueLimitGate(checking: true)` mostra spinner; no limite mostra

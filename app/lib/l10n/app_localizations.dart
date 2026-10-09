@@ -3819,6 +3819,30 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Compartilhar link'**
   String get cqShareLink;
+
+  /// No description provided for @cqAlertsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quer receber alertas desta fila?'**
+  String get cqAlertsTitle;
+
+  /// No description provided for @cqAlertsHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Opcional. Avisamos você quando a espera, o não comparecimento ou a fila parada passarem do limite que escolher.'**
+  String get cqAlertsHint;
+
+  /// No description provided for @cqAlertsPushNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os avisos chegam por notificação. Se a conta recebe esses avisos é uma opção da tela Alertas operacionais, nas configurações da fila.'**
+  String get cqAlertsPushNote;
+
+  /// No description provided for @cqSummaryAlerts.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alertas'**
+  String get cqSummaryAlerts;
 }
 
 class _AppLocalizationsDelegate

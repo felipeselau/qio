@@ -19,7 +19,7 @@ Future<void> walkAllSteps(WidgetTester tester) async {
   await tapKey(tester, 'create-continue');
   await tapKey(tester, 'create-mode-schedule');
   await tapKey(tester, 'create-suggest-60');
-  for (final key in ['create-continue', 'create-continue', 'create-continue']) {
+  for (final key in List.filled(4, 'create-continue')) {
     expect(tester.takeException(), isNull);
     await tapKey(tester, key);
   }

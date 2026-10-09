@@ -1,12 +1,21 @@
 import 'package:flutter/foundation.dart';
 
+import '../models/alerts_config.dart';
 import '../models/expiry_config.dart';
 import '../models/queue_info.dart';
 import '../models/queue_schedule.dart';
 import '../models/queue_slot.dart';
 import 'create_queue_draft.dart';
 
-enum CreateQueueStep { name, mode, capacity, appearance, schedule, review }
+enum CreateQueueStep {
+  name,
+  mode,
+  capacity,
+  appearance,
+  schedule,
+  alerts,
+  review,
+}
 
 enum CreateQueueField {
   name,
@@ -15,6 +24,7 @@ enum CreateQueueField {
   maxWaiting,
   slots,
   schedule,
+  alerts,
 }
 
 class CreateQueueArgs {
@@ -29,6 +39,7 @@ class CreateQueueArgs {
     required this.schedule,
     required this.brandColor,
     required this.expiry,
+    required this.alerts,
   });
 
   final String name;
@@ -41,6 +52,7 @@ class CreateQueueArgs {
   final QueueSchedule? schedule;
   final String? brandColor;
   final ExpiryConfig? expiry;
+  final AlertsConfig? alerts;
 }
 
 class CreateQueueController extends ChangeNotifier {
@@ -57,6 +69,7 @@ class CreateQueueController extends ChangeNotifier {
     CreateQueueStep.capacity,
     CreateQueueStep.appearance,
     CreateQueueStep.schedule,
+    CreateQueueStep.alerts,
   };
 
   final CreateQueueDraft _initial;
@@ -99,6 +112,9 @@ class CreateQueueController extends ChangeNotifier {
       case CreateQueueStep.schedule:
         final schedule = validateSchedule(d.schedule);
         if (schedule != null) errors[CreateQueueField.schedule] = schedule;
+      case CreateQueueStep.alerts:
+        final alerts = d.alerts?.validate();
+        if (alerts != null) errors[CreateQueueField.alerts] = alerts;
       case CreateQueueStep.review:
         for (final s in CreateQueueStep.values) {
           if (s == CreateQueueStep.review) continue;
@@ -174,6 +190,7 @@ class CreateQueueController extends ChangeNotifier {
     if (errors.isNotEmpty) throw FormatException(errors.values.first.name);
     final d = _draft.trimmed();
     final schedule = d.schedule;
+    final alerts = d.alerts;
     return CreateQueueArgs(
       name: d.name,
       description: QueueInfo.normalizeDescription(d.description),
@@ -186,6 +203,7 @@ class CreateQueueController extends ChangeNotifier {
       schedule: schedule != null && schedule.enabled ? schedule : null,
       brandColor: d.brandColor,
       expiry: d.expiry,
+      alerts: alerts != null && alerts.enabled ? alerts : null,
     );
   }
 
@@ -230,6 +248,8 @@ class CreateQueueController extends ChangeNotifier {
         return _draft.copyWith(clearBrandColor: true);
       case CreateQueueStep.schedule:
         return _draft.copyWith(clearSchedule: true, clearExpiry: true);
+      case CreateQueueStep.alerts:
+        return _draft.copyWith(clearAlerts: true);
       default:
         return _draft;
     }

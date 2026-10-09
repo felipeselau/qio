@@ -5,6 +5,7 @@ import 'package:flutter/semantics.dart';
 
 import '../controllers/create_queue_controller.dart';
 import '../l10n/app_localizations.dart';
+import '../models/alerts_config.dart';
 import '../models/expiry_config.dart';
 import '../models/queue_group.dart';
 import '../models/queue_info.dart';
@@ -23,6 +24,7 @@ import '../widgets/create_queue/queue_limit_gate.dart';
 import '../widgets/group_picker.dart';
 import '../widgets/qio_input.dart';
 import '../widgets/qio_responsive_body.dart';
+import '../widgets/queue_form/alerts_form.dart';
 import '../widgets/queue_form/brand_color_picker.dart';
 import '../widgets/queue_form/expiry_form.dart';
 import '../widgets/queue_form/schedule_form.dart';
@@ -68,6 +70,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen>
   final _capacityForm = GlobalKey<FormState>();
   final _attempted = <CreateQueueStep>{};
   ScheduleFormValue _scheduleValue = const ScheduleFormValue();
+  AlertsConfig _alertsValue = const AlertsConfig();
   int _shown = 0;
   bool _loading = false;
   bool _checkingLimit = true;
@@ -200,6 +203,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen>
     _avgCtrl.text = d.avgServiceMin;
     _limitCtrl.text = d.maxWaiting;
     _scheduleValue = ScheduleFormValue.fromSchedule(d.schedule);
+    _alertsValue = d.alerts ?? const AlertsConfig();
     _c.restoreFrom(restored);
     if (d.description.trim().isNotEmpty || d.groupId != null) {
       _moreCtrl.expand();
@@ -271,6 +275,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen>
     CreateQueueStep.capacity => l10n.cqCapacityTitle,
     CreateQueueStep.appearance => l10n.cqAppearanceTitle,
     CreateQueueStep.schedule => l10n.cqScheduleTitle,
+    CreateQueueStep.alerts => l10n.cqAlertsTitle,
     CreateQueueStep.review => l10n.cqReviewTitle,
   };
 
@@ -302,6 +307,9 @@ class _CreateQueueScreenState extends State<CreateQueueScreen>
       }
       if (step == CreateQueueStep.schedule) {
         _scheduleValue = const ScheduleFormValue();
+      }
+      if (step == CreateQueueStep.alerts) {
+        _alertsValue = const AlertsConfig();
       }
     }
   }
@@ -400,6 +408,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen>
             schedule: args.schedule,
             brandColor: args.brandColor,
             expiry: args.expiry,
+            alerts: args.alerts,
           )
           .timeout(createTimeout);
       _finished = true;
@@ -467,6 +476,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen>
                   _capacityStep(l10n),
                   _appearanceStep(l10n),
                   _scheduleStep(l10n),
+                  _alertsStep(l10n),
                   _reviewStep(l10n),
                 ],
               ),
@@ -748,6 +758,51 @@ class _CreateQueueScreenState extends State<CreateQueueScreen>
     );
   }
 
+  Widget _alertsStep(AppLocalizations l10n) {
+    return CreateQueueStepPage(
+      title: l10n.cqAlertsTitle,
+      hint: l10n.cqAlertsHint,
+      children: [
+        IgnorePointer(
+          ignoring: _loading,
+          child: AlertsForm(
+            key: const ValueKey('create-alerts'),
+            value: _alertsValue,
+            onChanged: (value) {
+              _alertsValue = value;
+              _c.update(
+                (d) => value.enabled
+                    ? d.copyWith(alerts: value)
+                    : d.copyWith(clearAlerts: true),
+              );
+              setState(() {});
+            },
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          l10n.cqAlertsPushNote,
+          key: const ValueKey('create-alerts-push-note'),
+          style: context.qioText.caption,
+        ),
+      ],
+    );
+  }
+
+  List<String> _alertsSummary(AlertsConfig? alerts, AppLocalizations l10n) {
+    if (alerts == null || !alerts.enabled) return [l10n.alertsOff];
+    final wait = alerts.maxWaitMin;
+    final noShow = alerts.maxNoShowPct;
+    final idle = alerts.idleMin;
+    return [
+      if (wait != null) '${l10n.alertsWaitLimit} ${l10n.alertsMinutes(wait)}',
+      if (noShow != null)
+        '${l10n.alertsNoShowLimit} ${l10n.alertsPercent(noShow)}',
+      if (idle != null) '${l10n.alertsIdleLimit} ${l10n.alertsMinutes(idle)}',
+      '${l10n.alertsCooldown}: ${l10n.alertsMinutes(alerts.cooldownMin)}',
+    ];
+  }
+
   Widget _reviewStep(AppLocalizations l10n) {
     final d = _c.draft.trimmed();
     final locale = Localizations.localeOf(context).toString();
@@ -855,6 +910,13 @@ class _CreateQueueScreenState extends State<CreateQueueScreen>
                 ? l10n.expiryAfterHours(expiry.hours)
                 : l10n.cqNoExpiry,
           ],
+        ),
+        const SizedBox(height: 12),
+        CreateQueueSummaryCard(
+          title: l10n.cqSummaryAlerts,
+          editKey: const ValueKey('create-edit-alerts'),
+          onEdit: _loading ? null : () => _edit(CreateQueueStep.alerts),
+          lines: _alertsSummary(d.alerts, l10n),
         ),
       ],
     );

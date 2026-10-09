@@ -66,7 +66,7 @@ Future<void> continueSteps(WidgetTester tester, int times) async {
 
 Future<void> goToReview(WidgetTester tester, {String name = 'Clínica'}) async {
   await typeName(tester, name);
-  await continueSteps(tester, 5);
+  await continueSteps(tester, 6);
 }
 
 String textOf(WidgetTester tester, String key) => tester

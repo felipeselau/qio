@@ -20,7 +20,7 @@ Future<void> submit(
   await pumpCreate(tester, queues: queues);
   await typeName(tester, 'Clínica');
   if (viaReview) {
-    await continueSteps(tester, 5);
+    await continueSteps(tester, 6);
     await tapKey(tester, 'create-submit');
   } else {
     await tapKey(tester, 'create-quick');

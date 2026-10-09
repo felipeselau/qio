@@ -1,3 +1,5 @@
+enum AlertsError { noRule, maxWait, maxNoShow, idle, cooldown }
+
 class AlertsConfig {
   const AlertsConfig({
     this.enabled = false,
@@ -12,6 +14,7 @@ class AlertsConfig {
   static const waitRange = (1, 240);
   static const noShowRange = (1, 100);
   static const idleRange = (5, 240);
+  static const cooldownRange = (5, 1440);
 
   final bool enabled;
   final int? maxWaitMin;
@@ -63,4 +66,17 @@ class AlertsConfig {
     'idleMin': ?idleMin,
     'cooldownMin': cooldownMin,
   };
+
+  static bool _inRange(int? v, (int, int) range) =>
+      v == null || (v >= range.$1 && v <= range.$2);
+
+  AlertsError? validate() {
+    if (!enabled) return null;
+    if (!_inRange(maxWaitMin, waitRange)) return AlertsError.maxWait;
+    if (!_inRange(maxNoShowPct, noShowRange)) return AlertsError.maxNoShow;
+    if (!_inRange(idleMin, idleRange)) return AlertsError.idle;
+    if (!_inRange(cooldownMin, cooldownRange)) return AlertsError.cooldown;
+    if (activeRules == 0) return AlertsError.noRule;
+    return null;
+  }
 }

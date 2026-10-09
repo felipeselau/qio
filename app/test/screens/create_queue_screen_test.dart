@@ -127,7 +127,7 @@ void main() {
       await tapKey(tester, 'expiry-enabled');
       expect(byKeyName('expiry-clear'), findsNothing);
       expect(byKeyName('expiry-reset'), findsNothing);
-      await tapKey(tester, 'create-continue');
+      await continueSteps(tester, 2);
 
       expect(find.text('Tempo médio: 20 min'), findsOneWidget);
       expect(find.text('Limite de espera: 30 pessoas'), findsOneWidget);
@@ -242,8 +242,10 @@ void main() {
       expect(byKeyName('create-color'), findsOneWidget);
       await tapKey(tester, 'create-skip');
       await tapKey(tester, 'create-skip');
+      await tapKey(tester, 'create-skip');
 
       expect(byKeyName('create-submit'), findsOneWidget);
+      expect(find.text('Desligado'), findsOneWidget);
       expect(find.text('Tempo médio: 10 min'), findsOneWidget);
       expect(find.text('Sempre aberta'), findsOneWidget);
     });
@@ -425,7 +427,7 @@ void main() {
       await continueSteps(tester, 3);
       await tester.tap(find.bySemanticsLabel('#7C3AED'));
       await tester.pumpAndSettle();
-      await continueSteps(tester, 2);
+      await continueSteps(tester, 3);
 
       expect(find.text('Loja Centro'), findsOneWidget);
       expect(byKeyName('create-review-group'), findsOneWidget);
@@ -437,7 +439,7 @@ void main() {
       await typeName(tester, 'Clínica');
       final first = tester.getSize(byKeyName('create-continue')).height;
       final top1 = tester.getTopLeft(byKeyName('create-continue')).dy;
-      await continueSteps(tester, 5);
+      await continueSteps(tester, 6);
       expect(byKeyName('create-submit'), findsOneWidget);
       expect(tester.getSize(byKeyName('create-submit')).height, first);
       expect(tester.getTopLeft(byKeyName('create-submit')).dy, top1);
@@ -472,10 +474,10 @@ void main() {
     testWidgets('barra de progresso anuncia o passo', (tester) async {
       final handle = tester.ensureSemantics();
       await pumpCreate(tester);
-      expect(find.bySemanticsLabel('Passo 1 de 6'), findsOneWidget);
+      expect(find.bySemanticsLabel('Passo 1 de 7'), findsOneWidget);
       await typeName(tester, 'Clínica');
       await tapKey(tester, 'create-continue');
-      expect(find.bySemanticsLabel('Passo 2 de 6'), findsOneWidget);
+      expect(find.bySemanticsLabel('Passo 2 de 7'), findsOneWidget);
       handle.dispose();
     });
 
@@ -493,7 +495,7 @@ void main() {
       final handle = tester.ensureSemantics();
       await pumpCreate(tester);
       await typeName(tester, 'Clínica');
-      for (var i = 0; i < 5; i++) {
+      for (var i = 0; i < 6; i++) {
         await expectLater(tester, meetsGuideline(labeledTapTargetGuideline));
         await expectLater(tester, meetsGuideline(androidTapTargetGuideline));
         await tapKey(tester, 'create-continue');

@@ -295,6 +295,7 @@ class FakeQueueService implements QueueService {
     createdSlots = slots;
     createdSchedule = schedule;
     createdBrandColor = brandColor;
+    createdAlerts = alerts;
     createdArgs = (
       name: name,
       description: description,
@@ -311,6 +312,7 @@ class FakeQueueService implements QueueService {
   Future<void>? createGate;
   QueueSchedule? createdSchedule;
   String? createdBrandColor;
+  AlertsConfig? createdAlerts;
   ({
     String name,
     String? description,
