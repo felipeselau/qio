@@ -16,7 +16,7 @@ import 'queue_schedule_tile.dart';
 import 'slots_editor.dart';
 
 const kPanelWideBreakpoint = 900.0;
-const kPanelCompactBarBreakpoint = 420.0;
+const kPanelCompactBarBreakpoint = 600.0;
 
 bool isPanelWide(double width) => width >= kPanelWideBreakpoint;
 

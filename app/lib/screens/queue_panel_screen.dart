@@ -10,10 +10,13 @@ import '../services/deferred_action.dart';
 import '../services/entry_diff.dart';
 import '../services/group_service.dart';
 import '../services/haptics.dart';
+import '../services/manual_entry_service.dart';
 import '../services/operator_service.dart';
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
+import '../widgets/queue_panel/add_person_dialog.dart';
 import '../widgets/queue_panel/queue_action_bar.dart';
+import '../widgets/queue_panel/queue_compact_menu.dart';
 import '../widgets/queue_panel/panel_notices.dart';
 import '../widgets/queue_panel/queue_panel_title.dart';
 import '../widgets/queue_panel/queue_settings_actions.dart';
@@ -32,6 +35,7 @@ class QueuePanelScreen extends StatefulWidget {
     this.isOwner = true,
     this.queues,
     this.operators,
+    this.manualEntries,
     this.groups,
     this.showTour = true,
   });
@@ -41,6 +45,7 @@ class QueuePanelScreen extends StatefulWidget {
   final bool isOwner;
   final QueueService? queues;
   final OperatorService? operators;
+  final ManualEntryService? manualEntries;
   @visibleForTesting
   final GroupService? groups;
   @visibleForTesting
@@ -57,6 +62,8 @@ class _QueuePanelScreenState extends State<QueuePanelScreen>
   QueueService get _queues => widget.queues ?? QueueService.instance;
   OperatorService get _operators =>
       widget.operators ?? OperatorService.instance;
+  ManualEntryService get _manualEntries =>
+      widget.manualEntries ?? ManualEntryService.instance;
 
   bool _actionLoading = false;
   int _finishCount = 0;
@@ -188,25 +195,44 @@ class _QueuePanelScreenState extends State<QueuePanelScreen>
           ),
           centerTitle: true,
           actions: [
-            if (!isPanelWide(MediaQuery.sizeOf(context).width))
-              QueueSettingsActions(
+            IconButton(
+              constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              icon: const Icon(Icons.person_add_alt_1_outlined),
+              tooltip: AppLocalizations.of(context).addPerson,
+              onPressed: _actionLoading ? null : _addPerson,
+            ),
+            if (isPanelCompactBar(context))
+              QueueCompactMenu(
                 queueId: widget.queueId,
                 queueName: widget.queueName,
                 isOwner: widget.isOwner,
-                qrKey: _qrKey,
-                settingsKey: _settingsKey,
+                showSettings: !isPanelWide(MediaQuery.sizeOf(context).width),
+                menuKey: _qrKey,
+                onStatus: _updateStatus,
                 queues: _queues,
                 groups: widget.groups,
                 onQueueGone: _onQueueGone,
-              ),
-            if (widget.isOwner)
-              QueueStatusActions(
-                queueId: widget.queueId,
-                queueName: widget.queueName,
-                onStatus: _updateStatus,
-                queues: _queues,
-                compact: isPanelCompactBar(context),
-              ),
+              )
+            else ...[
+              if (!isPanelWide(MediaQuery.sizeOf(context).width))
+                QueueSettingsActions(
+                  queueId: widget.queueId,
+                  queueName: widget.queueName,
+                  isOwner: widget.isOwner,
+                  qrKey: _qrKey,
+                  settingsKey: _settingsKey,
+                  queues: _queues,
+                  groups: widget.groups,
+                  onQueueGone: _onQueueGone,
+                ),
+              if (widget.isOwner)
+                QueueStatusActions(
+                  queueId: widget.queueId,
+                  queueName: widget.queueName,
+                  onStatus: _updateStatus,
+                  queues: _queues,
+                ),
+            ],
           ],
         ),
         body: QueuePanelBody(
@@ -287,6 +313,36 @@ class _QueuePanelScreenState extends State<QueuePanelScreen>
     } on Exception catch (e) {
       _showError(e);
     }
+  }
+
+  Future<void> _addPerson() async {
+    Queue? queue;
+    try {
+      queue = await _queues
+          .watchQueue(widget.queueId)
+          .first
+          .timeout(const Duration(seconds: 5));
+    } on Exception {
+      queue = null;
+    }
+    if (!mounted) return;
+    final result = await showAddPersonDialog(
+      context,
+      queueId: widget.queueId,
+      service: _manualEntries,
+      slots: queue?.slots ?? const [],
+      scheduled: queue?.isScheduled ?? false,
+    );
+    if (result == null) return;
+    Haptics.instance.light();
+    final messenger = _messenger;
+    final l10n = _l10n;
+    if (messenger == null || l10n == null || !messenger.mounted) return;
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(l10n.manualAdded(result.name, result.ticket))),
+      );
   }
 
   Future<void> _moveToEnd(QueueEntry entry) async {

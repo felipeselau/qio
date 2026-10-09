@@ -13,6 +13,7 @@ import 'package:qio_app/widgets/queue_panel/waiting_tile.dart';
 
 import '../helpers/fake_services.dart';
 import '../helpers/pump_app.dart';
+import '../helpers/panel_menu.dart';
 
 Future<void> tick(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 300));
@@ -56,7 +57,7 @@ void main() {
   testWidgets('gear opens settings with the owner tiles', (tester) async {
     await pumpApp(tester, panel(), size: const Size(390, 2400));
     await tick(tester);
-    await tester.tap(find.byTooltip('Configurações da fila'));
+    await tapPanelAction(tester, 'Configurações da fila');
     await tick(tester);
     expect(find.byType(QueueSettingsScreen), findsOneWidget);
     expect(find.byType(QueueQrCard), findsOneWidget);
@@ -68,7 +69,7 @@ void main() {
   testWidgets('QR shortcut opens the settings screen', (tester) async {
     await pumpApp(tester, panel(), size: const Size(390, 2400));
     await tick(tester);
-    await tester.tap(find.byTooltip('QR code da fila'));
+    await tapPanelAction(tester, 'QR code da fila');
     await tick(tester);
     expect(find.byType(QueueSettingsScreen), findsOneWidget);
     expect(find.byType(QueueQrCard), findsOneWidget);
@@ -78,7 +79,7 @@ void main() {
     await pumpApp(tester, panel(isOwner: false), size: const Size(390, 2400));
     await tick(tester);
     expect(find.byTooltip('Configurações da fila'), findsNothing);
-    await tester.tap(find.byTooltip('QR code da fila'));
+    await tapPanelAction(tester, 'QR code da fila');
     await tick(tester);
     expect(find.byType(QueueQrCard), findsOneWidget);
     expect(find.byType(OperatorsTile), findsNothing);
@@ -87,7 +88,7 @@ void main() {
   });
 
   testWidgets('shortcuts meet the 48dp tap target', (tester) async {
-    await pumpApp(tester, panel(), size: const Size(390, 844));
+    await pumpApp(tester, panel(), size: const Size(700, 844));
     await tick(tester);
     for (final tip in ['Configurações da fila', 'QR code da fila']) {
       final size = tester.getSize(

@@ -50,6 +50,7 @@ class QueueEntry {
     this.recalledAt,
     this.slotId,
     this.slotStart,
+    this.manual = false,
   });
 
   final String id;
@@ -68,6 +69,7 @@ class QueueEntry {
   final DateTime? recalledAt;
   final String? slotId;
   final DateTime? slotStart;
+  final bool manual;
 
   int get sortOrder => order ?? joinedAt.millisecondsSinceEpoch;
 
@@ -109,6 +111,7 @@ class QueueEntry {
               (data['slotStart'] as num).toInt(),
             )
           : null,
+      manual: data['manual'] == true,
     );
   }
 
@@ -119,7 +122,8 @@ class QueueEntry {
     'ticket': ticket,
     'name': name,
     'phone': phone,
-    'uid': uid,
+    if (!manual) 'uid': uid,
+    if (manual) 'manual': true,
     'fcmToken': fcmToken,
     'status': status.value,
     'joinedAt': joinedAt.millisecondsSinceEpoch,

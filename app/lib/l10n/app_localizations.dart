@@ -2998,6 +2998,126 @@ abstract class AppLocalizations {
   /// **'Nenhuma fila encontrada'**
   String get noQueuesMatch;
 
+  /// No description provided for @addPerson.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar pessoa'**
+  String get addPerson;
+
+  /// No description provided for @addPersonTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar pessoa à fila'**
+  String get addPersonTitle;
+
+  /// No description provided for @addPersonHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Para quem está no balcão e não usa o QR code.'**
+  String get addPersonHint;
+
+  /// No description provided for @manualPhoneLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Telefone (opcional)'**
+  String get manualPhoneLabel;
+
+  /// No description provided for @manualPhoneInvalid.
+  ///
+  /// In pt, this message translates to:
+  /// **'Use o formato (00) 00000-0000'**
+  String get manualPhoneInvalid;
+
+  /// No description provided for @manualNameRequired.
+  ///
+  /// In pt, this message translates to:
+  /// **'Informe um nome com até 60 caracteres'**
+  String get manualNameRequired;
+
+  /// No description provided for @manualSlotLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Horário'**
+  String get manualSlotLabel;
+
+  /// No description provided for @manualSlotOption.
+  ///
+  /// In pt, this message translates to:
+  /// **'{time} ({capacity} vagas)'**
+  String manualSlotOption(String time, int capacity);
+
+  /// No description provided for @manualSlotRequiredField.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolha um horário'**
+  String get manualSlotRequiredField;
+
+  /// No description provided for @manualAddConfirm.
+  ///
+  /// In pt, this message translates to:
+  /// **'Adicionar'**
+  String get manualAddConfirm;
+
+  /// No description provided for @manualAdded.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name} entrou na fila com a senha {ticket}'**
+  String manualAdded(String name, int ticket);
+
+  /// No description provided for @manualBadge.
+  ///
+  /// In pt, this message translates to:
+  /// **'Balcão'**
+  String get manualBadge;
+
+  /// No description provided for @manualAddQueueFull.
+  ///
+  /// In pt, this message translates to:
+  /// **'A fila está lotada no momento.'**
+  String get manualAddQueueFull;
+
+  /// No description provided for @manualAddSlotFull.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este horário está lotado.'**
+  String get manualAddSlotFull;
+
+  /// No description provided for @manualAddSlotRequired.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolha um horário válido.'**
+  String get manualAddSlotRequired;
+
+  /// No description provided for @manualAddSlotPassed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este horário já passou.'**
+  String get manualAddSlotPassed;
+
+  /// No description provided for @manualAddNotOpen.
+  ///
+  /// In pt, this message translates to:
+  /// **'A fila precisa estar aberta para adicionar pessoas.'**
+  String get manualAddNotOpen;
+
+  /// No description provided for @manualAddInvalid.
+  ///
+  /// In pt, this message translates to:
+  /// **'Confira o nome e o telefone informados.'**
+  String get manualAddInvalid;
+
+  /// No description provided for @manualAddRateLimited.
+  ///
+  /// In pt, this message translates to:
+  /// **'Muitas adições em pouco tempo. Aguarde alguns minutos.'**
+  String get manualAddRateLimited;
+
+  /// No description provided for @manualAddPhoneDuplicate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Este telefone já está na fila.'**
+  String get manualAddPhoneDuplicate;
+
   /// No description provided for @callPhoneTooltip.
   ///
   /// In pt, this message translates to:

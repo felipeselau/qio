@@ -10,6 +10,7 @@ import 'package:qio_app/models/queue_schedule.dart';
 import 'package:qio_app/models/queue_slot.dart';
 import 'package:qio_app/models/queue_group.dart';
 import 'package:qio_app/services/group_service.dart';
+import 'package:qio_app/services/manual_entry_service.dart';
 import 'package:qio_app/services/operator_service.dart';
 import 'package:qio_app/services/queue_service.dart';
 
@@ -35,6 +36,8 @@ QueueEntry fakeEntry(
   String? name,
   EntryStatus status = EntryStatus.waiting,
   String? operatorId,
+  bool manual = false,
+  String? phone,
 }) => QueueEntry(
   id: id,
   ticket: ticket,
@@ -44,7 +47,36 @@ QueueEntry fakeEntry(
   joinedAt: DateTime(2025, 5, 20, 10, ticket),
   calledAt: status == EntryStatus.called ? DateTime(2025, 5, 20, 11) : null,
   operatorId: operatorId,
+  manual: manual,
+  phone: phone,
 );
+
+class FakeManualEntryService implements ManualEntryService {
+  FakeManualEntryService({this.error, this.ticket = 7});
+
+  Object? error;
+  int ticket;
+  Future<void>? gate;
+  final List<Map<String, String?>> calls = [];
+
+  @override
+  Future<int> add({
+    required String queueId,
+    required String name,
+    String? phone,
+    String? slotId,
+  }) async {
+    calls.add({
+      'queueId': queueId,
+      'name': name,
+      'phone': phone,
+      'slotId': slotId,
+    });
+    await gate;
+    if (error != null) throw error!;
+    return ticket;
+  }
+}
 
 class FakeQueueService implements QueueService {
   FakeQueueService({
