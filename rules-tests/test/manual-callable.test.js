@@ -227,16 +227,21 @@ describe('callable addManualEntry (emulador)', () => {
   });
 
   it('teto absoluto de entries ativas sem maxWaiting', async () => {
+    const ceiling = Number(process.env.MANUAL_MAX_ACTIVE_ENTRIES);
+    assert.ok(
+      Number.isInteger(ceiling) && ceiling >= 2 && ceiling < 1000,
+      'defina MANUAL_MAX_ACTIVE_ENTRIES (ex.: 40) para o emulator de functions',
+    );
     const owner = await newClient();
     const operator = await newClient();
     await seed(owner, operator);
-    for (let chunk = 0; chunk < 20; chunk += 1) {
-      const entries = {};
-      for (let i = chunk * 50; i < chunk * 50 + 50; i += 1) {
-        entries[`e${i}`] = { ticket: i + 1, name: `P${i}`, phone: '', manual: true, status: 'waiting', joinedAt: 1 };
-      }
-      await adminDb((db) => update(ref(db, `queues/${QUEUE}/entries`), entries));
+    const entries = {};
+    for (let i = 0; i < ceiling - 1; i += 1) {
+      entries[`e${i}`] = { ticket: i + 1, name: `P${i}`, phone: '', manual: true, status: 'waiting', joinedAt: 1 };
     }
+    await adminDb((db) => update(ref(db, `queues/${QUEUE}/entries`), entries));
+    const last = await owner.add({ queueId: QUEUE, name: 'Última vaga' });
+    assert.equal(last.existing, undefined);
     await rejects(owner.add({ queueId: QUEUE, name: 'Extra' }), 'resource-exhausted', 'queue-full');
   });
 });

@@ -6,7 +6,7 @@
   "scripts": {
     "test": "npm run test:rules && npm run test:callable",
     "test:rules": "firebase emulators:exec --config ../firebase.json --project demo-qio --only firestore,database,storage \"node --test --test-concurrency=1 test/database.test.js test/firestore.test.js test/storage.test.js\"",
-    "test:callable": "STORAGE_BUCKET=demo-qio.appspot.com firebase emulators:exec --config ../firebase.json --project demo-qio --only firestore,database,functions,auth,storage \"node --test --test-concurrency=1 test/join-callable.test.js test/delete-callable.test.js test/manual-callable.test.js test/slug-callable.test.js test/dsr-callable.test.js\"",
+    "test:callable": "STORAGE_BUCKET=demo-qio.appspot.com MANUAL_MAX_ACTIVE_ENTRIES=40 firebase emulators:exec --config ../firebase.json --project demo-qio --only firestore,database,functions,auth,storage \"node --test --test-concurrency=1 test/join-callable.test.js test/delete-callable.test.js test/manual-callable.test.js test/slug-callable.test.js test/dsr-callable.test.js\"",
     "test:run": "node --test --test-concurrency=1"
   },
   "devDependencies": {
