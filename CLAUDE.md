@@ -596,6 +596,49 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
 - Retenção-alvo do `history`: 180 dias, **ainda não aplicada pelo código**. Mapa de
   dados e pendências do dono em `docs/privacidade.md`. Export sem telefone é a #160.
 
+## Link curto e cartaz
+
+- **Slug**: `queueSlugs/{slug}` no Firestore `{queueId, ownerId, createdAt}`. O
+  slug é o ID do doc, então a unicidade vem de create-only nas rules (`!exists`).
+  Formato `[a-z0-9-]{3,40}` sem `-` no início/fim; reservados: admin, api, app, q,
+  c, w, n, privacidade, termos, assets, fonts, icons. Regras duplicadas em
+  `app/lib/services/slug.dart`, `functions/src/slug.js`, `web/src/lib/slug.ts` e
+  `firestore.rules` (`validSlugId`); `functions/test/slug.test.js` confere a lista
+  nos 4 lugares e os 3 módulos testam os mesmos casos.
+- **Rules**: `get` só do dono do slug, `list` e `update` negados, `create` exige
+  dono da fila (`get(queues/{queueId}).ownerId`), `ownerId == auth.uid`,
+  `createdAt == request.time` e só as 3 chaves; `delete` só do dono. Nenhuma
+  validação nova no `update` de `queues` (limite de 1000 expressões): `slug` e
+  `posterTitle` (≤ 60, validado só no app) são campos livres lá.
+- **App**: tile "Link curto" em Configurações (`queue_slug_tile.dart`).
+  `QueueService.setSlug` faz um batch: cria o novo, apaga o antigo, grava
+  `queues/{id}.slug`. `permission-denied` com slug novo vira `SlugTaken`
+  ("já em uso"), pois as rules não distinguem a causa. Slug vazio remove. Com slug,
+  QR, copiar e compartilhar usam `https://qio.web.app/n/{slug}`; sem slug, `/q/{id}`.
+- **Web**: `/n/:slug` (`SlugRedirect.tsx`) chama a callable `resolveSlug` (auth
+  anônima, rate limit em memória de 30/min por uid e por instância, respeita
+  `ENFORCE_APP_CHECK`) e faz `replace` para `/q/{queueId}`. Slug inexistente ou
+  inválido mostra "Fila não encontrada". A web **não** inicializa o Firestore SDK
+  (pesaria muito no bundle); por isso a callable em vez de ler o doc. `/q/{id}` e
+  `/c/{id}` seguem iguais.
+- **deleteQueue/deleteAccount** apagam os slugs da fila (`listSlugs` por
+  `queueId` + `deleteSlug`, filtrados por fila e dono em `slugsToDelete`).
+- **Cartaz** (`qr_poster_screen.dart`, PDF em `services/poster.dart`): A4, A5 e
+  cartão de mesa (100×150 mm), faixa na cor da fila (`brandColor`, senão a cor do
+  QR), logo (`logoUrl` só se `https://firebasestorage.googleapis.com/`, download
+  com timeout de 6 s e falha silenciosa: sem logo o PDF sai igual), nome, frase
+  opcional `posterTitle`, instruções pt/en/es e o link. O PDF usa a fonte padrão
+  (Latin-1): `pdfSafeText` troca ★/—/aspas etc. e descarta emoji/CJK. Compartilhar
+  imagem (PNG da prévia), compartilhar PDF e imprimir.
+- **Deploy**: functions (`resolveSlug`, `deleteQueue`, `deleteAccount`) → rules do
+  Firestore → hosting → APK. Hosting antes das functions deixa `/n/` sem resolver;
+  APK antes das rules falha ao salvar slug (`permission-denied` vira "em uso").
+- **Limitações**: QR já impresso com `/q/{id}` continua válido; QR impresso com
+  `/n/{slug}` quebra se o dono trocar ou remover o slug (o antigo é apagado, não
+  reservado). O Android App Link cobre só `/q/*`, então `/n/` abre no navegador
+  (que redireciona para `/q/`). O rate limit da `resolveSlug` é por instância.
+  Um slug removido pode ser tomado por outra conta. Goldens não cobrem o cartaz.
+
 ## Tooling (adaptado do OpenCode)
 
 O framework de agentes (product → builder → reviewer → advisor) e as regras de
