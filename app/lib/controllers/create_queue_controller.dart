@@ -226,6 +226,14 @@ class CreateQueueController extends ChangeNotifier {
     return CreateQueueController(draft: draft, step: step);
   }
 
+  void restoreFrom(CreateQueueController other) {
+    _draft = other._draft;
+    _step = other._step;
+    _maxReached = other._maxReached;
+    _returnToReview = false;
+    notifyListeners();
+  }
+
   void _go(CreateQueueStep target) {
     _step = target;
     if (target.index > _maxReached) _maxReached = target.index;

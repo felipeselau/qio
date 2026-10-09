@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:qio_app/controllers/create_queue_controller.dart';
+import 'package:qio_app/controllers/create_queue_draft.dart';
 import 'package:qio_app/models/alerts_config.dart';
 import 'package:qio_app/screens/create_queue_screen.dart';
 
 import '../helpers/create_queue_flow.dart';
+import '../helpers/fake_draft_store.dart';
 import '../helpers/fake_services.dart';
 import '../helpers/pump_app.dart';
 
@@ -89,6 +92,43 @@ void main() {
       await tapKey(tester, 'alerts-wait');
       await tapKey(tester, 'alerts-enabled');
       await tapKey(tester, 'create-continue');
+      await tapKey(tester, 'create-submit');
+      expect(queues.createdAlerts, isNull);
+    });
+
+    testWidgets('rascunho com alerts restaura o formulário no passo', (
+      tester,
+    ) async {
+      final store = FakeCreateQueueDraftStore(
+        initial: {
+          'u1': CreateQueueController(
+            draft: const CreateQueueDraft(
+              name: 'Padaria',
+              alerts: AlertsConfig(enabled: true, idleMin: 20),
+            ),
+            step: CreateQueueStep.alerts,
+          ).toJson(),
+        },
+      );
+      await pumpCreate(tester, draftStore: store, uid: 'u1');
+      await tapKey(tester, 'create-resume-continue');
+      expect(byKeyName('alerts-idle'), findsOneWidget);
+      expect(find.text('20 min'), findsOneWidget);
+    });
+
+    testWidgets('rascunho antigo (versão 1, sem alerts) restaura', (
+      tester,
+    ) async {
+      final json = CreateQueueController(
+        draft: const CreateQueueDraft(name: 'Padaria'),
+        step: CreateQueueStep.review,
+      ).toJson()..['version'] = 1;
+      json.remove('alerts');
+      final store = FakeCreateQueueDraftStore(initial: {'u1': json});
+      final queues = await pumpCreate(tester, draftStore: store, uid: 'u1');
+      await tapKey(tester, 'create-resume-continue');
+      expect(byKeyName('create-submit'), findsOneWidget);
+      expect(find.text('Desligado'), findsOneWidget);
       await tapKey(tester, 'create-submit');
       expect(queues.createdAlerts, isNull);
     });

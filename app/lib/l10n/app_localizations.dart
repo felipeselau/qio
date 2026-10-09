@@ -3718,6 +3718,42 @@ abstract class AppLocalizations {
   /// **'Sem resposta. A fila pode ter sido criada: confira sua lista antes de tentar de novo.'**
   String get cqCreateTimeout;
 
+  /// No description provided for @cqResumeTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Continuar de onde parou?'**
+  String get cqResumeTitle;
+
+  /// No description provided for @cqResumeBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você tem uma fila em andamento que não foi criada. Quer continuar de onde parou ou descartar?'**
+  String get cqResumeBody;
+
+  /// No description provided for @cqResume.
+  ///
+  /// In pt, this message translates to:
+  /// **'Continuar'**
+  String get cqResume;
+
+  /// No description provided for @cqDiscardDraft.
+  ///
+  /// In pt, this message translates to:
+  /// **'Descartar'**
+  String get cqDiscardDraft;
+
+  /// No description provided for @cqSaveDraft.
+  ///
+  /// In pt, this message translates to:
+  /// **'Salvar rascunho'**
+  String get cqSaveDraft;
+
+  /// No description provided for @cqDraftDiscardBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Você já preencheu campos. Salve como rascunho para continuar depois ou descarte o que digitou.'**
+  String get cqDraftDiscardBody;
+
   /// No description provided for @cqCreatedTitle.
   ///
   /// In pt, this message translates to:
