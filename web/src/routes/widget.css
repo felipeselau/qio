@@ -10,6 +10,7 @@
   text-align: center;
   background: var(--surface);
   color: var(--text);
+  border-top: 6px solid var(--brand, var(--primary));
 }
 
 .widget-logo {
@@ -33,7 +34,7 @@
 .widget-name {
   font-size: 20px;
   font-weight: 700;
-  color: var(--brand, var(--text));
+  color: var(--text);
 }
 
 .widget-live {
@@ -50,7 +51,8 @@
 
 .widget-count strong {
   font-size: 40px;
-  color: var(--brand, var(--primary));
+  color: var(--text);
+  border-bottom: 3px solid var(--brand, var(--primary));
 }
 
 .widget-estimate,

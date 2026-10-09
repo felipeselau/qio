@@ -135,7 +135,7 @@
     "empty": "Sem fila no momento",
     "inQueue_one": "pessoa na fila",
     "inQueue_other": "pessoas na fila",
-    "estimate": "~{{minutes}} min",
+    "estimate": "espera ~{{minutes}} min",
     "beingServed_one": "{{count}} em atendimento",
     "beingServed_other": "{{count}} em atendimento"
   }

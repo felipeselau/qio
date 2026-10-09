@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   countPublic,
+  deriveWidgetState,
   futureTime,
+  parseWidgetMeta,
   parseWidgetTarget,
+  resolveWidgetSlug,
   widgetEstimateMin,
   widgetStatus,
 } from '../widget';
@@ -69,12 +72,101 @@ describe('widgetEstimateMin', () => {
 });
 
 describe('widgetStatus', () => {
-  it('normaliza valores desconhecidos para open', () => {
+  it('ausente vale open, desconhecido vale closed', () => {
     expect(widgetStatus('paused')).toBe('paused');
     expect(widgetStatus('closed')).toBe('closed');
     expect(widgetStatus('open')).toBe('open');
     expect(widgetStatus(undefined)).toBe('open');
-    expect(widgetStatus('x')).toBe('open');
+    expect(widgetStatus('x')).toBe('closed');
+    expect(widgetStatus(3)).toBe('closed');
+  });
+});
+
+describe('parseWidgetMeta', () => {
+  it('deleting, vazio e nao-objeto viram null', () => {
+    expect(parseWidgetMeta({ name: 'A', deleting: true })).toBeNull();
+    expect(parseWidgetMeta(null)).toBeNull();
+    expect(parseWidgetMeta('x')).toBeNull();
+  });
+
+  it('aplica filtros de cor e logo e le campos', () => {
+    const meta = parseWidgetMeta({
+      name: 'Cafe',
+      status: 'paused',
+      brandColor: '#2563eb',
+      logoUrl: 'https://evil.example/x.png',
+      avgServiceMinAuto: 4,
+      mode: 'schedule',
+    });
+    expect(meta).toMatchObject({
+      name: 'Cafe',
+      status: 'paused',
+      brandColor: '#2563EB',
+      logoUrl: null,
+      avgServiceMinAuto: 4,
+      scheduled: true,
+    });
+  });
+});
+
+describe('resolveWidgetSlug', () => {
+  it('devolve o queueId resolvido', async () => {
+    const r = await resolveWidgetSlug('cafe', async () => 'Q123');
+    expect(r).toEqual({ kind: 'ok', queueId: 'Q123' });
+  });
+
+  it('not-found cai para o proprio valor como queueId', async () => {
+    const r = await resolveWidgetSlug('abc123', async () => {
+      throw { code: 'functions/not-found' };
+    });
+    expect(r).toEqual({ kind: 'ok', queueId: 'abc123' });
+  });
+
+  it('outros erros viram failed', async () => {
+    const r = await resolveWidgetSlug('abc123', async () => {
+      throw { code: 'functions/unavailable' };
+    });
+    expect(r).toEqual({ kind: 'failed' });
+  });
+});
+
+describe('deriveWidgetState', () => {
+  const meta = parseWidgetMeta({ name: 'A' })!;
+  const base = {
+    resolved: { kind: 'ok', queueId: 'q' } as const,
+    authFailed: false,
+    listenFailed: false,
+    meta,
+    tickets: {} as Record<string, { status?: unknown }> | null,
+  };
+
+  it('fica em loading ate meta e public chegarem', () => {
+    expect(deriveWidgetState({ ...base, meta: undefined, tickets: null })).toEqual({
+      phase: 'loading',
+    });
+    expect(deriveWidgetState({ ...base, tickets: null })).toEqual({ phase: 'loading' });
+    expect(deriveWidgetState({ ...base, meta: undefined })).toEqual({ phase: 'loading' });
+    expect(deriveWidgetState({ ...base, resolved: { kind: 'pending' }, meta: undefined })).toEqual({
+      phase: 'loading',
+    });
+  });
+
+  it('pronto com contagem', () => {
+    const s = deriveWidgetState({ ...base, tickets: { a: { status: 'waiting' } } });
+    expect(s).toEqual({ phase: 'ready', meta, counts: { waiting: 1, called: 0 } });
+  });
+
+  it('notFound para meta null e slug invalido', () => {
+    expect(deriveWidgetState({ ...base, meta: null })).toEqual({ phase: 'notFound' });
+    expect(deriveWidgetState({ ...base, resolved: { kind: 'notFound' } })).toEqual({
+      phase: 'notFound',
+    });
+  });
+
+  it('failed para resolucao, auth e leitura', () => {
+    expect(deriveWidgetState({ ...base, resolved: { kind: 'failed' } })).toEqual({ phase: 'failed' });
+    expect(deriveWidgetState({ ...base, authFailed: true })).toEqual({ phase: 'failed' });
+    expect(deriveWidgetState({ ...base, listenFailed: true })).toEqual({ phase: 'failed' });
   });
 });
 

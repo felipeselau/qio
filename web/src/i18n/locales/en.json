@@ -135,7 +135,7 @@
     "empty": "No queue right now",
     "inQueue_one": "person in line",
     "inQueue_other": "people in line",
-    "estimate": "~{{minutes}} min",
+    "estimate": "wait ~{{minutes}} min",
     "beingServed_one": "{{count}} being served",
     "beingServed_other": "{{count}} being served"
   }

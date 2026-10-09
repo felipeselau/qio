@@ -1,60 +1,27 @@
 import { useCallback, useEffect, useState } from 'react';
-import { onAuthStateChanged, signInAnonymously } from 'firebase/auth';
 import { onValue, ref } from 'firebase/database';
-import { auth, db } from '../firebase';
-import { safeBrandColor, safeLogoUrl } from './queueLogic';
+import { db } from '../firebase';
+import { ensureSignedIn } from './anonAuth';
+import { resolveSlugToQueueId } from './resolveSlug';
 import {
-  countPublic,
-  widgetStatus,
+  deriveWidgetState,
+  parseWidgetMeta,
+  resolveWidgetSlug,
+  type Resolved,
   type WidgetCounts,
-  type WidgetStatus,
+  type WidgetMeta,
   type WidgetTarget,
 } from './widget';
-import { resolveSlugToQueueId } from './resolveSlug';
-import { slugErrorKind } from './slug';
 
-export type WidgetMeta = {
-  name: string;
-  status: WidgetStatus;
-  avgServiceMin: number | null;
-  avgServiceMinAuto: number | null;
-  statusMessage: string | null;
-  resumeAt: number | null;
-  opensAt: number | null;
-  brandColor: string | null;
-  logoUrl: string | null;
-  scheduled: boolean;
-};
+export type { WidgetMeta };
 
-export type WidgetState =
+export type WidgetView =
   | { phase: 'loading' }
   | { phase: 'notFound' }
   | { phase: 'failed'; retry: () => void }
   | { phase: 'ready'; queueId: string; meta: WidgetMeta; counts: WidgetCounts };
 
-type Resolved =
-  | { kind: 'pending' }
-  | { kind: 'ok'; queueId: string }
-  | { kind: 'notFound' }
-  | { kind: 'failed' };
-
-function parseMeta(val: Record<string, unknown>): WidgetMeta {
-  const num = (v: unknown) => (typeof v === 'number' ? v : null);
-  return {
-    name: typeof val.name === 'string' && val.name ? val.name : 'Qio',
-    status: widgetStatus(val.status),
-    avgServiceMin: num(val.avgServiceMin),
-    avgServiceMinAuto: num(val.avgServiceMinAuto),
-    statusMessage: typeof val.statusMessage === 'string' ? val.statusMessage : null,
-    resumeAt: num(val.resumeAt),
-    opensAt: num(val.opensAt),
-    brandColor: safeBrandColor(val.brandColor),
-    logoUrl: safeLogoUrl(val.logoUrl),
-    scheduled: val.mode === 'schedule',
-  };
-}
-
-export function useWidget(target: WidgetTarget): WidgetState {
+export function useWidget(target: WidgetTarget): WidgetView {
   const [ready, setReady] = useState(false);
   const [authFailed, setAuthFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -69,14 +36,20 @@ export function useWidget(target: WidgetTarget): WidgetState {
   }, []);
 
   useEffect(() => {
-    return onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setReady(true);
-        setAuthFailed(false);
-      } else {
-        signInAnonymously(auth).catch(() => setAuthFailed(true));
-      }
-    });
+    let active = true;
+    ensureSignedIn()
+      .then(() => {
+        if (active) {
+          setReady(true);
+          setAuthFailed(false);
+        }
+      })
+      .catch(() => {
+        if (active) setAuthFailed(true);
+      });
+    return () => {
+      active = false;
+    };
   }, [attempt]);
 
   const slug = target.kind === 'slug' ? target.slug : null;
@@ -95,18 +68,9 @@ export function useWidget(target: WidgetTarget): WidgetState {
     }
     setResolved({ kind: 'pending' });
     let active = true;
-    resolveSlugToQueueId(slug)
-      .then((queueId) => {
-        if (active) setResolved({ kind: 'ok', queueId });
-      })
-      .catch((err) => {
-        if (!active) return;
-        if (slugErrorKind(err) === 'notFound') {
-          setResolved({ kind: 'ok', queueId: slug });
-        } else {
-          setResolved({ kind: 'failed' });
-        }
-      });
+    void resolveWidgetSlug(slug, resolveSlugToQueueId).then((result) => {
+      if (active) setResolved(result);
+    });
     return () => {
       active = false;
     };
@@ -119,8 +83,7 @@ export function useWidget(target: WidgetTarget): WidgetState {
     const unsubMeta = onValue(
       ref(db, `queues/${queueId}/meta`),
       (snap) => {
-        const val = snap.val();
-        setMeta(val ? parseMeta(val) : null);
+        setMeta(parseWidgetMeta(snap.val()));
         setListenFailed(false);
       },
       () => setListenFailed(true),
@@ -128,7 +91,7 @@ export function useWidget(target: WidgetTarget): WidgetState {
     const unsubPublic = onValue(
       ref(db, `queues/${queueId}/public`),
       (snap) => setTickets(snap.val() ?? {}),
-      () => {},
+      () => setListenFailed(true),
     );
     return () => {
       unsubMeta();
@@ -136,9 +99,10 @@ export function useWidget(target: WidgetTarget): WidgetState {
     };
   }, [ready, queueId, attempt]);
 
-  if (resolved.kind === 'notFound') return { phase: 'notFound' };
-  if (resolved.kind === 'failed' || authFailed || listenFailed) return { phase: 'failed', retry };
-  if (meta === null) return { phase: 'notFound' };
-  if (meta === undefined) return { phase: 'loading' };
-  return { phase: 'ready', queueId: queueId ?? '', meta, counts: countPublic(tickets) };
+  const state = deriveWidgetState({ resolved, authFailed, listenFailed, meta, tickets });
+  if (state.phase === 'failed') return { phase: 'failed', retry };
+  if (state.phase === 'ready') {
+    return queueId ? { ...state, queueId } : { phase: 'loading' };
+  }
+  return state;
 }

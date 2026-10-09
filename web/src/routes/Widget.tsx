@@ -95,7 +95,11 @@ function Notice({ meta, now }: { meta: WidgetMeta; now: number }) {
 
 export default function Widget() {
   useTheme();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const language = i18n.language;
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
   const navigate = useNavigate();
   const { id } = useParams();
   const state = useWidget(parseWidgetTarget(id));

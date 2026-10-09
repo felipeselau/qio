@@ -37,9 +37,16 @@ disponível e centraliza o conteúdo.
 - Tempo real: lê só `queues/{id}/meta` e `queues/{id}/public` no RTDB (auth anônima). Nunca
   lê `entries`.
 - Contagem: "N na fila" = entries `waiting` em `public/`; "N em atendimento" = `called`.
-- Estimativa: `(N + 1) × (avgServiceMinAuto ?? avgServiceMin ?? 10)` minutos, a mesma
-  conta da página da senha para quem entraria agora. Sem fila, ou em fila por horário
-  (`mode == 'schedule'`), não mostra estimativa.
+- Estimativa ("espera ~X min"): tempo de espera para quem entrar agora,
+  `(N + 1) × (avgServiceMinAuto ?? avgServiceMin ?? 10)` minutos. Sem fila, ou em fila por
+  horário (`mode == 'schedule'`), não mostra estimativa.
+- Carregamento: a tela fica em "Carregando" até chegarem `meta` e `public/`, para não mostrar
+  "Sem fila" por engano. Erro de leitura em qualquer um dos dois mostra erro com "Tentar de novo".
+- `meta/deleting == true` ou `meta` inexistente: "Fila não encontrada". Status desconhecido (valor
+  que não seja open/paused/closed) é tratado como fechada, nunca como aberta; status ausente
+  (fila antiga) vale aberta, como na página da senha.
+- Cor da fila só em detalhes (borda, logo, sublinhado do número): o texto usa a cor padrão do
+  tema para manter o contraste no escuro.
 - Fila em pausa ou fechada mostra `statusMessage`, previsão de retorno (`resumeAt`) e horário de
   abertura (`opensAt`), só quando estão no futuro.
 - Tema: cor e logo da fila (`safeBrandColor`/`safeLogoUrl`); claro/escuro segue o sistema ou
