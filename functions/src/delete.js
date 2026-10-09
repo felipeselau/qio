@@ -41,9 +41,9 @@ function invitesToDelete(invites, queueId, ownerId) {
     .map((i) => i.code);
 }
 
-function slugsToDelete(slugs, queueId, ownerId) {
+function slugsToRelease(slugs, queueId, ownerId) {
   return slugs
-    .filter((s) => s && s.queueId === queueId && s.ownerId === ownerId)
+    .filter((s) => s && s.queueId === queueId && s.ownerId === ownerId && s.released !== true)
     .map((s) => s.slug);
 }
 
@@ -75,8 +75,8 @@ async function deleteQueueData(queueId, ownerId, deps, log = () => {}) {
   }
 
   const slugs = await deps.listSlugs(queueId);
-  for (const slug of slugsToDelete(slugs, queueId, ownerId)) {
-    await deps.deleteSlug(slug);
+  for (const slug of slugsToRelease(slugs, queueId, ownerId)) {
+    await deps.releaseSlug(slug);
   }
 
   await deps.deleteLogos(queueId);
@@ -143,7 +143,7 @@ module.exports = {
   isSafeId,
   assertRecentLogin,
   invitesToDelete,
-  slugsToDelete,
+  slugsToRelease,
   deleteLogoFiles,
   deleteQueueData,
   deleteOwnedQueue,

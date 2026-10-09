@@ -751,23 +751,132 @@ describe('Firestore rules', () => {
       await assertFails(getDoc(doc(db(STRANGER), 'queueSlugs', 'padaria')));
     });
 
-    it('só o dono apaga o slug', async () => {
+    it('ninguém apaga o slug (só tombstone)', async () => {
       await seedSlug('padaria');
       await assertFails(deleteDoc(doc(db(STRANGER), 'queueSlugs', 'padaria')));
-      await assertSucceeds(deleteDoc(doc(db(OWNER), 'queueSlugs', 'padaria')));
+      await assertFails(deleteDoc(doc(db(OWNER), 'queueSlugs', 'padaria')));
     });
 
-    it('troca de slug em batch: cria o novo, apaga o antigo e grava queues.slug', async () => {
-      await seedSlug('antigo');
+    it('anônimo não cria slug nem para a própria fila', async () => {
+      await assertFails(setDoc(doc(anonDb(OWNER), 'queueSlugs', 'anonimo'), slugDoc()));
+    });
+
+    it('queueId com caracteres inválidos é recusado', async () => {
       await env.withSecurityRulesDisabled((ctx) =>
-        updateDoc(doc(ctx.firestore(), 'queues', QUEUE), { slug: 'antigo' }),
+        setDoc(doc(ctx.firestore(), 'queues', 'a.b'), { ownerId: OWNER, name: 'X', status: 'open' }),
       );
-      const fs = db(OWNER);
-      const batch = writeBatch(fs);
-      batch.set(doc(fs, 'queueSlugs', 'novo-nome'), slugDoc());
-      batch.delete(doc(fs, 'queueSlugs', 'antigo'));
-      batch.update(doc(fs, 'queues', QUEUE), { slug: 'novo-nome' });
-      await assertSucceeds(batch.commit());
+      await assertFails(setDoc(doc(db(OWNER), 'queueSlugs', 'ponto'), slugDoc({ queueId: 'a.b' })));
+    });
+
+    describe('tombstone', () => {
+      const daysAgo = (d) => Timestamp.fromMillis(Date.now() - d * 86400 * 1000);
+      const tomb = (ownerId, daysOld) => ({
+        queueId: 'q-velha',
+        ownerId,
+        createdAt: daysAgo(daysOld + 5),
+        released: true,
+        releasedAt: daysAgo(daysOld),
+      });
+
+      beforeEach(async () => {
+        await env.withSecurityRulesDisabled((ctx) =>
+          setDoc(doc(ctx.firestore(), 'queues', 'q2'), { ownerId: STRANGER, name: 'Outra', status: 'open' }),
+        );
+      });
+
+      it('dono libera o próprio slug (tombstone)', async () => {
+        await seedSlug('padaria');
+        const ref = doc(db(OWNER), 'queueSlugs', 'padaria');
+        await assertSucceeds(updateDoc(ref, { released: true, releasedAt: serverTimestamp() }));
+        await env.withSecurityRulesDisabled(async (ctx) => {
+          const snap = await getDoc(doc(ctx.firestore(), 'queueSlugs', 'padaria'));
+          assert.equal(snap.get('released'), true);
+          assert.equal(snap.get('queueId'), QUEUE);
+        });
+      });
+
+      it('estranho não libera slug alheio', async () => {
+        await seedSlug('padaria');
+        await assertFails(
+          updateDoc(doc(db(STRANGER), 'queueSlugs', 'padaria'), { released: true, releasedAt: serverTimestamp() }),
+        );
+      });
+
+      it('liberar não aceita releasedAt arbitrário nem outros campos', async () => {
+        await seedSlug('padaria');
+        const ref = doc(db(OWNER), 'queueSlugs', 'padaria');
+        await assertFails(updateDoc(ref, { released: true, releasedAt: Timestamp.fromMillis(1) }));
+        await assertFails(updateDoc(ref, { released: true, releasedAt: serverTimestamp(), queueId: 'q2' }));
+        await assertFails(updateDoc(ref, { released: true, releasedAt: serverTimestamp(), extra: 1 }));
+      });
+
+      it('outro dono NÃO toma o slug dentro de 30 dias', async () => {
+        await seedSlug('velho', tomb(OWNER, 1));
+        await assertFails(
+          setDoc(doc(db(STRANGER), 'queueSlugs', 'velho'), slugDoc({ queueId: 'q2', ownerId: STRANGER })),
+        );
+        await seedSlug('quase', tomb(OWNER, 29));
+        await assertFails(
+          setDoc(doc(db(STRANGER), 'queueSlugs', 'quase'), slugDoc({ queueId: 'q2', ownerId: STRANGER })),
+        );
+      });
+
+      it('mesmo dono retoma dentro dos 30 dias', async () => {
+        await seedSlug('velho', tomb(OWNER, 1));
+        await assertSucceeds(setDoc(doc(db(OWNER), 'queueSlugs', 'velho'), slugDoc()));
+        await env.withSecurityRulesDisabled(async (ctx) => {
+          const snap = await getDoc(doc(ctx.firestore(), 'queueSlugs', 'velho'));
+          assert.equal(snap.get('released'), undefined);
+          assert.equal(snap.get('queueId'), QUEUE);
+        });
+      });
+
+      it('após 30 dias outro dono toma o slug', async () => {
+        await seedSlug('velho', tomb(OWNER, 31));
+        await assertSucceeds(
+          setDoc(doc(db(STRANGER), 'queueSlugs', 'velho'), slugDoc({ queueId: 'q2', ownerId: STRANGER })),
+        );
+      });
+
+      it('retomar tombstone exige as validações de criação', async () => {
+        await seedSlug('velho', tomb(OWNER, 31));
+        await assertFails(
+          setDoc(doc(anonDb(STRANGER), 'queueSlugs', 'velho'), slugDoc({ queueId: 'q2', ownerId: STRANGER })),
+        );
+        await assertFails(setDoc(doc(db(STRANGER), 'queueSlugs', 'velho'), slugDoc({ ownerId: STRANGER })));
+      });
+
+      it('slug ativo não pode ser retomado nem pelo dono', async () => {
+        await seedSlug('ativo');
+        await assertFails(setDoc(doc(db(OWNER), 'queueSlugs', 'ativo'), slugDoc()));
+      });
+
+      it('tombstone é legível por qualquer logado; ativo só pelo dono', async () => {
+        await seedSlug('velho', tomb(OWNER, 1));
+        await seedSlug('ativo');
+        await assertSucceeds(getDoc(doc(db(STRANGER), 'queueSlugs', 'velho')));
+        await assertFails(getDoc(doc(db(STRANGER), 'queueSlugs', 'ativo')));
+        await assertSucceeds(getDoc(doc(db(STRANGER), 'queueSlugs', 'inexistente')));
+      });
+
+      it('troca em batch deixa tombstone do antigo e grava o novo', async () => {
+        await seedSlug('antigo');
+        await env.withSecurityRulesDisabled((ctx) =>
+          updateDoc(doc(ctx.firestore(), 'queues', QUEUE), { slug: 'antigo' }),
+        );
+        const fs = db(OWNER);
+        const batch = writeBatch(fs);
+        batch.set(doc(fs, 'queueSlugs', 'novo-nome'), slugDoc());
+        batch.update(doc(fs, 'queueSlugs', 'antigo'), { released: true, releasedAt: serverTimestamp() });
+        batch.update(doc(fs, 'queues', QUEUE), { slug: 'novo-nome' });
+        await assertSucceeds(batch.commit());
+        await env.withSecurityRulesDisabled(async (ctx) => {
+          const old = await getDoc(doc(ctx.firestore(), 'queueSlugs', 'antigo'));
+          assert.equal(old.get('released'), true);
+          const next = await getDoc(doc(ctx.firestore(), 'queueSlugs', 'novo-nome'));
+          assert.equal(next.get('queueId'), QUEUE);
+        });
+      });
     });
 
     it('batch com slug em uso falha inteiro e não altera a fila', async () => {

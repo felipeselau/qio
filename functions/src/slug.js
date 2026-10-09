@@ -1,3 +1,6 @@
+const crypto = require('node:crypto');
+const { pruneTimestamps, isRateLimited } = require('./join');
+
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/;
 const RESERVED_SLUGS = [
   'admin',
@@ -31,20 +34,25 @@ function parseSlug(value) {
   return isValidSlug(slug) ? slug : null;
 }
 
-function slugRateLimited(buckets, key, now, max = 30, windowMs = 60_000) {
-  const recent = (buckets.get(key) ?? []).filter((t) => now - t < windowMs);
-  if (recent.length >= max) {
-    buckets.set(key, recent);
-    return true;
+const SLUG_RATE_USER = { max: 30, windowMs: 60_000 };
+const SLUG_RATE_IP = { max: 120, windowMs: 60_000 };
+const SLUG_RELEASE_DAYS = 30;
+
+function nextSlugRate(current, now, options) {
+  const recent = pruneTimestamps(current, now, options.windowMs);
+  if (isRateLimited(recent, now, options)) {
+    return { limited: true, timestamps: recent };
   }
-  recent.push(now);
-  buckets.set(key, recent);
-  if (buckets.size > 5000) {
-    for (const [k, v] of buckets) {
-      if (v.every((t) => now - t >= windowMs)) buckets.delete(k);
-    }
-  }
-  return false;
+  return { limited: false, timestamps: [...recent, now] };
+}
+
+function hashIp(ip) {
+  if (typeof ip !== 'string' || ip.trim() === '') return null;
+  return crypto.createHash('sha256').update(ip.trim()).digest('hex').slice(0, 24);
+}
+
+function isReleasedSlug(data) {
+  return !!data && data.released === true;
 }
 
 module.exports = {
@@ -53,5 +61,10 @@ module.exports = {
   normalizeSlug,
   isValidSlug,
   parseSlug,
-  slugRateLimited,
+  SLUG_RATE_USER,
+  SLUG_RATE_IP,
+  SLUG_RELEASE_DAYS,
+  nextSlugRate,
+  hashIp,
+  isReleasedSlug,
 };

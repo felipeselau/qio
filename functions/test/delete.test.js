@@ -5,7 +5,7 @@ const {
   isSafeId,
   assertRecentLogin,
   invitesToDelete,
-  slugsToDelete,
+  slugsToRelease,
   deleteLogoFiles,
   deleteQueueData,
   deleteOwnedQueue,
@@ -26,7 +26,7 @@ function fakeDeps(overrides = {}) {
     listInvites: async () => [{ code: 'ABC123', queueId: 'q1', ownerId: 'u1' }],
     deleteInvite: rec('deleteInvite'),
     listSlugs: async () => [{ slug: 'minha-fila', queueId: 'q1', ownerId: 'u1' }],
-    deleteSlug: rec('deleteSlug'),
+    releaseSlug: rec('releaseSlug'),
     deleteLogos: rec('deleteLogos'),
     deleteQueueDoc: rec('deleteQueueDoc'),
     listOwnedQueueIds: async () => ['a', 'b'],
@@ -81,14 +81,22 @@ describe('invitesToDelete', () => {
   });
 });
 
-describe('slugsToDelete', () => {
+describe('slugsToRelease', () => {
   it('filtra por fila e dono', () => {
     const list = [
       { slug: 'a-fila', queueId: 'q1', ownerId: 'u1' },
       { slug: 'b-fila', queueId: 'q2', ownerId: 'u1' },
       { slug: 'c-fila', queueId: 'q1', ownerId: 'u2' },
     ];
-    assert.deepEqual(slugsToDelete(list, 'q1', 'u1'), ['a-fila']);
+    assert.deepEqual(slugsToRelease(list, 'q1', 'u1'), ['a-fila']);
+  });
+
+  it('ignora slugs já liberados', () => {
+    const list = [
+      { slug: 'a-fila', queueId: 'q1', ownerId: 'u1', released: true },
+      { slug: 'b-fila', queueId: 'q1', ownerId: 'u1', released: false },
+    ];
+    assert.deepEqual(slugsToRelease(list, 'q1', 'u1'), ['b-fila']);
   });
 });
 
@@ -136,14 +144,14 @@ describe('deleteQueueData', () => {
       ...QUEUE_RTDB_PATHS('q1').map((p) => `rtdb:${p}`),
       'deleteSubcollections',
       'deleteInvite',
-      'deleteSlug',
+      'releaseSlug',
       'deleteLogos',
       'rtdb:owners/q1',
       'deleteQueueDoc',
     ]);
   });
 
-  it('apaga o slug da fila e ignora slug de outra fila', async () => {
+  it('libera (tombstone) o slug da fila e ignora slug de outra fila', async () => {
     const deps = fakeDeps({
       listSlugs: async () => [
         { slug: 'minha-fila', queueId: 'q1', ownerId: 'u1' },
@@ -152,15 +160,15 @@ describe('deleteQueueData', () => {
     });
     await deleteQueueData('q1', 'u1', deps);
     assert.deepEqual(
-      deps.calls.filter((c) => c[0] === 'deleteSlug'),
-      [['deleteSlug', 'minha-fila']],
+      deps.calls.filter((c) => c[0] === 'releaseSlug'),
+      [['releaseSlug', 'minha-fila']],
     );
   });
 
-  it('sem slug não chama deleteSlug', async () => {
+  it('sem slug não chama releaseSlug', async () => {
     const deps = fakeDeps({ listSlugs: async () => [] });
     await deleteQueueData('q1', 'u1', deps);
-    assert.ok(!names(deps.calls).includes('deleteSlug'));
+    assert.ok(!names(deps.calls).includes('releaseSlug'));
   });
 
   it('meta é o último caminho do RTDB removido', () => {

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { initializeApp, deleteApp } from 'firebase/app';
 import { connectAuthEmulator, getAuth, signInAnonymously } from 'firebase/auth';
 import { connectFunctionsEmulator, getFunctions, httpsCallable } from 'firebase/functions';
+import { get, ref, remove } from 'firebase/database';
 import { doc, setDoc } from 'firebase/firestore';
 import { setupEnv } from './helpers.js';
 
@@ -17,10 +18,12 @@ describe('callable resolveSlug (emulador)', () => {
     apps.push(app);
     const auth = getAuth(app);
     connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
-    await signInAnonymously(auth);
+    const cred = await signInAnonymously(auth);
     const functions = getFunctions(app);
     connectFunctionsEmulator(functions, FUNCTIONS_HOST, Number(FUNCTIONS_PORT));
-    return async (slug) => (await httpsCallable(functions, 'resolveSlug')({ slug })).data;
+    const call = async (slug) => (await httpsCallable(functions, 'resolveSlug')({ slug })).data;
+    call.uid = cred.user.uid;
+    return call;
   }
 
   async function rejects(promise, code) {
@@ -41,8 +44,17 @@ describe('callable resolveSlug (emulador)', () => {
 
   beforeEach(async () => {
     await env.clearFirestore();
+    await env.withSecurityRulesDisabled((ctx) => remove(ref(ctx.database(), 'rateLimits/slug')));
     await env.withSecurityRulesDisabled((ctx) =>
       setDoc(doc(ctx.firestore(), 'queueSlugs', 'padaria'), { queueId: 'qpad', ownerId: 'o1' }),
+    );
+    await env.withSecurityRulesDisabled((ctx) =>
+      setDoc(doc(ctx.firestore(), 'queueSlugs', 'liberado'), {
+        queueId: 'qvelha',
+        ownerId: 'o1',
+        released: true,
+        releasedAt: new Date(),
+      }),
     );
   });
 
@@ -66,5 +78,36 @@ describe('callable resolveSlug (emulador)', () => {
     for (const bad of ['', 'ab', 'admin', '../x', 'a/b', null, 42]) {
       await rejects(resolve(bad), 'not-found');
     }
+  });
+
+  it('ignora tombstone (slug liberado) como se não existisse', async () => {
+    const resolve = await newClient();
+    await rejects(resolve('liberado'), 'not-found');
+  });
+
+  it('limita 30 resoluções por minuto por usuário', async () => {
+    const resolve = await newClient();
+    for (let i = 0; i < 30; i += 1) {
+      assert.deepEqual(await resolve('padaria'), { queueId: 'qpad' });
+    }
+    await rejects(resolve('padaria'), 'resource-exhausted');
+    const stored = await new Promise((res, rej) =>
+      env.withSecurityRulesDisabled(async (ctx) => {
+        try {
+          res((await get(ref(ctx.database(), `rateLimits/slug/${resolve.uid}`))).val());
+        } catch (err) {
+          rej(err);
+        }
+      }),
+    );
+    assert.equal(stored.length, 30);
+  });
+
+  it('slug inválido não consome o limite', async () => {
+    const resolve = await newClient();
+    for (let i = 0; i < 40; i += 1) {
+      await rejects(resolve('admin'), 'not-found');
+    }
+    assert.deepEqual(await resolve('padaria'), { queueId: 'qpad' });
   });
 });
