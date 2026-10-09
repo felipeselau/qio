@@ -1,15 +1,19 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import QueuePage from './routes/QueuePage';
 import Landing from './routes/Landing';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from './lib/theme';
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
+import { PRIVACY_PATH, TERMS_PATH } from './lib/privacy';
 import {
   analyticsConfigured,
   isAnalyticsOptedOut,
   setAnalyticsOptOut,
 } from './lib/analytics';
 import { LANGUAGES, LANGUAGE_LABELS, setLanguage, type Language } from './i18n';
+
+const Privacy = lazy(() => import('./routes/Privacy'));
+const Terms = lazy(() => import('./routes/Terms'));
 
 function NotFound() {
   const { t } = useTranslation();
@@ -21,22 +25,31 @@ function NotFound() {
   );
 }
 
-function AnalyticsFooter() {
+function AppFooter() {
   const { t } = useTranslation();
   const [optedOut, setOptedOut] = useState(isAnalyticsOptedOut);
-  if (!analyticsConfigured()) return null;
   return (
     <footer className="analytics-footer">
-      <button
-        type="button"
-        className="analytics-link"
-        onClick={() => {
-          setAnalyticsOptOut(!optedOut);
-          setOptedOut(!optedOut);
-        }}
-      >
-        {optedOut ? t('app.analyticsOptIn') : t('app.analyticsOptOut')}
-      </button>
+      <nav className="footer-links" aria-label={t('app.legalNav')}>
+        <Link className="analytics-link" to={PRIVACY_PATH}>
+          {t('app.privacy')}
+        </Link>
+        <Link className="analytics-link" to={TERMS_PATH}>
+          {t('app.terms')}
+        </Link>
+        {analyticsConfigured() && (
+          <button
+            type="button"
+            className="analytics-link"
+            onClick={() => {
+              setAnalyticsOptOut(!optedOut);
+              setOptedOut(!optedOut);
+            }}
+          >
+            {optedOut ? t('app.analyticsOptIn') : t('app.analyticsOptOut')}
+          </button>
+        )}
+      </nav>
     </footer>
   );
 }
@@ -76,10 +89,26 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/q/:queueId" element={<QueuePage />} />
           <Route path="/c/:queueId" element={<QueuePage />} />
+          <Route
+            path={PRIVACY_PATH}
+            element={
+              <Suspense fallback={null}>
+                <Privacy />
+              </Suspense>
+            }
+          />
+          <Route
+            path={TERMS_PATH}
+            element={
+              <Suspense fallback={null}>
+                <Terms />
+              </Suspense>
+            }
+          />
           <Route path="*" element={<NotFound />} />
         </Routes>
+        <AppFooter />
       </BrowserRouter>
-      <AnalyticsFooter />
     </div>
   );
 }

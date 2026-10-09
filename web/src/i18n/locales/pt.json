@@ -7,7 +7,10 @@
     "language": "Idioma",
     "loading": "Carregando a fila",
     "analyticsOptOut": "Não coletar estatísticas de uso",
-    "analyticsOptIn": "Voltar a permitir estatísticas de uso"
+    "analyticsOptIn": "Voltar a permitir estatísticas de uso",
+    "privacy": "Privacidade",
+    "terms": "Termos",
+    "legalNav": "Informações legais"
   },
   "queue": {
     "connectFailed": "Não foi possível conectar",
@@ -45,6 +48,8 @@
     "nameLabel": "Nome *",
     "namePlaceholder": "Seu nome",
     "phoneLabel": "Telefone",
+    "privacyNotice": "Usamos seu nome e telefone só para organizar esta fila.",
+    "privacyLink": "Veja a política de privacidade",
     "joining": "Entrando...",
     "join": "Entrar na fila",
     "defaultName": "Fila",
