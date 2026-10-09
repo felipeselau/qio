@@ -18,6 +18,7 @@ import 'action_errors.dart';
 import 'analytics_service.dart';
 import 'delete_service.dart';
 import 'finish_entry.dart';
+import 'join_url.dart';
 import 'mirror.dart';
 
 const maxQueuesPerOwner = 20;
@@ -665,5 +666,5 @@ class QueueService {
     }
   }
 
-  String queueJoinUrl(String queueId) => 'https://qio.web.app/q/$queueId';
+  String queueJoinUrl(String queueId) => joinUrl(queueId);
 }
