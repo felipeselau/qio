@@ -569,5 +569,8 @@
   "slugReservedError": "That name is reserved. Choose another.",
   "slugTakenError": "That link is already in use. Choose another.",
   "slugSaved": "Short link saved",
-  "slugRemoved": "Short link removed"
+  "slugRemoved": "Short link removed",
+  "slugReleaseNotice": "Changing the link invalidates QR codes printed with the old link. The old link stays reserved for you for 30 days.",
+  "posterNameLossy": "Some characters are not available in the PDF font and will be omitted or replaced.",
+  "posterNameFallback": "Queue"
 }

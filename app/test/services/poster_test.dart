@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'dart:ui' show Locale;
 
 import 'package:flutter_test/flutter_test.dart';
@@ -61,6 +62,38 @@ void main() {
       expect(isValidPosterTitle('a' * 61), isFalse);
       expect(isValidPosterTitle('  ${'a' * 60}  '), isTrue);
       expect(isValidPosterTitle(''), isTrue);
+    });
+  });
+
+  group('pdfTextLosesChars', () {
+    test('detecta troca ou descarte', () {
+      expect(pdfTextLosesChars('Padaria ★'), isTrue);
+      expect(pdfTextLosesChars('Fila 😀'), isTrue);
+      expect(pdfTextLosesChars('Pão ¡Sí!'), isFalse);
+    });
+  });
+
+  group('limite do logo', () {
+    test('rejeita vazio, nulo e acima de 1 MB', () {
+      expect(() => posterLogoFromBytes(null), throwsFormatException);
+      expect(() => posterLogoFromBytes(Uint8List(0)), throwsFormatException);
+      expect(
+        () => posterLogoFromBytes(Uint8List(posterLogoMaxBytes + 1)),
+        throwsFormatException,
+      );
+    });
+
+    test('aceita imagem pequena válida', () {
+      expect(posterLogoFromBytes(base64Decode(_pngBase64)), isNotNull);
+    });
+
+    test('loader que estoura o limite vira null', () async {
+      final logo = await fetchPosterLogo(
+        'https://firebasestorage.googleapis.com/v0/b/x/o/y',
+        loader: (_) async =>
+            posterLogoFromBytes(Uint8List(posterLogoMaxBytes + 1)),
+      );
+      expect(logo, isNull);
     });
   });
 

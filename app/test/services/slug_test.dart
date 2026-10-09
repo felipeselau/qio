@@ -72,4 +72,79 @@ void main() {
       expect(queueLinkUrl('q1', 'cafe'), 'https://qio.web.app/n/cafe');
     });
   });
+
+  group('slugAvailability', () {
+    final now = DateTime(2026, 10, 9);
+    SlugAvailability check({
+      bool exists = true,
+      bool released = false,
+      String owner = 'outro',
+      DateTime? releasedAt,
+    }) => slugAvailability(
+      exists: exists,
+      uid: 'eu',
+      now: now,
+      released: released,
+      ownerId: owner,
+      releasedAt: releasedAt,
+    );
+
+    test('inexistente está livre', () {
+      expect(check(exists: false), SlugAvailability.free);
+    });
+
+    test('ativo está em uso, mesmo sendo meu', () {
+      expect(check(owner: 'eu'), SlugAvailability.taken);
+      expect(check(), SlugAvailability.taken);
+    });
+
+    test('tombstone meu pode ser retomado', () {
+      expect(
+        check(released: true, owner: 'eu', releasedAt: now),
+        SlugAvailability.mine,
+      );
+    });
+
+    test('tombstone de outro só livra depois de 30 dias', () {
+      expect(
+        check(
+          released: true,
+          releasedAt: now.subtract(const Duration(days: 29)),
+        ),
+        SlugAvailability.taken,
+      );
+      expect(
+        check(
+          released: true,
+          releasedAt: now.subtract(const Duration(days: 31)),
+        ),
+        SlugAvailability.free,
+      );
+      expect(check(released: true), SlugAvailability.taken);
+    });
+  });
+
+  group('canReleaseSlug', () {
+    bool can({
+      bool exists = true,
+      bool released = false,
+      String owner = 'eu',
+      String queue = 'q1',
+    }) => canReleaseSlug(
+      exists: exists,
+      uid: 'eu',
+      queueId: 'q1',
+      released: released,
+      ownerId: owner,
+      docQueueId: queue,
+    );
+
+    test('só libera slug ativo meu da mesma fila', () {
+      expect(can(), isTrue);
+      expect(can(exists: false), isFalse);
+      expect(can(released: true), isFalse);
+      expect(can(owner: 'outro'), isFalse);
+      expect(can(queue: 'q2'), isFalse);
+    });
+  });
 }

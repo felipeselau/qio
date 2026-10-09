@@ -1787,4 +1787,15 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get slugRemoved => 'Link curto removido';
+
+  @override
+  String get slugReleaseNotice =>
+      'Trocar o link invalida os QRs impressos com o link antigo. O link antigo fica reservado por 30 dias para você.';
+
+  @override
+  String get posterNameLossy =>
+      'Alguns caracteres do texto não existem na fonte do PDF e serão omitidos ou trocados.';
+
+  @override
+  String get posterNameFallback => 'Fila';
 }

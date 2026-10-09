@@ -617,5 +617,8 @@
   "slugReservedError": "Esse nome é reservado. Escolha outro.",
   "slugTakenError": "Esse link já está em uso. Escolha outro.",
   "slugSaved": "Link curto salvo",
-  "slugRemoved": "Link curto removido"
+  "slugRemoved": "Link curto removido",
+  "slugReleaseNotice": "Trocar o link invalida os QRs impressos com o link antigo. O link antigo fica reservado por 30 dias para você.",
+  "posterNameLossy": "Alguns caracteres do texto não existem na fonte do PDF e serão omitidos ou trocados.",
+  "posterNameFallback": "Fila"
 }

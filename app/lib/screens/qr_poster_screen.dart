@@ -147,6 +147,7 @@ class _QrPosterScreenState extends State<QrPosterScreen> {
       instructions: posterInstructions(Localizations.localeOf(context)),
       title: _headline,
       logo: logo,
+      fallbackName: AppLocalizations.of(context).posterNameFallback,
     );
   }
 
@@ -208,7 +209,9 @@ class _QrPosterScreenState extends State<QrPosterScreen> {
                     child: AspectRatio(
                       aspectRatio: 1 / _size.aspect,
                       child: _PosterPreview(
-                        queueName: widget.queueName,
+                        queueName: pdfSafeText(widget.queueName).isEmpty
+                            ? l10n.posterNameFallback
+                            : widget.queueName,
                         url: widget.joinUrl,
                         displayUrl: _displayUrl,
                         title: _headline,
@@ -225,6 +228,19 @@ class _QrPosterScreenState extends State<QrPosterScreen> {
               ),
             ),
           ),
+          if (pdfTextLosesChars(widget.queueName) ||
+              pdfTextLosesChars(_headline ?? '')) ...[
+            const SizedBox(height: 12),
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                l10n.posterNameLossy,
+                style: context.qioText.caption.copyWith(
+                  color: context.qio.gray700,
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 24),
           Text(
             l10n.posterSize,

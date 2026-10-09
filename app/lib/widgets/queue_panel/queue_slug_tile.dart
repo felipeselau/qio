@@ -203,6 +203,15 @@ class _SlugDialogState extends State<_SlugDialog> {
                   style: context.qioText.caption,
                 ),
               ),
+              if (widget.currentSlug != null) ...[
+                const SizedBox(height: 8),
+                Text(
+                  l10n.slugReleaseNotice,
+                  style: context.qioText.caption.copyWith(
+                    color: context.qio.gray700,
+                  ),
+                ),
+              ],
               if (_failure != null) ...[
                 const SizedBox(height: 8),
                 Text(

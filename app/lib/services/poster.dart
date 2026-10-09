@@ -1,15 +1,17 @@
 import 'dart:typed_data';
 import 'dart:ui' show Color, Locale;
 
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
 
 import '../l10n/app_localizations.dart';
 
 const posterTitleMaxLength = 60;
 const posterLogoPrefix = 'https://firebasestorage.googleapis.com/';
 const posterLogoTimeout = Duration(seconds: 6);
+const posterLogoMaxBytes = 1024 * 1024;
+const posterNameFallbackDefault = 'Fila';
 
 enum PosterSize { a4, a5, table }
 
@@ -72,6 +74,15 @@ String pdfSafeText(String input) {
   return out.toString().replaceAll(RegExp(r'\s+'), ' ').trim();
 }
 
+bool pdfTextLosesChars(String input) {
+  for (final rune in input.runes) {
+    if (rune > 0xFF || _replacements.containsKey(String.fromCharCode(rune))) {
+      return true;
+    }
+  }
+  return false;
+}
+
 String normalizePosterTitle(String value) =>
     value.replaceAll(RegExp(r'\s+'), ' ').trim();
 
@@ -81,6 +92,23 @@ bool isValidPosterTitle(String value) =>
 bool isPosterLogoUrl(String? url) =>
     url != null && url.startsWith(posterLogoPrefix);
 
+pw.ImageProvider posterLogoFromBytes(
+  Uint8List? bytes, {
+  int maxBytes = posterLogoMaxBytes,
+}) {
+  if (bytes == null || bytes.isEmpty || bytes.length > maxBytes) {
+    throw const FormatException('logo size');
+  }
+  return pw.MemoryImage(bytes);
+}
+
+Future<pw.ImageProvider> _downloadPosterLogo(String url) async {
+  final bytes = await FirebaseStorage.instance
+      .refFromURL(url)
+      .getData(posterLogoMaxBytes);
+  return posterLogoFromBytes(bytes);
+}
+
 Future<pw.ImageProvider?> fetchPosterLogo(
   String? url, {
   Duration timeout = posterLogoTimeout,
@@ -88,7 +116,7 @@ Future<pw.ImageProvider?> fetchPosterLogo(
 }) async {
   if (!isPosterLogoUrl(url)) return null;
   try {
-    return await (loader ?? (u) => networkImage(u))(url!).timeout(timeout);
+    return await (loader ?? _downloadPosterLogo)(url!).timeout(timeout);
   } catch (_) {
     return null;
   }
@@ -117,6 +145,7 @@ Future<Uint8List> buildPosterPdf({
   required List<String> instructions,
   String? title,
   pw.ImageProvider? logo,
+  String fallbackName = posterNameFallbackDefault,
 }) async {
   try {
     return await _renderPoster(
@@ -128,6 +157,7 @@ Future<Uint8List> buildPosterPdf({
       instructions: instructions,
       title: title,
       logo: logo,
+      fallbackName: fallbackName,
     );
   } catch (_) {
     if (logo == null) rethrow;
@@ -139,6 +169,7 @@ Future<Uint8List> buildPosterPdf({
       qrColor: qrColor,
       instructions: instructions,
       title: title,
+      fallbackName: fallbackName,
     );
   }
 }
@@ -150,11 +181,13 @@ Future<Uint8List> _renderPoster({
   required PdfColor accent,
   required PdfColor qrColor,
   required List<String> instructions,
+  required String fallbackName,
   String? title,
   pw.ImageProvider? logo,
 }) {
   final s = size.scale;
-  final name = pdfSafeText(queueName);
+  final safeName = pdfSafeText(queueName);
+  final name = safeName.isEmpty ? pdfSafeText(fallbackName) : safeName;
   final headline = title == null ? '' : pdfSafeText(title);
   final display = pdfSafeText(url.replaceFirst('https://', ''));
   final primary = instructions.isEmpty ? '' : instructions.first;

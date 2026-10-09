@@ -26,3 +26,34 @@ SlugError? slugError(String value) {
 }
 
 bool isValidSlug(String value) => slugError(value) == null;
+
+const slugReleaseDays = 30;
+
+enum SlugAvailability { free, mine, taken }
+
+SlugAvailability slugAvailability({
+  required bool exists,
+  required String uid,
+  required DateTime now,
+  bool released = false,
+  String? ownerId,
+  DateTime? releasedAt,
+}) {
+  if (!exists) return SlugAvailability.free;
+  if (!released) return SlugAvailability.taken;
+  if (ownerId == uid) return SlugAvailability.mine;
+  if (releasedAt != null &&
+      now.isAfter(releasedAt.add(const Duration(days: slugReleaseDays)))) {
+    return SlugAvailability.free;
+  }
+  return SlugAvailability.taken;
+}
+
+bool canReleaseSlug({
+  required bool exists,
+  required String uid,
+  required String queueId,
+  bool released = false,
+  String? ownerId,
+  String? docQueueId,
+}) => exists && !released && ownerId == uid && docQueueId == queueId;

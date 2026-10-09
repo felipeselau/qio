@@ -46,6 +46,18 @@ void main() {
     expect(find.text('Não definido'), findsOneWidget);
   });
 
+  testWidgets('aviso de QR impresso só aparece com slug atual', (tester) async {
+    await open(tester, slug: 'padaria');
+    expect(find.textContaining('30 dias'), findsOneWidget);
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+  });
+
+  testWidgets('sem slug atual não mostra o aviso', (tester) async {
+    await open(tester);
+    expect(find.textContaining('30 dias'), findsNothing);
+  });
+
   testWidgets('formato inválido bloqueia o salvamento', (tester) async {
     final service = await open(tester);
     await tester.enterText(find.byType(TextFormField), 'ab');

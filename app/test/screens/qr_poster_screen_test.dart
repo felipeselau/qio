@@ -7,6 +7,7 @@ import '../helpers/pump_app.dart';
 
 Future<FakeQueueService> pumpPoster(
   WidgetTester tester, {
+  String queueName = 'Padaria',
   bool canEdit = true,
   String? posterTitle,
   String? brandColor,
@@ -16,7 +17,7 @@ Future<FakeQueueService> pumpPoster(
   await pumpApp(
     tester,
     QrPosterScreen(
-      queueName: 'Padaria',
+      queueName: queueName,
       joinUrl: 'https://qio.web.app/n/padaria',
       queueId: 'q1',
       canEdit: canEdit,
@@ -66,6 +67,21 @@ void main() {
     await tester.tap(find.text('Imprimir'));
     await tester.pumpAndSettle();
     expect(find.text('Use até 60 caracteres.'), findsOneWidget);
+  });
+
+  testWidgets('avisa quando o nome perde caracteres no PDF', (tester) async {
+    await pumpPoster(tester, queueName: 'Padaria ★');
+    expect(find.textContaining('não existem na fonte do PDF'), findsOneWidget);
+  });
+
+  testWidgets('sem aviso quando o nome cabe na fonte', (tester) async {
+    await pumpPoster(tester);
+    expect(find.textContaining('não existem na fonte do PDF'), findsNothing);
+  });
+
+  testWidgets('nome só com emoji usa o fallback Fila', (tester) async {
+    await pumpPoster(tester, queueName: '😀');
+    expect(find.text('Fila'), findsOneWidget);
   });
 
   testWidgets('sem permissão de edição não mostra o campo de frase', (

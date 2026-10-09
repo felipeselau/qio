@@ -3267,6 +3267,24 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Link curto removido'**
   String get slugRemoved;
+
+  /// No description provided for @slugReleaseNotice.
+  ///
+  /// In pt, this message translates to:
+  /// **'Trocar o link invalida os QRs impressos com o link antigo. O link antigo fica reservado por 30 dias para você.'**
+  String get slugReleaseNotice;
+
+  /// No description provided for @posterNameLossy.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alguns caracteres do texto não existem na fonte do PDF e serão omitidos ou trocados.'**
+  String get posterNameLossy;
+
+  /// No description provided for @posterNameFallback.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fila'**
+  String get posterNameFallback;
 }
 
 class _AppLocalizationsDelegate
