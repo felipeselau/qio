@@ -75,15 +75,17 @@ class QueueService {
         );
   }
 
-  Future<void> ensureUnderQueueLimit(String ownerId) async {
+  Future<bool> isAtQueueLimit(String ownerId) async {
     final owned = await _firestore
         .collection('queues')
         .where('ownerId', isEqualTo: ownerId)
         .count()
         .get();
-    if (isQueueLimitReached(owned.count ?? 0)) {
-      throw const QueueLimitReached();
-    }
+    return isQueueLimitReached(owned.count ?? 0);
+  }
+
+  Future<void> ensureUnderQueueLimit(String ownerId) async {
+    if (await isAtQueueLimit(ownerId)) throw const QueueLimitReached();
   }
 
   Future<Queue> createQueue({

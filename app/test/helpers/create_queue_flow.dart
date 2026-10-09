@@ -18,6 +18,7 @@ Future<FakeQueueService> pumpCreate(
     CreateQueueScreen(queues: service, groups: FakeGroupService()),
     size: size,
   );
+  await tester.pumpAndSettle();
   return service;
 }
 

@@ -645,5 +645,16 @@
   "cqDefaultColor": "Default",
   "cqGroupChosen": "In a group",
   "cqSummaryName": "Name",
-  "cqCreateTimeout": "No response. The queue may have been created: check your list before trying again."
+  "cqCreateTimeout": "No response. The queue may have been created: check your list before trying again.",
+  "cqCreatedTitle": "Queue created",
+  "cqCreatedHint": "Share the link or show the QR code so people can join.",
+  "cqOpenPanel": "Open panel",
+  "cqPolishTitle": "Make your queue nicer and more complete",
+  "cqShortcutLogo": "Logo and color",
+  "cqShortcutShortLink": "Short link",
+  "cqShortcutOperators": "Operators",
+  "cqShortcutAlerts": "Alerts",
+  "cqLimitTitle": "Queue limit reached",
+  "cqCheckingLimit": "Checking your queue limit",
+  "cqShareLink": "Share link"
 }

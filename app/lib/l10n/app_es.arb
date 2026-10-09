@@ -645,5 +645,16 @@
   "cqDefaultColor": "Predeterminado",
   "cqGroupChosen": "En un grupo",
   "cqSummaryName": "Nombre",
-  "cqCreateTimeout": "Sin respuesta. Puede que la fila se haya creado: revise su lista antes de intentarlo de nuevo."
+  "cqCreateTimeout": "Sin respuesta. Puede que la fila se haya creado: revise su lista antes de intentarlo de nuevo.",
+  "cqCreatedTitle": "Fila creada",
+  "cqCreatedHint": "Comparta el enlace o muestre el QR para que las personas entren.",
+  "cqOpenPanel": "Abrir panel",
+  "cqPolishTitle": "Deje su fila más linda y completa",
+  "cqShortcutLogo": "Logo y color",
+  "cqShortcutShortLink": "Enlace corto",
+  "cqShortcutOperators": "Operadores",
+  "cqShortcutAlerts": "Alertas",
+  "cqLimitTitle": "Límite de filas alcanzado",
+  "cqCheckingLimit": "Verificando su límite de filas",
+  "cqShareLink": "Compartir enlace"
 }

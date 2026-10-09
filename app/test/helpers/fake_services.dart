@@ -246,6 +246,10 @@ class FakeQueueService implements QueueService {
   QueueMode? savedMode;
   List<QueueSlot>? savedSlots;
   Object? createError;
+  bool atLimit = false;
+  Object? limitCheckError;
+  Future<void>? limitGate;
+  int limitChecks = 0;
   QueueMode? createdMode;
   List<QueueSlot>? createdSlots;
 
@@ -258,6 +262,15 @@ class FakeQueueService implements QueueService {
     calls.add('modeSlots:$queueId:${mode.value}:${slots.length}');
     savedMode = mode;
     savedSlots = slots;
+  }
+
+  @override
+  Future<bool> isAtQueueLimit(String ownerId) async {
+    limitChecks++;
+    await limitGate;
+    final error = limitCheckError;
+    if (error != null) throw error;
+    return atLimit;
   }
 
   @override

@@ -2068,4 +2068,38 @@ class AppLocalizationsPt extends AppLocalizations {
   @override
   String get cqCreateTimeout =>
       'Sem resposta. A fila pode ter sido criada: confira sua lista antes de tentar de novo.';
+
+  @override
+  String get cqCreatedTitle => 'Fila criada';
+
+  @override
+  String get cqCreatedHint =>
+      'Compartilhe o link ou mostre o QR para as pessoas entrarem.';
+
+  @override
+  String get cqOpenPanel => 'Abrir painel';
+
+  @override
+  String get cqPolishTitle => 'Deixe sua fila mais bonita e completa';
+
+  @override
+  String get cqShortcutLogo => 'Logo e cor';
+
+  @override
+  String get cqShortcutShortLink => 'Link curto';
+
+  @override
+  String get cqShortcutOperators => 'Operadores';
+
+  @override
+  String get cqShortcutAlerts => 'Alertas';
+
+  @override
+  String get cqLimitTitle => 'Limite de filas atingido';
+
+  @override
+  String get cqCheckingLimit => 'Verificando seu limite de filas';
+
+  @override
+  String get cqShareLink => 'Compartilhar link';
 }
