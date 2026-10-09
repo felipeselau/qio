@@ -4,6 +4,20 @@ const fallbackQueueName = 'Fila';
 const queueDescriptionMaxLength = 300;
 const avgServiceMinRange = (1, 240);
 
+const maxWaitingRange = (1, 1000);
+
+enum MaxWaitingError { invalid }
+
+MaxWaitingError? validateMaxWaitingText(String? value) {
+  final text = value?.trim() ?? '';
+  if (text.isEmpty) return null;
+  final n = int.tryParse(text);
+  if (n == null || n < maxWaitingRange.$1 || n > maxWaitingRange.$2) {
+    return MaxWaitingError.invalid;
+  }
+  return null;
+}
+
 enum QueueInfoError {
   nameRequired,
   nameTooLong,
