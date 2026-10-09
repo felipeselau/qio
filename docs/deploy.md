@@ -264,7 +264,8 @@ Conferir antes se já foi feito: `firebase functions:list --project qio-app`.
 - [ ] `onQueueOpened` (trigger RTDB; avisos "me avise quando abrir").
 - [ ] `mirrorQueueToRtdb`, `mirrorOperatorToRtdb` (#164; triggers Firestore -> RTDB; antes de qualquer
       APK; `--only functions:mirrorQueueToRtdb,functions:mirrorOperatorToRtdb`; só escrevem no RTDB,
-      rollback = `firebase functions:delete` das duas, o dual-write do app segue valendo).
+      rollback = `firebase functions:delete` das duas só vale enquanto o APK distribuído for anterior à
+      1.5.0; com o APK 1.5.0 em uso, as duas são obrigatórias).
 - [ ] `deleteQueue`, `deleteAccount` (antes de distribuir o APK; `ENFORCE_APP_CHECK_DELETE=false`).
 - [ ] Demais já documentadas: `submitFeedback`, `updateServiceEstimate`, `evaluateQueueAlerts`,
       `applyQueueSchedules`, `syncPublicTicket` (roteador único de `entries/{id}`: sync do
@@ -297,6 +298,10 @@ Conferir antes se já foi feito: `firebase functions:list --project qio-app`.
 - [ ] Backfill de `public/` e do contador de espera (seção 5), se faltarem dados.
 - [ ] APK: `flutter build apk --release` (exige `app/android/key.properties`) e distribuição;
       depois das functions e rules correspondentes.
+      **APK 1.5.0 exige `mirrorQueueToRtdb` e `mirrorOperatorToRtdb` no ar antes de ser
+      distribuído** (#164 etapa 2): ele só escreve no Firestore nos setters de fila/operador;
+      sem os triggers o RTDB (e a web) ficam desatualizados. Confira com
+      `firebase functions:list --project qio-app`. APK antigo segue funcionando.
 - [ ] Atualizar `web/public/.well-known/assetlinks.json` com o SHA-256 da chave de release.
 
 ### Console / ações do dono

@@ -9,7 +9,7 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 Versão do app: 1.5.0+6.
 
 ### Adicionado
-- Triggers `mirrorQueueToRtdb` e `mirrorOperatorToRtdb`: o Firestore passa a replicar `meta`, `owners` e `operatorUids` no RTDB de forma idempotente e segura contra eventos fora de ordem (#164, primeira etapa; o cliente ainda faz dual-write).
+- Triggers `mirrorQueueToRtdb` e `mirrorOperatorToRtdb`: o Firestore passa a replicar `meta`, `owners` e `operatorUids` no RTDB de forma idempotente e segura contra eventos fora de ordem (#164, etapas 1 e 2; o app 1.5.0 deixa de fazer dual-write nos setters de fila e operador).
 - Métricas por atendente no painel gerencial (#124).
 - Exportação das métricas em CSV e PDF (#125).
 - Métricas de espera (mediana, P90 e faixas) e de re-chamadas (#126).
@@ -70,6 +70,7 @@ Versão do app: 1.5.0+6.
   depender do aparelho do operador (#205).
 
 ### Alterado
+- O APK 1.5.0 exige `mirrorQueueToRtdb` e `mirrorOperatorToRtdb` no ar antes de ser distribuído: os setters de fila e operador escrevem só no Firestore e o RTDB depende dos triggers (#164, etapa 2).
 - Limite de horários por fila caiu de 24 para 20 (limite de expressões das rules
   do Firestore); filas existentes com 21–24 seguem funcionando (#196).
 - Refactor das functions: `index.js` dividido por domínio e triggers de `entries`

@@ -31,7 +31,9 @@ function queueWorld({ current, meta = null, owner = null } = {}) {
     readMeta: async () => w.meta,
     updateMeta: async (id, patch) => {
       w.calls.push(['updateMeta', patch]);
-      w.meta = { ...w.meta, ...patch };
+      const next = { ...w.meta, ...patch };
+      for (const k of Object.keys(next)) if (next[k] === null) delete next[k];
+      w.meta = next;
     },
     createMeta: async (id, meta) => {
       w.calls.push(['createMeta', meta]);
@@ -78,14 +80,41 @@ describe('mirrorQueueToRtdb handler', () => {
     assert.deepEqual(w.calls, []);
   });
 
-  it('só repara os campos que mudaram entre before e after', async () => {
+  it('patch idempotente sobre tudo: repara também campo que não mudou no evento', async () => {
     const w = queueWorld({
       current: doc({ name: 'Novo' }),
       meta: metaOf({ status: 'closed' }),
       owner: { ownerUid: 'u1' },
     });
     await createMirrorQueueHandler(w.deps)(event(doc(), doc({ name: 'Novo' })));
+    assert.deepEqual(w.calls, [['updateMeta', { name: 'Novo', status: 'open', updatedAt: 4242 }]]);
+  });
+
+  it('só nome muda: sem updatedAt', async () => {
+    const w = queueWorld({ current: doc({ name: 'Novo' }), meta: metaOf(), owner: { ownerUid: 'u1' } });
+    await createMirrorQueueHandler(w.deps)(event(doc(), doc({ name: 'Novo' })));
     assert.deepEqual(w.calls, [['updateMeta', { name: 'Novo' }]]);
+  });
+
+  it('status muda: carimba updatedAt', async () => {
+    const w = queueWorld({ current: doc({ status: 'paused' }), meta: metaOf(), owner: { ownerUid: 'u1' } });
+    await createMirrorQueueHandler(w.deps)(event(doc(), doc({ status: 'paused' })));
+    assert.deepEqual(w.calls, [['updateMeta', { status: 'paused', updatedAt: 4242 }]]);
+  });
+
+  it('pausado com mensagem para aberto sem mensagem limpa statusMessage e resumeAt', async () => {
+    const before = doc({ status: 'paused', statusMessage: 'volto já', resumeAt: 1000 });
+    const w = queueWorld({
+      current: doc(),
+      meta: metaOf({ status: 'paused', statusMessage: 'volto já', resumeAt: 1000 }),
+      owner: { ownerUid: 'u1' },
+    });
+    await createMirrorQueueHandler(w.deps)(event(before, doc()));
+    assert.deepEqual(w.calls, [
+      ['updateMeta', { status: 'open', statusMessage: null, resumeAt: null, updatedAt: 4242 }],
+    ]);
+    assert.equal('statusMessage' in w.meta, false);
+    assert.equal('resumeAt' in w.meta, false);
   });
 
   it('evento fora de ordem: usa o doc atual, não o after do evento', async () => {
@@ -129,7 +158,7 @@ describe('mirrorQueueToRtdb handler', () => {
   it('status só entra quando mudou; valor desconhecido é ignorado', async () => {
     const w = queueWorld({ current: doc({ status: 'closed', name: 'N' }), meta: metaOf(), owner: { ownerUid: 'u1' } });
     await createMirrorQueueHandler(w.deps)(event(doc({ status: 'closed' }), doc({ status: 'closed', name: 'N' })));
-    assert.deepEqual(w.calls, [['updateMeta', { name: 'N' }]]);
+    assert.deepEqual(w.calls, [['updateMeta', { name: 'N', status: 'closed', updatedAt: 4242 }]]);
 
     const w2 = queueWorld({ current: doc({ status: 'weird' }), meta: metaOf(), owner: { ownerUid: 'u1' } });
     await createMirrorQueueHandler(w2.deps)(event(doc(), doc({ status: 'weird' })));
@@ -150,13 +179,26 @@ describe('mirrorQueueToRtdb handler', () => {
     assert.deepEqual(w.calls, [['setOwner', { ownerUid: 'u2' }]]);
   });
 
-  it('erro de dependência é logado e não propaga', async () => {
+  it('erro de dependência é logado e relançado (retry do trigger)', async () => {
     const w = queueWorld({ current: doc() });
     w.deps.readQueueDoc = async () => {
       throw new Error('boom');
     };
-    assert.equal(await createMirrorQueueHandler(w.deps)(event(null, doc())), null);
+    await assert.rejects(createMirrorQueueHandler(w.deps)(event(null, doc())), /boom/);
     assert.equal(w.errors.length, 1);
+  });
+
+  it('falha do RTDB no update relança e a reexecução converge', async () => {
+    const w = queueWorld({ current: doc({ name: 'Novo' }), meta: metaOf(), owner: { ownerUid: 'u1' } });
+    const update = w.deps.updateMeta;
+    w.deps.updateMeta = async () => {
+      throw new Error('rtdb down');
+    };
+    const ev = event(doc(), doc({ name: 'Novo' }));
+    await assert.rejects(createMirrorQueueHandler(w.deps)(ev), /rtdb down/);
+    w.deps.updateMeta = update;
+    await createMirrorQueueHandler(w.deps)(ev);
+    assert.equal(w.meta.name, 'Novo');
   });
 });
 
@@ -214,5 +256,13 @@ describe('mirrorOperatorToRtdb handler', () => {
   it('uid inválido é ignorado', async () => {
     await createMirrorOperatorHandler(w.deps)({ params: { queueId: 'q1', uid: 'a/b' } });
     assert.deepEqual(w.calls, []);
+  });
+
+  it('falha do RTDB é logada e relançada', async () => {
+    w.deps.setOperator = async () => {
+      throw new Error('rtdb down');
+    };
+    await assert.rejects(createMirrorOperatorHandler(w.deps)({ params }), /rtdb down/);
+    assert.equal(w.errors.length, 1);
   });
 });

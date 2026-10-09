@@ -109,12 +109,12 @@ describe('trigger mirrorQueueToRtdb / mirrorOperatorToRtdb (emulador)', () => {
     assert.equal(meta.avgServiceMinAuto, 7.5);
     assert.equal(meta.waitingCount, 4);
     assert.equal(meta.serving, 9);
-    assert.equal(meta.updatedAt, 12345);
+    assert.ok(meta.updatedAt > 12345, 'status mudou: trigger carimba updatedAt');
     assert.equal(meta.opensAt, 777);
     assert.equal(meta.nextNotifiedAt, 55);
   });
 
-  it('só age nos campos que mudaram: update sem campo espelhado não repara nada', async () => {
+  it('update sem campo espelhado não escreve; ao mudar um campo, repara o meta inteiro (idempotente)', async () => {
     const id = newId();
     await fs((db) =>
       setDoc(doc(db, 'queues', id), { ownerId: 'owner1', name: 'A', status: 'open', avgServiceMin: 10 }),
@@ -126,7 +126,7 @@ describe('trigger mirrorQueueToRtdb / mirrorOperatorToRtdb (emulador)', () => {
     );
     await fs((db) => updateDoc(doc(db, 'queues', id), { maxWaiting: 7 }));
     await waitFor(async () => (await rtdb(`queues/${id}/meta/maxWaiting`)) === 7);
-    assert.equal(await rtdb(`queues/${id}/meta/name`), 'Adulterado');
+    assert.equal(await rtdb(`queues/${id}/meta/name`), 'A');
   });
 
   it('fila existente sem meta não recria meta num update', async () => {

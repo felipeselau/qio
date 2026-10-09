@@ -43,13 +43,14 @@ function createMirrorQueueHandler(deps) {
         return { ok: true };
       }
 
-      const patch = buildMetaPatch(current, meta, fields);
+      const patch = buildMetaPatch(current, meta, null);
+      if (patch.status !== undefined) patch.updatedAt = deps.now();
       if (Object.keys(patch).length === 0) return null;
       await deps.updateMeta(queueId, patch);
       return { ok: true };
     } catch (err) {
       deps.onError('mirrorQueueToRtdb failed', err, { queueId });
-      return null;
+      throw err;
     }
   };
 }
@@ -71,7 +72,7 @@ function createMirrorOperatorHandler(deps) {
       return { ok: true };
     } catch (err) {
       deps.onError('mirrorOperatorToRtdb failed', err, { queueId });
-      return null;
+      throw err;
     }
   };
 }
