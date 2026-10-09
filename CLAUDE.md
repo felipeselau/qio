@@ -56,7 +56,8 @@ volte a subir functions junto das rules.
 
 Sempre rode lint + analyze + test antes de dar uma tarefa como concluída (ver
 `~/.claude/CLAUDE.md`). Não há testes em `web/`. Contagem de testes, cobertura e limitações
-conhecidas: `docs/qualidade.md`.
+conhecidas: `docs/qualidade.md`. Kit do piloto em estabelecimento real (plano, checklist,
+modelos; ainda sem dados): `docs/piloto/`.
 
 ## Modelo de dados
 
