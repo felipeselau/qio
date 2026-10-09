@@ -315,7 +315,7 @@ describe('Firestore rules', () => {
     });
 
     it('atualiza anonymizePhone e retentionDays em fila com 24 slots', async () => {
-      const slots = Array.from({ length: 24 }, (_, i) => ({
+      const slots = Array.from({ length: 20 }, (_, i) => ({
         id: `s${i}`,
         start: `${String(i).padStart(2, '0')}:00`,
         capacity: 2,
@@ -354,6 +354,95 @@ describe('Firestore rules', () => {
     });
   });
 
+  describe('pior caso, ownerId, deleting e alertState', () => {
+    const ref = () => doc(db(OWNER), 'queues', QUEUE);
+    const slots24 = Array.from({ length: 20 }, (_, i) => ({
+      id: `s${i}`,
+      start: `${String(i).padStart(2, '0')}:00`,
+      capacity: 50,
+    }));
+    const alerts = { enabled: true, maxWaitMin: 240, maxNoShowPct: 100, idleMin: 240, cooldownMin: 1440 };
+
+    it('create com 24 slots, alerts, groupId e privacidade passa', async () => {
+      await assertSucceeds(
+        setDoc(doc(db(OWNER), 'queues', 'big1'), {
+          ownerId: OWNER,
+          name: 'x'.repeat(60),
+          description: 'd'.repeat(300),
+          avgServiceMin: 240,
+          status: 'open',
+          mode: 'schedule',
+          slots: slots24,
+          alerts,
+          groupId: 'g'.repeat(40),
+          retentionDays: 730,
+          anonymizePhone: true,
+        }),
+      );
+    });
+
+    it('create com 25 slots ou slot inválido é negado', async () => {
+      const base = { ownerId: OWNER, name: 'x', status: 'open', mode: 'schedule' };
+      await assertFails(setDoc(doc(db(OWNER), 'queues', 'big2'), { ...base, slots: [...slots24, slots24[0]] }));
+      await assertFails(setDoc(doc(db(OWNER), 'queues', 'big3'), { ...base, slots: [slots24[0], { ...slots24[1], capacity: 51 }] }));
+      await assertFails(setDoc(doc(db(OWNER), 'queues', 'big4'), { ...base, slots: [{ ...slots24[0], start: '24:00' }] }));
+    });
+
+    it('update com 24 slots e todos os campos validados passa', async () => {
+      await assertSucceeds(
+        updateDoc(ref(), {
+          mode: 'schedule',
+          slots: slots24,
+          name: 'Novo',
+          description: 'outra',
+          avgServiceMin: 12,
+          alerts,
+          retentionDays: 365,
+          anonymizePhone: true,
+        }),
+      );
+    });
+
+    it('update nega slot inválido em qualquer posição', async () => {
+      for (const i of [0, 11, 19]) {
+        const slots = slots24.map((x, j) => (j === i ? { ...x, capacity: 0 } : x));
+        await assertFails(updateDoc(ref(), { slots }));
+      }
+    });
+
+    it('slots e alerts legados inalterados não bloqueiam outras atualizações', async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), 'queues', 'old'), {
+          ownerId: OWNER,
+          name: 'x',
+          status: 'open',
+          slots: [{ id: 'a', start: '99:99', capacity: 0 }],
+          alerts: { enabled: 'sim' },
+        });
+      });
+      const old = doc(db(OWNER), 'queues', 'old');
+      await assertSucceeds(updateDoc(old, { status: 'paused' }));
+      await assertFails(updateDoc(old, { alerts: { enabled: 'nao' } }));
+    });
+
+    it('dono não transfere a fila e estranho não altera nada', async () => {
+      await assertFails(updateDoc(ref(), { ownerId: STRANGER }));
+      await assertFails(updateDoc(doc(db(STRANGER), 'queues', QUEUE), { status: 'paused' }));
+      await assertFails(updateDoc(doc(db(STRANGER), 'queues', QUEUE), { ownerId: STRANGER }));
+    });
+
+    it('cliente não escreve deleting nem alertState', async () => {
+      await assertFails(updateDoc(ref(), { deleting: true }));
+      await assertFails(updateDoc(ref(), { alertState: { x: 1 } }));
+      await assertFails(setDoc(doc(db(OWNER), 'queues', 'd1'), { ownerId: OWNER, name: 'x', deleting: true }));
+      await assertFails(setDoc(doc(db(OWNER), 'queues', 'd2'), { ownerId: OWNER, name: 'x', alertState: {} }));
+    });
+
+    it('campos desconhecidos continuam permitidos', async () => {
+      await assertSucceeds(updateDoc(ref(), { slug: 'padaria' }));
+    });
+  });
+
   describe('modo agendado e slots', () => {
     const queueRef = () => doc(db(OWNER), 'queues', QUEUE);
     const slot = (n, start = '09:00', capacity = 2) => ({ id: `s${n}`, start, capacity });
@@ -364,7 +453,7 @@ describe('Firestore rules', () => {
     });
 
     it('aceita exatamente 24 slots e nega 25', async () => {
-      const slots = Array.from({ length: 24 }, (_, i) => slot(i, `${String(i).padStart(2, '0')}:00`));
+      const slots = Array.from({ length: 20 }, (_, i) => slot(i, `${String(i).padStart(2, '0')}:00`));
       await assertSucceeds(updateDoc(queueRef(), { mode: 'schedule', slots }));
       await assertFails(updateDoc(queueRef(), { mode: 'schedule', slots: [...slots, slot(24, '23:30')] }));
     });

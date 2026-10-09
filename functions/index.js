@@ -541,7 +541,11 @@ async function archiveLeftEntry(queueId, entryId, entry) {
   try {
     await firestore
       .doc(`queues/${queueId}/history/${entryId}`)
-      .create(historyFromLeftEntry(entry, Date.now()));
+      .create(
+        historyFromLeftEntry(entry, Date.now(), {
+          anonymizePhone: queueDoc.data()?.anonymizePhone === true,
+        }),
+      );
   } catch (err) {
     if (err?.code !== 6) throw err;
   }

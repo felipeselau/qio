@@ -34,14 +34,14 @@ service cloud.firestore {
     }
 
     function validNullableInt(m, key, lo, hi) {
-      return !(key in m) || m[key] == null || (m[key] is int && m[key] >= lo && m[key] <= hi);
+      let v = m.get(key, null);
+      return v == null || (v is int && v >= lo && v <= hi);
     }
 
     function validAlerts(a) {
       return a == null
         || (a is map
           && a.keys().hasOnly(['enabled', 'maxWaitMin', 'maxNoShowPct', 'idleMin', 'cooldownMin'])
-          && a.keys().hasAll(['enabled'])
           && a.enabled is bool
           && validNullableInt(a, 'maxWaitMin', 1, 240)
           && validNullableInt(a, 'maxNoShowPct', 1, 100)
@@ -60,20 +60,21 @@ service cloud.firestore {
         && c is int && c >= 1 && c <= 50;
     }
 
-    function slotAt(n, slots, i) {
-      return n <= i || validSlot(slots[i]);
-    }
-
     function validSlots(slots) {
       let n = slots.size();
+      let p = slots.concat(slots);
+      let q = p.concat(p);
+      let r = q.concat(q);
+      let t = r.concat(r);
+      let e = t.concat(t);
       return slots is list
-        && n <= 24
-        && slotAt(n, slots, 0) && slotAt(n, slots, 1) && slotAt(n, slots, 2) && slotAt(n, slots, 3)
-        && slotAt(n, slots, 4) && slotAt(n, slots, 5) && slotAt(n, slots, 6) && slotAt(n, slots, 7)
-        && slotAt(n, slots, 8) && slotAt(n, slots, 9) && slotAt(n, slots, 10) && slotAt(n, slots, 11)
-        && slotAt(n, slots, 12) && slotAt(n, slots, 13) && slotAt(n, slots, 14) && slotAt(n, slots, 15)
-        && slotAt(n, slots, 16) && slotAt(n, slots, 17) && slotAt(n, slots, 18) && slotAt(n, slots, 19)
-        && slotAt(n, slots, 20) && slotAt(n, slots, 21) && slotAt(n, slots, 22) && slotAt(n, slots, 23);
+        && n <= 20
+        && (n == 0
+          || (validSlot(e[0]) && validSlot(e[1]) && validSlot(e[2]) && validSlot(e[3])
+            && validSlot(e[4]) && validSlot(e[5]) && validSlot(e[6]) && validSlot(e[7])
+            && validSlot(e[8]) && validSlot(e[9]) && validSlot(e[10]) && validSlot(e[11])
+            && validSlot(e[12]) && validSlot(e[13]) && validSlot(e[14]) && validSlot(e[15])
+            && validSlot(e[16]) && validSlot(e[17]) && validSlot(e[18]) && validSlot(e[19])));
     }
 
     function scheduleModeOk(data) {
@@ -112,7 +113,7 @@ service cloud.firestore {
           || queueInfoFieldsOk(d, changed))
         && (!changed.hasAny(['retentionDays', 'anonymizePhone'])
           || privacyFieldsOk(d, changed))
-        && !('alertState' in changed)
+        && !changed.hasAny(['alertState', 'deleting', 'ownerId'])
         && (!('mode' in changed) || d.get('mode', null) in ['queue', 'schedule'])
         && (!('slots' in changed) || validSlots(d.get('slots', null)))
         && (!('alerts' in changed) || validAlerts(d.get('alerts', null)));
@@ -178,6 +179,7 @@ service cloud.firestore {
         && request.resource.data.ownerId == request.auth.uid
         && validGroupId(request.resource.data)
         && alertsOkOnCreate()
+        && !('deleting' in request.resource.data)
         && queueInfoOkOnCreate(request.resource.data)
         && privacyOkOnCreate(request.resource.data)
         && scheduleModeOk(request.resource.data);
