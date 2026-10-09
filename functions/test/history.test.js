@@ -50,4 +50,11 @@ describe('historyFromLeftEntry', () => {
     assert.equal(doc.phone, '');
     assert.equal(doc.joinedAt.toMillis(), now);
   });
+
+  it('grava phone null quando a fila anonimiza', () => {
+    const entry = { ticket: 1, name: 'Ana', phone: '(11) 91234-5678', status: 'left', joinedAt: now - 1000 };
+    assert.equal(historyFromLeftEntry(entry, now, { anonymizePhone: true }).phone, null);
+    assert.equal(historyFromLeftEntry(entry, now, { anonymizePhone: false }).phone, '(11) 91234-5678');
+    assert.equal(historyFromLeftEntry(entry, now).phone, '(11) 91234-5678');
+  });
 });

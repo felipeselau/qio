@@ -1802,4 +1802,27 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get posterNameFallback => 'Fila';
+
+  @override
+  String get exportCsvWithPhone => 'Exportar CSV con teléfono';
+
+  @override
+  String get exportPdfWithPhone => 'Exportar PDF con teléfono';
+
+  @override
+  String get exportPhoneTitle => '¿Incluir teléfono?';
+
+  @override
+  String get exportPhoneWarning =>
+      'El teléfono es un dato personal (LGPD). Por defecto la exportación no lo incluye. Inclúyelo solo si lo necesitas y protege el archivo.';
+
+  @override
+  String get exportPhoneConfirm => 'Incluir teléfono';
+
+  @override
+  String get anonymizePhoneTitle => 'No guardar el teléfono en el historial';
+
+  @override
+  String get anonymizePhoneHint =>
+      'Al terminar una atención, el teléfono no se guarda en el historial.';
 }

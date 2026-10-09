@@ -28,6 +28,24 @@ void main() {
     final csv = buildHistoryCsv(pt, [entry()]);
     expect(csv.startsWith('﻿'), isTrue);
     final lines = csv.substring(1).trim().split('\r\n');
+    expect(lines[0], 'ticket,nome,resultado,entrada,chamado,finalizado');
+    expect(
+      lines[1],
+      '7,Ana,Atendido,2026-10-01 09:00:00,'
+      '2026-10-01 09:10:00,2026-10-01 09:20:00',
+    );
+  });
+
+  test('csv omits the phone by default', () {
+    final csv = buildHistoryCsv(pt, [entry()]);
+    expect(csv.contains('91234'), isFalse);
+    expect(csv.contains('telefone'), isFalse);
+  });
+
+  test('csv includes the phone only when requested', () {
+    final lines = buildHistoryCsv(pt, [
+      entry(),
+    ], includePhone: true).substring(1).trim().split('\r\n');
     expect(
       lines[0],
       'ticket,nome,telefone,resultado,entrada,chamado,finalizado',
@@ -43,8 +61,8 @@ void main() {
     final lines = buildHistoryCsv(en, [
       entry(),
     ]).substring(1).trim().split('\r\n');
-    expect(lines[0], 'ticket,name,phone,result,joined,called,finished');
-    expect(lines[1].split(',')[3], 'Served');
+    expect(lines[0], 'ticket,name,result,joined,called,finished');
+    expect(lines[1].split(',')[2], 'Served');
   });
 
   test('csv escapes commas, quotes and formula prefixes', () {
@@ -62,7 +80,9 @@ void main() {
       result: 'left',
       joinedAt: DateTime(2026, 10, 1),
     );
-    final row = buildHistoryCsv(pt, [e]).substring(1).trim().split('\r\n')[1];
+    final row = buildHistoryCsv(pt, [
+      e,
+    ], includePhone: true).substring(1).trim().split('\r\n')[1];
     expect(row, '1,Bia,,Desistiu,2026-10-01 00:00:00,,');
   });
 
@@ -77,6 +97,20 @@ void main() {
       generatedAt: DateTime(2026, 10, 6),
     );
     expect(String.fromCharCodes(bytes.take(4)), '%PDF');
+  });
+
+  test('pdf with phone is larger than the default one', () async {
+    Future<int> size({required bool includePhone}) async =>
+        (await buildHistoryPdf(
+          l10n: pt,
+          queueName: 'Fila',
+          entries: [entry()],
+          generatedAt: DateTime(2026, 10, 6),
+          includePhone: includePhone,
+        )).length;
+    final without = await size(includePhone: false);
+    final withPhone = await size(includePhone: true);
+    expect(withPhone, greaterThan(without));
   });
 
   test('pdf builds for another locale', () async {

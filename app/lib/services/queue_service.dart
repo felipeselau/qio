@@ -14,6 +14,7 @@ import '../models/queue_entry.dart';
 import '../models/queue_feedback.dart';
 import '../models/queue_schedule.dart';
 import '../models/queue_slot.dart';
+import 'history_privacy.dart';
 import 'action_errors.dart';
 import 'analytics_service.dart';
 import 'delete_service.dart';
@@ -42,6 +43,7 @@ class QueueService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseDatabase _rtdb = FirebaseDatabase.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final Map<String, bool> _anonymizeKnown = {};
 
   @visibleForTesting
   DeleteService? deleteService;
@@ -411,6 +413,24 @@ class QueueService {
     });
   }
 
+  Future<void> updateAnonymizePhone(String queueId, bool value) async {
+    await _firestore.collection('queues').doc(queueId).update({
+      'anonymizePhone': value,
+    });
+  }
+
+  Future<bool> _shouldAnonymizePhone(String queueId, bool? known) {
+    return resolveAnonymizePhone(
+      known: known ?? _anonymizeKnown[queueId],
+      read: () async {
+        final snap = await _firestore.collection('queues').doc(queueId).get();
+        final value = snap.data()?['anonymizePhone'] == true;
+        _anonymizeKnown[queueId] = value;
+        return value;
+      },
+    );
+  }
+
   Future<void> updateModeAndSlots(
     String queueId,
     QueueMode mode,
@@ -478,7 +498,7 @@ class QueueService {
       maxWaiting: source.maxWaiting,
       groupId: source.groupId,
       mode: source.mode,
-      slots: source.slots,
+      slots: source.slots.take(maxQueueSlots).toList(),
       schedule: source.schedule,
       brandColor: source.brandColor,
       alerts: source.alerts,
@@ -494,7 +514,11 @@ class QueueService {
         .doc(queueId)
         .snapshots()
         .where((d) => d.exists && d.data() != null)
-        .map((d) => Queue.fromDoc(d.id, d.data()!));
+        .map((d) {
+          final queue = Queue.fromDoc(d.id, d.data()!);
+          _anonymizeKnown[d.id] = queue.anonymizePhone;
+          return queue;
+        });
   }
 
   Stream<bool> watchQueueExists(String queueId) {
@@ -697,14 +721,15 @@ class QueueService {
   Future<void> _finishEntry(
     String queueId,
     QueueEntry entry,
-    EntryStatus result,
-  ) async {
+    EntryStatus result, {
+    bool? anonymizePhone,
+  }) async {
     final entryRef = _rtdb.ref('queues/$queueId/entries/${entry.id}');
     await _ensureOwnerMirrorIfOwner(queueId);
     final check = checkFinishable((await entryRef.get()).value, result);
     if (check == FinishCheck.gone) return;
     if (check == FinishCheck.changed) throw const EntryChangedException();
-    await _archiveEntry(queueId, entry, result);
+    await _archiveEntry(queueId, entry, result, anonymizePhone: anonymizePhone);
     final uid = _uid;
     final claim = await entryRef.runTransaction((current) {
       if (current == null) return Transaction.success(null);
@@ -719,20 +744,40 @@ class QueueService {
     await entryRef.remove();
   }
 
-  Future<void> markServed(String queueId, QueueEntry entry) async {
-    await _finishEntry(queueId, entry, EntryStatus.served);
+  Future<void> markServed(
+    String queueId,
+    QueueEntry entry, {
+    bool? anonymizePhone,
+  }) async {
+    await _finishEntry(
+      queueId,
+      entry,
+      EntryStatus.served,
+      anonymizePhone: anonymizePhone,
+    );
     unawaited(AnalyticsController.instance.service.entryServed(queueId));
   }
 
-  Future<void> markNoShow(String queueId, QueueEntry entry) async {
-    await _finishEntry(queueId, entry, EntryStatus.noShow);
+  Future<void> markNoShow(
+    String queueId,
+    QueueEntry entry, {
+    bool? anonymizePhone,
+  }) async {
+    await _finishEntry(
+      queueId,
+      entry,
+      EntryStatus.noShow,
+      anonymizePhone: anonymizePhone,
+    );
   }
 
   Future<void> _archiveEntry(
     String queueId,
     QueueEntry entry,
-    EntryStatus result,
-  ) async {
+    EntryStatus result, {
+    bool? anonymizePhone,
+  }) async {
+    final anonymize = await _shouldAnonymizePhone(queueId, anonymizePhone);
     try {
       await _firestore
           .collection('queues')
@@ -742,7 +787,7 @@ class QueueService {
           .set({
             'ticket': entry.ticket,
             'name': entry.name,
-            'phone': entry.phone,
+            'phone': anonymize ? null : entry.phone,
             'result': result.value,
             'joinedAt': Timestamp.fromDate(entry.joinedAt),
             'calledAt': entry.calledAt != null

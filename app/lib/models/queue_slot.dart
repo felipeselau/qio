@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'queue_schedule.dart';
 
-const int maxQueueSlots = 24;
+const int maxQueueSlots = 20;
 const int maxSlotCapacity = 50;
 final RegExp _slotTimeRe = RegExp(r'^([01]\d|2[0-3]):([0-5]\d)$');
 final RegExp _slotIdRe = RegExp(r'^[A-Za-z0-9_-]{1,20}$');

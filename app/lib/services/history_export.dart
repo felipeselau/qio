@@ -7,10 +7,10 @@ import '../l10n/app_localizations.dart';
 import '../models/history_entry.dart';
 import 'history_metrics.dart';
 
-List<String> _csvHeader(AppLocalizations l10n) => [
+List<String> _csvHeader(AppLocalizations l10n, bool includePhone) => [
   l10n.csvTicket,
   l10n.csvName,
-  l10n.csvPhone,
+  if (includePhone) l10n.csvPhone,
   l10n.csvResult,
   l10n.csvEntered,
   l10n.csvCalled,
@@ -43,14 +43,18 @@ String csvCell(String value) {
   return v;
 }
 
-String buildHistoryCsv(AppLocalizations l10n, List<HistoryEntry> entries) {
+String buildHistoryCsv(
+  AppLocalizations l10n,
+  List<HistoryEntry> entries, {
+  bool includePhone = false,
+}) {
   final rows = <List<String>>[
-    _csvHeader(l10n),
+    _csvHeader(l10n, includePhone),
     for (final e in entries)
       [
         '${e.ticket}',
         e.name,
-        e.phone ?? '',
+        if (includePhone) e.phone ?? '',
         resultLabel(l10n, e.result),
         formatExportDateTime(e.joinedAt),
         formatExportDateTime(e.calledAt),
@@ -71,6 +75,7 @@ Future<Uint8List> buildHistoryPdf({
   required String queueName,
   required List<HistoryEntry> entries,
   required DateTime generatedAt,
+  bool includePhone = false,
 }) {
   final metrics = computeHistoryMetrics(entries);
   final pct = (metrics.noShowRate * 100).round();
@@ -123,7 +128,7 @@ Future<Uint8List> buildHistoryPdf({
             headers: [
               l10n.colTicket,
               l10n.colName,
-              l10n.colPhone,
+              if (includePhone) l10n.colPhone,
               l10n.colResult,
               l10n.colEntered,
               l10n.colCalled,
@@ -134,7 +139,7 @@ Future<Uint8List> buildHistoryPdf({
                 [
                   '${e.ticket}',
                   e.name,
-                  e.phone ?? '',
+                  if (includePhone) e.phone ?? '',
                   resultLabel(l10n, e.result),
                   _short(e.joinedAt),
                   _short(e.calledAt),

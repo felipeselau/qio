@@ -572,5 +572,12 @@
   "slugRemoved": "Short link removed",
   "slugReleaseNotice": "Changing the link invalidates QR codes printed with the old link. The old link stays reserved for you for 30 days.",
   "posterNameLossy": "Some characters are not available in the PDF font and will be omitted or replaced.",
-  "posterNameFallback": "Queue"
+  "posterNameFallback": "Queue",
+  "exportCsvWithPhone": "Export CSV with phone",
+  "exportPdfWithPhone": "Export PDF with phone",
+  "exportPhoneTitle": "Include phone number?",
+  "exportPhoneWarning": "The phone number is personal data (LGPD). Exports leave it out by default. Include it only if you need it and protect the file.",
+  "exportPhoneConfirm": "Include phone",
+  "anonymizePhoneTitle": "Do not keep phone in history",
+  "anonymizePhoneHint": "When a service is completed, the phone number is not saved to the history."
 }

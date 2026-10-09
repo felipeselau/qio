@@ -1798,4 +1798,27 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get posterNameFallback => 'Queue';
+
+  @override
+  String get exportCsvWithPhone => 'Export CSV with phone';
+
+  @override
+  String get exportPdfWithPhone => 'Export PDF with phone';
+
+  @override
+  String get exportPhoneTitle => 'Include phone number?';
+
+  @override
+  String get exportPhoneWarning =>
+      'The phone number is personal data (LGPD). Exports leave it out by default. Include it only if you need it and protect the file.';
+
+  @override
+  String get exportPhoneConfirm => 'Include phone';
+
+  @override
+  String get anonymizePhoneTitle => 'Do not keep phone in history';
+
+  @override
+  String get anonymizePhoneHint =>
+      'When a service is completed, the phone number is not saved to the history.';
 }

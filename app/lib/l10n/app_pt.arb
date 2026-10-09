@@ -620,5 +620,12 @@
   "slugRemoved": "Link curto removido",
   "slugReleaseNotice": "Trocar o link invalida os QRs impressos com o link antigo. O link antigo fica reservado por 30 dias para você.",
   "posterNameLossy": "Alguns caracteres do texto não existem na fonte do PDF e serão omitidos ou trocados.",
-  "posterNameFallback": "Fila"
+  "posterNameFallback": "Fila",
+  "exportCsvWithPhone": "Exportar CSV com telefone",
+  "exportPdfWithPhone": "Exportar PDF com telefone",
+  "exportPhoneTitle": "Incluir telefone?",
+  "exportPhoneWarning": "O telefone é dado pessoal (LGPD). Por padrão a exportação não o inclui. Inclua apenas se precisar e proteja o arquivo.",
+  "exportPhoneConfirm": "Incluir telefone",
+  "anonymizePhoneTitle": "Não guardar telefone no histórico",
+  "anonymizePhoneHint": "Ao concluir um atendimento, o telefone não é salvo no histórico."
 }
