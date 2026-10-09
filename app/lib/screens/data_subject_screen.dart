@@ -198,7 +198,12 @@ class _DataSubjectScreenState extends State<DataSubjectScreen> {
                       labelText: l10n.dataSubjectPhoneLabel,
                       hintText: '(11) 99999-9999',
                     ),
-                    onChanged: (_) => setState(() {}),
+                    onChanged: (_) => setState(() {
+                      if (_typedDigits != _digits) {
+                        _summary = null;
+                        _digits = null;
+                      }
+                    }),
                     onSubmitted: (_) => _search(),
                   ),
                   const SizedBox(height: 12),

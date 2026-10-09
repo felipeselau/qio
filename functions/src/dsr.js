@@ -119,7 +119,19 @@ function totalsOf(queues) {
   );
 }
 
-function auditDoc({ action, mode, phoneHash, queues, complete, now }) {
+async function safeWriteLog(deps, uid, doc, onError) {
+  try {
+    await deps.writeLog(uid, doc);
+    return true;
+  } catch (err) {
+    try {
+      onError(err, { action: doc.action });
+    } catch (_) {}
+    return false;
+  }
+}
+
+function auditDoc({ action, mode, phoneHash, queues, complete, now, failedQueueIds }) {
   const doc = {
     action,
     phoneHash,
@@ -134,10 +146,13 @@ function auditDoc({ action, mode, phoneHash, queues, complete, now }) {
     createdAt: now,
   };
   if (mode) doc.mode = mode;
+  if (failedQueueIds && failedQueueIds.length > 0) {
+    doc.failedQueueIds = failedQueueIds.slice(0, MAX_LOG_QUEUES);
+  }
   return doc;
 }
 
-async function findCustomerData({ uid, digits, now, pepper }, deps) {
+async function findCustomerData({ uid, digits, now, pepper, onError = () => {} }, deps) {
   const forms = phoneForms(digits);
   const queues = await deps.listOwnedQueues(uid);
   const summaries = [];
@@ -146,7 +161,8 @@ async function findCustomerData({ uid, digits, now, pepper }, deps) {
     const summary = summarize(queue, data);
     if (summary.history + summary.feedback + summary.entries > 0) summaries.push(summary);
   }
-  await deps.writeLog(
+  await safeWriteLog(
+    deps,
     uid,
     auditDoc({
       action: 'find',
@@ -155,6 +171,7 @@ async function findCustomerData({ uid, digits, now, pepper }, deps) {
       complete: true,
       now,
     }),
+    onError,
   );
   return { queues: summaries, totals: totalsOf(summaries), queuesScanned: queues.length };
 }
@@ -245,7 +262,7 @@ function recordsFor(queue, data) {
   return records;
 }
 
-async function exportCustomerData({ uid, digits, now, pepper }, deps) {
+async function exportCustomerData({ uid, digits, now, pepper, onError = () => {} }, deps) {
   const forms = phoneForms(digits);
   const queues = await deps.listOwnedQueues(uid);
   const summaries = [];
@@ -259,7 +276,8 @@ async function exportCustomerData({ uid, digits, now, pepper }, deps) {
   }
   const truncated = records.length > MAX_EXPORT_RECORDS;
   const kept = truncated ? records.slice(0, MAX_EXPORT_RECORDS) : records;
-  await deps.writeLog(
+  await safeWriteLog(
+    deps,
     uid,
     auditDoc({
       action: 'export',
@@ -268,6 +286,7 @@ async function exportCustomerData({ uid, digits, now, pepper }, deps) {
       complete: !truncated,
       now,
     }),
+    onError,
   );
   return {
     records: kept,
@@ -317,18 +336,20 @@ async function eraseCustomerData({ uid, digits, mode, now, pepper, onError = () 
   const forms = phoneForms(digits);
   const queues = await deps.listOwnedQueues(uid);
   const summaries = [];
-  let failed = 0;
+  const failedQueueIds = [];
   for (const queue of queues) {
     try {
       const summary = await eraseQueue(queue, forms, mode, deps);
       if (summary.history + summary.feedback + summary.entries > 0) summaries.push(summary);
     } catch (err) {
-      failed += 1;
+      failedQueueIds.push(queue.id);
       onError(err, { queueId: queue.id });
     }
   }
+  const failed = failedQueueIds.length;
   const complete = failed === 0;
-  await deps.writeLog(
+  await safeWriteLog(
+    deps,
     uid,
     auditDoc({
       action: 'erase',
@@ -337,7 +358,9 @@ async function eraseCustomerData({ uid, digits, mode, now, pepper, onError = () 
       queues: summaries,
       complete,
       now,
+      failedQueueIds,
     }),
+    onError,
   );
   return { queues: summaries, totals: totalsOf(summaries), complete, failedQueues: failed };
 }

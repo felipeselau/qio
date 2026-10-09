@@ -201,4 +201,48 @@ describe('callables de direitos do titular (emulador)', () => {
     const other = await newClient();
     await other.find({ phone: DIGITS });
   });
+
+  it('recusa chamada sem autenticação', async () => {
+    const app = initializeApp({ projectId: 'demo-qio', apiKey: 'fake-key' }, `dsr-anon-${apps.length}`);
+    apps.push(app);
+    const functions = getFunctions(app);
+    connectFunctionsEmulator(functions, FUNCTIONS_HOST, Number(FUNCTIONS_PORT));
+    await rejects(httpsCallable(functions, 'findCustomerData')({ phone: DIGITS }), 'unauthenticated');
+    await rejects(httpsCallable(functions, 'eraseCustomerData')({ phone: DIGITS, mode: 'delete' }), 'unauthenticated');
+  });
+
+  it('exige login recente (auth_time antigo) e não toca nos dados', async () => {
+    const owner = await newClient();
+    await seed(owner.uid, 'outro-dono');
+    const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url');
+    const old = Math.floor(Date.now() / 1000) - 3600;
+    const token = [
+      b64({ alg: 'none', typ: 'JWT' }),
+      b64({
+        iss: 'https://securetoken.google.com/demo-qio',
+        aud: 'demo-qio',
+        auth_time: old,
+        iat: old,
+        exp: old + 7200,
+        user_id: owner.uid,
+        sub: owner.uid,
+        firebase: { sign_in_provider: 'password', identities: {} },
+      }),
+      '',
+    ].join('.');
+    const call = async (name, data) => {
+      const res = await fetch(`http://${FUNCTIONS_HOST}:${FUNCTIONS_PORT}/demo-qio/us-central1/${name}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${token}` },
+        body: JSON.stringify({ data }),
+      });
+      return res.json();
+    };
+    const res = await call('eraseCustomerData', { phone: DIGITS, mode: 'delete' });
+    assert.equal(res.error?.status, 'FAILED_PRECONDITION');
+    assert.equal(res.error?.details?.reason, 'recent-login');
+    const find = await call('findCustomerData', { phone: DIGITS });
+    assert.equal(find.error?.details?.reason, 'recent-login');
+    assert.notEqual(await hist('qa1', 'h1'), null);
+  });
 });

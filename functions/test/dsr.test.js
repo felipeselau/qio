@@ -299,6 +299,64 @@ describe('auditDoc', () => {
   });
 });
 
+describe('falha ao gravar o log de auditoria', () => {
+  const failingLog = (deps) => {
+    deps.writeLog = async () => {
+      throw new Error('log down');
+    };
+    return deps;
+  };
+
+  it('erase devolve o resultado e reporta o erro sem PII', async () => {
+    const deps = failingLog(fakeDeps(seed()));
+    const errors = [];
+    const res = await eraseCustomerData(
+      { uid: 'u1', digits: DIGITS, mode: 'delete', now: 1, onError: (e, c) => errors.push(c) },
+      deps,
+    );
+    assert.equal(res.complete, true);
+    assert.deepEqual(res.totals, { history: 2, feedback: 1, entries: 1 });
+    assert.deepEqual(errors, [{ action: 'erase' }]);
+  });
+
+  it('find e export devolvem o resultado mesmo sem log', async () => {
+    const found = await findCustomerData({ uid: 'u1', digits: DIGITS, now: 1 }, failingLog(fakeDeps(seed())));
+    assert.equal(found.totals.history, 2);
+    const exported = await exportCustomerData({ uid: 'u1', digits: DIGITS, now: 1 }, failingLog(fakeDeps(seed())));
+    assert.equal(exported.records.length, 3);
+  });
+
+  it('um onError que lança não derruba a resposta', async () => {
+    const deps = failingLog(fakeDeps(seed()));
+    const res = await findCustomerData(
+      {
+        uid: 'u1',
+        digits: DIGITS,
+        now: 1,
+        onError: () => {
+          throw new Error('x');
+        },
+      },
+      deps,
+    );
+    assert.equal(res.totals.history, 2);
+  });
+});
+
+describe('failedQueueIds no log do erase', () => {
+  it('registra as filas que falharam', async () => {
+    const deps = fakeDeps({ ...seed(), failOn: 'q1' });
+    await eraseCustomerData({ uid: 'u1', digits: DIGITS, mode: 'delete', now: 1 }, deps);
+    assert.deepEqual(deps.logs[0][1].failedQueueIds, ['q1']);
+  });
+
+  it('omite o campo quando tudo deu certo', async () => {
+    const deps = fakeDeps(seed());
+    await eraseCustomerData({ uid: 'u1', digits: DIGITS, mode: 'delete', now: 1 }, deps);
+    assert.equal('failedQueueIds' in deps.logs[0][1], false);
+  });
+});
+
 describe('App Check das callables de titular', () => {
   it('só liga por ENFORCE_APP_CHECK_DSR', () => {
     for (const name of ['findCustomerData', 'exportCustomerData', 'eraseCustomerData']) {

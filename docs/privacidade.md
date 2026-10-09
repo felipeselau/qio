@@ -48,4 +48,13 @@ O cliente é anônimo e não tem conta, então o canal do titular é o estabelec
 6. Eliminação: "Anonimizar" troca o nome por "Anônimo", remove o telefone do histórico e apaga o comentário da avaliação (a nota fica, sem vínculo). "Excluir" apaga histórico e avaliações. Nos dois casos a entrada ativa na fila é removida. Para confirmar, digite o telefone de novo. Não dá para desfazer.
 7. Responda ao titular dentro do prazo e guarde o registro: cada consulta, exportação e eliminação grava `owners/{uid}/dataRequests/{id}` (ação, modo, contagens por fila, hash do telefone e data), sem nome nem telefone. Só o dono lê.
 
-Limites: a busca é exata pelo telefone, nas duas formas gravadas (`(11) 99999-9999` e só dígitos); registros sem telefone (`anonymizePhone`) não são encontrados. Não migramos dados antigos. O limite é de 20 pedidos por hora por conta. Backups (`docs/backup.md`) podem reter os dados até expirarem. O hash do telefone usa `DSR_HASH_PEPPER` (opcional) e o uid do dono; como telefone é um espaço pequeno, trate o log como dado sensível.
+Limites conhecidos:
+
+- A busca é exata pelo telefone, nas duas formas: máscara `(11) 99999-9999` (a única que o `joinQueue`, o `addManualEntry` e as rules gravam hoje) e só dígitos. A forma só-dígitos é mantida só por tolerância a dados legados que não conseguimos descartar; não migramos dados antigos.
+- Registros de `history` sem telefone (fila com `anonymizePhone`, ou já anonimizados) não são encontrados. Por isso o `feedback` desses atendimentos também não: ele só é alcançado pelo `entryId` de um history achado pelo telefone.
+- "Anonimizar" apaga o comentário do feedback, mas mantém `rating`, `uid` (anônimo do navegador) e `createdAt`. Se isso for demais para o caso, use "Excluir".
+- Corrida com o trigger `syncPublicTicket`: se o cliente sair da fila (`left`) no instante da eliminação, o trigger pode gravar um `history` novo com o telefone depois da varredura. Repita a busca após alguns segundos e elimine de novo se aparecer.
+- Se a gravação do log de auditoria falhar, a ação continua valendo e a resposta é devolvida; o erro vai para o log de erros (sem PII). Em eliminação parcial o log traz `failedQueueIds`.
+- O limite é de 20 pedidos por hora por conta (`rateLimits/_dsr/{uid}`, apagado junto com a conta).
+- Backups (`docs/backup.md`) podem reter os dados até expirarem.
+- O hash do telefone no log é pseudonimização, não anonimização: SHA-256 de `pepper:uid:telefone`. O pepper (`DSR_HASH_PEPPER`, opcional, segredo) dificulta a reversão por força bruta; sem ele, trate o log como dado pessoal. Excluir a conta apaga o log.

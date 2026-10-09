@@ -2,7 +2,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 
 import 'delete_service.dart';
 
-const _timeout = Duration(minutes: 5);
+const _timeout = Duration(minutes: 4);
 
 String? normalizeCustomerPhone(String input) {
   final digits = input.replaceAll(RegExp(r'\D'), '');

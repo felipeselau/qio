@@ -614,6 +614,7 @@ function deleteDeps() {
     },
     deleteOwnerData: async (uid) => {
       await firestore.recursiveDelete(firestore.doc(`owners/${uid}`));
+      await db.ref(`rateLimits/_dsr/${uid}`).remove();
     },
     deleteAuthUser: async (uid) => {
       try {
@@ -851,7 +852,7 @@ function dsrCallable(name, run) {
           digits,
           now,
           pepper: process.env.DSR_HASH_PEPPER ?? '',
-          onError: (err, ctx) => logError(`${name} queue failed`, err, ctx),
+          onError: (err, ctx) => logError(`${name} failed`, err, ctx),
           ...extra,
         },
         dsrDeps(),

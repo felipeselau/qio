@@ -239,6 +239,17 @@ void main() {
     expect(find.text('Balcão'), findsOneWidget);
   });
 
+  testWidgets('editing the phone clears the previous result', (tester) async {
+    final service = FakeDataSubjectService(summary: found);
+    await pumpApp(tester, DataSubjectScreen(service: service), size: tall);
+    await search(tester, '11999999999');
+    expect(find.text('Excluir'), findsOneWidget);
+    await tester.enterText(find.byType(TextField).first, '11988888888');
+    await tester.pump();
+    expect(find.text('Excluir'), findsNothing);
+    expect(find.text('Balcão'), findsNothing);
+  });
+
   testWidgets('has accessible labels', (tester) async {
     final handle = tester.ensureSemantics();
     await pumpApp(
