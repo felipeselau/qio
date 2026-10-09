@@ -97,6 +97,7 @@ class QueueService {
     QueueSchedule? schedule,
     String? brandColor,
     AlertsConfig? alerts,
+    ExpiryConfig? expiry,
   }) async {
     await ensureUnderQueueLimit(_uid);
     final info = QueueInfo(
@@ -122,6 +123,7 @@ class QueueService {
       if (schedule != null && schedule.enabled) 'schedule': schedule.toMap(),
       'brandColor': ?brandColor,
       if (alerts != null) 'alerts': alerts.toMap(),
+      if (expiry != null && expiry.enabled) 'expiry': expiry.toMap(),
       if (mode == QueueMode.schedule) ...{
         'mode': mode.value,
         'slots': [for (final s in slots) s.toMap()],
@@ -171,6 +173,7 @@ class QueueService {
       schedule: schedule,
       brandColor: brandColor,
       alerts: alerts,
+      expiry: expiry != null && expiry.enabled ? expiry : null,
       mode: mode,
       slots: slots,
     );
@@ -495,6 +498,7 @@ class QueueService {
       schedule: source.schedule,
       brandColor: source.brandColor,
       alerts: source.alerts,
+      expiry: source.expiry,
     );
   }
 

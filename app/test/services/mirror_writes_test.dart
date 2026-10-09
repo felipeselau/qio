@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:qio_app/models/expiry_config.dart';
 import 'package:qio_app/models/operator.dart';
 import 'package:qio_app/models/queue.dart';
 import 'package:qio_app/models/queue_slot.dart';
@@ -112,6 +113,54 @@ void main() {
       expect(d['mode'], 'schedule');
       expect((d['slots'] as List).map((s) => s['id']), ['a', 'b']);
       expect(rtdb.touched, isFalse);
+    });
+  });
+
+  group('createQueue e expiry', () {
+    Future<Map<String, dynamic>> docOf(String id) async =>
+        (await firestore.collection('queues').doc(id).get()).data()!;
+
+    test('grava expiry quando habilitado', () async {
+      final queue = await service.createQueue(
+        name: 'Nova',
+        expiry: const ExpiryConfig(enabled: true, hours: 6, clearOnClose: true),
+      );
+      expect((await docOf(queue.id))['expiry'], {
+        'enabled': true,
+        'hours': 6,
+        'clearOnClose': true,
+        'resetTicketDaily': false,
+      });
+      expect(queue.expiry?.hours, 6);
+    });
+
+    test('nao grava expiry ausente ou desabilitado', () async {
+      final a = await service.createQueue(name: 'A');
+      final b = await service.createQueue(
+        name: 'B',
+        expiry: const ExpiryConfig(),
+      );
+      expect((await docOf(a.id)).containsKey('expiry'), isFalse);
+      expect((await docOf(b.id)).containsKey('expiry'), isFalse);
+      expect(b.expiry, isNull);
+    });
+
+    test('duplicateQueue copia expiry', () async {
+      await firestore.collection('queues').doc('q1').update({
+        'expiry': {
+          'enabled': true,
+          'hours': 4,
+          'clearOnClose': false,
+          'resetTicketDaily': true,
+        },
+      });
+      final copy = await service.duplicateQueue('q1', name: 'Fila (copia)');
+      expect((await docOf(copy.id))['expiry'], {
+        'enabled': true,
+        'hours': 4,
+        'clearOnClose': false,
+        'resetTicketDaily': true,
+      });
     });
   });
 
