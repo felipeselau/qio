@@ -14,6 +14,8 @@ Sistema de filas para atendimentos presenciais. Proprietários criam filas no ap
 | [`docs/monitoring.md`](docs/monitoring.md) | Logging estruturado, analytics com opt-out e ações manuais no console |
 | [`docs/qualidade.md`](docs/qualidade.md) | **Quadro de resultados** — testes, cobertura, CI e limitações conhecidas |
 | [`docs/testes/`](docs/testes/)           | Casos de teste, ambiente de emulators e roteiro de demonstração |
+| [`docs/arquitetura/`](docs/arquitetura/diagramas.md) | **Arquitetura para o TCC** — [diagramas](docs/arquitetura/diagramas.md) (componentes, `joinQueue`, `callNext`, finalização, modelo de dados), [comparativo com alternativas](docs/arquitetura/comparativo-concorrentes.md), [modelo de ameaças](docs/arquitetura/modelo-de-ameacas.md) e [limitações e trabalhos futuros](docs/arquitetura/limitacoes-e-trabalhos-futuros.md) |
+| [`docs/usabilidade/`](docs/usabilidade/README.md) | **Teste de usabilidade (SUS)** — plano, [roteiro de tarefas](docs/usabilidade/roteiro-tarefas.md), [formulário SUS](docs/usabilidade/formulario-sus.md), [termo de consentimento](docs/usabilidade/termo-consentimento.md), [ficha de observação](docs/usabilidade/ficha-observacao.md) e [modelo de relatório](docs/usabilidade/relatorio-modelo.md); nenhum ciclo executado ainda |
 | [`CHANGELOG.md`](CHANGELOG.md)           | Histórico de versões do app |
 | [`CLAUDE.md`](CLAUDE.md)                 | Guia de módulos, comandos, modelo de dados e decisões de cada funcionalidade |
 

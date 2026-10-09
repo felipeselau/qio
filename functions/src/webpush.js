@@ -1,4 +1,5 @@
 const { normalizeLang } = require('./push');
+const { joinUrl } = require('./urls');
 
 const TEXT = {
   pt: {
@@ -26,7 +27,7 @@ function queueLabel(name) {
 }
 
 function webpushFor(queueId) {
-  return { fcmOptions: { link: `https://qio.web.app/q/${queueId}` } };
+  return { fcmOptions: { link: joinUrl(queueId) } };
 }
 
 function buildCalledMessage({ token, ticket, queueName, queueId, lang }) {

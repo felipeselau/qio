@@ -4,18 +4,14 @@ import { connectAuthEmulator, getAuth } from 'firebase/auth';
 import { connectDatabaseEmulator, getDatabase } from 'firebase/database';
 import { connectFunctionsEmulator, getFunctions } from 'firebase/functions';
 
-const firebaseConfig = {
-  apiKey: 'AIzaSyAY29R07GlubY5lFmUriQ8qiVuiiWv7W6Y',
-  authDomain: 'qio-app.firebaseapp.com',
-  databaseURL: 'https://qio-app-default-rtdb.firebaseio.com',
-  projectId: 'qio-app',
-  storageBucket: 'qio-app.firebasestorage.app',
-  messagingSenderId: '981965097928',
-  appId: '1:981965097928:web:b08d7d1bfce182d3d4cefd',
+import { firebaseConfig } from './firebaseConfig';
+
+const config = {
+  ...firebaseConfig,
   measurementId: (import.meta.env.VITE_MEASUREMENT_ID as string | undefined) || undefined,
 };
 
-export const app = initializeApp(firebaseConfig);
+export const app = initializeApp(config);
 
 // App Check (reCAPTCHA Enterprise / Fraud Defense) — mitiga entradas falsas/automatizadas na fila,
 // rejeitando no backend do Firebase requisições que não venham do site legítimo
