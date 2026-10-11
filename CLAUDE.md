@@ -1107,6 +1107,22 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   reservado, não redireciona). O Android App Link cobre só `/q/*`, então `/n/`
   abre no navegador (que redireciona para `/q/`). Goldens não cobrem o cartaz.
 
+## Universo demo (emulator)
+
+- Seed determinístico de 7 contas de dono (padaria, clínica, barbearia, cartório, food truck, rede
+  de óticas com 20 filas, conta nova) + 11 operadores `@qio.demo`, com ~120 dias de histórico por
+  simulação de fila, feedback, grupos, alertas, expiração, slots, convites e pedidos de operador.
+  Senha, roteiro por conta e portas: `docs/demo/README.md` (a senha só existe lá e em
+  `functions/scripts/demo/accounts.js`; vale só no emulator).
+- Código em `functions/scripts/demo/` (`rng`, `simulate`, `accounts`, `build` puro e testado,
+  `seed`, `guard`, `index`). **Só emulator:** `guard.js` recusa rodar sem as três
+  `*_EMULATOR_HOST` em localhost. Sobe com `ops/demo-up.sh` (fase 1 sem functions + seed +
+  export em `.demo-data/`, fase 2 completa com `--import`; o import não dispara triggers) e
+  para com `ops/demo-down.sh`. Gera `.firebase.demo.generated.json` (não altera o `firebase.json`).
+- Ids `demo-*` e e-mails `@qio.demo`; cada execução apaga e regrava só esse escopo (idempotente).
+  Testes: `functions/test/demo-*.test.js` (`npm test` em `functions/`). Pub/Sub não sobe, então
+  as funções agendadas não rodam no demo.
+
 ## Tooling (adaptado do OpenCode)
 
 O framework de agentes (product → builder → reviewer → advisor) e as regras de
