@@ -334,6 +334,12 @@ modelos; ainda sem dados): `docs/piloto/`.
   seletores posicionais.
 - Voltar do painel/criação/edição é `QueueBackButton` (`BackButton` do Material, tooltip e
   semântica localizados, usa `maybePop` e portanto respeita o `PopScope`).
+- **Tour da criação (#224): decidido NÃO implementar** `OnboardingTour.create`: o wizard já
+  guia com uma decisão por tela e a tela "Fila criada" traz os atalhos; um tour em cima
+  seria ruído. Goldens do wizard em `app/test/golden/create_queue_golden_test.dart`
+  (`create_{name,mode,alerts,review,created}_390_{light,dark}` e `create_review_320_light`;
+  modo hora marcada com sugestões, alertas ligados, revisão com a seção de horários
+  preenchida). Regenerar pelo artifact do CI Linux (`app/test/goldens/README.md`).
 - **Rascunho persistente**: `CreateQueueDraftStore` (`services/create_queue_draft_store.dart`,
   interface injetável `load/save/clear` por `uid`; implementação
   `SharedPrefsCreateQueueDraftStore`, chave `create_queue_draft_<uid>`, JSON de

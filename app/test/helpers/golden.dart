@@ -54,6 +54,14 @@ Future<void> goldenApp(
     themeMode: themeMode,
     size: size,
   );
+  await goldenExpect(tester, name, settle: settle);
+}
+
+Future<void> goldenExpect(
+  WidgetTester tester,
+  String name, {
+  Duration settle = const Duration(milliseconds: 600),
+}) async {
   await tester.pump(settle);
   await tester.pump(settle);
   if (!Platform.isLinux) return;
