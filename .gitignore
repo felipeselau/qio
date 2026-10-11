@@ -48,3 +48,7 @@ Claude outputs/
 
 # Backups locais do RTDB (contêm PII)
 backups/
+
+# Universo demo (emulator)
+.demo-data/
+.firebase.demo.generated.json
