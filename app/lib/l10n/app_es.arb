@@ -666,5 +666,10 @@
   "cqAlertsTitle": "¿Quiere recibir alertas de esta fila?",
   "cqAlertsHint": "Opcional. Le avisamos cuando la espera, la inasistencia o la fila detenida superen el límite que elija.",
   "cqAlertsPushNote": "Los avisos llegan como notificaciones. Si esta cuenta los recibe es una opción de la pantalla Alertas operativas, en los ajustes de la fila.",
-  "cqSummaryAlerts": "Alertas"
+  "cqSummaryAlerts": "Alertas",
+  "groupSectionQueues": "{count, plural, =1{{count} fila} other{{count} filas}}",
+  "groupSectionWaiting": "{count} esperando",
+  "groupSectionExpanded": "expandido",
+  "groupSectionCollapsed": "contraído",
+  "groupSectionSemantics": "{name}, {queues}, {waiting}, {state}"
 }

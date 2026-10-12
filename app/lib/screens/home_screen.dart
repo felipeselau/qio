@@ -10,9 +10,12 @@ import '../l10n/app_localizations.dart';
 import '../controllers/home_controller.dart';
 import '../models/operator.dart';
 import '../models/queue.dart';
+import '../models/queue_group.dart';
 import '../services/action_errors.dart';
 import '../services/auth_service.dart';
 import '../services/deep_link.dart';
+import '../services/group_service.dart';
+import '../services/home_grouping.dart';
 import '../services/join_url.dart';
 import '../services/home_prompts.dart';
 import '../services/push_service.dart';
@@ -49,6 +52,8 @@ class HomeScreen extends StatefulWidget {
     this.operators,
     this.enableIntegrations = true,
     this.prompts,
+    this.groups,
+    this.collapseStore,
   });
 
   final AuthService? auth;
@@ -58,6 +63,9 @@ class HomeScreen extends StatefulWidget {
   final bool enableIntegrations;
   @visibleForTesting
   final HomePrompts? prompts;
+  final GroupService? groups;
+  @visibleForTesting
+  final GroupCollapseStore? collapseStore;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -72,6 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ownedSource: _queues.watchOwnerQueues,
     operatingSource: _operators.watchMyOperatorQueues,
     requestsSource: _operators.watchMyRequests,
+    groupsSource: _watchGroups,
   );
 
   StreamSubscription<Uri>? _linkSub;
@@ -81,6 +90,32 @@ class _HomeScreenState extends State<HomeScreen> {
   QueueSort _sort = QueueSort.name;
   final Map<String, int> _waiting = {};
   final Map<String, StreamSubscription<int>> _waitingSubs = {};
+  Set<String> _collapsed = {};
+  bool _collapsedTouched = false;
+
+  GroupCollapseStore get _collapseStore =>
+      widget.collapseStore ?? const SharedPrefsGroupCollapseStore();
+
+  String get _uid =>
+      (widget.auth ?? AuthService.instance).currentUser?.uid ?? '';
+
+  Stream<List<QueueGroup>> _watchGroups() {
+    try {
+      return (widget.groups ?? GroupService.instance).watchGroups();
+    } catch (_) {
+      return Stream.value(const <QueueGroup>[]);
+    }
+  }
+
+  void _toggleSection(String id) {
+    final next = {..._collapsed};
+    if (!next.remove(id)) next.add(id);
+    setState(() {
+      _collapsed = next;
+      _collapsedTouched = true;
+    });
+    _collapseStore.save(_uid, next);
+  }
 
   @override
   void initState() {
@@ -89,6 +124,10 @@ class _HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
       setState(() => _sort = sort);
       _syncWaitingSubs();
+    });
+    _collapseStore.load(_uid).then((saved) {
+      if (!mounted || _collapsedTouched) return;
+      setState(() => _collapsed = saved);
     });
     _controller.addListener(_syncWaitingSubs);
     _prompts =
@@ -402,14 +441,47 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     final showHeaders = operating.isNotEmpty || requests.isNotEmpty;
     final tools = showQueueTools(owned.length);
-    final visible = tools
+    List<Queue> arrange(List<Queue> list) => tools
         ? filterAndSortQueues(
-            owned,
+            list,
             query: _query,
             sort: _sort,
             waiting: _waiting,
           )
-        : owned;
+        : list;
+    final sections = buildHomeSections(owned, _controller.groups);
+    final grouped = sections.isNotEmpty;
+    final visibleSections = [
+      for (final s in sections)
+        if (arrange(s.queues) case final qs when qs.isNotEmpty)
+          HomeSection(group: s.group, queues: qs),
+    ];
+    final visible = grouped
+        ? [for (final s in visibleSections) ...s.queues]
+        : arrange(owned);
+    var firstKeyUsed = false;
+    Widget ownerCard(Queue q, {bool visibleNow = true}) {
+      final useKey = visibleNow && !firstKeyUsed;
+      if (useKey) firstKeyUsed = true;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            key: useKey ? _firstQueueKey : null,
+            child: _QueueCard(
+              key: ValueKey(q.id),
+              queue: q,
+              isOwner: true,
+              waiting: _waiting[q.id] ?? 0,
+              queues: _queues,
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+      );
+    }
+
+    final searching = tools && foldForSearch(_query).isNotEmpty;
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
@@ -427,19 +499,25 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
-        for (final q in visible) ...[
-          SizedBox(
-            key: q == visible.first ? _firstQueueKey : null,
-            child: _QueueCard(
-              key: ValueKey(q.id),
-              queue: q,
-              isOwner: true,
-              waiting: _waiting[q.id] ?? 0,
-              queues: _queues,
-            ),
-          ),
-          const SizedBox(height: 16),
-        ],
+        if (grouped)
+          for (final s in visibleSections)
+            _GroupSection(
+              key: ValueKey('group-${s.id}'),
+              title: s.group?.name ?? l10n.groupNone,
+              queueCount: s.queues.length,
+              waiting: sumWaiting(s.queues, _waiting),
+              expanded: searching || !_collapsed.contains(s.id),
+              onToggle: searching ? null : () => _toggleSection(s.id),
+              children: [
+                for (final q in s.queues)
+                  ownerCard(
+                    q,
+                    visibleNow: searching || !_collapsed.contains(s.id),
+                  ),
+              ],
+            )
+        else
+          for (final q in visible) ownerCard(q),
         if (operating.isNotEmpty) _sectionTitle(l10n.sectionOperator),
         for (final op in operating) ...[
           _OperatorQueueCard(
@@ -529,6 +607,117 @@ class _HomeScreenState extends State<HomeScreen> {
           color: context.qio.gray700,
         ),
       ),
+    );
+  }
+}
+
+class _GroupSection extends StatelessWidget {
+  const _GroupSection({
+    super.key,
+    required this.title,
+    required this.queueCount,
+    required this.waiting,
+    required this.expanded,
+    required this.onToggle,
+    required this.children,
+  });
+
+  final String title;
+  final int queueCount;
+  final int waiting;
+  final bool expanded;
+  final VoidCallback? onToggle;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final animate = !MediaQuery.of(context).disableAnimations;
+    final duration = animate
+        ? const Duration(milliseconds: 200)
+        : Duration.zero;
+    final queuesText = l10n.groupSectionQueues(queueCount);
+    final waitingText = l10n.groupSectionWaiting(waiting);
+    final stateText = expanded
+        ? l10n.groupSectionExpanded
+        : l10n.groupSectionCollapsed;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Semantics(
+          container: true,
+          button: onToggle != null,
+          expanded: expanded,
+          label: l10n.groupSectionSemantics(
+            title,
+            queuesText,
+            waitingText,
+            stateText,
+          ),
+          excludeSemantics: true,
+          onTap: onToggle,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: onToggle,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 48),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            title,
+                            style: context.qioText.heading3.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: context.qio.textPrimary,
+                            ),
+                          ),
+                          Text(
+                            '$queuesText · $waitingText',
+                            style: context.qioText.caption.copyWith(
+                              fontSize: 12,
+                              color: context.qio.gray700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    AnimatedRotation(
+                      turns: expanded ? 0 : -0.25,
+                      duration: duration,
+                      child: Icon(
+                        Icons.expand_more,
+                        color: context.qio.gray700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        if (animate)
+          AnimatedSize(
+            duration: duration,
+            alignment: Alignment.topCenter,
+            child: expanded
+                ? Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: children,
+                  )
+                : const SizedBox(width: double.infinity),
+          )
+        else if (expanded)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: children,
+          ),
+      ],
     );
   }
 }
