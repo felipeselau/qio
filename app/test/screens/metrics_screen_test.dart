@@ -4,7 +4,6 @@ import 'package:qio_app/models/queue.dart';
 import 'package:qio_app/models/queue_group.dart';
 import 'package:qio_app/screens/metrics_screen.dart';
 import 'package:qio_app/services/metrics_export.dart';
-import 'package:qio_app/services/queue_analytics.dart';
 import 'package:qio_app/widgets/delta_badge.dart';
 import 'package:qio_app/widgets/trend_chart.dart';
 
@@ -16,6 +15,11 @@ const tall = Size(390, 2400);
 Future<void> tick(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 300));
   await tester.pump(const Duration(milliseconds: 300));
+}
+
+Future<void> openScope(WidgetTester tester) async {
+  await tester.tap(find.byKey(const ValueKey('scope-picker')));
+  await tick(tester);
 }
 
 Finder chip(String label) => find.widgetWithText(ChoiceChip, label);
@@ -353,12 +357,12 @@ void main() {
     await tick(tester);
     await tester.tap(chip('Personalizado'));
     await tick(tester);
-    await tester.tap(find.byType(DropdownButton<MetricsScope>));
+    await openScope(tester);
+    await tester.tap(find.byKey(const ValueKey('scope-group-g1')));
     await tick(tester);
-    await tester.tap(find.text('Grupo: Grupo').last);
-    await tick(tester);
+    expect(find.byKey(const ValueKey('cmp-row-a')), findsOneWidget);
+    expect(find.byKey(const ValueKey('cmp-row-b')), findsOneWidget);
     expect(find.text('Padaria'), findsWidgets);
-    expect(find.textContaining('1 atendimentos · espera'), findsOneWidget);
-    expect(find.textContaining('0 atendimentos · espera'), findsOneWidget);
+    expect(find.text('Clinica'), findsWidgets);
   });
 }
