@@ -265,11 +265,7 @@ void main() {
     expect(finder, findsOneWidget);
     expect(
       tester.getSemantics(finder),
-      isSemantics(
-        isButton: true,
-        hasExpandedState: true,
-        isExpanded: true,
-      ),
+      isSemantics(isButton: true, hasExpandedState: true, isExpanded: true),
     );
     expect(tester.getSize(finder).height, greaterThanOrEqualTo(48));
 
