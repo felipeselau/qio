@@ -2136,4 +2136,36 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get cqSummaryAlerts => 'Alertas';
+
+  @override
+  String groupSectionQueues(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count filas',
+      one: '$count fila',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupSectionWaiting(int count) {
+    return '$count esperando';
+  }
+
+  @override
+  String get groupSectionExpanded => 'expandido';
+
+  @override
+  String get groupSectionCollapsed => 'recolhido';
+
+  @override
+  String groupSectionSemantics(
+    String name,
+    String queues,
+    String waiting,
+    String state,
+  ) {
+    return '$name, $queues, $waiting, $state';
+  }
 }

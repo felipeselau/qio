@@ -666,5 +666,10 @@
   "cqAlertsTitle": "Want alerts for this queue?",
   "cqAlertsHint": "Optional. We notify you when the wait, no-shows or a stalled queue go past the limit you pick.",
   "cqAlertsPushNote": "Alerts arrive as notifications. Whether this account receives them is an option on the Operational alerts screen, in the queue settings.",
-  "cqSummaryAlerts": "Alerts"
+  "cqSummaryAlerts": "Alerts",
+  "groupSectionQueues": "{count, plural, =1{{count} queue} other{{count} queues}}",
+  "groupSectionWaiting": "{count} waiting",
+  "groupSectionExpanded": "expanded",
+  "groupSectionCollapsed": "collapsed",
+  "groupSectionSemantics": "{name}, {queues}, {waiting}, {state}"
 }

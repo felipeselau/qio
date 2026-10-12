@@ -21,8 +21,10 @@ Queue fakeQueue(
   QueueStatus status = QueueStatus.open,
   int maxWaiting = 0,
   String? statusMessage,
+  String? groupId,
 }) => Queue(
   id: id,
+  groupId: groupId,
   ownerId: 'uid-1',
   name: name ?? 'Fila $id',
   status: status,

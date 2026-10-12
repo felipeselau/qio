@@ -478,6 +478,22 @@ modelos; ainda sem dados): `docs/piloto/`.
   (`queue_analytics.dart`) antes de `buildMetricsReport`; o comparativo entre
   filas (`compareQueues`) só aparece no escopo de grupo. CSV/PDF levam o nome do
   escopo (`MetricsReport.scopeLabel`) no cabeçalho e no nome do arquivo.
+- **Home agrupada (#240):** com pelo menos um grupo que tenha fila, a home do app mostra uma
+  seção por grupo (ordem `sortGroups`), cada uma com cabeçalho (nome, nº de filas, soma dos
+  `waitingCount` já mantidos em `_waiting`, seta; `Semantics` button + expanded com rótulo
+  "Loja Centro, 3 filas, 12 esperando, expandido"; toque colapsa/expande com `AnimatedSize`
+  de 200 ms, sem animação com `disableAnimations`; altura mínima 48). Filas sem grupo ou com
+  `groupId` órfão vão para "Sem grupo" por último (`buildHomeSections` em
+  `services/home_grouping.dart`, puro e testado). Com zero grupos (ou nenhuma fila com grupo
+  válido) a home é a lista plana de sempre (golden `home_*` intacto). Busca e ordenação
+  (> 5 filas no total) valem dentro de cada grupo; grupo sem resultado some e, com busca
+  ativa, as seções com resultado ficam expandidas (sem alterar o estado salvo; o cabeçalho
+  mostra a contagem/soma só do que aparece). "Sou operador" segue sem filtro, ordenação ou
+  agrupamento. Colapso persistido em `SharedPreferences` (`home_collapsed_groups_<uid>`, lista
+  de ids; `__ungrouped__` para "Sem grupo"; `GroupCollapseStore` injetável). Os grupos vêm de
+  `GroupService.watchGroups()` assinado **uma vez** no `HomeController` (`groupsSource`);
+  `permission-denied` ou qualquer erro viram lista vazia (home plana, sem erro visível).
+  Golden novo `home_grouped_390_{light,dark}`.
 - **Ordem de deploy**: rules do Firestore (`firebase deploy --only
   firestore:rules`) → APK. APK novo com rules antigas recebe `permission-denied`
   nas operações de grupo (o app mostra mensagem) e ao gravar `groupId`.
@@ -620,7 +636,8 @@ modelos; ainda sem dados): `docs/piloto/`.
 - `callNext` reserva a entry por transação (`_claimEntry`) e avança
   `meta/serving` por transação (nunca volta). Histórico grava `calledBy` e
   `operatorId`; rule exige `operatorId == auth.uid` p/ operador.
-- Home do app: busca/ordenação (> 5 filas) valem só para as filas de dono; a
+- Home do app: com grupos, as filas de dono aparecem em seções colapsáveis (ver "Grupos de
+  filas"); busca/ordenação (> 5 filas) valem só para as filas de dono (dentro de cada grupo); a
   seção "Sou operador" não é filtrada nem ordenada. Cards de dono têm atalhos
   de pausar/reabrir e QR; os de operador não.
 

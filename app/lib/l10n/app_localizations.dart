@@ -3843,6 +3843,41 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Alertas'**
   String get cqSummaryAlerts;
+
+  /// No description provided for @groupSectionQueues.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =1{{count} fila} other{{count} filas}}'**
+  String groupSectionQueues(int count);
+
+  /// No description provided for @groupSectionWaiting.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count} esperando'**
+  String groupSectionWaiting(int count);
+
+  /// No description provided for @groupSectionExpanded.
+  ///
+  /// In pt, this message translates to:
+  /// **'expandido'**
+  String get groupSectionExpanded;
+
+  /// No description provided for @groupSectionCollapsed.
+  ///
+  /// In pt, this message translates to:
+  /// **'recolhido'**
+  String get groupSectionCollapsed;
+
+  /// No description provided for @groupSectionSemantics.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name}, {queues}, {waiting}, {state}'**
+  String groupSectionSemantics(
+    String name,
+    String queues,
+    String waiting,
+    String state,
+  );
 }
 
 class _AppLocalizationsDelegate

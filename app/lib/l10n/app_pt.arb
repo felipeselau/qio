@@ -723,5 +723,13 @@
   "cqAlertsTitle": "Quer receber alertas desta fila?",
   "cqAlertsHint": "Opcional. Avisamos você quando a espera, o não comparecimento ou a fila parada passarem do limite que escolher.",
   "cqAlertsPushNote": "Os avisos chegam por notificação. Se a conta recebe esses avisos é uma opção da tela Alertas operacionais, nas configurações da fila.",
-  "cqSummaryAlerts": "Alertas"
+  "cqSummaryAlerts": "Alertas",
+  "groupSectionQueues": "{count, plural, =1{{count} fila} other{{count} filas}}",
+  "@groupSectionQueues": {"placeholders": {"count": {"type": "int"}}},
+  "groupSectionWaiting": "{count} esperando",
+  "@groupSectionWaiting": {"placeholders": {"count": {"type": "int"}}},
+  "groupSectionExpanded": "expandido",
+  "groupSectionCollapsed": "recolhido",
+  "groupSectionSemantics": "{name}, {queues}, {waiting}, {state}",
+  "@groupSectionSemantics": {"placeholders": {"name": {"type": "String"}, "queues": {"type": "String"}, "waiting": {"type": "String"}, "state": {"type": "String"}}}
 }
