@@ -32,7 +32,7 @@ class GroupOverviewSection extends StatelessWidget {
               ComparisonRow(
                 id: r.groupId ?? 'none',
                 name: r.groupId == null ? l10n.groupNone : r.name,
-                subtitle: l10n.groupQueueCount(r.queueCount),
+                subtitle: l10n.metricsGroupQueues(r.queueCount),
                 stats: r,
                 pinLast: r.groupId == null,
                 onTap: () => onSelect(

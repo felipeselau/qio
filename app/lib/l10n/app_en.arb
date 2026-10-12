@@ -671,8 +671,8 @@
   "groupOverviewTitle": "By group",
   "groupOverviewHint": "Tap a group to see only its queues.",
   "groupOverviewOpenHint": "Show only this group",
-  "groupQueueCount": "{count, plural, =1{1 queue} other{{count} queues}}",
-  "@groupQueueCount": {"placeholders": {"count": {"type": "int"}}},
+  "metricsGroupQueues": "{count, plural, =1{1 queue} other{{count} queues}}",
+  "@metricsGroupQueues": {"placeholders": {"count": {"type": "int"}}},
   "groupPartialData": "partial data",
   "cmpColQueue": "Queue",
   "cmpColGroup": "Group",
@@ -696,5 +696,10 @@
   "csvDeltaWaitPct": "average wait change (%)",
   "csvDeltaMedianPct": "median change (%)",
   "csvDeltaP90Pct": "P90 change (%)",
-  "csvDeltaNoShowPoints": "no-show change (p.p.)"
+  "csvDeltaNoShowPoints": "no-show change (p.p.)",
+  "groupSectionQueues": "{count, plural, =1{{count} queue} other{{count} queues}}",
+  "groupSectionWaiting": "{count} waiting",
+  "groupSectionExpanded": "expanded",
+  "groupSectionCollapsed": "collapsed",
+  "groupSectionSemantics": "{name}, {queues}, {waiting}, {state}"
 }

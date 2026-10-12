@@ -224,7 +224,7 @@ class _ScopeSheetState extends State<_ScopeSheet> {
           context,
           value: scope,
           title: name,
-          subtitle: l10n.groupQueueCount(queues.length),
+          subtitle: l10n.metricsGroupQueues(queues.length),
           icon: icon,
         ),
       );

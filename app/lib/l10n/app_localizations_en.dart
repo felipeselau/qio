@@ -2146,7 +2146,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupOverviewOpenHint => 'Show only this group';
 
   @override
-  String groupQueueCount(int count) {
+  String metricsGroupQueues(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
@@ -2226,4 +2226,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get csvDeltaNoShowPoints => 'no-show change (p.p.)';
+
+  @override
+  String groupSectionQueues(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count queues',
+      one: '$count queue',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupSectionWaiting(int count) {
+    return '$count waiting';
+  }
+
+  @override
+  String get groupSectionExpanded => 'expanded';
+
+  @override
+  String get groupSectionCollapsed => 'collapsed';
+
+  @override
+  String groupSectionSemantics(
+    String name,
+    String queues,
+    String waiting,
+    String state,
+  ) {
+    return '$name, $queues, $waiting, $state';
+  }
 }

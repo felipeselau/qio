@@ -671,8 +671,8 @@
   "groupOverviewTitle": "Por grupo",
   "groupOverviewHint": "Toque un grupo para ver solo sus filas.",
   "groupOverviewOpenHint": "Ver solo este grupo",
-  "groupQueueCount": "{count, plural, =1{1 fila} other{{count} filas}}",
-  "@groupQueueCount": {"placeholders": {"count": {"type": "int"}}},
+  "metricsGroupQueues": "{count, plural, =1{1 fila} other{{count} filas}}",
+  "@metricsGroupQueues": {"placeholders": {"count": {"type": "int"}}},
   "groupPartialData": "datos parciales",
   "cmpColQueue": "Fila",
   "cmpColGroup": "Grupo",
@@ -696,5 +696,10 @@
   "csvDeltaWaitPct": "variación espera media (%)",
   "csvDeltaMedianPct": "variación mediana (%)",
   "csvDeltaP90Pct": "variación P90 (%)",
-  "csvDeltaNoShowPoints": "variación inasistencia (p.p.)"
+  "csvDeltaNoShowPoints": "variación inasistencia (p.p.)",
+  "groupSectionQueues": "{count, plural, =1{{count} fila} other{{count} filas}}",
+  "groupSectionWaiting": "{count} esperando",
+  "groupSectionExpanded": "expandido",
+  "groupSectionCollapsed": "contraído",
+  "groupSectionSemantics": "{name}, {queues}, {waiting}, {state}"
 }

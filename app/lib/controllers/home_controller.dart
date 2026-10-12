@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import '../models/operator.dart';
 import '../models/queue.dart';
+import '../models/queue_group.dart';
 
 enum SectionStatus { loading, data, error }
 
@@ -22,6 +23,7 @@ class HomeController extends ChangeNotifier {
     required this.ownedSource,
     required this.operatingSource,
     required this.requestsSource,
+    this.groupsSource,
   }) {
     _subscribe();
   }
@@ -29,6 +31,9 @@ class HomeController extends ChangeNotifier {
   final Stream<List<Queue>> Function() ownedSource;
   final Stream<List<QueueOperator>> Function() operatingSource;
   final Stream<List<OperatorRequest>> Function() requestsSource;
+  final Stream<List<QueueGroup>> Function()? groupsSource;
+
+  List<QueueGroup> groups = const [];
 
   final List<StreamSubscription<Object?>> _subs = [];
   bool _disposed = false;
@@ -48,6 +53,19 @@ class HomeController extends ChangeNotifier {
   List<OperatorRequest> get pendingRequests => requests.value ?? const [];
 
   void _subscribe() {
+    final source = groupsSource;
+    if (source != null) {
+      try {
+        _subs.add(
+          source().listen(
+            (v) => _set(() => groups = v),
+            onError: (Object _) => _set(() => groups = const []),
+          ),
+        );
+      } catch (_) {
+        groups = const [];
+      }
+    }
     _subs
       ..add(
         ownedSource().listen(
