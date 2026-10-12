@@ -737,5 +737,16 @@
   "groupAlertsContinue": "Continuar",
   "groupAlertsConfirm": "¿Aplicar esta configuración de alertas a {count, plural, =1{1 fila} other{{count} filas}} del grupo \"{name}\"? Los alertas actuales de esas filas se reemplazarán.",
   "groupAlertsApply": "Aplicar",
-  "groupAlertsDone": "Alertas aplicados a {count, plural, =1{1 fila} other{{count} filas}}"
+  "groupAlertsDone": "Alertas aplicados a {count, plural, =1{1 fila} other{{count} filas}}",
+  "groupHistoryTitle": "Historial del grupo",
+  "groupHistoryOpen": "Historial del grupo",
+  "groupHistoryNoQueues": "Ninguna fila en este grupo",
+  "groupHistoryNoQueuesHint": "Agrega filas al grupo para ver el historial consolidado.",
+  "groupHistoryTruncated": "Mostrando solo los {limit} registros más recientes de cada fila. Filas con historial recortado: {queues}.",
+  "@groupHistoryTruncated": {"placeholders": {"limit": {"type": "int"}, "queues": {"type": "String"}}},
+  "groupHistoryShowMore": "Mostrar más ({shown} de {total})",
+  "@groupHistoryShowMore": {"placeholders": {"shown": {"type": "int"}, "total": {"type": "int"}}},
+  "historyQueueOrigin": "Fila: {name}",
+  "@historyQueueOrigin": {"placeholders": {"name": {"type": "String"}}},
+  "colQueue": "Fila"
 }

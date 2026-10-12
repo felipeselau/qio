@@ -817,5 +817,16 @@
   "@groupAlertsConfirm": {"placeholders": {"count": {"type": "int"}, "name": {"type": "String"}}},
   "groupAlertsApply": "Aplicar",
   "groupAlertsDone": "Alertas aplicados a {count, plural, =1{1 fila} other{{count} filas}}",
-  "@groupAlertsDone": {"placeholders": {"count": {"type": "int"}}}
+  "@groupAlertsDone": {"placeholders": {"count": {"type": "int"}}},
+  "groupHistoryTitle": "Histórico do grupo",
+  "groupHistoryOpen": "Histórico do grupo",
+  "groupHistoryNoQueues": "Nenhuma fila neste grupo",
+  "groupHistoryNoQueuesHint": "Coloque filas no grupo para ver o histórico consolidado.",
+  "groupHistoryTruncated": "Mostrando só os {limit} registros mais recentes de cada fila. Filas com histórico cortado: {queues}.",
+  "@groupHistoryTruncated": {"placeholders": {"limit": {"type": "int"}, "queues": {"type": "String"}}},
+  "groupHistoryShowMore": "Mostrar mais ({shown} de {total})",
+  "@groupHistoryShowMore": {"placeholders": {"shown": {"type": "int"}, "total": {"type": "int"}}},
+  "historyQueueOrigin": "Fila: {name}",
+  "@historyQueueOrigin": {"placeholders": {"name": {"type": "String"}}},
+  "colQueue": "Fila"
 }

@@ -2475,4 +2475,35 @@ class AppLocalizationsEn extends AppLocalizations {
     );
     return 'Alerts applied to $_temp0';
   }
+
+  @override
+  String get groupHistoryTitle => 'Group history';
+
+  @override
+  String get groupHistoryOpen => 'Group history';
+
+  @override
+  String get groupHistoryNoQueues => 'No queues in this group';
+
+  @override
+  String get groupHistoryNoQueuesHint =>
+      'Add queues to the group to see the combined history.';
+
+  @override
+  String groupHistoryTruncated(int limit, String queues) {
+    return 'Showing only the $limit most recent records of each queue. Queues with truncated history: $queues.';
+  }
+
+  @override
+  String groupHistoryShowMore(int shown, int total) {
+    return 'Show more ($shown of $total)';
+  }
+
+  @override
+  String historyQueueOrigin(String name) {
+    return 'Queue: $name';
+  }
+
+  @override
+  String get colQueue => 'Queue';
 }

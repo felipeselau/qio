@@ -2480,4 +2480,35 @@ class AppLocalizationsPt extends AppLocalizations {
     );
     return 'Alertas aplicados a $_temp0';
   }
+
+  @override
+  String get groupHistoryTitle => 'Histórico do grupo';
+
+  @override
+  String get groupHistoryOpen => 'Histórico do grupo';
+
+  @override
+  String get groupHistoryNoQueues => 'Nenhuma fila neste grupo';
+
+  @override
+  String get groupHistoryNoQueuesHint =>
+      'Coloque filas no grupo para ver o histórico consolidado.';
+
+  @override
+  String groupHistoryTruncated(int limit, String queues) {
+    return 'Mostrando só os $limit registros mais recentes de cada fila. Filas com histórico cortado: $queues.';
+  }
+
+  @override
+  String groupHistoryShowMore(int shown, int total) {
+    return 'Mostrar mais ($shown de $total)';
+  }
+
+  @override
+  String historyQueueOrigin(String name) {
+    return 'Fila: $name';
+  }
+
+  @override
+  String get colQueue => 'Fila';
 }

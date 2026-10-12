@@ -503,6 +503,20 @@ modelos; ainda sem dados): `docs/piloto/`.
   um bottom sheet com busca e seções (Todas, cada grupo com as filas dele, "Sem grupo"): qualquer
   escopo sai em 2 toques (abrir + escolher). Chaves de teste: `scope-picker`, `scope-search`,
   `scope-<all|group|ungrouped|queue>-<id>`, `cmp-row-<id>` e `cmp-sort-<coluna>`.
+- **Histórico do grupo (#248):** `HistoryScreen.group(groupName, groupQueues)` reaproveita a tela
+  do histórico (filtros de resultado/período, métricas, média ★, `★ n`, "Desistiu"). Entrada:
+  botão `group-history-open` ("Histórico do grupo") na `MetricsScreen` quando o escopo é um grupo
+  (filas de `filterByScope`, só as do dono; `deleting` já saem de `watchOwnerQueues`); nada na
+  home nem em `groups_screen.dart`. Carrega `fetchHistory`+`fetchFeedback` por fila (500 por fila,
+  `QueueService.historyFetchLimit`) uma vez (sem stream; o erro cai no retry).
+  `mergeGroupHistory` (`services/group_history.dart`, pura) ordena por `referenceTime` desc com
+  desempate por nome da fila, ticket desc, id da fila e da entry (determinístico), corta cada
+  fila em `limitPerQueue` e devolve `truncatedQueueNames` (fila com ≥ limite de docs): a tela avisa
+  (`groupHistoryTruncated`, lista as filas). A lista pagina de 50 em 50 (`pageOf`, botão
+  `history-show-more`); métricas e exportação usam o conjunto filtrado inteiro. Cada item mostra
+  `Fila: <nome>`. Grupo sem filas: estado vazio. Feedback é casado por `entryId` (push key do
+  Firestore, colisão entre filas desprezível). O histórico de uma fila continua igual (goldens
+  intactos).
 - **Home agrupada (#240):** com pelo menos um grupo que tenha fila, a home do app mostra uma
   seção por grupo (ordem `sortGroups`), cada uma com cabeçalho (nome, nº de filas, soma dos
   `waitingCount` já mantidos em `_waiting`, seta; `Semantics` button + expanded com rótulo
@@ -648,6 +662,9 @@ modelos; ainda sem dados): `docs/piloto/`.
   cliente próprio). Padrão 180.
 - Exportação CSV/PDF do Histórico **sem telefone por padrão**; os itens "Exportar ... com
   telefone" pedem confirmação com aviso LGPD. `metrics_export.dart` nunca exporta telefone.
+  O Histórico do grupo (#248) usa o mesmo menu e a mesma confirmação: CSV/PDF com coluna
+  `Fila` (`queueNames` em `buildHistoryCsv`/`buildHistoryPdf`), arquivo
+  `historico-grupo-<slug>` e cabeçalho do PDF "Grupo: <nome>"; sem telefone por padrão.
 - Rules do Firestore: `retentionDays` e `anonymizePhone` só são validados quando mudam.
   O update de `queues` valida tudo por campo alterado (`queueUpdateFieldsOk`, um único
   `diff`), inclusive `mode`/`slots`/`alerts`, por causa do limite de 1000 expressões; não

@@ -8,8 +8,10 @@ import 'package:share_plus/share_plus.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/history_entry.dart';
+import '../models/queue.dart';
 import '../models/queue_feedback.dart';
 import '../services/history_export.dart';
+import '../services/group_history.dart';
 import '../services/history_metrics.dart';
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
@@ -23,14 +25,26 @@ import '../theme/qio_palette.dart';
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({
     super.key,
-    required this.queueId,
+    required String this.queueId,
     this.queueName = '',
     this.queues,
     this.clock,
-  });
+  }) : groupName = null,
+       groupQueues = const [];
 
-  final String queueId;
+  const HistoryScreen.group({
+    super.key,
+    required String this.groupName,
+    required this.groupQueues,
+    this.queues,
+    this.clock,
+  }) : queueId = null,
+       queueName = '';
+
+  final String? queueId;
   final String queueName;
+  final String? groupName;
+  final List<Queue> groupQueues;
   final QueueService? queues;
   @visibleForTesting
   final DateTime Function()? clock;
@@ -39,8 +53,19 @@ class HistoryScreen extends StatefulWidget {
   State<HistoryScreen> createState() => _HistoryScreenState();
 }
 
+class _HistoryData {
+  const _HistoryData(this.entries, this.queueNames, this.feedback, this.group);
+
+  final List<HistoryEntry> entries;
+  final Map<HistoryEntry, String> queueNames;
+  final List<QueueFeedback> feedback;
+  final GroupHistory? group;
+}
+
 class _HistoryScreenState extends State<HistoryScreen> {
-  late Stream<List<HistoryEntry>> _stream;
+  late Stream<_HistoryData> _stream;
+  int _page = 0;
+  List<String> _filteredQueues = const [];
   HistoryPeriod _period = HistoryPeriod.all;
   String? _result;
   List<HistoryEntry> _filtered = const [];
@@ -50,7 +75,53 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   QueueService get _queues => widget.queues ?? QueueService.instance;
 
-  String get _baseName => 'historico-${widget.queueId}';
+  bool get _isGroup => widget.groupName != null;
+
+  String get _baseName {
+    if (!_isGroup) return 'historico-${widget.queueId}';
+    final slug = widget.groupName!
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'^-+|-+$'), '');
+    return 'historico-grupo${slug.isEmpty ? '' : '-$slug'}';
+  }
+
+  Stream<_HistoryData> _open() {
+    if (!_isGroup) {
+      return _queues
+          .watchHistory(widget.queueId!)
+          .map((e) => _HistoryData(e, const {}, const [], null));
+    }
+    return Stream.fromFuture(_loadGroup());
+  }
+
+  Future<_HistoryData> _loadGroup() async {
+    final slices = await Future.wait([
+      for (final q in widget.groupQueues)
+        Future.wait([
+          _queues.fetchHistory(q.id),
+          _queues.fetchFeedback(q.id).catchError((_) => <QueueFeedback>[]),
+        ]).then(
+          (r) => GroupHistorySlice(
+            queueId: q.id,
+            queueName: q.name,
+            entries: r[0] as List<HistoryEntry>,
+            feedback: r[1] as List<QueueFeedback>,
+          ),
+        ),
+    ]);
+    final group = mergeGroupHistory(slices);
+    final names = Map<HistoryEntry, String>.identity();
+    for (final i in group.items) {
+      names[i.entry] = i.queueName;
+    }
+    return _HistoryData(
+      [for (final i in group.items) i.entry],
+      names,
+      group.feedback,
+      group,
+    );
+  }
 
   Future<void> _export(Future<void> Function() action) async {
     if (_exporting) return;
@@ -79,7 +150,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Future<void> _exportCsv({bool includePhone = false}) => _export(() async {
     final l10n = AppLocalizations.of(context);
     final bytes = Uint8List.fromList(
-      utf8.encode(buildHistoryCsv(l10n, _filtered, includePhone: includePhone)),
+      utf8.encode(
+        buildHistoryCsv(
+          l10n,
+          _filtered,
+          includePhone: includePhone,
+          queueNames: _isGroup ? _filteredQueues : null,
+        ),
+      ),
     );
     final fileName = '$_baseName.csv';
     await SharePlus.instance.share(
@@ -93,10 +171,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Future<void> _exportPdf({bool includePhone = false}) => _export(() async {
     final bytes = await buildHistoryPdf(
       l10n: AppLocalizations.of(context),
-      queueName: widget.queueName,
+      queueName: _isGroup
+          ? AppLocalizations.of(context).metricsScopeGroup(widget.groupName!)
+          : widget.queueName,
       entries: _filtered,
       generatedAt: DateTime.now(),
       includePhone: includePhone,
+      queueNames: _isGroup ? _filteredQueues : null,
     );
     await Printing.sharePdf(bytes: bytes, filename: '$_baseName.pdf');
   });
@@ -143,11 +224,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   void initState() {
     super.initState();
-    _stream = _queues.watchHistory(widget.queueId);
-    _feedbackSub = _queues.watchFeedback(widget.queueId).listen((list) {
-      if (!mounted) return;
-      setState(() => _feedback = {for (final f in list) f.entryId: f});
-    }, onError: (_) {});
+    _stream = _open();
+    if (!_isGroup) {
+      _feedbackSub = _queues.watchFeedback(widget.queueId!).listen((list) {
+        if (!mounted) return;
+        setState(() => _feedback = {for (final f in list) f.entryId: f});
+      }, onError: (_) {});
+    }
   }
 
   @override
@@ -164,7 +247,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       appBar: AppBar(
         backgroundColor: context.qio.surface,
         title: Text(
-          l10n.historyTitle,
+          _isGroup ? l10n.groupHistoryTitle : l10n.historyTitle,
           style: context.qioText.heading2.copyWith(
             fontWeight: FontWeight.w700,
             color: context.qio.textPrimary,
@@ -193,21 +276,32 @@ class _HistoryScreenState extends State<HistoryScreen> {
         ],
       ),
       body: QioResponsiveBody(
-        child: StreamBuilder<List<HistoryEntry>>(
+        child: StreamBuilder<_HistoryData>(
           stream: _stream,
           builder: (context, snap) {
             if (snap.hasError) {
               return QioErrorState(
                 message: l10n.loadHistoryError,
                 onRetry: () => setState(() {
-                  _stream = _queues.watchHistory(widget.queueId);
+                  _stream = _open();
                 }),
               );
             }
             if (!snap.hasData) {
               return const QioSkeletonList(count: 4);
             }
-            final all = snap.data!;
+            final data = snap.data!;
+            final all = data.entries;
+            if (_isGroup) {
+              _feedback = {for (final f in data.feedback) f.entryId: f};
+              if (widget.groupQueues.isEmpty) {
+                return QioEmptyState(
+                  icon: Icons.folder_open,
+                  title: l10n.groupHistoryNoQueues,
+                  message: l10n.groupHistoryNoQueuesHint,
+                );
+              }
+            }
             if (all.isEmpty) {
               return QioEmptyState(
                 icon: Icons.history,
@@ -222,10 +316,32 @@ class _HistoryScreenState extends State<HistoryScreen> {
               now: (widget.clock ?? DateTime.now)(),
             );
             _filtered = filtered;
+            _filteredQueues = [
+              if (_isGroup)
+                for (final e in filtered) data.queueNames[e] ?? '',
+            ];
+            final shown = _isGroup ? pageOf(filtered, _page) : filtered;
             final metrics = computeHistoryMetrics(filtered);
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                if (_isGroup) ...[
+                  Text(widget.groupName!, style: context.qioText.heading3),
+                  const SizedBox(height: 8),
+                  if (data.group!.truncated) ...[
+                    Semantics(
+                      liveRegion: true,
+                      child: Text(
+                        l10n.groupHistoryTruncated(
+                          QueueService.historyFetchLimit,
+                          data.group!.truncatedQueueNames.join(', '),
+                        ),
+                        style: context.qioText.caption,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ],
                 _buildFilters(),
                 const SizedBox(height: 16),
                 _MetricsCard(
@@ -247,8 +363,28 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ),
                   )
                 else
-                  for (final e in filtered)
-                    _HistoryTile(entry: e, rating: _feedback[e.id]?.rating),
+                  for (final e in shown)
+                    _HistoryTile(
+                      entry: e,
+                      rating: _feedback[e.id]?.rating,
+                      queueName: _isGroup ? data.queueNames[e] : null,
+                    ),
+                if (shown.length < filtered.length)
+                  Center(
+                    child: TextButton(
+                      key: const ValueKey('history-show-more'),
+                      style: TextButton.styleFrom(
+                        minimumSize: const Size(48, 48),
+                      ),
+                      onPressed: () => setState(() => _page++),
+                      child: Text(
+                        l10n.groupHistoryShowMore(
+                          shown.length,
+                          filtered.length,
+                        ),
+                      ),
+                    ),
+                  ),
               ],
             );
           },
@@ -277,7 +413,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
               ChoiceChip(
                 label: Text(p.label(l10n)),
                 selected: _period == p,
-                onSelected: (_) => setState(() => _period = p),
+                onSelected: (_) => setState(() {
+                  _period = p;
+                  _page = 0;
+                }),
               ),
           ],
         ),
@@ -289,7 +428,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
               ChoiceChip(
                 label: Text(o.key),
                 selected: _result == o.value,
-                onSelected: (_) => setState(() => _result = o.value),
+                onSelected: (_) => setState(() {
+                  _result = o.value;
+                  _page = 0;
+                }),
               ),
           ],
         ),
@@ -385,10 +527,11 @@ class _Metric extends StatelessWidget {
 }
 
 class _HistoryTile extends StatelessWidget {
-  const _HistoryTile({required this.entry, this.rating});
+  const _HistoryTile({required this.entry, this.rating, this.queueName});
 
   final HistoryEntry entry;
   final int? rating;
+  final String? queueName;
 
   @override
   Widget build(BuildContext context) {
@@ -431,6 +574,11 @@ class _HistoryTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(subtitle, style: context.qioText.caption),
+                    if (queueName != null)
+                      Text(
+                        l10n.historyQueueOrigin(queueName!),
+                        style: context.qioText.caption,
+                      ),
                   ],
                 ),
               ),
