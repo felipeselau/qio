@@ -502,7 +502,12 @@ class _MetricsScreenState extends State<MetricsScreen> {
           const SizedBox(height: 16),
           if (_scope.kind == MetricsScopeKind.group) ...[
             GroupCompareSection(
-              rows: compareQueues(scoped, period: _period, now: DateTime.now()),
+              rows: compareQueues(
+                scoped,
+                period: _period,
+                now: (widget.clock ?? DateTime.now)(),
+                custom: _custom,
+              ),
             ),
             const SizedBox(height: 16),
           ],

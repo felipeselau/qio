@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:qio_app/models/queue.dart';
+import 'package:qio_app/models/queue_group.dart';
 import 'package:qio_app/screens/metrics_screen.dart';
 import 'package:qio_app/services/metrics_export.dart';
+import 'package:qio_app/services/queue_analytics.dart';
 import 'package:qio_app/widgets/delta_badge.dart';
 import 'package:qio_app/widgets/trend_chart.dart';
 
@@ -304,5 +307,58 @@ void main() {
     await tick(tester);
     expect(find.text('Intervalo limitado a 366 dias'), findsOneWidget);
     expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('custom period keeps the group comparison rows', (tester) async {
+    final g = QueueGroup(id: 'g1', name: 'Grupo', createdAt: DateTime(2025));
+    Queue inGroup(String id, String name) => Queue(
+      id: id,
+      ownerId: 'uid-1',
+      name: name,
+      createdAt: DateTime(2025, 5, 20),
+      groupId: 'g1',
+    );
+    await pumpApp(
+      tester,
+      MetricsScreen(
+        clock: () => fixedNow,
+        groupsLoader: () async => [g],
+        loader: () async => [
+          QueueHistoryInput(
+            inGroup('a', 'Padaria'),
+            [
+              fakeHistory(
+                'h1',
+                1,
+                finishedAt: fixedNow.subtract(const Duration(minutes: 5)),
+              ),
+            ],
+            const [],
+            const [],
+          ),
+          QueueHistoryInput(
+            inGroup('b', 'Clinica'),
+            const [],
+            const [],
+            const [],
+          ),
+        ],
+        rangePicker: (_, _, _, _) async => DateTimeRange(
+          start: DateTime(2025, 6, 10),
+          end: DateTime(2025, 6, 15),
+        ),
+      ),
+      size: tall,
+    );
+    await tick(tester);
+    await tester.tap(chip('Personalizado'));
+    await tick(tester);
+    await tester.tap(find.byType(DropdownButton<MetricsScope>));
+    await tick(tester);
+    await tester.tap(find.text('Grupo: Grupo').last);
+    await tick(tester);
+    expect(find.text('Padaria'), findsWidgets);
+    expect(find.textContaining('1 atendimentos · espera'), findsOneWidget);
+    expect(find.textContaining('0 atendimentos · espera'), findsOneWidget);
   });
 }

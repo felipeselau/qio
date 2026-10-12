@@ -3,6 +3,7 @@ import '../models/queue_feedback.dart';
 import '../models/queue_group.dart';
 import '../models/queue_history_input.dart';
 import 'history_metrics.dart';
+import 'metrics_trend.dart';
 
 List<int> hourlyDistribution(List<HistoryEntry> entries) {
   final counts = List<int>.filled(24, 0);
@@ -119,10 +120,16 @@ List<QueueComparison> compareQueues(
   List<QueueHistoryInput> data, {
   required HistoryPeriod period,
   required DateTime now,
+  DateRange? custom,
 }) {
   final items = <QueueComparison>[];
   for (final d in data) {
-    final entries = filterHistory(d.entries, period: period, now: now);
+    final entries = filterHistory(
+      d.entries,
+      period: period,
+      now: now,
+      custom: custom,
+    );
     items.add(
       QueueComparison(
         queueId: d.queue.id,

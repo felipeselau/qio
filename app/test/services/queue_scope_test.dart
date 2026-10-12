@@ -9,6 +9,7 @@ import 'package:qio_app/models/queue_feedback.dart';
 import 'package:qio_app/models/queue_group.dart';
 import 'package:qio_app/services/history_metrics.dart';
 import 'package:qio_app/services/metrics_export.dart';
+import 'package:qio_app/services/metrics_trend.dart';
 import 'package:qio_app/services/queue_analytics.dart';
 
 final now = DateTime(2026, 10, 7, 12);
@@ -165,6 +166,102 @@ void main() {
         now: now,
       );
       expect(rows.single.feedback.average, isNull);
+    });
+  });
+
+  group('compareQueues custom period', () {
+    final range = customRangeFromPicked(
+      DateTime(2026, 10, 7),
+      DateTime(2026, 10, 7),
+    );
+
+    test('matches the main report counts for the same range', () {
+      final g1 = filterByScope(data, groups, const MetricsScope.group('g1'));
+      final rows = compareQueues(
+        g1,
+        period: HistoryPeriod.custom,
+        now: now,
+        custom: range,
+      );
+      final report = buildMetricsReport(
+        data: g1,
+        scopeLabel: 'g',
+        period: HistoryPeriod.custom,
+        now: now,
+        historyLimit: 500,
+        unknownOperatorName: 'ex',
+        customRange: range,
+      );
+      expect(rows.map((r) => r.queueId), ['b', 'a']);
+      expect(rows.fold<int>(0, (s, r) => s + r.metrics.total), 3);
+      expect(
+        rows.fold<int>(0, (s, r) => s + r.metrics.total),
+        report.metrics.total,
+      );
+    });
+
+    test('range excluding the entries yields zero totals', () {
+      final other = customRangeFromPicked(
+        DateTime(2026, 9, 1),
+        DateTime(2026, 9, 2),
+      );
+      final rows = compareQueues(
+        [data[0]],
+        period: HistoryPeriod.custom,
+        now: now,
+        custom: other,
+      );
+      expect(rows.single.metrics.total, 0);
+    });
+
+    test('queue without data stays listed with zero totals', () {
+      final rows = compareQueues(
+        [input(queue('z', groupId: 'g1'), const [])],
+        period: HistoryPeriod.custom,
+        now: now,
+        custom: range,
+      );
+      expect(rows.single.metrics.total, 0);
+    });
+
+    test('empty group yields no rows', () {
+      final rows = compareQueues(
+        filterByScope(
+          data,
+          groups,
+          const MetricsScope.group('g2'),
+        ).where((d) => d.queue.id == 'none').toList(),
+        period: HistoryPeriod.custom,
+        now: now,
+        custom: range,
+      );
+      expect(rows, isEmpty);
+    });
+
+    test('custom without range yields empty metrics', () {
+      final rows = compareQueues(
+        [data[1]],
+        period: HistoryPeriod.custom,
+        now: now,
+      );
+      expect(rows.single.metrics.total, 0);
+    });
+  });
+
+  group('compareQueues injected clock', () {
+    test('today depends only on the supplied now', () {
+      final same = compareQueues(
+        [data[1]],
+        period: HistoryPeriod.today,
+        now: now,
+      );
+      final later = compareQueues(
+        [data[1]],
+        period: HistoryPeriod.today,
+        now: DateTime(2026, 10, 9, 12),
+      );
+      expect(same.single.metrics.total, 2);
+      expect(later.single.metrics.total, 0);
     });
   });
 
