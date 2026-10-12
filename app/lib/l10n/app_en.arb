@@ -721,5 +721,14 @@
   "groupMoved": "Group \"{name}\" at position {position}",
   "groupColor": "Group color",
   "groupColorOf": "Color of group \"{name}\"",
-  "groupColorNone": "No color"
+  "groupColorNone": "No color",
+  "queueSelect": "Select queues",
+  "selectionExit": "Exit selection",
+  "selectionCount": "{count, plural, =0{No queues selected} =1{1 queue selected} other{{count} queues selected}}",
+  "queueSelectLabel": "Select queue {name}",
+  "moveToGroup": "Move to group…",
+  "moveToGroupTitle": "{count, plural, =1{Move 1 queue to} other{Move {count} queues to}}",
+  "moveGroupDone": "{count, plural, =1{1 queue moved} other{{count} queues moved}} to \"{group}\"",
+  "moveGroupPartial": "{done} of {total} queues moved. Try again for the rest.",
+  "moveGroupEmpty": "None of the selected queues could be moved."
 }

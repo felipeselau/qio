@@ -4166,6 +4166,60 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Sem cor'**
   String get groupColorNone;
+
+  /// No description provided for @queueSelect.
+  ///
+  /// In pt, this message translates to:
+  /// **'Selecionar filas'**
+  String get queueSelect;
+
+  /// No description provided for @selectionExit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sair da seleção'**
+  String get selectionExit;
+
+  /// No description provided for @selectionCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =0{Nenhuma fila selecionada} =1{1 fila selecionada} other{{count} filas selecionadas}}'**
+  String selectionCount(int count);
+
+  /// No description provided for @queueSelectLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Selecionar a fila {name}'**
+  String queueSelectLabel(String name);
+
+  /// No description provided for @moveToGroup.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mover para grupo…'**
+  String get moveToGroup;
+
+  /// No description provided for @moveToGroupTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =1{Mover 1 fila para} other{Mover {count} filas para}}'**
+  String moveToGroupTitle(int count);
+
+  /// No description provided for @moveGroupDone.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =1{1 fila movida} other{{count} filas movidas}} para \"{group}\"'**
+  String moveGroupDone(int count, String group);
+
+  /// No description provided for @moveGroupPartial.
+  ///
+  /// In pt, this message translates to:
+  /// **'{done} de {total} filas movidas. Tente de novo para as demais.'**
+  String moveGroupPartial(int done, int total);
+
+  /// No description provided for @moveGroupEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma das filas selecionadas pôde ser movida.'**
+  String get moveGroupEmpty;
 }
 
 class _AppLocalizationsDelegate

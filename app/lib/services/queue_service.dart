@@ -21,7 +21,7 @@ import 'analytics_service.dart';
 import 'claim_entry.dart';
 import 'delete_service.dart';
 import 'finish_entry.dart';
-import 'group_service.dart' show chunkList, groupBatchLimit;
+import 'group_service.dart' show GroupBatchResult, chunkList, groupBatchLimit;
 import 'join_url.dart';
 import 'mirror.dart';
 import 'resilient_stream.dart';
@@ -40,17 +40,7 @@ class SlugTaken implements Exception {
   const SlugTaken();
 }
 
-class GroupStatusResult {
-  const GroupStatusResult({required this.total, required this.updated});
-
-  final int total;
-  final int updated;
-
-  int get failed => total - updated;
-  bool get isEmpty => total == 0;
-  bool get isComplete => updated == total;
-  bool get isPartial => updated > 0 && updated < total;
-}
+typedef GroupStatusResult = GroupBatchResult;
 
 class QueueService {
   QueueService._()

@@ -40,6 +40,18 @@ List<QueueGroup> sortGroups(Iterable<QueueGroup> groups) {
   return sorted;
 }
 
+class GroupBatchResult {
+  const GroupBatchResult({required this.total, required this.updated});
+
+  final int total;
+  final int updated;
+
+  int get failed => total - updated;
+  bool get isEmpty => total == 0;
+  bool get isComplete => updated == total;
+  bool get isPartial => updated > 0 && updated < total;
+}
+
 class GroupService {
   GroupService._()
     : _firestore = FirebaseFirestore.instance,
@@ -150,6 +162,41 @@ class GroupService {
       await _firestore.collection('queues').doc(queueId).update({
         'groupId': groupId ?? FieldValue.delete(),
       });
+    } catch (e, s) {
+      throwGroupError(e, s);
+    }
+  }
+
+  Future<GroupBatchResult> setQueuesGroup(
+    Iterable<String> queueIds,
+    String? groupId,
+  ) async {
+    final wanted = queueIds.toSet();
+    if (wanted.isEmpty) return const GroupBatchResult(total: 0, updated: 0);
+    try {
+      final snap = await _firestore
+          .collection('queues')
+          .where('ownerId', isEqualTo: _uid)
+          .get();
+      final docs = snap.docs
+          .where((d) => wanted.contains(d.id) && d.data()['deleting'] != true)
+          .toList();
+      var updated = 0;
+      for (final chunk in chunkList(docs, groupBatchLimit)) {
+        final batch = _firestore.batch();
+        for (final d in chunk) {
+          batch.update(d.reference, {
+            'groupId': groupId ?? FieldValue.delete(),
+          });
+        }
+        try {
+          await batch.commit();
+          updated += chunk.length;
+        } on Exception {
+          continue;
+        }
+      }
+      return GroupBatchResult(total: docs.length, updated: updated);
     } catch (e, s) {
       throwGroupError(e, s);
     }

@@ -548,6 +548,18 @@ modelos; ainda sem dados): `docs/piloto/`.
   e o botão de cor abre `BrandColorPicker` + "Sem cor". A home mostra uma barra de 4 dp na cor do
   grupo no cabeçalho da seção (`ensureContrast` de `brand_palette.dart` clareia/escurece até 3:1
   contra o fundo; o nome continua sendo o portador da informação). `GroupService.forTesting`.
+- **Mover várias filas (#247):** modo de seleção na home (long-press num card de dono ou ícone
+  "Selecionar filas" no AppBar; checkboxes só nos cards de dono, a seção "Sou operador" nunca entra;
+  `PopScope(canPop: !_selecting)` sai do modo antes de sair da home; AppBar vira X + contador e o
+  FAB fica oculto com `Visibility(maintainState)` por causa da `GlobalKey` do tour). Barra inferior
+  com contador e "Mover para grupo…" (`showMoveToGroupSheet`: Sem grupo, grupos existentes ou
+  "Novo grupo…", que cria e usa o grupo). `GroupService.setQueuesGroup(ids, groupId?)` lê as filas
+  com `ownerId == uid` (ignora `deleting`, ids alheios/inexistentes), grava `groupId`
+  (`FieldValue.delete()` = Sem grupo) em `WriteBatch` de 450 e devolve `GroupBatchResult`
+  (`GroupStatusResult` é um typedef dele); lote que falha não aborta os demais. Sucesso total sai do
+  modo; parcial/falha mantém a seleção e mostra o SnackBar. Sem mudança de rules.
+  `showGroupNameDialog` agora é um `StatefulWidget` (o controller era descartado durante a animação
+  de saída).
 - **Ordem de deploy**: rules do Firestore (`firebase deploy --only
   firestore:rules`) → APK. APK novo com rules antigas recebe `permission-denied`
   nas operações de grupo (o app mostra mensagem) e ao gravar `groupId`; com #246, também ao

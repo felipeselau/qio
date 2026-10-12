@@ -2383,4 +2383,61 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get groupColorNone => 'Sem cor';
+
+  @override
+  String get queueSelect => 'Selecionar filas';
+
+  @override
+  String get selectionExit => 'Sair da seleção';
+
+  @override
+  String selectionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count filas selecionadas',
+      one: '1 fila selecionada',
+      zero: 'Nenhuma fila selecionada',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String queueSelectLabel(String name) {
+    return 'Selecionar a fila $name';
+  }
+
+  @override
+  String get moveToGroup => 'Mover para grupo…';
+
+  @override
+  String moveToGroupTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Mover $count filas para',
+      one: 'Mover 1 fila para',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String moveGroupDone(int count, String group) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count filas movidas',
+      one: '1 fila movida',
+    );
+    return '$_temp0 para \"$group\"';
+  }
+
+  @override
+  String moveGroupPartial(int done, int total) {
+    return '$done de $total filas movidas. Tente de novo para as demais.';
+  }
+
+  @override
+  String get moveGroupEmpty =>
+      'Nenhuma das filas selecionadas pôde ser movida.';
 }

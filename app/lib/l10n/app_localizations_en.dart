@@ -2379,4 +2379,60 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupColorNone => 'No color';
+
+  @override
+  String get queueSelect => 'Select queues';
+
+  @override
+  String get selectionExit => 'Exit selection';
+
+  @override
+  String selectionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count queues selected',
+      one: '1 queue selected',
+      zero: 'No queues selected',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String queueSelectLabel(String name) {
+    return 'Select queue $name';
+  }
+
+  @override
+  String get moveToGroup => 'Move to group…';
+
+  @override
+  String moveToGroupTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Move $count queues to',
+      one: 'Move 1 queue to',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String moveGroupDone(int count, String group) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count queues moved',
+      one: '1 queue moved',
+    );
+    return '$_temp0 to \"$group\"';
+  }
+
+  @override
+  String moveGroupPartial(int done, int total) {
+    return '$done of $total queues moved. Try again for the rest.';
+  }
+
+  @override
+  String get moveGroupEmpty => 'None of the selected queues could be moved.';
 }

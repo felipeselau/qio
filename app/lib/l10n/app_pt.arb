@@ -793,5 +793,19 @@
   "groupColor": "Cor do grupo",
   "groupColorOf": "Cor do grupo \"{name}\"",
   "@groupColorOf": {"placeholders": {"name": {"type": "String"}}},
-  "groupColorNone": "Sem cor"
+  "groupColorNone": "Sem cor",
+  "queueSelect": "Selecionar filas",
+  "selectionExit": "Sair da seleção",
+  "selectionCount": "{count, plural, =0{Nenhuma fila selecionada} =1{1 fila selecionada} other{{count} filas selecionadas}}",
+  "@selectionCount": {"placeholders": {"count": {"type": "int"}}},
+  "queueSelectLabel": "Selecionar a fila {name}",
+  "@queueSelectLabel": {"placeholders": {"name": {"type": "String"}}},
+  "moveToGroup": "Mover para grupo…",
+  "moveToGroupTitle": "{count, plural, =1{Mover 1 fila para} other{Mover {count} filas para}}",
+  "@moveToGroupTitle": {"placeholders": {"count": {"type": "int"}}},
+  "moveGroupDone": "{count, plural, =1{1 fila movida} other{{count} filas movidas}} para \"{group}\"",
+  "@moveGroupDone": {"placeholders": {"count": {"type": "int"}, "group": {"type": "String"}}},
+  "moveGroupPartial": "{done} de {total} filas movidas. Tente de novo para as demais.",
+  "@moveGroupPartial": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},
+  "moveGroupEmpty": "Nenhuma das filas selecionadas pôde ser movida."
 }

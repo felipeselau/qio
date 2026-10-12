@@ -721,5 +721,14 @@
   "groupMoved": "Grupo \"{name}\" en la posición {position}",
   "groupColor": "Color del grupo",
   "groupColorOf": "Color del grupo \"{name}\"",
-  "groupColorNone": "Sin color"
+  "groupColorNone": "Sin color",
+  "queueSelect": "Seleccionar filas",
+  "selectionExit": "Salir de la selección",
+  "selectionCount": "{count, plural, =0{Ninguna fila seleccionada} =1{1 fila seleccionada} other{{count} filas seleccionadas}}",
+  "queueSelectLabel": "Seleccionar la fila {name}",
+  "moveToGroup": "Mover a un grupo…",
+  "moveToGroupTitle": "{count, plural, =1{Mover 1 fila a} other{Mover {count} filas a}}",
+  "moveGroupDone": "{count, plural, =1{1 fila movida} other{{count} filas movidas}} a \"{group}\"",
+  "moveGroupPartial": "{done} de {total} filas movidas. Inténtalo de nuevo con las demás.",
+  "moveGroupEmpty": "Ninguna de las filas seleccionadas se pudo mover."
 }

@@ -412,6 +412,26 @@ class FakeGroupService implements GroupService {
     calls.add('deleteGroup:$groupId');
   }
 
+  GroupBatchResult? moveResult;
+  Object? moveError;
+
+  @override
+  Future<QueueGroup> createGroup(String name) async {
+    calls.add('createGroup:$name');
+    return QueueGroup(id: 'new', name: name, createdAt: DateTime(2026));
+  }
+
+  @override
+  Future<GroupBatchResult> setQueuesGroup(
+    Iterable<String> queueIds,
+    String? groupId,
+  ) async {
+    calls.add('setQueuesGroup:${queueIds.join(',')}:$groupId');
+    if (moveError != null) throw moveError!;
+    return moveResult ??
+        GroupBatchResult(total: queueIds.length, updated: queueIds.length);
+  }
+
   @override
   Future<void> reorderGroups(List<String> orderedIds) async {
     calls.add('reorderGroups:${orderedIds.join(',')}');

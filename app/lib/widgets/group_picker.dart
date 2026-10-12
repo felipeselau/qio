@@ -30,19 +30,45 @@ Future<String?> showGroupNameDialog(
   BuildContext context, {
   String initial = '',
   required String title,
-}) async {
-  final l10n = AppLocalizations.of(context);
-  final controller = TextEditingController(text: initial);
-  final formKey = GlobalKey<FormState>();
-  final result = await showDialog<String>(
+}) {
+  return showDialog<String>(
     context: context,
-    builder: (ctx) => AlertDialog(
-      title: Text(title),
+    builder: (ctx) => _GroupNameDialog(title: title, initial: initial),
+  );
+}
+
+class _GroupNameDialog extends StatefulWidget {
+  const _GroupNameDialog({required this.title, required this.initial});
+
+  final String title;
+  final String initial;
+
+  @override
+  State<_GroupNameDialog> createState() => _GroupNameDialogState();
+}
+
+class _GroupNameDialogState extends State<_GroupNameDialog> {
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.initial,
+  );
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return AlertDialog(
+      title: Text(widget.title),
       content: Form(
-        key: formKey,
+        key: _formKey,
         child: QioInput(
           label: l10n.groupName,
-          controller: controller,
+          controller: _controller,
           autofocus: true,
           validator: (v) {
             final text = v?.trim() ?? '';
@@ -55,21 +81,19 @@ Future<String?> showGroupNameDialog(
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.of(ctx).pop(),
+          onPressed: () => Navigator.of(context).pop(),
           child: Text(l10n.cancel),
         ),
         TextButton(
           onPressed: () {
-            if (!formKey.currentState!.validate()) return;
-            Navigator.of(ctx).pop(controller.text.trim());
+            if (!_formKey.currentState!.validate()) return;
+            Navigator.of(context).pop(_controller.text.trim());
           },
           child: Text(l10n.save),
         ),
       ],
-    ),
-  );
-  controller.dispose();
-  return result;
+    );
+  }
 }
 
 const _newGroupValue = '\u0000new';
