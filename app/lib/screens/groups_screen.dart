@@ -13,8 +13,15 @@ import '../widgets/qio_responsive_body.dart';
 import '../widgets/qio_skeleton.dart';
 import '../theme/qio_palette.dart';
 
-class GroupsScreen extends StatelessWidget {
+class GroupsScreen extends StatefulWidget {
   const GroupsScreen({super.key});
+
+  @override
+  State<GroupsScreen> createState() => _GroupsScreenState();
+}
+
+class _GroupsScreenState extends State<GroupsScreen> {
+  final _stream = GroupService.instance.watchGroups();
 
   Future<void> _create(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
@@ -94,7 +101,7 @@ class GroupsScreen extends StatelessWidget {
       ),
       body: QioResponsiveBody(
         child: StreamBuilder<List<QueueGroup>>(
-          stream: GroupService.instance.watchGroups(),
+          stream: _stream,
           builder: (context, snap) {
             if (snap.hasError) {
               final err = snap.error;
