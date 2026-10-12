@@ -474,10 +474,35 @@ modelos; ainda sem dados): `docs/piloto/`.
 - Excluir grupo = batch que apaga `groupId` das filas (`FieldValue.delete()`) e o
   doc. `groupId` órfão (grupo inexistente) vale como "sem grupo" na leitura
   (`resolveGroupId`).
-- `MetricsScreen` filtra por escopo (todas/grupo/fila) com `filterByScope`
-  (`queue_analytics.dart`) antes de `buildMetricsReport`; o comparativo entre
-  filas (`compareQueues`) só aparece no escopo de grupo. CSV/PDF levam o nome do
-  escopo (`MetricsReport.scopeLabel`) no cabeçalho e no nome do arquivo.
+- `MetricsScreen` filtra por escopo (todas/grupo/sem grupo/fila) com `filterByScope`
+  (`queue_analytics.dart`) antes de `buildMetricsReport`; `MetricsScopeKind.ungrouped`
+  (`MetricsScope.ungrouped`) cobre as filas sem grupo válido (`resolveGroupId == null`) e
+  `sanitizeScope` o descarta quando não sobra fila assim. CSV/PDF levam o nome do escopo
+  (`MetricsReport.scopeLabel`) no cabeçalho e no nome do arquivo.
+- **Visão "Por grupo" (#243):** no escopo "Todas as filas", com ≥1 grupo, `compareGroups`
+  (`queue_analytics.dart`, pura) gera uma linha por grupo + "Sem grupo" (`groupId == null`;
+  `groupId` órfão cai aí; grupo sem filas some) com atendimentos, espera média, mediana, P90,
+  % no-show, nota e variação vs. período anterior (`computeHistoryMetrics`, `computeWaitStats`,
+  `compare`; respeita período personalizado e relógio injetado). O histórico é cortado em 500
+  docs por fila (`defaultHistoryLimit`, igual a `QueueService.historyFetchLimit`): se a fila
+  estourou o limite dentro do período a linha vira `partial` ("dados parciais") e sem variação;
+  se só a janela anterior pode estar cortada, fica sem variação (mesma regra de
+  `buildMetricsReport`). `GroupOverviewSection` (`widgets/group_overview_section.dart`) tocar na
+  linha troca o escopo (grupo ou sem grupo) e volta ao topo. Sem grupos a seção não existe
+  (os goldens `metrics_390_*` não mudam).
+- **Comparativo entre filas (#244):** `QueueComparison` e `GroupComparison` estendem
+  `ComparisonStats` (`metrics`, `feedback`, `waitStats`, `deltas`, `partial`).
+  `GroupCompareSection` e `GroupOverviewSection` usam `ComparisonTable`
+  (`widgets/comparison_table.dart`): tabela com rolagem horizontal, colunas ordenáveis
+  (atend., espera, mediana, P90, no-show, nota; ordenação só no estado local, nulos por último),
+  `DeltaBadge` por célula, rótulo falado por linha (`comparisonSpoken`) e cabeçalhos como botões.
+  `MetricsReport.groupRows`/`queueRows` levam as duas tabelas para o CSV e o PDF (sem
+  telefone; só agregados).
+- **Seletor de escopo (#245):** `MetricsScopePicker` (`widgets/metrics_scope_picker.dart`).
+  Sem grupos continua o `DropdownButton` simples (todas + filas). Com grupos é um botão que abre
+  um bottom sheet com busca e seções (Todas, cada grupo com as filas dele, "Sem grupo"): qualquer
+  escopo sai em 2 toques (abrir + escolher). Chaves de teste: `scope-picker`, `scope-search`,
+  `scope-<all|group|ungrouped|queue>-<id>`, `cmp-row-<id>` e `cmp-sort-<coluna>`.
 - **Home agrupada (#240):** com pelo menos um grupo que tenha fila, a home do app mostra uma
   seção por grupo (ordem `sortGroups`), cada uma com cabeçalho (nome, nº de filas, soma dos
   `waitingCount` já mantidos em `_waiting`, seta; `Semantics` button + expanded com rótulo

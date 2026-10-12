@@ -8,6 +8,19 @@ import '../theme/qio_palette.dart';
 
 bool lowerIsBetter(MetricKey key) => key != MetricKey.total;
 
+String _deltaShown(AppLocalizations l10n, double magnitude) => magnitude >= 1
+    ? '${magnitude.round()}'
+    : NumberFormat('0.0', l10n.localeName).format(magnitude);
+
+String deltaSpoken(AppLocalizations l10n, MetricKey metric, Delta delta) {
+  final points = metric == MetricKey.noShowRate;
+  final value = points ? delta.abs : delta.pct ?? 0;
+  if (value == 0) return '${l10n.deltaSame} ${l10n.deltaVsPrevious}';
+  final shown = _deltaShown(l10n, value.abs());
+  final spokenValue = points ? l10n.deltaPoints(shown) : '$shown%';
+  return '${value > 0 ? l10n.deltaRose : l10n.deltaFell} $spokenValue ${l10n.deltaVsPrevious}';
+}
+
 class DeltaBadge extends StatelessWidget {
   const DeltaBadge({super.key, required this.metric, required this.delta});
 
@@ -19,24 +32,16 @@ class DeltaBadge extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     final points = metric == MetricKey.noShowRate;
     final value = points ? delta.abs : delta.pct ?? 0;
-    final magnitude = value.abs();
     final up = value > 0;
     final same = value == 0;
-    final shown = magnitude >= 1
-        ? '${magnitude.round()}'
-        : NumberFormat('0.0', l10n.localeName).format(magnitude);
+    final shown = _deltaShown(l10n, value.abs());
     final String text;
-    final String spoken;
     if (same) {
       text = l10n.deltaSame;
-      spoken = '${l10n.deltaSame} ${l10n.deltaVsPrevious}';
     } else {
-      final spokenValue = points ? l10n.deltaPoints(shown) : '$shown%';
       text = points
           ? (up ? l10n.deltaPointsUp(shown) : l10n.deltaPointsDown(shown))
           : (up ? l10n.deltaUp(shown) : l10n.deltaDown(shown));
-      spoken =
-          '${up ? l10n.deltaRose : l10n.deltaFell} $spokenValue ${l10n.deltaVsPrevious}';
     }
     final Color color;
     if (same) {
@@ -46,7 +51,7 @@ class DeltaBadge extends StatelessWidget {
       color = good ? context.qio.statusOpenText : context.qio.statusClosedText;
     }
     return Semantics(
-      label: spoken,
+      label: deltaSpoken(l10n, metric, delta),
       child: ExcludeSemantics(
         child: Text(
           text,

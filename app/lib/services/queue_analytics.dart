@@ -46,12 +46,13 @@ List<QueueActivity> rankByActivity(List<QueueActivity> items) {
   return sorted;
 }
 
-enum MetricsScopeKind { all, group, queue }
+enum MetricsScopeKind { all, group, ungrouped, queue }
 
 class MetricsScope {
   const MetricsScope._(this.kind, this.id);
 
   static const all = MetricsScope._(MetricsScopeKind.all, null);
+  static const ungrouped = MetricsScope._(MetricsScopeKind.ungrouped, null);
   const MetricsScope.group(String id) : this._(MetricsScopeKind.group, id);
   const MetricsScope.queue(String id) : this._(MetricsScopeKind.queue, id);
 
@@ -79,6 +80,11 @@ List<QueueHistoryInput> filterByScope(
         for (final d in data)
           if (resolveGroupId(d.queue, groups) == scope.id) d,
       ];
+    case MetricsScopeKind.ungrouped:
+      return [
+        for (final d in data)
+          if (resolveGroupId(d.queue, groups) == null) d,
+      ];
     case MetricsScopeKind.queue:
       return [
         for (final d in data)
@@ -97,23 +103,128 @@ MetricsScope sanitizeScope(
       return scope;
     case MetricsScopeKind.group:
       return groups.any((g) => g.id == scope.id) ? scope : MetricsScope.all;
+    case MetricsScopeKind.ungrouped:
+      return data.any((d) => resolveGroupId(d.queue, groups) == null)
+          ? scope
+          : MetricsScope.all;
     case MetricsScopeKind.queue:
       return data.any((d) => d.queue.id == scope.id) ? scope : MetricsScope.all;
   }
 }
 
-class QueueComparison {
+const defaultHistoryLimit = 500;
+
+class ComparisonStats {
+  const ComparisonStats({
+    required this.metrics,
+    required this.feedback,
+    this.waitStats = const WaitStats(samples: 0, bucketCounts: [0, 0, 0, 0]),
+    this.deltas = const {},
+    this.partial = false,
+  });
+
+  final HistoryMetrics metrics;
+  final FeedbackSummary feedback;
+  final WaitStats waitStats;
+  final Map<MetricKey, Delta> deltas;
+  final bool partial;
+}
+
+class QueueComparison extends ComparisonStats {
   const QueueComparison({
     required this.queueId,
     required this.name,
-    required this.metrics,
-    required this.feedback,
+    required super.metrics,
+    required super.feedback,
+    super.waitStats,
+    super.deltas,
+    super.partial,
   });
 
   final String queueId;
   final String name;
-  final HistoryMetrics metrics;
-  final FeedbackSummary feedback;
+}
+
+class GroupComparison extends ComparisonStats {
+  const GroupComparison({
+    required this.groupId,
+    required this.name,
+    required this.queueCount,
+    required super.metrics,
+    required super.feedback,
+    super.waitStats,
+    super.deltas,
+    super.partial,
+  });
+
+  final String? groupId;
+  final String name;
+  final int queueCount;
+}
+
+ComparisonStats _comparisonStats(
+  List<QueueHistoryInput> items, {
+  required HistoryPeriod period,
+  required DateTime now,
+  required int historyLimit,
+  DateRange? custom,
+}) {
+  final perQueue = [
+    for (final d in items)
+      filterHistory(d.entries, period: period, now: now, custom: custom),
+  ];
+  final entries = [for (final e in perQueue) ...e];
+  final metrics = computeHistoryMetrics(entries);
+  final waitStats = computeWaitStats(entries);
+  final feedback = summarizeFeedback(
+    [for (final d in items) ...d.feedback],
+    onlyEntryIds: {
+      for (final e in entries)
+        if (e.isServed) e.id,
+    },
+  );
+  final truncated = items.any((d) {
+    if (d.entries.length < historyLimit) return false;
+    final oldest = d.entries.reduce(
+      (a, b) => a.referenceTime.isBefore(b.referenceTime) ? a : b,
+    );
+    return filterHistory(
+      [oldest],
+      period: period,
+      now: now,
+      custom: custom,
+    ).isNotEmpty;
+  });
+  var deltas = const <MetricKey, Delta>{};
+  final range = rangeFor(period, now, custom: custom);
+  if (range != null && !truncated) {
+    final prev = range.previous();
+    final window = range.previousAligned(now);
+    final incomplete = items.any(
+      (d) =>
+          d.entries.length >= historyLimit &&
+          d.entries.every((e) => !e.referenceTime.isBefore(prev.start)),
+    );
+    if (!incomplete) {
+      final prevEntries = [
+        for (final d in items)
+          ...d.entries.where((e) => window.contains(e.referenceTime)),
+      ];
+      deltas = compare(
+        metrics,
+        computeHistoryMetrics(prevEntries),
+        curWait: waitStats,
+        prevWait: computeWaitStats(prevEntries),
+      );
+    }
+  }
+  return ComparisonStats(
+    metrics: metrics,
+    feedback: feedback,
+    waitStats: waitStats,
+    deltas: deltas,
+    partial: truncated,
+  );
 }
 
 List<QueueComparison> compareQueues(
@@ -121,27 +232,26 @@ List<QueueComparison> compareQueues(
   required HistoryPeriod period,
   required DateTime now,
   DateRange? custom,
+  int historyLimit = defaultHistoryLimit,
 }) {
   final items = <QueueComparison>[];
   for (final d in data) {
-    final entries = filterHistory(
-      d.entries,
+    final s = _comparisonStats(
+      [d],
       period: period,
       now: now,
       custom: custom,
+      historyLimit: historyLimit,
     );
     items.add(
       QueueComparison(
         queueId: d.queue.id,
         name: d.queue.name,
-        metrics: computeHistoryMetrics(entries),
-        feedback: summarizeFeedback(
-          d.feedback,
-          onlyEntryIds: {
-            for (final e in entries)
-              if (e.isServed) e.id,
-          },
-        ),
+        metrics: s.metrics,
+        feedback: s.feedback,
+        waitStats: s.waitStats,
+        deltas: s.deltas,
+        partial: s.partial,
       ),
     );
   }
@@ -150,6 +260,52 @@ List<QueueComparison> compareQueues(
     return byTotal != 0 ? byTotal : a.name.compareTo(b.name);
   });
   return items;
+}
+
+List<GroupComparison> compareGroups(
+  List<QueueHistoryInput> data,
+  List<QueueGroup> groups, {
+  required HistoryPeriod period,
+  required DateTime now,
+  DateRange? custom,
+  int historyLimit = defaultHistoryLimit,
+}) {
+  final buckets = <String?, List<QueueHistoryInput>>{};
+  for (final d in data) {
+    buckets.putIfAbsent(resolveGroupId(d.queue, groups), () => []).add(d);
+  }
+  final rows = <GroupComparison>[];
+  for (final entry in buckets.entries) {
+    final id = entry.key;
+    final s = _comparisonStats(
+      entry.value,
+      period: period,
+      now: now,
+      custom: custom,
+      historyLimit: historyLimit,
+    );
+    rows.add(
+      GroupComparison(
+        groupId: id,
+        name: id == null ? '' : groups.firstWhere((g) => g.id == id).name,
+        queueCount: entry.value.length,
+        metrics: s.metrics,
+        feedback: s.feedback,
+        waitStats: s.waitStats,
+        deltas: s.deltas,
+        partial: s.partial,
+      ),
+    );
+  }
+  rows.sort((a, b) {
+    final byTotal = b.metrics.total.compareTo(a.metrics.total);
+    if (byTotal != 0) return byTotal;
+    if ((a.groupId == null) != (b.groupId == null)) {
+      return a.groupId == null ? 1 : -1;
+    }
+    return a.name.compareTo(b.name);
+  });
+  return rows;
 }
 
 List<int> weekdayDistribution(List<HistoryEntry> entries) {

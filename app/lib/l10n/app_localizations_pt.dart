@@ -2138,6 +2138,100 @@ class AppLocalizationsPt extends AppLocalizations {
   String get cqSummaryAlerts => 'Alertas';
 
   @override
+  String get metricsScopeUngrouped => 'Filas sem grupo';
+
+  @override
+  String get groupOverviewTitle => 'Por grupo';
+
+  @override
+  String get groupOverviewHint => 'Toque num grupo para ver só as filas dele.';
+
+  @override
+  String get groupOverviewOpenHint => 'Ver só este grupo';
+
+  @override
+  String metricsGroupQueues(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count filas',
+      one: '1 fila',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupPartialData => 'dados parciais';
+
+  @override
+  String get cmpColQueue => 'Fila';
+
+  @override
+  String get cmpColGroup => 'Grupo';
+
+  @override
+  String get cmpColServed => 'Atend.';
+
+  @override
+  String get cmpColWait => 'Espera';
+
+  @override
+  String get cmpColNoShow => 'Não comp.';
+
+  @override
+  String get cmpColRating => 'Nota';
+
+  @override
+  String sortByHint(String column) {
+    return 'Ordenar por $column';
+  }
+
+  @override
+  String get sortAscending => 'ordem crescente';
+
+  @override
+  String get sortDescending => 'ordem decrescente';
+
+  @override
+  String get scopePickerTitle => 'Escolher escopo';
+
+  @override
+  String get scopeSearchHint => 'Buscar grupo ou fila';
+
+  @override
+  String get scopeNoResults => 'Nada encontrado';
+
+  @override
+  String get csvGroup => 'grupo';
+
+  @override
+  String get csvQueuesCount => 'filas';
+
+  @override
+  String get csvPartialData => 'dados parciais';
+
+  @override
+  String get csvYes => 'sim';
+
+  @override
+  String get csvNo => 'não';
+
+  @override
+  String get csvDeltaTotalPct => 'variação atendimentos (%)';
+
+  @override
+  String get csvDeltaWaitPct => 'variação espera média (%)';
+
+  @override
+  String get csvDeltaMedianPct => 'variação mediana (%)';
+
+  @override
+  String get csvDeltaP90Pct => 'variação P90 (%)';
+
+  @override
+  String get csvDeltaNoShowPoints => 'variação não comparecimento (p.p.)';
+
+  @override
   String groupSectionQueues(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

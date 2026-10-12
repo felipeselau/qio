@@ -2134,6 +2134,100 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cqSummaryAlerts => 'Alerts';
 
   @override
+  String get metricsScopeUngrouped => 'Queues without a group';
+
+  @override
+  String get groupOverviewTitle => 'By group';
+
+  @override
+  String get groupOverviewHint => 'Tap a group to see only its queues.';
+
+  @override
+  String get groupOverviewOpenHint => 'Show only this group';
+
+  @override
+  String metricsGroupQueues(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count queues',
+      one: '1 queue',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupPartialData => 'partial data';
+
+  @override
+  String get cmpColQueue => 'Queue';
+
+  @override
+  String get cmpColGroup => 'Group';
+
+  @override
+  String get cmpColServed => 'Served';
+
+  @override
+  String get cmpColWait => 'Wait';
+
+  @override
+  String get cmpColNoShow => 'No-show';
+
+  @override
+  String get cmpColRating => 'Rating';
+
+  @override
+  String sortByHint(String column) {
+    return 'Sort by $column';
+  }
+
+  @override
+  String get sortAscending => 'ascending order';
+
+  @override
+  String get sortDescending => 'descending order';
+
+  @override
+  String get scopePickerTitle => 'Choose scope';
+
+  @override
+  String get scopeSearchHint => 'Search group or queue';
+
+  @override
+  String get scopeNoResults => 'No results';
+
+  @override
+  String get csvGroup => 'group';
+
+  @override
+  String get csvQueuesCount => 'queues';
+
+  @override
+  String get csvPartialData => 'partial data';
+
+  @override
+  String get csvYes => 'yes';
+
+  @override
+  String get csvNo => 'no';
+
+  @override
+  String get csvDeltaTotalPct => 'served change (%)';
+
+  @override
+  String get csvDeltaWaitPct => 'average wait change (%)';
+
+  @override
+  String get csvDeltaMedianPct => 'median change (%)';
+
+  @override
+  String get csvDeltaP90Pct => 'P90 change (%)';
+
+  @override
+  String get csvDeltaNoShowPoints => 'no-show change (p.p.)';
+
+  @override
   String groupSectionQueues(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

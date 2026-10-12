@@ -24,6 +24,8 @@ import '../theme/qio_text_styles.dart';
 import '../widgets/demand_charts.dart';
 import '../widgets/delta_badge.dart';
 import '../widgets/group_compare_card.dart';
+import '../widgets/group_overview_section.dart';
+import '../widgets/metrics_scope_picker.dart';
 import '../widgets/qio_card.dart';
 import '../widgets/qio_empty_state.dart';
 import '../widgets/qio_skeleton.dart';
@@ -71,6 +73,21 @@ class _MetricsScreenState extends State<MetricsScreen> {
   MetricsScope _scope = MetricsScope.all;
   List<QueueGroup> _groups = const [];
   bool _groupsUnavailable = false;
+  final ScrollController _scroll = ScrollController();
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _setScope(MetricsScope scope) {
+    setState(() {
+      _scope = scope;
+      _operatorQueueId = null;
+    });
+    if (_scroll.hasClients) _scroll.jumpTo(0);
+  }
 
   String _baseName(DateTime now) =>
       'metricas-${_period.fileSlug}${_scopeSlug()}-${formatExportDateTime(now).substring(0, 10)}';
@@ -132,6 +149,8 @@ class _MetricsScreenState extends State<MetricsScreen> {
     switch (_scope.kind) {
       case MetricsScopeKind.all:
         return null;
+      case MetricsScopeKind.ungrouped:
+        return '';
       case MetricsScopeKind.group:
         for (final g in _groups) {
           if (g.id == _scope.id) return g.name;
@@ -147,6 +166,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
   String _scopeSlug() {
     final name = _scopeName();
     if (name == null) return '';
+    if (_scope.kind == MetricsScopeKind.ungrouped) return '-sem-grupo';
     final slug = name
         .toLowerCase()
         .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
@@ -158,22 +178,51 @@ class _MetricsScreenState extends State<MetricsScreen> {
   String _scopeLabel(AppLocalizations l10n) {
     final name = _scopeName();
     if (name == null) return l10n.metricsScopeAll;
-    return _scope.kind == MetricsScopeKind.group
-        ? l10n.metricsScopeGroup(name)
-        : l10n.metricsScopeQueue(name);
+    switch (_scope.kind) {
+      case MetricsScopeKind.ungrouped:
+        return l10n.metricsScopeUngrouped;
+      case MetricsScopeKind.group:
+        return l10n.metricsScopeGroup(name);
+      case MetricsScopeKind.queue:
+        return l10n.metricsScopeQueue(name);
+      case MetricsScopeKind.all:
+        return l10n.metricsScopeAll;
+    }
   }
 
-  MetricsReport _report(AppLocalizations l10n, List<QueueHistoryInput> data) =>
-      buildMetricsReport(
-        data: filterByScope(data, _groups, _scope),
-        scopeLabel: _scopeLabel(l10n),
-        period: _period,
-        now: (widget.clock ?? DateTime.now)(),
-        historyLimit: QueueService.historyFetchLimit,
-        unknownOperatorName: l10n.formerOperator,
-        operatorQueueId: _operatorQueueId,
-        customRange: _custom,
-      );
+  MetricsReport _report(AppLocalizations l10n, List<QueueHistoryInput> data) {
+    final scoped = filterByScope(data, _groups, _scope);
+    final now = (widget.clock ?? DateTime.now)();
+    return buildMetricsReport(
+      data: scoped,
+      scopeLabel: _scopeLabel(l10n),
+      period: _period,
+      now: now,
+      historyLimit: QueueService.historyFetchLimit,
+      unknownOperatorName: l10n.formerOperator,
+      operatorQueueId: _operatorQueueId,
+      customRange: _custom,
+      groupRows: _scope.kind == MetricsScopeKind.all && _groups.isNotEmpty
+          ? compareGroups(
+              data,
+              _groups,
+              period: _period,
+              now: now,
+              custom: _custom,
+              historyLimit: QueueService.historyFetchLimit,
+            )
+          : const [],
+      queueRows: _scope.kind == MetricsScopeKind.group
+          ? compareQueues(
+              scoped,
+              period: _period,
+              now: now,
+              custom: _custom,
+              historyLimit: QueueService.historyFetchLimit,
+            )
+          : const [],
+    );
+  }
 
   Future<void> _export(
     Future<void> Function(MetricsReport report) action,
@@ -351,6 +400,7 @@ class _MetricsScreenState extends State<MetricsScreen> {
         ? null
         : DeltaBadge(metric: key, delta: report.deltas[key]!);
     return ListView(
+      controller: _scroll,
       padding: const EdgeInsets.all(16),
       children: [
         Wrap(
@@ -500,15 +550,12 @@ class _MetricsScreenState extends State<MetricsScreen> {
               ),
             ),
           const SizedBox(height: 16),
+          if (report.groupRows.isNotEmpty) ...[
+            GroupOverviewSection(rows: report.groupRows, onSelect: _setScope),
+            const SizedBox(height: 16),
+          ],
           if (_scope.kind == MetricsScopeKind.group) ...[
-            GroupCompareSection(
-              rows: compareQueues(
-                scoped,
-                period: _period,
-                now: (widget.clock ?? DateTime.now)(),
-                custom: _custom,
-              ),
-            ),
+            GroupCompareSection(rows: report.queueRows),
             const SizedBox(height: 16),
           ],
           _buildOperatorSection(l10n, scoped, report),
@@ -522,38 +569,11 @@ class _MetricsScreenState extends State<MetricsScreen> {
     AppLocalizations l10n,
     List<QueueHistoryInput> data,
   ) {
-    return Semantics(
-      label: l10n.metricsScopeLabel,
-      child: DropdownButton<MetricsScope>(
-        isExpanded: true,
-        value: _scope,
-        onChanged: (v) => setState(() {
-          _scope = v ?? MetricsScope.all;
-          _operatorQueueId = null;
-        }),
-        items: [
-          DropdownMenuItem(
-            value: MetricsScope.all,
-            child: Text(l10n.metricsScopeAll),
-          ),
-          for (final g in _groups)
-            DropdownMenuItem(
-              value: MetricsScope.group(g.id),
-              child: Text(
-                l10n.metricsScopeGroup(g.name),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          for (final d in data)
-            DropdownMenuItem(
-              value: MetricsScope.queue(d.queue.id),
-              child: Text(
-                l10n.metricsScopeQueue(d.queue.name),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-        ],
-      ),
+    return MetricsScopePicker(
+      scope: _scope,
+      groups: _groups,
+      queues: [for (final d in data) d.queue],
+      onChanged: _setScope,
     );
   }
 

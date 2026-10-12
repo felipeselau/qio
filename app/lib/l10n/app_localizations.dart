@@ -3844,6 +3844,174 @@ abstract class AppLocalizations {
   /// **'Alertas'**
   String get cqSummaryAlerts;
 
+  /// No description provided for @metricsScopeUngrouped.
+  ///
+  /// In pt, this message translates to:
+  /// **'Filas sem grupo'**
+  String get metricsScopeUngrouped;
+
+  /// No description provided for @groupOverviewTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Por grupo'**
+  String get groupOverviewTitle;
+
+  /// No description provided for @groupOverviewHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Toque num grupo para ver só as filas dele.'**
+  String get groupOverviewHint;
+
+  /// No description provided for @groupOverviewOpenHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ver só este grupo'**
+  String get groupOverviewOpenHint;
+
+  /// No description provided for @metricsGroupQueues.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =1{1 fila} other{{count} filas}}'**
+  String metricsGroupQueues(int count);
+
+  /// No description provided for @groupPartialData.
+  ///
+  /// In pt, this message translates to:
+  /// **'dados parciais'**
+  String get groupPartialData;
+
+  /// No description provided for @cmpColQueue.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fila'**
+  String get cmpColQueue;
+
+  /// No description provided for @cmpColGroup.
+  ///
+  /// In pt, this message translates to:
+  /// **'Grupo'**
+  String get cmpColGroup;
+
+  /// No description provided for @cmpColServed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atend.'**
+  String get cmpColServed;
+
+  /// No description provided for @cmpColWait.
+  ///
+  /// In pt, this message translates to:
+  /// **'Espera'**
+  String get cmpColWait;
+
+  /// No description provided for @cmpColNoShow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não comp.'**
+  String get cmpColNoShow;
+
+  /// No description provided for @cmpColRating.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nota'**
+  String get cmpColRating;
+
+  /// No description provided for @sortByHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ordenar por {column}'**
+  String sortByHint(String column);
+
+  /// No description provided for @sortAscending.
+  ///
+  /// In pt, this message translates to:
+  /// **'ordem crescente'**
+  String get sortAscending;
+
+  /// No description provided for @sortDescending.
+  ///
+  /// In pt, this message translates to:
+  /// **'ordem decrescente'**
+  String get sortDescending;
+
+  /// No description provided for @scopePickerTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Escolher escopo'**
+  String get scopePickerTitle;
+
+  /// No description provided for @scopeSearchHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Buscar grupo ou fila'**
+  String get scopeSearchHint;
+
+  /// No description provided for @scopeNoResults.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nada encontrado'**
+  String get scopeNoResults;
+
+  /// No description provided for @csvGroup.
+  ///
+  /// In pt, this message translates to:
+  /// **'grupo'**
+  String get csvGroup;
+
+  /// No description provided for @csvQueuesCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'filas'**
+  String get csvQueuesCount;
+
+  /// No description provided for @csvPartialData.
+  ///
+  /// In pt, this message translates to:
+  /// **'dados parciais'**
+  String get csvPartialData;
+
+  /// No description provided for @csvYes.
+  ///
+  /// In pt, this message translates to:
+  /// **'sim'**
+  String get csvYes;
+
+  /// No description provided for @csvNo.
+  ///
+  /// In pt, this message translates to:
+  /// **'não'**
+  String get csvNo;
+
+  /// No description provided for @csvDeltaTotalPct.
+  ///
+  /// In pt, this message translates to:
+  /// **'variação atendimentos (%)'**
+  String get csvDeltaTotalPct;
+
+  /// No description provided for @csvDeltaWaitPct.
+  ///
+  /// In pt, this message translates to:
+  /// **'variação espera média (%)'**
+  String get csvDeltaWaitPct;
+
+  /// No description provided for @csvDeltaMedianPct.
+  ///
+  /// In pt, this message translates to:
+  /// **'variação mediana (%)'**
+  String get csvDeltaMedianPct;
+
+  /// No description provided for @csvDeltaP90Pct.
+  ///
+  /// In pt, this message translates to:
+  /// **'variação P90 (%)'**
+  String get csvDeltaP90Pct;
+
+  /// No description provided for @csvDeltaNoShowPoints.
+  ///
+  /// In pt, this message translates to:
+  /// **'variação não comparecimento (p.p.)'**
+  String get csvDeltaNoShowPoints;
+
   /// No description provided for @groupSectionQueues.
   ///
   /// In pt, this message translates to:
