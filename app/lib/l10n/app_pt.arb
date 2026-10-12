@@ -807,5 +807,15 @@
   "@moveGroupDone": {"placeholders": {"count": {"type": "int"}, "group": {"type": "String"}}},
   "moveGroupPartial": "{done} de {total} filas movidas. Tente de novo para as demais.",
   "@moveGroupPartial": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},
-  "moveGroupEmpty": "Nenhuma das filas selecionadas pôde ser movida."
+  "moveGroupEmpty": "Nenhuma das filas selecionadas pôde ser movida.",
+  "groupApplyAlerts": "Aplicar alertas a todas as filas",
+  "groupAlertsDialogTitle": "Alertas do grupo \"{name}\"",
+  "@groupAlertsDialogTitle": {"placeholders": {"name": {"type": "String"}}},
+  "groupAlertsDialogHint": "Esta configuração será copiada para todas as filas do grupo, no lugar da atual.",
+  "groupAlertsContinue": "Continuar",
+  "groupAlertsConfirm": "Aplicar esta configuração de alertas a {count, plural, =1{1 fila} other{{count} filas}} do grupo \"{name}\"? Os alertas atuais dessas filas serão substituídos.",
+  "@groupAlertsConfirm": {"placeholders": {"count": {"type": "int"}, "name": {"type": "String"}}},
+  "groupAlertsApply": "Aplicar",
+  "groupAlertsDone": "Alertas aplicados a {count, plural, =1{1 fila} other{{count} filas}}",
+  "@groupAlertsDone": {"placeholders": {"count": {"type": "int"}}}
 }

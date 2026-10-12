@@ -26,6 +26,7 @@ import '../services/operator_service.dart';
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
+import '../widgets/group_alerts_dialog.dart';
 import '../widgets/group_batch_menu.dart';
 import '../widgets/group_chip.dart';
 import '../widgets/group_picker.dart';
@@ -217,6 +218,24 @@ class _HomeScreenState extends State<HomeScreen> {
         groupName: group.name,
         count: s.queues.length,
         action: action,
+      );
+    } finally {
+      _batchBusy.remove(group.id);
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _groupAlerts(HomeSection s) async {
+    final group = s.group;
+    if (group == null || !_batchBusy.add(group.id)) return;
+    setState(() {});
+    try {
+      await runGroupApplyAlerts(
+        context,
+        service: _queues,
+        groupId: group.id,
+        groupName: group.name,
+        queues: s.queues,
       );
     } finally {
       _batchBusy.remove(group.id);
@@ -699,6 +718,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       queues: fullSections[s.id]!.queues,
                       enabled: !_batchBusy.contains(s.id),
                       onSelected: (a) => _groupBatch(fullSections[s.id]!, a),
+                      onApplyAlerts: () => _groupAlerts(fullSections[s.id]!),
                     ),
               onToggle: searching ? null : () => _toggleSection(s.id),
               children: [

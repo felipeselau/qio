@@ -730,5 +730,12 @@
   "moveToGroupTitle": "{count, plural, =1{Mover 1 fila a} other{Mover {count} filas a}}",
   "moveGroupDone": "{count, plural, =1{1 fila movida} other{{count} filas movidas}} a \"{group}\"",
   "moveGroupPartial": "{done} de {total} filas movidas. Inténtalo de nuevo con las demás.",
-  "moveGroupEmpty": "Ninguna de las filas seleccionadas se pudo mover."
+  "moveGroupEmpty": "Ninguna de las filas seleccionadas se pudo mover.",
+  "groupApplyAlerts": "Aplicar alertas a todas las filas",
+  "groupAlertsDialogTitle": "Alertas del grupo \"{name}\"",
+  "groupAlertsDialogHint": "Esta configuración se copiará a todas las filas del grupo, en lugar de la actual.",
+  "groupAlertsContinue": "Continuar",
+  "groupAlertsConfirm": "¿Aplicar esta configuración de alertas a {count, plural, =1{1 fila} other{{count} filas}} del grupo \"{name}\"? Los alertas actuales de esas filas se reemplazarán.",
+  "groupAlertsApply": "Aplicar",
+  "groupAlertsDone": "Alertas aplicados a {count, plural, =1{1 fila} other{{count} filas}}"
 }

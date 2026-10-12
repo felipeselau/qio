@@ -2443,4 +2443,44 @@ class AppLocalizationsEs extends AppLocalizations {
   @override
   String get moveGroupEmpty =>
       'Ninguna de las filas seleccionadas se pudo mover.';
+
+  @override
+  String get groupApplyAlerts => 'Aplicar alertas a todas las filas';
+
+  @override
+  String groupAlertsDialogTitle(String name) {
+    return 'Alertas del grupo \"$name\"';
+  }
+
+  @override
+  String get groupAlertsDialogHint =>
+      'Esta configuración se copiará a todas las filas del grupo, en lugar de la actual.';
+
+  @override
+  String get groupAlertsContinue => 'Continuar';
+
+  @override
+  String groupAlertsConfirm(int count, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count filas',
+      one: '1 fila',
+    );
+    return '¿Aplicar esta configuración de alertas a $_temp0 del grupo \"$name\"? Los alertas actuales de esas filas se reemplazarán.';
+  }
+
+  @override
+  String get groupAlertsApply => 'Aplicar';
+
+  @override
+  String groupAlertsDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count filas',
+      one: '1 fila',
+    );
+    return 'Alertas aplicados a $_temp0';
+  }
 }

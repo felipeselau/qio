@@ -321,6 +321,35 @@ class QueueService {
     return GroupStatusResult(total: docs.length, updated: updated);
   }
 
+  Future<GroupStatusResult> applyGroupAlerts(
+    String groupId,
+    AlertsConfig config,
+  ) async {
+    if (config.validate() != null) {
+      throw const FormatException('invalid alerts');
+    }
+    final snap = await _firestore
+        .collection('queues')
+        .where('ownerId', isEqualTo: _uid)
+        .where('groupId', isEqualTo: groupId)
+        .get();
+    final docs = snap.docs.where((d) => d.data()['deleting'] != true).toList();
+    var updated = 0;
+    for (final chunk in chunkList(docs, groupBatchLimit)) {
+      final batch = _firestore.batch();
+      for (final d in chunk) {
+        batch.update(d.reference, {'alerts': config.toMap()});
+      }
+      try {
+        await batch.commit();
+        updated += chunk.length;
+      } on Exception {
+        continue;
+      }
+    }
+    return GroupStatusResult(total: docs.length, updated: updated);
+  }
+
   Future<void> updateSchedule(String queueId, QueueSchedule? schedule) async {
     await _firestore.collection('queues').doc(queueId).update({
       'schedule': schedule != null && schedule.enabled

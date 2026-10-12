@@ -2435,4 +2435,44 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moveGroupEmpty => 'None of the selected queues could be moved.';
+
+  @override
+  String get groupApplyAlerts => 'Apply alerts to all queues';
+
+  @override
+  String groupAlertsDialogTitle(String name) {
+    return 'Alerts for group \"$name\"';
+  }
+
+  @override
+  String get groupAlertsDialogHint =>
+      'This setup will be copied to every queue in the group, replacing the current one.';
+
+  @override
+  String get groupAlertsContinue => 'Continue';
+
+  @override
+  String groupAlertsConfirm(int count, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count queues',
+      one: '1 queue',
+    );
+    return 'Apply this alerts setup to $_temp0 in group \"$name\"? The current alerts of those queues will be replaced.';
+  }
+
+  @override
+  String get groupAlertsApply => 'Apply';
+
+  @override
+  String groupAlertsDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count queues',
+      one: '1 queue',
+    );
+    return 'Alerts applied to $_temp0';
+  }
 }

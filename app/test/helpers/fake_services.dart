@@ -22,9 +22,11 @@ Queue fakeQueue(
   int maxWaiting = 0,
   String? statusMessage,
   String? groupId,
+  AlertsConfig? alerts,
 }) => Queue(
   id: id,
   groupId: groupId,
+  alerts: alerts,
   ownerId: 'uid-1',
   name: name ?? 'Fila $id',
   status: status,
@@ -263,6 +265,21 @@ class FakeQueueService implements QueueService {
     await groupStatusGate;
     if (groupStatusError != null) throw groupStatusError!;
     return groupStatusResult ?? const GroupStatusResult(total: 2, updated: 2);
+  }
+
+  AlertsConfig? lastGroupAlerts;
+  GroupStatusResult? groupAlertsResult;
+  Object? groupAlertsError;
+
+  @override
+  Future<GroupStatusResult> applyGroupAlerts(
+    String groupId,
+    AlertsConfig config,
+  ) async {
+    calls.add('groupAlerts:$groupId');
+    lastGroupAlerts = config;
+    if (groupAlertsError != null) throw groupAlertsError!;
+    return groupAlertsResult ?? const GroupStatusResult(total: 2, updated: 2);
   }
 
   QueueMode? savedMode;

@@ -560,6 +560,16 @@ modelos; ainda sem dados): `docs/piloto/`.
   modo; parcial/falha mantém a seleção e mostra o SnackBar. Sem mudança de rules.
   `showGroupNameDialog` agora é um `StatefulWidget` (o controller era descartado durante a animação
   de saída).
+- **Alertas em lote (#249):** o menu ⋮ do cabeçalho do grupo ganhou "Aplicar alertas a todas as
+  filas" (sempre habilitado, fora do "Sem grupo"). Abre um diálogo com o `AlertsForm` controlado,
+  pré-preenchido com o `alerts` da primeira fila do grupo que tem config (senão o padrão
+  desligado); "Continuar" só habilita com `AlertsConfig.validate() == null`; depois uma confirmação
+  com a contagem e o SnackBar de sucesso/parcial (`groupBatchPartial`). `QueueService.applyGroupAlerts
+  (groupId, config)` segue o padrão de `updateGroupStatus` (filas `ownerId == uid` + `groupId`, sem
+  `deleting`, `WriteBatch` de 450, falha de lote não aborta os demais) e grava só `alerts`
+  (`config.toMap()`, o objeto como está, inclusive `enabled: false`, e **substitui** o map inteiro);
+  nunca toca `alertState`. Sem mudança de functions nem rules (`evaluateQueueAlerts` lê
+  `queues/{id}.alerts`; a validação de `alerts` nas rules do update segue valendo).
 - **Ordem de deploy**: rules do Firestore (`firebase deploy --only
   firestore:rules`) → APK. APK novo com rules antigas recebe `permission-denied`
   nas operações de grupo (o app mostra mensagem) e ao gravar `groupId`; com #246, também ao

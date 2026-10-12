@@ -4220,6 +4220,48 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Nenhuma das filas selecionadas pôde ser movida.'**
   String get moveGroupEmpty;
+
+  /// No description provided for @groupApplyAlerts.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aplicar alertas a todas as filas'**
+  String get groupApplyAlerts;
+
+  /// No description provided for @groupAlertsDialogTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alertas do grupo \"{name}\"'**
+  String groupAlertsDialogTitle(String name);
+
+  /// No description provided for @groupAlertsDialogHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esta configuração será copiada para todas as filas do grupo, no lugar da atual.'**
+  String get groupAlertsDialogHint;
+
+  /// No description provided for @groupAlertsContinue.
+  ///
+  /// In pt, this message translates to:
+  /// **'Continuar'**
+  String get groupAlertsContinue;
+
+  /// No description provided for @groupAlertsConfirm.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aplicar esta configuração de alertas a {count, plural, =1{1 fila} other{{count} filas}} do grupo \"{name}\"? Os alertas atuais dessas filas serão substituídos.'**
+  String groupAlertsConfirm(int count, String name);
+
+  /// No description provided for @groupAlertsApply.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aplicar'**
+  String get groupAlertsApply;
+
+  /// No description provided for @groupAlertsDone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alertas aplicados a {count, plural, =1{1 fila} other{{count} filas}}'**
+  String groupAlertsDone(int count);
 }
 
 class _AppLocalizationsDelegate
