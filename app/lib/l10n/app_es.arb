@@ -701,5 +701,18 @@
   "groupSectionWaiting": "{count} esperando",
   "groupSectionExpanded": "expandido",
   "groupSectionCollapsed": "contraído",
-  "groupSectionSemantics": "{name}, {queues}, {waiting}, {state}"
+  "groupSectionSemantics": "{name}, {queues}, {waiting}, {state}",
+  "groupChipSemantics": "Grupo: {name}",
+  "groupQueueCount": "{count, plural, =0{Sin filas} =1{1 fila} other{{count} filas}}",
+  "groupDeleteConfirmCount": "¿Eliminar el grupo \"{name}\"? {count, plural, =1{1 fila quedará sin grupo.} other{{count} filas quedarán sin grupo.}}",
+  "groupBatchMenuLabel": "Acciones en lote del grupo {name}",
+  "groupPauseAll": "Pausar todas",
+  "groupCloseAll": "Cerrar todas",
+  "groupReopenAll": "Reabrir todas",
+  "groupBatchConfirmPause": "¿Pausar {count, plural, =1{1 fila} other{{count} filas}} del grupo \"{name}\"?",
+  "groupBatchConfirmClose": "¿Cerrar {count, plural, =1{1 fila} other{{count} filas}} del grupo \"{name}\"?",
+  "groupBatchConfirmReopen": "¿Reabrir {count, plural, =1{1 fila} other{{count} filas}} del grupo \"{name}\"?",
+  "groupBatchDone": "{count, plural, =1{1 fila actualizada} other{{count} filas actualizadas}}",
+  "groupBatchPartial": "{done} de {total} actualizadas. Inténtalo de nuevo con el resto.",
+  "groupBatchEmpty": "No hay filas del grupo para actualizar."
 }

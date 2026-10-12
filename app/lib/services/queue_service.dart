@@ -21,6 +21,7 @@ import 'analytics_service.dart';
 import 'claim_entry.dart';
 import 'delete_service.dart';
 import 'finish_entry.dart';
+import 'group_service.dart' show chunkList, groupBatchLimit;
 import 'join_url.dart';
 import 'mirror.dart';
 import 'resilient_stream.dart';
@@ -37,6 +38,18 @@ class QueueLimitReached implements Exception {
 
 class SlugTaken implements Exception {
   const SlugTaken();
+}
+
+class GroupStatusResult {
+  const GroupStatusResult({required this.total, required this.updated});
+
+  final int total;
+  final int updated;
+
+  int get failed => total - updated;
+  bool get isEmpty => total == 0;
+  bool get isComplete => updated == total;
+  bool get isPartial => updated > 0 && updated < total;
 }
 
 class QueueService {
@@ -277,6 +290,45 @@ class QueueService {
           ? Timestamp.fromDate(until)
           : FieldValue.delete(),
     });
+  }
+
+  Future<GroupStatusResult> updateGroupStatus(
+    String groupId,
+    QueueStatus status, {
+    String? message,
+    DateTime? resumeAt,
+  }) async {
+    final keepNotice = status != QueueStatus.open;
+    final text = keepNotice && message != null && message.trim().isNotEmpty
+        ? message.trim()
+        : null;
+    final until = keepNotice ? resumeAt : null;
+    final snap = await _firestore
+        .collection('queues')
+        .where('ownerId', isEqualTo: _uid)
+        .where('groupId', isEqualTo: groupId)
+        .get();
+    final docs = snap.docs.where((d) => d.data()['deleting'] != true).toList();
+    var updated = 0;
+    for (final chunk in chunkList(docs, groupBatchLimit)) {
+      final batch = _firestore.batch();
+      for (final d in chunk) {
+        batch.update(d.reference, {
+          'status': status.value,
+          'statusMessage': text ?? FieldValue.delete(),
+          'resumeAt': until != null
+              ? Timestamp.fromDate(until)
+              : FieldValue.delete(),
+        });
+      }
+      try {
+        await batch.commit();
+        updated += chunk.length;
+      } on Exception {
+        continue;
+      }
+    }
+    return GroupStatusResult(total: docs.length, updated: updated);
   }
 
   Future<void> updateSchedule(String queueId, QueueSchedule? schedule) async {

@@ -4046,6 +4046,84 @@ abstract class AppLocalizations {
     String waiting,
     String state,
   );
+
+  /// No description provided for @groupChipSemantics.
+  ///
+  /// In pt, this message translates to:
+  /// **'Grupo: {name}'**
+  String groupChipSemantics(String name);
+
+  /// No description provided for @groupQueueCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =0{Sem filas} =1{1 fila} other{{count} filas}}'**
+  String groupQueueCount(int count);
+
+  /// No description provided for @groupDeleteConfirmCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'Excluir o grupo \"{name}\"? {count, plural, =1{1 fila ficará sem grupo.} other{{count} filas ficarão sem grupo.}}'**
+  String groupDeleteConfirmCount(String name, int count);
+
+  /// No description provided for @groupBatchMenuLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ações em lote do grupo {name}'**
+  String groupBatchMenuLabel(String name);
+
+  /// No description provided for @groupPauseAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pausar todas'**
+  String get groupPauseAll;
+
+  /// No description provided for @groupCloseAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fechar todas'**
+  String get groupCloseAll;
+
+  /// No description provided for @groupReopenAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Reabrir todas'**
+  String get groupReopenAll;
+
+  /// No description provided for @groupBatchConfirmPause.
+  ///
+  /// In pt, this message translates to:
+  /// **'Pausar {count, plural, =1{1 fila} other{{count} filas}} do grupo \"{name}\"?'**
+  String groupBatchConfirmPause(int count, String name);
+
+  /// No description provided for @groupBatchConfirmClose.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fechar {count, plural, =1{1 fila} other{{count} filas}} do grupo \"{name}\"?'**
+  String groupBatchConfirmClose(int count, String name);
+
+  /// No description provided for @groupBatchConfirmReopen.
+  ///
+  /// In pt, this message translates to:
+  /// **'Reabrir {count, plural, =1{1 fila} other{{count} filas}} do grupo \"{name}\"?'**
+  String groupBatchConfirmReopen(int count, String name);
+
+  /// No description provided for @groupBatchDone.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =1{1 fila atualizada} other{{count} filas atualizadas}}'**
+  String groupBatchDone(int count);
+
+  /// No description provided for @groupBatchPartial.
+  ///
+  /// In pt, this message translates to:
+  /// **'{done} de {total} atualizadas. Tente de novo para as demais.'**
+  String groupBatchPartial(int done, int total);
+
+  /// No description provided for @groupBatchEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma fila do grupo para atualizar.'**
+  String get groupBatchEmpty;
 }
 
 class _AppLocalizationsDelegate

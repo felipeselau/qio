@@ -701,5 +701,18 @@
   "groupSectionWaiting": "{count} waiting",
   "groupSectionExpanded": "expanded",
   "groupSectionCollapsed": "collapsed",
-  "groupSectionSemantics": "{name}, {queues}, {waiting}, {state}"
+  "groupSectionSemantics": "{name}, {queues}, {waiting}, {state}",
+  "groupChipSemantics": "Group: {name}",
+  "groupQueueCount": "{count, plural, =0{No queues} =1{1 queue} other{{count} queues}}",
+  "groupDeleteConfirmCount": "Delete the group \"{name}\"? {count, plural, =1{1 queue will become ungrouped.} other{{count} queues will become ungrouped.}}",
+  "groupBatchMenuLabel": "Batch actions for group {name}",
+  "groupPauseAll": "Pause all",
+  "groupCloseAll": "Close all",
+  "groupReopenAll": "Reopen all",
+  "groupBatchConfirmPause": "Pause {count, plural, =1{1 queue} other{{count} queues}} in group \"{name}\"?",
+  "groupBatchConfirmClose": "Close {count, plural, =1{1 queue} other{{count} queues}} in group \"{name}\"?",
+  "groupBatchConfirmReopen": "Reopen {count, plural, =1{1 queue} other{{count} queues}} in group \"{name}\"?",
+  "groupBatchDone": "{count, plural, =1{1 queue updated} other{{count} queues updated}}",
+  "groupBatchPartial": "{done} of {total} updated. Try again for the rest.",
+  "groupBatchEmpty": "No queues in the group to update."
 }

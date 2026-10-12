@@ -245,6 +245,26 @@ class FakeQueueService implements QueueService {
   }
 
   String? lastStatusMessage;
+  GroupStatusResult? groupStatusResult;
+  Object? groupStatusError;
+  Future<void>? groupStatusGate;
+  DateTime? lastGroupResumeAt;
+
+  @override
+  Future<GroupStatusResult> updateGroupStatus(
+    String groupId,
+    QueueStatus status, {
+    String? message,
+    DateTime? resumeAt,
+  }) async {
+    calls.add('groupStatus:$groupId:${status.value}');
+    lastStatusMessage = message;
+    lastGroupResumeAt = resumeAt;
+    await groupStatusGate;
+    if (groupStatusError != null) throw groupStatusError!;
+    return groupStatusResult ?? const GroupStatusResult(total: 2, updated: 2);
+  }
+
   QueueMode? savedMode;
   List<QueueSlot>? savedSlots;
   Object? createError;
@@ -385,6 +405,11 @@ class FakeGroupService implements GroupService {
   @override
   Future<void> setQueueGroup(String queueId, String? groupId) async {
     calls.add('setQueueGroup:$queueId:$groupId');
+  }
+
+  @override
+  Future<void> deleteGroup(String groupId) async {
+    calls.add('deleteGroup:$groupId');
   }
 
   @override

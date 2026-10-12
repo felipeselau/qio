@@ -2262,4 +2262,98 @@ class AppLocalizationsPt extends AppLocalizations {
   ) {
     return '$name, $queues, $waiting, $state';
   }
+
+  @override
+  String groupChipSemantics(String name) {
+    return 'Grupo: $name';
+  }
+
+  @override
+  String groupQueueCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count filas',
+      one: '1 fila',
+      zero: 'Sem filas',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupDeleteConfirmCount(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count filas ficarão sem grupo.',
+      one: '1 fila ficará sem grupo.',
+    );
+    return 'Excluir o grupo \"$name\"? $_temp0';
+  }
+
+  @override
+  String groupBatchMenuLabel(String name) {
+    return 'Ações em lote do grupo $name';
+  }
+
+  @override
+  String get groupPauseAll => 'Pausar todas';
+
+  @override
+  String get groupCloseAll => 'Fechar todas';
+
+  @override
+  String get groupReopenAll => 'Reabrir todas';
+
+  @override
+  String groupBatchConfirmPause(int count, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count filas',
+      one: '1 fila',
+    );
+    return 'Pausar $_temp0 do grupo \"$name\"?';
+  }
+
+  @override
+  String groupBatchConfirmClose(int count, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count filas',
+      one: '1 fila',
+    );
+    return 'Fechar $_temp0 do grupo \"$name\"?';
+  }
+
+  @override
+  String groupBatchConfirmReopen(int count, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count filas',
+      one: '1 fila',
+    );
+    return 'Reabrir $_temp0 do grupo \"$name\"?';
+  }
+
+  @override
+  String groupBatchDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count filas atualizadas',
+      one: '1 fila atualizada',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupBatchPartial(int done, int total) {
+    return '$done de $total atualizadas. Tente de novo para as demais.';
+  }
+
+  @override
+  String get groupBatchEmpty => 'Nenhuma fila do grupo para atualizar.';
 }
