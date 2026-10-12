@@ -714,5 +714,16 @@
   "groupBatchConfirmReopen": "¿Reabrir {count, plural, =1{1 fila} other{{count} filas}} del grupo \"{name}\"?",
   "groupBatchDone": "{count, plural, =1{1 fila actualizada} other{{count} filas actualizadas}}",
   "groupBatchPartial": "{done} de {total} actualizadas. Inténtalo de nuevo con el resto.",
-  "groupBatchEmpty": "No hay filas del grupo para actualizar."
+  "groupBatchEmpty": "No hay filas del grupo para actualizar.",
+  "groupHistoryTitle": "Historial del grupo",
+  "groupHistoryOpen": "Historial del grupo",
+  "groupHistoryNoQueues": "Ninguna fila en este grupo",
+  "groupHistoryNoQueuesHint": "Agrega filas al grupo para ver el historial consolidado.",
+  "groupHistoryTruncated": "Mostrando solo los {limit} registros más recientes de cada fila. Filas con historial recortado: {queues}.",
+  "@groupHistoryTruncated": {"placeholders": {"limit": {"type": "int"}, "queues": {"type": "String"}}},
+  "groupHistoryShowMore": "Mostrar más ({shown} de {total})",
+  "@groupHistoryShowMore": {"placeholders": {"shown": {"type": "int"}, "total": {"type": "int"}}},
+  "historyQueueOrigin": "Fila: {name}",
+  "@historyQueueOrigin": {"placeholders": {"name": {"type": "String"}}},
+  "colQueue": "Fila"
 }

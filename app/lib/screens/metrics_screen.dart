@@ -9,6 +9,7 @@ import '../l10n/app_localizations.dart';
 import '../models/history_entry.dart';
 import '../models/operator.dart';
 import '../models/queue_group.dart';
+import 'history_screen.dart';
 import '../models/queue_feedback.dart';
 import '../services/history_export.dart';
 import '../services/group_service.dart';
@@ -41,7 +42,11 @@ class MetricsScreen extends StatefulWidget {
     this.clock,
     this.groupsLoader,
     this.rangePicker,
+    this.queues,
   });
+
+  @visibleForTesting
+  final QueueService? queues;
 
   @visibleForTesting
   final Future<List<QueueGroup>> Function()? groupsLoader;
@@ -251,6 +256,21 @@ class _MetricsScreenState extends State<MetricsScreen> {
     }
   }
 
+  void _openGroupHistory(List<QueueHistoryInput> scoped) {
+    final name = _scopeName();
+    if (name == null) return;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => HistoryScreen.group(
+          groupName: name,
+          groupQueues: [for (final d in scoped) d.queue],
+          queues: widget.queues,
+          clock: widget.clock,
+        ),
+      ),
+    );
+  }
+
   Future<void> _exportCsv() => _export((report) async {
     final l10n = AppLocalizations.of(context);
     final bytes = Uint8List.fromList(
@@ -418,6 +438,19 @@ class _MetricsScreenState extends State<MetricsScreen> {
         _buildScopeSelector(l10n, data),
         if (_groupsUnavailable)
           Text(l10n.groupsUnavailable, style: context.qioText.caption),
+        if (_scope.kind == MetricsScopeKind.group && _scopeName() != null) ...[
+          const SizedBox(height: 8),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: OutlinedButton.icon(
+              key: const ValueKey('group-history-open'),
+              style: OutlinedButton.styleFrom(minimumSize: const Size(48, 48)),
+              icon: const Icon(Icons.history),
+              label: Text(l10n.groupHistoryOpen),
+              onPressed: () => _openGroupHistory(scoped),
+            ),
+          ),
+        ],
         const SizedBox(height: 16),
         if (report.isEmpty)
           Padding(
