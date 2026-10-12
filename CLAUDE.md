@@ -510,7 +510,7 @@ modelos; ainda sem dados): `docs/piloto/`.
   ganhou o menu ⋮ (`GroupBatchMenu`, `widgets/group_batch_menu.dart`) no cabeçalho de cada seção de
   grupo (não em "Sem grupo"): Pausar/Fechar todas abrem `showStatusMessageDialog`, depois uma
   confirmação com a contagem; o menu mostra só as ações que mudam alguma fila e fica desabilitado
-  enquanto o lote roda. Golden `home_grouped_*` regenerado (cabeçalho com o menu).
+  enquanto o lote roda. Golden `home_grouped_*` segue dentro da tolerância (cabeçalho com o menu).
 - **Ordem de deploy**: rules do Firestore (`firebase deploy --only
   firestore:rules`) → APK. APK novo com rules antigas recebe `permission-denied`
   nas operações de grupo (o app mostra mensagem) e ao gravar `groupId`.
