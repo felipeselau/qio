@@ -79,6 +79,17 @@ class _CreateQueueScreenState extends State<CreateQueueScreen>
   String? _savedJson;
   bool _finished = false;
   Future<void> _draftWork = Future.value();
+  Stream<List<QueueGroup>>? _groupsStream;
+  GroupService? _groupsStreamOwner;
+
+  Stream<List<QueueGroup>> get _groups {
+    final service = widget.groups ?? GroupService.instance;
+    if (_groupsStream == null || !identical(_groupsStreamOwner, service)) {
+      _groupsStreamOwner = service;
+      _groupsStream = service.watchGroups();
+    }
+    return _groupsStream!;
+  }
 
   @override
   void initState() {
@@ -819,9 +830,7 @@ class _CreateQueueScreenState extends State<CreateQueueScreen>
       hint: l10n.cqReviewHint,
       children: [
         StreamBuilder<List<QueueGroup>>(
-          stream: d.groupId == null
-              ? null
-              : (widget.groups ?? GroupService.instance).watchGroups(),
+          stream: d.groupId == null ? null : _groups,
           builder: (context, snap) {
             final group = (snap.data ?? const <QueueGroup>[])
                 .where((g) => g.id == d.groupId)

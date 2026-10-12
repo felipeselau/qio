@@ -434,6 +434,36 @@ void main() {
       expect(byKeyName('create-review-color'), findsOneWidget);
     });
 
+    testWidgets('rebuilds não abrem novas assinaturas de grupos', (
+      tester,
+    ) async {
+      final groups = FakeGroupService(
+        groups: [
+          QueueGroup(id: 'g1', name: 'Loja Centro', createdAt: DateTime(2025)),
+        ],
+      );
+      await pumpCreate(tester, groups: groups);
+      await typeName(tester, 'Clínica');
+      await tapFinder(tester, find.text('Mais detalhes'));
+      expect(groups.watchCalls, 1);
+      await tapFinder(
+        tester,
+        find.descendant(
+          of: byKeyName('create-group'),
+          matching: find.byType(DropdownButtonFormField<String?>),
+        ),
+      );
+      await tester.tap(find.text('Loja Centro').last);
+      await tester.pumpAndSettle();
+      await tester.enterText(byKeyName('create-name'), 'Clínica 2');
+      await tester.pumpAndSettle();
+      expect(groups.watchCalls, 2);
+      await continueSteps(tester, 6);
+      await tester.pumpAndSettle();
+      expect(find.text('Loja Centro'), findsOneWidget);
+      expect(groups.watchCalls, 2);
+    });
+
     testWidgets('rodapé mantém a altura entre passos', (tester) async {
       await pumpCreate(tester);
       await typeName(tester, 'Clínica');

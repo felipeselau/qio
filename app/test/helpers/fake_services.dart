@@ -369,9 +369,13 @@ class FakeGroupService implements GroupService {
 
   List<QueueGroup> groups;
   final List<String> calls = [];
+  int watchCalls = 0;
 
   @override
-  Stream<List<QueueGroup>> watchGroups() => Stream.value(groups);
+  Stream<List<QueueGroup>> watchGroups() {
+    watchCalls++;
+    return Stream.value(groups);
+  }
 
   @override
   Future<List<QueueGroup>> fetchGroups() async => groups;

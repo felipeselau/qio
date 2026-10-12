@@ -74,7 +74,7 @@ Future<String?> showGroupNameDialog(
 
 const _newGroupValue = '\u0000new';
 
-class GroupPicker extends StatelessWidget {
+class GroupPicker extends StatefulWidget {
   const GroupPicker({
     super.key,
     required this.value,
@@ -88,13 +88,31 @@ class GroupPicker extends StatelessWidget {
   final ValueChanged<String?> onChanged;
   final bool enabled;
 
+  @override
+  State<GroupPicker> createState() => _GroupPickerState();
+}
+
+class _GroupPickerState extends State<GroupPicker> {
+  late Stream<List<QueueGroup>> _stream = _open();
+
+  Stream<List<QueueGroup>> _open() =>
+      (widget.groups ?? GroupService.instance).watchGroups();
+
+  @override
+  void didUpdateWidget(GroupPicker oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.groups != widget.groups) _stream = _open();
+  }
+
   Future<void> _create(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
     final name = await showGroupNameDialog(context, title: l10n.groupNew);
     if (name == null || !context.mounted) return;
     try {
-      final group = await (groups ?? GroupService.instance).createGroup(name);
-      onChanged(group.id);
+      final group = await (widget.groups ?? GroupService.instance).createGroup(
+        name,
+      );
+      widget.onChanged(group.id);
     } on Exception catch (e) {
       if (context.mounted) showGroupError(context, e);
     }
@@ -104,10 +122,12 @@ class GroupPicker extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return StreamBuilder<List<QueueGroup>>(
-      stream: (groups ?? GroupService.instance).watchGroups(),
+      stream: _stream,
       builder: (context, snap) {
         final groups = snap.data ?? const <QueueGroup>[];
-        final selected = groups.any((g) => g.id == value) ? value : null;
+        final selected = groups.any((g) => g.id == widget.value)
+            ? widget.value
+            : null;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -117,12 +137,12 @@ class GroupPicker extends StatelessWidget {
               key: ValueKey(selected),
               initialValue: selected,
               isExpanded: true,
-              onChanged: enabled
+              onChanged: widget.enabled
                   ? (v) {
                       if (v == _newGroupValue) {
                         _create(context);
                       } else {
-                        onChanged(v);
+                        widget.onChanged(v);
                       }
                     }
                   : null,
