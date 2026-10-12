@@ -2139,4 +2139,98 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get cqSummaryAlerts => 'Alertas';
+
+  @override
+  String get metricsScopeUngrouped => 'Filas sin grupo';
+
+  @override
+  String get groupOverviewTitle => 'Por grupo';
+
+  @override
+  String get groupOverviewHint => 'Toque un grupo para ver solo sus filas.';
+
+  @override
+  String get groupOverviewOpenHint => 'Ver solo este grupo';
+
+  @override
+  String groupQueueCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count filas',
+      one: '1 fila',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get groupPartialData => 'datos parciales';
+
+  @override
+  String get cmpColQueue => 'Fila';
+
+  @override
+  String get cmpColGroup => 'Grupo';
+
+  @override
+  String get cmpColServed => 'Atend.';
+
+  @override
+  String get cmpColWait => 'Espera';
+
+  @override
+  String get cmpColNoShow => 'Ausentes';
+
+  @override
+  String get cmpColRating => 'Nota';
+
+  @override
+  String sortByHint(String column) {
+    return 'Ordenar por $column';
+  }
+
+  @override
+  String get sortAscending => 'orden ascendente';
+
+  @override
+  String get sortDescending => 'orden descendente';
+
+  @override
+  String get scopePickerTitle => 'Elegir alcance';
+
+  @override
+  String get scopeSearchHint => 'Buscar grupo o fila';
+
+  @override
+  String get scopeNoResults => 'Sin resultados';
+
+  @override
+  String get csvGroup => 'grupo';
+
+  @override
+  String get csvQueuesCount => 'filas';
+
+  @override
+  String get csvPartialData => 'datos parciales';
+
+  @override
+  String get csvYes => 'sí';
+
+  @override
+  String get csvNo => 'no';
+
+  @override
+  String get csvDeltaTotalPct => 'variación atendimientos (%)';
+
+  @override
+  String get csvDeltaWaitPct => 'variación espera media (%)';
+
+  @override
+  String get csvDeltaMedianPct => 'variación mediana (%)';
+
+  @override
+  String get csvDeltaP90Pct => 'variación P90 (%)';
+
+  @override
+  String get csvDeltaNoShowPoints => 'variación inasistencia (p.p.)';
 }

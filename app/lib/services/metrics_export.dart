@@ -45,9 +45,13 @@ class MetricsReport {
     this.previousMetrics,
     this.deltas = const {},
     this.previousWaitStats,
+    this.groupRows = const [],
+    this.queueRows = const [],
   });
 
   final String? scopeLabel;
+  final List<GroupComparison> groupRows;
+  final List<QueueComparison> queueRows;
   final HistoryPeriod period;
   final String? operatorQueueId;
   final String? operatorQueueName;
@@ -89,6 +93,8 @@ MetricsReport buildMetricsReport({
   String? operatorQueueId,
   DateRange? customRange,
   String? scopeLabel,
+  List<GroupComparison> groupRows = const [],
+  List<QueueComparison> queueRows = const [],
 }) {
   final perQueue = [
     for (final d in data)
@@ -202,6 +208,8 @@ MetricsReport buildMetricsReport({
     previousMetrics: previousMetrics,
     deltas: deltas,
     previousWaitStats: previousWaitStats,
+    groupRows: groupRows,
+    queueRows: queueRows,
   );
 }
 
@@ -289,6 +297,28 @@ String buildMetricsCsv(
           _num(report.ranking[i].metrics.noShowRate * 100),
         ],
     ],
+    if (report.groupRows.isNotEmpty)
+      _comparisonCsv(
+        l10n,
+        l10n.groupOverviewTitle,
+        l10n.csvGroup,
+        report.groupRows,
+        [
+          for (final r in report.groupRows)
+            [r.groupId == null ? l10n.groupNone : r.name, '${r.queueCount}'],
+        ],
+        extraHeader: [l10n.csvQueuesCount],
+      ),
+    if (report.queueRows.isNotEmpty)
+      _comparisonCsv(
+        l10n,
+        l10n.groupCompareTitle,
+        l10n.csvQueue,
+        report.queueRows,
+        [
+          for (final r in report.queueRows) [r.name],
+        ],
+      ),
     [
       [l10n.byOperatorTitle],
       if (report.operators.isEmpty)
@@ -405,6 +435,60 @@ String buildMetricsCsv(
     }
   }
   return '\u{FEFF}${lines.join('\r\n')}\r\n';
+}
+
+List<List<Object>> _comparisonCsv(
+  AppLocalizations l10n,
+  String title,
+  String firstHeader,
+  List<ComparisonStats> rows,
+  List<List<String>> leading, {
+  List<String> extraHeader = const [],
+}) {
+  Object signed(ComparisonStats r, MetricKey key, {bool points = false}) {
+    final d = r.deltas[key];
+    if (d == null) return '';
+    final v = points ? d.abs : d.pct;
+    return v == null ? '' : _SignedCell(v);
+  }
+
+  return [
+    [title],
+    [
+      firstHeader,
+      ...extraHeader,
+      l10n.csvTotal,
+      l10n.csvAvgWaitMin,
+      l10n.csvMedianWaitMin,
+      l10n.csvP90WaitMin,
+      l10n.csvNoShowRatePct,
+      l10n.csvAvgRating,
+      l10n.csvRatingCount,
+      l10n.csvPartialData,
+      l10n.csvDeltaTotalPct,
+      l10n.csvDeltaWaitPct,
+      l10n.csvDeltaMedianPct,
+      l10n.csvDeltaP90Pct,
+      l10n.csvDeltaNoShowPoints,
+    ],
+    for (var i = 0; i < rows.length; i++)
+      [
+        ...leading[i],
+        '${rows[i].metrics.total}',
+        _num(rows[i].metrics.avgWaitMin),
+        _num(rows[i].waitStats.medianMin),
+        _num(rows[i].waitStats.p90Min),
+        _num(rows[i].metrics.noShowRate * 100),
+        _num(rows[i].feedback.average),
+        '${rows[i].feedback.count}',
+        rows[i].partial ? l10n.csvYes : l10n.csvNo,
+        signed(rows[i], MetricKey.total),
+        signed(rows[i], MetricKey.avgWait),
+        signed(rows[i], MetricKey.waitMedian),
+        signed(rows[i], MetricKey.waitP90),
+        signed(rows[i], MetricKey.noShowRate, points: true),
+      ],
+  ];
 }
 
 class _SignedCell {
@@ -597,6 +681,39 @@ List<pw.Widget> _demandPdf(AppLocalizations l10n, MetricsReport report) {
   ];
 }
 
+pw.Widget _comparisonPdf(
+  AppLocalizations l10n,
+  String firstHeader,
+  List<ComparisonStats> rows,
+  List<String> names,
+) => _table(
+  [
+    firstHeader,
+    l10n.cmpColServed,
+    l10n.cmpColWait,
+    l10n.medianWait,
+    l10n.p90Wait,
+    l10n.csvNoShowRatePct,
+    l10n.cmpColRating,
+    l10n.pdfVsPrevious,
+  ],
+  [
+    for (var i = 0; i < rows.length; i++)
+      [
+        rows[i].partial ? '${names[i]} (${l10n.groupPartialData})' : names[i],
+        '${rows[i].metrics.total}',
+        _minutesLabel(l10n, rows[i].metrics.avgWaitMin),
+        _minutesLabel(l10n, rows[i].waitStats.medianMin),
+        _minutesLabel(l10n, rows[i].waitStats.p90Min),
+        '${(rows[i].metrics.noShowRate * 100).round()}',
+        rows[i].feedback.average == null
+            ? '-'
+            : rows[i].feedback.average!.toStringAsFixed(1),
+        _pdfDelta(MetricKey.total, rows[i].deltas[MetricKey.total]),
+      ],
+  ],
+);
+
 Future<Uint8List> buildMetricsPdf({
   required AppLocalizations l10n,
   required MetricsReport report,
@@ -698,6 +815,19 @@ Future<Uint8List> buildMetricsPdf({
                 ],
             ],
           ),
+          if (report.groupRows.isNotEmpty) ...[
+            _section(l10n.groupOverviewTitle),
+            _comparisonPdf(l10n, l10n.csvGroup, report.groupRows, [
+              for (final r in report.groupRows)
+                r.groupId == null ? l10n.groupNone : r.name,
+            ]),
+          ],
+          if (report.queueRows.isNotEmpty) ...[
+            _section(l10n.groupCompareTitle),
+            _comparisonPdf(l10n, l10n.csvQueue, report.queueRows, [
+              for (final r in report.queueRows) r.name,
+            ]),
+          ],
           _section(l10n.byOperatorTitle),
           pw.Text(
             '${l10n.csvScope}: ${_scopeLabel(l10n, report)}',
