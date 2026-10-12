@@ -413,6 +413,16 @@ class FakeGroupService implements GroupService {
   }
 
   @override
+  Future<void> reorderGroups(List<String> orderedIds) async {
+    calls.add('reorderGroups:${orderedIds.join(',')}');
+  }
+
+  @override
+  Future<void> updateGroupColor(String groupId, String? colorHex) async {
+    calls.add('updateGroupColor:$groupId:$colorHex');
+  }
+
+  @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 

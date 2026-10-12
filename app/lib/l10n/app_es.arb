@@ -714,5 +714,12 @@
   "groupBatchConfirmReopen": "¿Reabrir {count, plural, =1{1 fila} other{{count} filas}} del grupo \"{name}\"?",
   "groupBatchDone": "{count, plural, =1{1 fila actualizada} other{{count} filas actualizadas}}",
   "groupBatchPartial": "{done} de {total} actualizadas. Inténtalo de nuevo con el resto.",
-  "groupBatchEmpty": "No hay filas del grupo para actualizar."
+  "groupBatchEmpty": "No hay filas del grupo para actualizar.",
+  "groupReorderHandle": "Arrastrar para reordenar el grupo \"{name}\"",
+  "groupMoveUp": "Mover hacia arriba",
+  "groupMoveDown": "Mover hacia abajo",
+  "groupMoved": "Grupo \"{name}\" en la posición {position}",
+  "groupColor": "Color del grupo",
+  "groupColorOf": "Color del grupo \"{name}\"",
+  "groupColorNone": "Sin color"
 }

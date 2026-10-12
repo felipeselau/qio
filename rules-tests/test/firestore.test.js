@@ -204,6 +204,34 @@ describe('Firestore rules', () => {
       await assertSucceeds(setDoc(ref(OWNER, 'g5'), { ...group, name: 'x'.repeat(40) }));
     });
 
+    it('cor e ordem: válidas passam, legado sem campos segue válido', async () => {
+      await assertSucceeds(setDoc(ref(OWNER, 'g6'), { ...group, colorHex: '#2563EB', order: 0 }));
+      await assertSucceeds(setDoc(ref(OWNER, 'g6'), { ...group, colorHex: '#abcdef', order: 1000 }));
+      await assertSucceeds(updateDoc(ref(OWNER), { colorHex: '#0F766E' }));
+      await assertSucceeds(updateDoc(ref(OWNER), { order: 3 }));
+      await assertSucceeds(updateDoc(ref(OWNER), { name: 'Renomeado' }));
+      await assertSucceeds(setDoc(ref(OWNER, 'g7'), { name: 'Sem createdAt' }));
+    });
+
+    it('rejeita cor inválida, order fora da faixa ou não inteiro', async () => {
+      for (const colorHex of ['2563EB', '#GGGGGG', '#12345', '#1234567', '', 5, null]) {
+        await assertFails(setDoc(ref(OWNER, 'g8'), { ...group, colorHex }));
+      }
+      for (const order of [-1, 1001, 1.5, '1', null]) {
+        await assertFails(setDoc(ref(OWNER, 'g8'), { ...group, order }));
+      }
+      await assertFails(updateDoc(ref(OWNER), { colorHex: 'red' }));
+      await assertFails(updateDoc(ref(OWNER), { order: 1001 }));
+      await assertFails(updateDoc(ref(OWNER), { color: '#2563EB' }));
+    });
+
+    it('outro uid e operador não definem cor nem ordem', async () => {
+      for (const uid of [STRANGER, OPERATOR]) {
+        await assertFails(updateDoc(ref(uid), { colorHex: '#2563EB', order: 1 }));
+        await assertFails(setDoc(ref(uid, 'g9'), { ...group, colorHex: '#2563EB' }));
+      }
+    });
+
     it('somente o dono define groupId na fila', async () => {
       await assertSucceeds(updateDoc(doc(db(OWNER), 'queues', QUEUE), { groupId: 'g1' }));
       await assertFails(updateDoc(doc(db(OPERATOR), 'queues', QUEUE), { groupId: 'g1' }));

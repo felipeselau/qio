@@ -783,5 +783,15 @@
   "@groupBatchDone": {"placeholders": {"count": {"type": "int"}}},
   "groupBatchPartial": "{done} de {total} atualizadas. Tente de novo para as demais.",
   "@groupBatchPartial": {"placeholders": {"done": {"type": "int"}, "total": {"type": "int"}}},
-  "groupBatchEmpty": "Nenhuma fila do grupo para atualizar."
+  "groupBatchEmpty": "Nenhuma fila do grupo para atualizar.",
+  "groupReorderHandle": "Arrastar para reordenar o grupo \"{name}\"",
+  "@groupReorderHandle": {"placeholders": {"name": {"type": "String"}}},
+  "groupMoveUp": "Mover para cima",
+  "groupMoveDown": "Mover para baixo",
+  "groupMoved": "Grupo \"{name}\" na posição {position}",
+  "@groupMoved": {"placeholders": {"name": {"type": "String"}, "position": {"type": "int"}}},
+  "groupColor": "Cor do grupo",
+  "groupColorOf": "Cor do grupo \"{name}\"",
+  "@groupColorOf": {"placeholders": {"name": {"type": "String"}}},
+  "groupColorNone": "Sem cor"
 }

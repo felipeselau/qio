@@ -2359,4 +2359,31 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get groupBatchEmpty => 'No hay filas del grupo para actualizar.';
+
+  @override
+  String groupReorderHandle(String name) {
+    return 'Arrastrar para reordenar el grupo \"$name\"';
+  }
+
+  @override
+  String get groupMoveUp => 'Mover hacia arriba';
+
+  @override
+  String get groupMoveDown => 'Mover hacia abajo';
+
+  @override
+  String groupMoved(String name, int position) {
+    return 'Grupo \"$name\" en la posición $position';
+  }
+
+  @override
+  String get groupColor => 'Color del grupo';
+
+  @override
+  String groupColorOf(String name) {
+    return 'Color del grupo \"$name\"';
+  }
+
+  @override
+  String get groupColorNone => 'Sin color';
 }

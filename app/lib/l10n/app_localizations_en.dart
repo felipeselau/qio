@@ -2352,4 +2352,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get groupBatchEmpty => 'No queues in the group to update.';
+
+  @override
+  String groupReorderHandle(String name) {
+    return 'Drag to reorder group \"$name\"';
+  }
+
+  @override
+  String get groupMoveUp => 'Move up';
+
+  @override
+  String get groupMoveDown => 'Move down';
+
+  @override
+  String groupMoved(String name, int position) {
+    return 'Group \"$name\" at position $position';
+  }
+
+  @override
+  String get groupColor => 'Group color';
+
+  @override
+  String groupColorOf(String name) {
+    return 'Color of group \"$name\"';
+  }
+
+  @override
+  String get groupColorNone => 'No color';
 }

@@ -13,6 +13,7 @@ import '../models/queue.dart';
 import '../models/queue_group.dart';
 import '../services/action_errors.dart';
 import '../services/auth_service.dart';
+import '../services/brand_palette.dart';
 import '../services/deep_link.dart';
 import '../services/group_service.dart';
 import '../services/home_grouping.dart';
@@ -536,6 +537,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _GroupSection(
               key: ValueKey('group-${s.id}'),
               title: s.group?.name ?? l10n.groupNone,
+              color: s.group?.color,
               queueCount: s.queues.length,
               waiting: sumWaiting(s.queues, _waiting),
               expanded: searching || !_collapsed.contains(s.id),
@@ -661,8 +663,10 @@ class _GroupSection extends StatelessWidget {
     required this.onToggle,
     required this.children,
     this.batchMenu,
+    this.color,
   });
 
+  final Color? color;
   final String title;
   final int queueCount;
   final int waiting;
@@ -710,6 +714,21 @@ class _GroupSection extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Row(
                         children: [
+                          if (color != null) ...[
+                            Container(
+                              key: const ValueKey('group-color-bar'),
+                              width: 4,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: ensureContrast(
+                                  color!,
+                                  context.qio.gray100,
+                                ),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                          ],
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,

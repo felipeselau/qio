@@ -19,6 +19,55 @@ Queue queue(String? groupId) => Queue(
 );
 
 void main() {
+  group('QueueGroup color e order', () {
+    test('doc legado sem os campos', () {
+      final g = QueueGroup.fromDoc('g', {'name': 'A'});
+      expect(g.colorHex, isNull);
+      expect(g.order, isNull);
+      expect(g.color, isNull);
+    });
+
+    test('lê cor da paleta e order', () {
+      final g = QueueGroup.fromDoc('g', {
+        'name': 'A',
+        'colorHex': '#0f766e',
+        'order': 3,
+      });
+      expect(g.colorHex, '#0F766E');
+      expect(g.order, 3);
+      expect(g.color, isNotNull);
+    });
+
+    test('ignora cor fora da paleta e order fora da faixa', () {
+      for (final bad in ['#123456', 'red', 5, null]) {
+        expect(QueueGroup.fromDoc('g', {'colorHex': bad}).colorHex, isNull);
+      }
+      for (final bad in [-1, 1001, '2', null]) {
+        expect(QueueGroup.fromDoc('g', {'order': bad}).order, isNull);
+      }
+    });
+  });
+
+  group('sortGroups por order', () {
+    QueueGroup o(String id, String name, int? order) =>
+        QueueGroup(id: id, name: name, createdAt: DateTime(2026), order: order);
+
+    test('order primeiro, nulos por último e depois nome', () {
+      final sorted = sortGroups([
+        o('1', 'Zeta', null),
+        o('2', 'Beta', 1),
+        o('3', 'Alfa', null),
+        o('4', 'Omega', 0),
+      ]);
+      expect(sorted.map((g) => g.id), ['4', '2', '3', '1']);
+    });
+
+    test('order igual desempata pelo nome', () {
+      final sorted = sortGroups([o('1', 'b', 2), o('2', 'a', 2)]);
+      expect(sorted.map((g) => g.id), ['2', '1']);
+    });
+  });
+
   group('QueueGroup.fromDoc', () {
     test('parses name and Timestamp', () {
       final date = DateTime(2026, 3, 1, 9);

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/queue_group.dart';
 
@@ -28,6 +29,11 @@ List<List<T>> chunkList<T>(List<T> items, int size) => [
 List<QueueGroup> sortGroups(Iterable<QueueGroup> groups) {
   final sorted = [...groups];
   sorted.sort((a, b) {
+    final ao = a.order;
+    final bo = b.order;
+    if (ao != null && bo != null && ao != bo) return ao.compareTo(bo);
+    if (ao != null && bo == null) return -1;
+    if (ao == null && bo != null) return 1;
     final byName = a.name.toLowerCase().compareTo(b.name.toLowerCase());
     return byName != 0 ? byName : a.createdAt.compareTo(b.createdAt);
   });
@@ -35,11 +41,17 @@ List<QueueGroup> sortGroups(Iterable<QueueGroup> groups) {
 }
 
 class GroupService {
-  GroupService._();
+  GroupService._()
+    : _firestore = FirebaseFirestore.instance,
+      _auth = FirebaseAuth.instance;
+
+  @visibleForTesting
+  GroupService.forTesting(this._firestore, this._auth);
+
   static final GroupService instance = GroupService._();
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
 
   String get _uid => _auth.currentUser?.uid ?? '';
 
@@ -86,6 +98,28 @@ class GroupService {
   Future<void> renameGroup(String groupId, String name) async {
     try {
       await _groups.doc(groupId).update({'name': name.trim()});
+    } catch (e, s) {
+      throwGroupError(e, s);
+    }
+  }
+
+  Future<void> updateGroupColor(String groupId, String? colorHex) async {
+    try {
+      await _groups.doc(groupId).update({
+        'colorHex': colorHex ?? FieldValue.delete(),
+      });
+    } catch (e, s) {
+      throwGroupError(e, s);
+    }
+  }
+
+  Future<void> reorderGroups(List<String> orderedIds) async {
+    try {
+      final batch = _firestore.batch();
+      for (var i = 0; i < orderedIds.length; i++) {
+        batch.update(_groups.doc(orderedIds[i]), {'order': i});
+      }
+      await batch.commit();
     } catch (e, s) {
       throwGroupError(e, s);
     }

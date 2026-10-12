@@ -536,9 +536,23 @@ modelos; ainda sem dados): `docs/piloto/`.
   grupo (não em "Sem grupo"): Pausar/Fechar todas abrem `showStatusMessageDialog`, depois uma
   confirmação com a contagem; o menu mostra só as ações que mudam alguma fila e fica desabilitado
   enquanto o lote roda. Golden `home_grouped_*` segue dentro da tolerância (cabeçalho com o menu).
+- **Cor e ordem do grupo (#246):** `owners/{uid}/groups/{gid}` ganha `colorHex?` (uma das 8 cores de
+  `brand_palette.dart`, formato `#RRGGBB`) e `order?` (inteiro 0–1000; o app grava a posição na lista).
+  Rules: `hasOnly(['name','createdAt','colorHex','order'])`; `colorHex` casa `^#[0-9A-Fa-f]{6}$` e
+  `order` é `int` 0..1000 **só quando presentes** (docs legados sem os campos seguem válidos; a
+  regra é de `groups`, não mexe no orçamento de `queues`). `QueueGroup.fromDoc` ignora cor fora da
+  paleta e `order` fora da faixa. `sortGroups`: `order` crescente, nulos por último, depois nome e
+  `createdAt`. `GroupService.reorderGroups(ids)` (batch `order = índice`) e `updateGroupColor(id, hex?)`
+  (`FieldValue.delete()` = "Sem cor"). `GroupsScreen` é um `ReorderableListView` (alça
+  `drag_indicator`; ações semânticas "Mover para cima/baixo"; ordem otimista até o write terminar)
+  e o botão de cor abre `BrandColorPicker` + "Sem cor". A home mostra uma barra de 4 dp na cor do
+  grupo no cabeçalho da seção (`ensureContrast` de `brand_palette.dart` clareia/escurece até 3:1
+  contra o fundo; o nome continua sendo o portador da informação). `GroupService.forTesting`.
 - **Ordem de deploy**: rules do Firestore (`firebase deploy --only
   firestore:rules`) → APK. APK novo com rules antigas recebe `permission-denied`
-  nas operações de grupo (o app mostra mensagem) e ao gravar `groupId`.
+  nas operações de grupo (o app mostra mensagem) e ao gravar `groupId`; com #246, também ao
+  reordenar/colorir grupos (o doc ganha `colorHex`/`order`, que as rules antigas rejeitam por
+  `hasOnly`).
 
 ## Alertas operacionais
 

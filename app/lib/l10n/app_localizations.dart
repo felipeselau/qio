@@ -4124,6 +4124,48 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Nenhuma fila do grupo para atualizar.'**
   String get groupBatchEmpty;
+
+  /// No description provided for @groupReorderHandle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Arrastar para reordenar o grupo \"{name}\"'**
+  String groupReorderHandle(String name);
+
+  /// No description provided for @groupMoveUp.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mover para cima'**
+  String get groupMoveUp;
+
+  /// No description provided for @groupMoveDown.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mover para baixo'**
+  String get groupMoveDown;
+
+  /// No description provided for @groupMoved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Grupo \"{name}\" na posição {position}'**
+  String groupMoved(String name, int position);
+
+  /// No description provided for @groupColor.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cor do grupo'**
+  String get groupColor;
+
+  /// No description provided for @groupColorOf.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cor do grupo \"{name}\"'**
+  String groupColorOf(String name);
+
+  /// No description provided for @groupColorNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem cor'**
+  String get groupColorNone;
 }
 
 class _AppLocalizationsDelegate
