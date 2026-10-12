@@ -2361,6 +2361,130 @@ class AppLocalizationsEs extends AppLocalizations {
   String get groupBatchEmpty => 'No hay filas del grupo para actualizar.';
 
   @override
+  String groupReorderHandle(String name) {
+    return 'Arrastrar para reordenar el grupo \"$name\"';
+  }
+
+  @override
+  String get groupMoveUp => 'Mover hacia arriba';
+
+  @override
+  String get groupMoveDown => 'Mover hacia abajo';
+
+  @override
+  String groupMoved(String name, int position) {
+    return 'Grupo \"$name\" en la posición $position';
+  }
+
+  @override
+  String get groupColor => 'Color del grupo';
+
+  @override
+  String groupColorOf(String name) {
+    return 'Color del grupo \"$name\"';
+  }
+
+  @override
+  String get groupColorNone => 'Sin color';
+
+  @override
+  String get queueSelect => 'Seleccionar filas';
+
+  @override
+  String get selectionExit => 'Salir de la selección';
+
+  @override
+  String selectionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count filas seleccionadas',
+      one: '1 fila seleccionada',
+      zero: 'Ninguna fila seleccionada',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String queueSelectLabel(String name) {
+    return 'Seleccionar la fila $name';
+  }
+
+  @override
+  String get moveToGroup => 'Mover a un grupo…';
+
+  @override
+  String moveToGroupTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Mover $count filas a',
+      one: 'Mover 1 fila a',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String moveGroupDone(int count, String group) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count filas movidas',
+      one: '1 fila movida',
+    );
+    return '$_temp0 a \"$group\"';
+  }
+
+  @override
+  String moveGroupPartial(int done, int total) {
+    return '$done de $total filas movidas. Inténtalo de nuevo con las demás.';
+  }
+
+  @override
+  String get moveGroupEmpty =>
+      'Ninguna de las filas seleccionadas se pudo mover.';
+
+  @override
+  String get groupApplyAlerts => 'Aplicar alertas a todas las filas';
+
+  @override
+  String groupAlertsDialogTitle(String name) {
+    return 'Alertas del grupo \"$name\"';
+  }
+
+  @override
+  String get groupAlertsDialogHint =>
+      'Esta configuración se copiará a todas las filas del grupo, en lugar de la actual.';
+
+  @override
+  String get groupAlertsContinue => 'Continuar';
+
+  @override
+  String groupAlertsConfirm(int count, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count filas',
+      one: '1 fila',
+    );
+    return '¿Aplicar esta configuración de alertas a $_temp0 del grupo \"$name\"? Los alertas actuales de esas filas se reemplazarán.';
+  }
+
+  @override
+  String get groupAlertsApply => 'Aplicar';
+
+  @override
+  String groupAlertsDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count filas',
+      one: '1 fila',
+    );
+    return 'Alertas aplicados a $_temp0';
+  }
+
+  @override
   String get groupHistoryTitle => 'Historial del grupo';
 
   @override

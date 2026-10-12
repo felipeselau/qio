@@ -278,6 +278,39 @@ void main() {
     handle.dispose();
   });
 
+  testWidgets(
+    'group color shows a bar only for colored groups and respects order',
+    (tester) async {
+      await pumpTall(
+        tester,
+        homeWith(
+          queues: _sample(),
+          groups: [
+            QueueGroup(
+              id: 'g1',
+              name: 'Loja Centro',
+              createdAt: DateTime(2025, 1, 1),
+              colorHex: '#BE185D',
+              order: 0,
+            ),
+            QueueGroup(
+              id: 'g2',
+              name: 'Anexo',
+              createdAt: DateTime(2025, 1, 1),
+              order: 1,
+            ),
+          ],
+        ),
+      );
+      await tick(tester);
+      expect(find.byKey(const ValueKey('group-color-bar')), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text('Loja Centro')).dy,
+        lessThan(tester.getTopLeft(find.text('Anexo')).dy),
+      );
+    },
+  );
+
   testWidgets('english labels', (tester) async {
     final handle = tester.ensureSemantics();
     await pumpTall(

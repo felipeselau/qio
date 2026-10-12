@@ -13,6 +13,7 @@ import '../models/queue.dart';
 import '../models/queue_group.dart';
 import '../services/action_errors.dart';
 import '../services/auth_service.dart';
+import '../services/brand_palette.dart';
 import '../services/deep_link.dart';
 import '../services/group_service.dart';
 import '../services/home_grouping.dart';
@@ -25,8 +26,11 @@ import '../services/operator_service.dart';
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
+import '../widgets/group_alerts_dialog.dart';
 import '../widgets/group_batch_menu.dart';
 import '../widgets/group_chip.dart';
+import '../widgets/group_picker.dart';
+import '../widgets/move_to_group_sheet.dart';
 import '../widgets/qio_avatar.dart';
 import '../widgets/qio_badge.dart';
 import '../widgets/onboarding_tour.dart';
@@ -110,6 +114,97 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   final Set<String> _batchBusy = {};
+  bool _selecting = false;
+  bool _moving = false;
+  Set<String> _selected = {};
+
+  List<String> _selectedOwned() {
+    final owned = {for (final q in _controller.ownedQueues) q.id};
+    return [
+      for (final id in _selected)
+        if (owned.contains(id)) id,
+    ];
+  }
+
+  void _enterSelection([String? queueId]) {
+    setState(() {
+      _selecting = true;
+      _selected = {?queueId};
+    });
+  }
+
+  void _exitSelection() {
+    setState(() {
+      _selecting = false;
+      _selected = {};
+    });
+  }
+
+  void _toggleSelect(String queueId) {
+    final next = {..._selected};
+    if (!next.remove(queueId)) next.add(queueId);
+    setState(() => _selected = next);
+  }
+
+  Future<void> _moveSelected() async {
+    if (_moving) return;
+    final ids = _selectedOwned();
+    if (ids.isEmpty) return;
+    final l10n = AppLocalizations.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final service = widget.groups ?? GroupService.instance;
+    final target = await showMoveToGroupSheet(
+      context,
+      groups: _controller.groups,
+      count: ids.length,
+    );
+    if (target == null || !mounted) return;
+    setState(() => _moving = true);
+    String message;
+    var failed = false;
+    var done = false;
+    try {
+      var groupId = target.groupId;
+      var groupName = l10n.groupNone;
+      if (target.createNew) {
+        final name = await showGroupNameDialog(context, title: l10n.groupNew);
+        if (name == null || !mounted) return;
+        final created = await service.createGroup(name);
+        groupId = created.id;
+        groupName = created.name;
+      } else if (groupId != null) {
+        groupName = _controller.groups.firstWhere((g) => g.id == groupId).name;
+      }
+      final result = await service.setQueuesGroup(ids, groupId);
+      if (result.isEmpty) {
+        message = l10n.moveGroupEmpty;
+        failed = true;
+      } else if (result.isComplete) {
+        message = l10n.moveGroupDone(result.updated, groupName);
+        done = true;
+      } else if (result.isPartial) {
+        message = l10n.moveGroupPartial(result.updated, result.total);
+        failed = true;
+      } else {
+        message = l10n.genericActionError;
+        failed = true;
+      }
+    } on Exception catch (e) {
+      message = groupErrorMessage(l10n, e);
+      failed = true;
+    } finally {
+      if (mounted) setState(() => _moving = false);
+    }
+    if (done && mounted) _exitSelection();
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: failed ? QioColors.error : null,
+        ),
+      );
+  }
 
   Future<void> _groupBatch(HomeSection s, GroupBatchAction action) async {
     final group = s.group;
@@ -123,6 +218,24 @@ class _HomeScreenState extends State<HomeScreen> {
         groupName: group.name,
         count: s.queues.length,
         action: action,
+      );
+    } finally {
+      _batchBusy.remove(group.id);
+      if (mounted) setState(() {});
+    }
+  }
+
+  Future<void> _groupAlerts(HomeSection s) async {
+    final group = s.group;
+    if (group == null || !_batchBusy.add(group.id)) return;
+    setState(() {});
+    try {
+      await runGroupApplyAlerts(
+        context,
+        service: _queues,
+        groupId: group.id,
+        groupName: group.name,
+        queues: s.queues,
       );
     } finally {
       _batchBusy.remove(group.id);
@@ -343,100 +456,152 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final user = (widget.auth ?? AuthService.instance).currentUser;
-    return Scaffold(
-      backgroundColor: context.qio.gray100,
-      appBar: AppBar(
-        backgroundColor: context.qio.surface,
-        title: Text(
-          l10n.myQueues,
-          style: context.qioText.heading2.copyWith(
-            fontWeight: FontWeight.w700,
-            color: context.qio.textPrimary,
-          ),
-        ),
-        actions: [
-          ListenableBuilder(
-            listenable: _controller,
-            builder: (context, _) => _controller.ownedQueues.isEmpty
-                ? const SizedBox.shrink()
-                : IconButton(
-                    tooltip: l10n.groups,
-                    icon: const Icon(
-                      Icons.folder_outlined,
-                      color: QioColors.primary,
-                    ),
+    final selectedCount = _selectedOwned().length;
+    return PopScope(
+      canPop: !_selecting,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && !_moving) _exitSelection();
+      },
+      child: Scaffold(
+        backgroundColor: context.qio.gray100,
+        appBar: _selecting
+            ? AppBar(
+                backgroundColor: context.qio.surface,
+                leading: IconButton(
+                  tooltip: l10n.selectionExit,
+                  icon: const Icon(Icons.close),
+                  onPressed: _moving ? null : _exitSelection,
+                ),
+                title: Text(
+                  l10n.selectionCount(selectedCount),
+                  style: context.qioText.heading2.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: context.qio.textPrimary,
+                  ),
+                ),
+              )
+            : AppBar(
+                backgroundColor: context.qio.surface,
+                title: Text(
+                  l10n.myQueues,
+                  style: context.qioText.heading2.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: context.qio.textPrimary,
+                  ),
+                ),
+                actions: [
+                  ListenableBuilder(
+                    listenable: _controller,
+                    builder: (context, _) => _controller.ownedQueues.isEmpty
+                        ? const SizedBox.shrink()
+                        : IconButton(
+                            tooltip: l10n.queueSelect,
+                            icon: const Icon(
+                              Icons.checklist,
+                              color: QioColors.primary,
+                            ),
+                            onPressed: _enterSelection,
+                          ),
+                  ),
+                  ListenableBuilder(
+                    listenable: _controller,
+                    builder: (context, _) => _controller.ownedQueues.isEmpty
+                        ? const SizedBox.shrink()
+                        : IconButton(
+                            tooltip: l10n.groups,
+                            icon: const Icon(
+                              Icons.folder_outlined,
+                              color: QioColors.primary,
+                            ),
+                            onPressed: () => Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const GroupsScreen(),
+                              ),
+                            ),
+                          ),
+                  ),
+                  IconButton(
+                    tooltip: l10n.metricsTooltip,
+                    icon: const Icon(Icons.bar_chart, color: QioColors.primary),
                     onPressed: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const GroupsScreen()),
+                      MaterialPageRoute(builder: (_) => const MetricsScreen()),
                     ),
                   ),
+                  PopupMenuButton<_AccountAction>(
+                    key: _accountKey,
+                    tooltip: l10n.accountTitle,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 48,
+                      minHeight: 48,
+                    ),
+                    onSelected: (action) => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => switch (action) {
+                          _AccountAction.account => const AccountScreen(),
+                          _AccountAction.operator => const JoinOperatorScreen(),
+                        },
+                      ),
+                    ),
+                    itemBuilder: (_) => [
+                      PopupMenuItem(
+                        value: _AccountAction.account,
+                        child: Text(l10n.accountTitle),
+                      ),
+                      PopupMenuItem(
+                        value: _AccountAction.operator,
+                        child: Text(l10n.joinAsOperator),
+                      ),
+                    ],
+                    child: SizedBox(
+                      width: 48,
+                      height: 48,
+                      child: Center(
+                        child: QioAvatar(
+                          name: user?.displayName ?? user?.email ?? 'Q',
+                          size: 36,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                ],
+              ),
+        body: QioResponsiveBody(
+          child: ListenableBuilder(
+            listenable: _controller,
+            builder: (context, _) {
+              if (_controller.hasError) {
+                return QioErrorState(onRetry: _controller.retry);
+              }
+              if (_controller.isLoading) return const QioSkeletonList();
+              return _buildBody(
+                _controller.ownedQueues,
+                _controller.operatingQueues,
+                _controller.pendingRequests,
+              );
+            },
           ),
-          IconButton(
-            tooltip: l10n.metricsTooltip,
-            icon: const Icon(Icons.bar_chart, color: QioColors.primary),
-            onPressed: () => Navigator.of(
-              context,
-            ).push(MaterialPageRoute(builder: (_) => const MetricsScreen())),
-          ),
-          PopupMenuButton<_AccountAction>(
-            key: _accountKey,
-            tooltip: l10n.accountTitle,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-            onSelected: (action) => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => switch (action) {
-                  _AccountAction.account => const AccountScreen(),
-                  _AccountAction.operator => const JoinOperatorScreen(),
-                },
-              ),
-            ),
-            itemBuilder: (_) => [
-              PopupMenuItem(
-                value: _AccountAction.account,
-                child: Text(l10n.accountTitle),
-              ),
-              PopupMenuItem(
-                value: _AccountAction.operator,
-                child: Text(l10n.joinAsOperator),
-              ),
-            ],
-            child: SizedBox(
-              width: 48,
-              height: 48,
-              child: Center(
-                child: QioAvatar(
-                  name: user?.displayName ?? user?.email ?? 'Q',
-                  size: 36,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 4),
-        ],
-      ),
-      body: QioResponsiveBody(
-        child: ListenableBuilder(
-          listenable: _controller,
-          builder: (context, _) {
-            if (_controller.hasError) {
-              return QioErrorState(onRetry: _controller.retry);
-            }
-            if (_controller.isLoading) return const QioSkeletonList();
-            return _buildBody(
-              _controller.ownedQueues,
-              _controller.operatingQueues,
-              _controller.pendingRequests,
-            );
-          },
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        key: _fabKey,
-        tooltip: l10n.createQueue,
-        onPressed: () => Navigator.of(
-          context,
-        ).push(MaterialPageRoute(builder: (_) => const CreateQueueScreen())),
-        child: const Icon(Icons.add),
+        bottomNavigationBar: _selecting
+            ? _SelectionBar(
+                count: selectedCount,
+                busy: _moving,
+                onMove: _moveSelected,
+              )
+            : null,
+        floatingActionButton: Visibility(
+          visible: !_selecting,
+          maintainState: true,
+          child: FloatingActionButton(
+            key: _fabKey,
+            tooltip: l10n.createQueue,
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const CreateQueueScreen()),
+            ),
+            child: const Icon(Icons.add),
+          ),
+        ),
       ),
     );
   }
@@ -506,6 +671,12 @@ class _HomeScreenState extends State<HomeScreen> {
               groupName: showGroup
                   ? groupNames[resolveGroupId(q, _controller.groups)]
                   : null,
+              selecting: _selecting,
+              selected: _selected.contains(q.id),
+              onToggleSelect: () => _toggleSelect(q.id),
+              onLongPress: _selecting || _moving
+                  ? null
+                  : () => _enterSelection(q.id),
             ),
           ),
           const SizedBox(height: 16),
@@ -536,6 +707,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _GroupSection(
               key: ValueKey('group-${s.id}'),
               title: s.group?.name ?? l10n.groupNone,
+              color: s.group?.color,
               queueCount: s.queues.length,
               waiting: sumWaiting(s.queues, _waiting),
               expanded: searching || !_collapsed.contains(s.id),
@@ -546,6 +718,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       queues: fullSections[s.id]!.queues,
                       enabled: !_batchBusy.contains(s.id),
                       onSelected: (a) => _groupBatch(fullSections[s.id]!, a),
+                      onApplyAlerts: () => _groupAlerts(fullSections[s.id]!),
                     ),
               onToggle: searching ? null : () => _toggleSection(s.id),
               children: [
@@ -661,8 +834,10 @@ class _GroupSection extends StatelessWidget {
     required this.onToggle,
     required this.children,
     this.batchMenu,
+    this.color,
   });
 
+  final Color? color;
   final String title;
   final int queueCount;
   final int waiting;
@@ -710,6 +885,21 @@ class _GroupSection extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 4),
                       child: Row(
                         children: [
+                          if (color != null) ...[
+                            Container(
+                              key: const ValueKey('group-color-bar'),
+                              width: 4,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: ensureContrast(
+                                  color!,
+                                  context.qio.gray100,
+                                ),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                          ],
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -779,6 +969,10 @@ class _QueueCard extends StatefulWidget {
     required this.waiting,
     required this.queues,
     this.groupName,
+    this.selecting = false,
+    this.selected = false,
+    this.onToggleSelect,
+    this.onLongPress,
   });
 
   final Queue queue;
@@ -786,6 +980,10 @@ class _QueueCard extends StatefulWidget {
   final int waiting;
   final QueueService queues;
   final String? groupName;
+  final bool selecting;
+  final bool selected;
+  final VoidCallback? onToggleSelect;
+  final VoidCallback? onLongPress;
 
   @override
   State<_QueueCard> createState() => _QueueCardState();
@@ -854,6 +1052,7 @@ class _QueueCardState extends State<_QueueCard> {
     final l10n = AppLocalizations.of(context);
     final q = widget.queue;
     final isOwner = widget.isOwner;
+    final selecting = isOwner && widget.selecting;
     return QioCard(
       padding: EdgeInsets.zero,
       child: Column(
@@ -862,15 +1061,18 @@ class _QueueCardState extends State<_QueueCard> {
           MergeSemantics(
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
-              onTap: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => QueuePanelScreen(
-                    queueId: q.id,
-                    queueName: q.name,
-                    isOwner: isOwner,
-                  ),
-                ),
-              ),
+              onLongPress: isOwner ? widget.onLongPress : null,
+              onTap: selecting
+                  ? widget.onToggleSelect
+                  : () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => QueuePanelScreen(
+                          queueId: q.id,
+                          queueName: q.name,
+                          isOwner: isOwner,
+                        ),
+                      ),
+                    ),
               child: Padding(
                 padding: EdgeInsets.fromLTRB(20, 20, 20, isOwner ? 8 : 20),
                 child: Column(
@@ -878,6 +1080,20 @@ class _QueueCardState extends State<_QueueCard> {
                   children: [
                     Row(
                       children: [
+                        if (selecting)
+                          Semantics(
+                            label: l10n.queueSelectLabel(q.name),
+                            checked: widget.selected,
+                            excludeSemantics: true,
+                            child: SizedBox(
+                              width: 48,
+                              height: 48,
+                              child: Checkbox(
+                                value: widget.selected,
+                                onChanged: (_) => widget.onToggleSelect?.call(),
+                              ),
+                            ),
+                          ),
                         Expanded(
                           child: Text(
                             q.name,
@@ -927,7 +1143,7 @@ class _QueueCardState extends State<_QueueCard> {
               ),
             ),
           ),
-          if (isOwner)
+          if (isOwner && !selecting)
             Padding(
               padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
               child: Wrap(
@@ -955,6 +1171,58 @@ class _QueueCardState extends State<_QueueCard> {
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _SelectionBar extends StatelessWidget {
+  const _SelectionBar({
+    required this.count,
+    required this.busy,
+    required this.onMove,
+  });
+
+  final int count;
+  final bool busy;
+  final VoidCallback onMove;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Material(
+      color: context.qio.surface,
+      elevation: 8,
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.selectionCount(count),
+                  style: context.qioText.body.copyWith(
+                    color: context.qio.textPrimary,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              FilledButton.icon(
+                key: const ValueKey('selection-move'),
+                style: FilledButton.styleFrom(minimumSize: const Size(48, 48)),
+                onPressed: count == 0 || busy ? null : onMove,
+                icon: busy
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.drive_file_move_outline),
+                label: Text(l10n.moveToGroup),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

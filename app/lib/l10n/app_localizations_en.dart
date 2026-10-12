@@ -2354,6 +2354,129 @@ class AppLocalizationsEn extends AppLocalizations {
   String get groupBatchEmpty => 'No queues in the group to update.';
 
   @override
+  String groupReorderHandle(String name) {
+    return 'Drag to reorder group \"$name\"';
+  }
+
+  @override
+  String get groupMoveUp => 'Move up';
+
+  @override
+  String get groupMoveDown => 'Move down';
+
+  @override
+  String groupMoved(String name, int position) {
+    return 'Group \"$name\" at position $position';
+  }
+
+  @override
+  String get groupColor => 'Group color';
+
+  @override
+  String groupColorOf(String name) {
+    return 'Color of group \"$name\"';
+  }
+
+  @override
+  String get groupColorNone => 'No color';
+
+  @override
+  String get queueSelect => 'Select queues';
+
+  @override
+  String get selectionExit => 'Exit selection';
+
+  @override
+  String selectionCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count queues selected',
+      one: '1 queue selected',
+      zero: 'No queues selected',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String queueSelectLabel(String name) {
+    return 'Select queue $name';
+  }
+
+  @override
+  String get moveToGroup => 'Move to group…';
+
+  @override
+  String moveToGroupTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Move $count queues to',
+      one: 'Move 1 queue to',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String moveGroupDone(int count, String group) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count queues moved',
+      one: '1 queue moved',
+    );
+    return '$_temp0 to \"$group\"';
+  }
+
+  @override
+  String moveGroupPartial(int done, int total) {
+    return '$done of $total queues moved. Try again for the rest.';
+  }
+
+  @override
+  String get moveGroupEmpty => 'None of the selected queues could be moved.';
+
+  @override
+  String get groupApplyAlerts => 'Apply alerts to all queues';
+
+  @override
+  String groupAlertsDialogTitle(String name) {
+    return 'Alerts for group \"$name\"';
+  }
+
+  @override
+  String get groupAlertsDialogHint =>
+      'This setup will be copied to every queue in the group, replacing the current one.';
+
+  @override
+  String get groupAlertsContinue => 'Continue';
+
+  @override
+  String groupAlertsConfirm(int count, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count queues',
+      one: '1 queue',
+    );
+    return 'Apply this alerts setup to $_temp0 in group \"$name\"? The current alerts of those queues will be replaced.';
+  }
+
+  @override
+  String get groupAlertsApply => 'Apply';
+
+  @override
+  String groupAlertsDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count queues',
+      one: '1 queue',
+    );
+    return 'Alerts applied to $_temp0';
+  }
+
+  @override
   String get groupHistoryTitle => 'Group history';
 
   @override

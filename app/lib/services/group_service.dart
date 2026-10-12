@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 import '../models/queue_group.dart';
 
@@ -28,18 +29,41 @@ List<List<T>> chunkList<T>(List<T> items, int size) => [
 List<QueueGroup> sortGroups(Iterable<QueueGroup> groups) {
   final sorted = [...groups];
   sorted.sort((a, b) {
+    final ao = a.order;
+    final bo = b.order;
+    if (ao != null && bo != null && ao != bo) return ao.compareTo(bo);
+    if (ao != null && bo == null) return -1;
+    if (ao == null && bo != null) return 1;
     final byName = a.name.toLowerCase().compareTo(b.name.toLowerCase());
     return byName != 0 ? byName : a.createdAt.compareTo(b.createdAt);
   });
   return sorted;
 }
 
+class GroupBatchResult {
+  const GroupBatchResult({required this.total, required this.updated});
+
+  final int total;
+  final int updated;
+
+  int get failed => total - updated;
+  bool get isEmpty => total == 0;
+  bool get isComplete => updated == total;
+  bool get isPartial => updated > 0 && updated < total;
+}
+
 class GroupService {
-  GroupService._();
+  GroupService._()
+    : _firestore = FirebaseFirestore.instance,
+      _auth = FirebaseAuth.instance;
+
+  @visibleForTesting
+  GroupService.forTesting(this._firestore, this._auth);
+
   static final GroupService instance = GroupService._();
 
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth _auth;
 
   String get _uid => _auth.currentUser?.uid ?? '';
 
@@ -91,6 +115,28 @@ class GroupService {
     }
   }
 
+  Future<void> updateGroupColor(String groupId, String? colorHex) async {
+    try {
+      await _groups.doc(groupId).update({
+        'colorHex': colorHex ?? FieldValue.delete(),
+      });
+    } catch (e, s) {
+      throwGroupError(e, s);
+    }
+  }
+
+  Future<void> reorderGroups(List<String> orderedIds) async {
+    try {
+      final batch = _firestore.batch();
+      for (var i = 0; i < orderedIds.length; i++) {
+        batch.update(_groups.doc(orderedIds[i]), {'order': i});
+      }
+      await batch.commit();
+    } catch (e, s) {
+      throwGroupError(e, s);
+    }
+  }
+
   Future<void> deleteGroup(String groupId) async {
     try {
       final queues = await _firestore
@@ -116,6 +162,41 @@ class GroupService {
       await _firestore.collection('queues').doc(queueId).update({
         'groupId': groupId ?? FieldValue.delete(),
       });
+    } catch (e, s) {
+      throwGroupError(e, s);
+    }
+  }
+
+  Future<GroupBatchResult> setQueuesGroup(
+    Iterable<String> queueIds,
+    String? groupId,
+  ) async {
+    final wanted = queueIds.toSet();
+    if (wanted.isEmpty) return const GroupBatchResult(total: 0, updated: 0);
+    try {
+      final snap = await _firestore
+          .collection('queues')
+          .where('ownerId', isEqualTo: _uid)
+          .get();
+      final docs = snap.docs
+          .where((d) => wanted.contains(d.id) && d.data()['deleting'] != true)
+          .toList();
+      var updated = 0;
+      for (final chunk in chunkList(docs, groupBatchLimit)) {
+        final batch = _firestore.batch();
+        for (final d in chunk) {
+          batch.update(d.reference, {
+            'groupId': groupId ?? FieldValue.delete(),
+          });
+        }
+        try {
+          await batch.commit();
+          updated += chunk.length;
+        } on Exception {
+          continue;
+        }
+      }
+      return GroupBatchResult(total: docs.length, updated: updated);
     } catch (e, s) {
       throwGroupError(e, s);
     }

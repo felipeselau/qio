@@ -23,6 +23,8 @@ List<GroupBatchAction> availableBatchActions(Iterable<Queue> queues) => [
   if (queues.any((q) => q.status != QueueStatus.open)) GroupBatchAction.reopen,
 ];
 
+const _applyAlerts = Object();
+
 class GroupBatchMenu extends StatelessWidget {
   const GroupBatchMenu({
     super.key,
@@ -30,12 +32,14 @@ class GroupBatchMenu extends StatelessWidget {
     required this.queues,
     required this.enabled,
     required this.onSelected,
+    required this.onApplyAlerts,
   });
 
   final String groupName;
   final List<Queue> queues;
   final bool enabled;
   final ValueChanged<GroupBatchAction> onSelected;
+  final VoidCallback onApplyAlerts;
 
   @override
   Widget build(BuildContext context) {
@@ -46,14 +50,26 @@ class GroupBatchMenu extends StatelessWidget {
       GroupBatchAction.close => l10n.groupCloseAll,
       GroupBatchAction.reopen => l10n.groupReopenAll,
     };
-    return PopupMenuButton<GroupBatchAction>(
+    return PopupMenuButton<Object>(
       tooltip: l10n.groupBatchMenuLabel(groupName),
-      enabled: enabled && actions.isNotEmpty,
+      enabled: enabled,
       padding: EdgeInsets.zero,
-      onSelected: onSelected,
+      onSelected: (v) {
+        if (v is GroupBatchAction) {
+          onSelected(v);
+        } else {
+          onApplyAlerts();
+        }
+      },
       itemBuilder: (_) => [
         for (final a in actions)
-          PopupMenuItem(value: a, height: 48, child: Text(label(a))),
+          PopupMenuItem<Object>(value: a, height: 48, child: Text(label(a))),
+        PopupMenuItem<Object>(
+          key: const ValueKey('group-apply-alerts'),
+          value: _applyAlerts,
+          height: 48,
+          child: Text(l10n.groupApplyAlerts),
+        ),
       ],
       child: const SizedBox(
         width: 48,

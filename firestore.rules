@@ -157,8 +157,15 @@ service cloud.firestore {
         allow read, delete: if request.auth != null && request.auth.uid == uid;
         allow create, update: if request.auth != null
           && request.auth.uid == uid
-          && request.resource.data.keys().hasOnly(['name', 'createdAt'])
+          && request.resource.data.keys().hasOnly(['name', 'createdAt', 'colorHex', 'order'])
           && request.resource.data.keys().hasAll(['name'])
+          && (!('colorHex' in request.resource.data)
+            || (request.resource.data.colorHex is string
+              && request.resource.data.colorHex.matches('^#[0-9A-Fa-f]{6}$')))
+          && (!('order' in request.resource.data)
+            || (request.resource.data.order is int
+              && request.resource.data.order >= 0
+              && request.resource.data.order <= 1000))
           && request.resource.data.name is string
           && request.resource.data.name.size() >= 1
           && request.resource.data.name.size() <= 40;

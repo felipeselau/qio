@@ -1,10 +1,12 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 
 import '../l10n/app_localizations.dart';
 import '../models/queue.dart';
 import '../models/queue_group.dart';
 import '../services/group_service.dart';
+import '../services/brand_palette.dart';
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
@@ -13,6 +15,7 @@ import '../widgets/qio_card.dart';
 import '../widgets/qio_empty_state.dart';
 import '../widgets/qio_responsive_body.dart';
 import '../widgets/qio_skeleton.dart';
+import '../widgets/queue_form/brand_color_picker.dart';
 import '../theme/qio_palette.dart';
 
 class GroupsScreen extends StatefulWidget {
@@ -26,6 +29,8 @@ class GroupsScreen extends StatefulWidget {
 }
 
 class _GroupsScreenState extends State<GroupsScreen> {
+  List<String>? _optimistic;
+
   GroupService get _groups => widget.groups ?? GroupService.instance;
   late final Stream<List<QueueGroup>> _stream = _groups.watchGroups();
   late final Stream<List<Queue>>? _queuesStream = _watchQueues();
@@ -167,22 +172,128 @@ class _GroupsScreenState extends State<GroupsScreen> {
     );
   }
 
-  Widget _list(
+  Future<void> _reorder(
     BuildContext context,
     List<QueueGroup> groups,
+    int from,
+    int target,
+  ) async {
+    if (target < 0 || target >= groups.length || target == from) return;
+    final ids = [for (final g in groups) g.id];
+    ids.insert(target, ids.removeAt(from));
+    final moved = groups[from];
+    setState(() => _optimistic = ids);
+    SemanticsService.sendAnnouncement(
+      View.of(context),
+      AppLocalizations.of(context).groupMoved(moved.name, target + 1),
+      Directionality.of(context),
+    );
+    try {
+      await _groups.reorderGroups(ids);
+    } on Exception catch (e) {
+      if (context.mounted) showGroupError(context, e);
+    } finally {
+      if (mounted) setState(() => _optimistic = null);
+    }
+  }
+
+  Future<void> _pickColor(BuildContext context, QueueGroup group) async {
+    final l10n = AppLocalizations.of(context);
+    final result = await showDialog<_ColorChoice>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.groupColorOf(group.name)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            BrandColorPicker(
+              value: group.colorHex,
+              onChanged: (hex) => Navigator.of(ctx).pop(_ColorChoice(hex)),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              key: const ValueKey('group-color-none'),
+              onPressed: () => Navigator.of(ctx).pop(const _ColorChoice(null)),
+              child: Text(l10n.groupColorNone),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(l10n.cancel),
+          ),
+        ],
+      ),
+    );
+    if (result == null || result.hex == group.colorHex || !context.mounted) {
+      return;
+    }
+    try {
+      await _groups.updateGroupColor(group.id, result.hex);
+    } on Exception catch (e) {
+      if (context.mounted) showGroupError(context, e);
+    }
+  }
+
+  List<QueueGroup> _applyOptimistic(List<QueueGroup> groups) {
+    final ids = _optimistic;
+    if (ids == null) return groups;
+    final byId = {for (final g in groups) g.id: g};
+    if (ids.length != groups.length || ids.any((id) => !byId.containsKey(id))) {
+      return groups;
+    }
+    return [for (final id in ids) byId[id]!];
+  }
+
+  Widget _list(
+    BuildContext context,
+    List<QueueGroup> source,
     Map<String, int>? counts,
   ) {
     final l10n = AppLocalizations.of(context);
-    return ListView(
+    final groups = _applyOptimistic(source);
+    return ReorderableListView.builder(
       padding: const EdgeInsets.all(16),
-      children: [
-        for (final g in groups)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
+      buildDefaultDragHandles: false,
+      itemCount: groups.length,
+      onReorderItem: (from, to) => _reorder(context, groups, from, to),
+      itemBuilder: (context, index) {
+        final g = groups[index];
+        final color = g.color == null
+            ? null
+            : ensureContrast(g.color!, context.qio.surface);
+        return Padding(
+          key: ValueKey('group-row-${g.id}'),
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Semantics(
+            customSemanticsActions: {
+              if (index > 0)
+                CustomSemanticsAction(label: l10n.groupMoveUp): () =>
+                    _reorder(context, groups, index, index - 1),
+              if (index < groups.length - 1)
+                CustomSemanticsAction(label: l10n.groupMoveDown): () =>
+                    _reorder(context, groups, index, index + 1),
+            },
             child: QioCard(
               child: Row(
                 children: [
-                  Icon(Icons.folder_outlined, color: context.qio.primaryText),
+                  ReorderableDragStartListener(
+                    index: index,
+                    child: Semantics(
+                      label: l10n.groupReorderHandle(g.name),
+                      child: const SizedBox(
+                        width: 40,
+                        height: 48,
+                        child: Icon(Icons.drag_indicator),
+                      ),
+                    ),
+                  ),
+                  Icon(
+                    Icons.folder_outlined,
+                    color: color ?? context.qio.primaryText,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -205,6 +316,15 @@ class _GroupsScreenState extends State<GroupsScreen> {
                     ),
                   ),
                   IconButton(
+                    tooltip: l10n.groupColorOf(g.name),
+                    icon: Icon(
+                      Icons.circle,
+                      size: 20,
+                      color: color ?? context.qio.gray500,
+                    ),
+                    onPressed: () => _pickColor(context, g),
+                  ),
+                  IconButton(
                     tooltip: l10n.groupRename,
                     icon: const Icon(Icons.edit_outlined, size: 20),
                     onPressed: () => _rename(context, g),
@@ -222,7 +342,14 @@ class _GroupsScreenState extends State<GroupsScreen> {
               ),
             ),
           ),
-      ],
+        );
+      },
     );
   }
+}
+
+class _ColorChoice {
+  const _ColorChoice(this.hex);
+
+  final String? hex;
 }

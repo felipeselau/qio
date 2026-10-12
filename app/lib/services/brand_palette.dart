@@ -32,3 +32,23 @@ double contrastWithWhite(Color c) => 1.05 / (_luminance(c) + 0.05);
 
 bool isValidBrandHex(String? value) =>
     value != null && brandPalette.any((c) => c.hex == value.toUpperCase());
+
+double contrastRatio(Color a, Color b) {
+  final la = _luminance(a);
+  final lb = _luminance(b);
+  final hi = la > lb ? la : lb;
+  final lo = la > lb ? lb : la;
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+Color ensureContrast(Color color, Color background, {double min = 3}) {
+  if (contrastRatio(color, background) >= min) return color;
+  final target = _luminance(background) < 0.5 ? Colors.white : Colors.black;
+  var t = 0.0;
+  var result = color;
+  while (t < 1 && contrastRatio(result, background) < min) {
+    t += 0.1;
+    result = Color.lerp(color, target, t)!;
+  }
+  return result;
+}

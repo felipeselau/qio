@@ -4125,6 +4125,144 @@ abstract class AppLocalizations {
   /// **'Nenhuma fila do grupo para atualizar.'**
   String get groupBatchEmpty;
 
+  /// No description provided for @groupReorderHandle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Arrastar para reordenar o grupo \"{name}\"'**
+  String groupReorderHandle(String name);
+
+  /// No description provided for @groupMoveUp.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mover para cima'**
+  String get groupMoveUp;
+
+  /// No description provided for @groupMoveDown.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mover para baixo'**
+  String get groupMoveDown;
+
+  /// No description provided for @groupMoved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Grupo \"{name}\" na posição {position}'**
+  String groupMoved(String name, int position);
+
+  /// No description provided for @groupColor.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cor do grupo'**
+  String get groupColor;
+
+  /// No description provided for @groupColorOf.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cor do grupo \"{name}\"'**
+  String groupColorOf(String name);
+
+  /// No description provided for @groupColorNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem cor'**
+  String get groupColorNone;
+
+  /// No description provided for @queueSelect.
+  ///
+  /// In pt, this message translates to:
+  /// **'Selecionar filas'**
+  String get queueSelect;
+
+  /// No description provided for @selectionExit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sair da seleção'**
+  String get selectionExit;
+
+  /// No description provided for @selectionCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =0{Nenhuma fila selecionada} =1{1 fila selecionada} other{{count} filas selecionadas}}'**
+  String selectionCount(int count);
+
+  /// No description provided for @queueSelectLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Selecionar a fila {name}'**
+  String queueSelectLabel(String name);
+
+  /// No description provided for @moveToGroup.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mover para grupo…'**
+  String get moveToGroup;
+
+  /// No description provided for @moveToGroupTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =1{Mover 1 fila para} other{Mover {count} filas para}}'**
+  String moveToGroupTitle(int count);
+
+  /// No description provided for @moveGroupDone.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =1{1 fila movida} other{{count} filas movidas}} para \"{group}\"'**
+  String moveGroupDone(int count, String group);
+
+  /// No description provided for @moveGroupPartial.
+  ///
+  /// In pt, this message translates to:
+  /// **'{done} de {total} filas movidas. Tente de novo para as demais.'**
+  String moveGroupPartial(int done, int total);
+
+  /// No description provided for @moveGroupEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma das filas selecionadas pôde ser movida.'**
+  String get moveGroupEmpty;
+
+  /// No description provided for @groupApplyAlerts.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aplicar alertas a todas as filas'**
+  String get groupApplyAlerts;
+
+  /// No description provided for @groupAlertsDialogTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alertas do grupo \"{name}\"'**
+  String groupAlertsDialogTitle(String name);
+
+  /// No description provided for @groupAlertsDialogHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Esta configuração será copiada para todas as filas do grupo, no lugar da atual.'**
+  String get groupAlertsDialogHint;
+
+  /// No description provided for @groupAlertsContinue.
+  ///
+  /// In pt, this message translates to:
+  /// **'Continuar'**
+  String get groupAlertsContinue;
+
+  /// No description provided for @groupAlertsConfirm.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aplicar esta configuração de alertas a {count, plural, =1{1 fila} other{{count} filas}} do grupo \"{name}\"? Os alertas atuais dessas filas serão substituídos.'**
+  String groupAlertsConfirm(int count, String name);
+
+  /// No description provided for @groupAlertsApply.
+  ///
+  /// In pt, this message translates to:
+  /// **'Aplicar'**
+  String get groupAlertsApply;
+
+  /// No description provided for @groupAlertsDone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alertas aplicados a {count, plural, =1{1 fila} other{{count} filas}}'**
+  String groupAlertsDone(int count);
+
   /// No description provided for @groupHistoryTitle.
   ///
   /// In pt, this message translates to:

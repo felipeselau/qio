@@ -22,9 +22,11 @@ Queue fakeQueue(
   int maxWaiting = 0,
   String? statusMessage,
   String? groupId,
+  AlertsConfig? alerts,
 }) => Queue(
   id: id,
   groupId: groupId,
+  alerts: alerts,
   ownerId: 'uid-1',
   name: name ?? 'Fila $id',
   status: status,
@@ -265,6 +267,21 @@ class FakeQueueService implements QueueService {
     return groupStatusResult ?? const GroupStatusResult(total: 2, updated: 2);
   }
 
+  AlertsConfig? lastGroupAlerts;
+  GroupStatusResult? groupAlertsResult;
+  Object? groupAlertsError;
+
+  @override
+  Future<GroupStatusResult> applyGroupAlerts(
+    String groupId,
+    AlertsConfig config,
+  ) async {
+    calls.add('groupAlerts:$groupId');
+    lastGroupAlerts = config;
+    if (groupAlertsError != null) throw groupAlertsError!;
+    return groupAlertsResult ?? const GroupStatusResult(total: 2, updated: 2);
+  }
+
   QueueMode? savedMode;
   List<QueueSlot>? savedSlots;
   Object? createError;
@@ -410,6 +427,36 @@ class FakeGroupService implements GroupService {
   @override
   Future<void> deleteGroup(String groupId) async {
     calls.add('deleteGroup:$groupId');
+  }
+
+  GroupBatchResult? moveResult;
+  Object? moveError;
+
+  @override
+  Future<QueueGroup> createGroup(String name) async {
+    calls.add('createGroup:$name');
+    return QueueGroup(id: 'new', name: name, createdAt: DateTime(2026));
+  }
+
+  @override
+  Future<GroupBatchResult> setQueuesGroup(
+    Iterable<String> queueIds,
+    String? groupId,
+  ) async {
+    calls.add('setQueuesGroup:${queueIds.join(',')}:$groupId');
+    if (moveError != null) throw moveError!;
+    return moveResult ??
+        GroupBatchResult(total: queueIds.length, updated: queueIds.length);
+  }
+
+  @override
+  Future<void> reorderGroups(List<String> orderedIds) async {
+    calls.add('reorderGroups:${orderedIds.join(',')}');
+  }
+
+  @override
+  Future<void> updateGroupColor(String groupId, String? colorHex) async {
+    calls.add('updateGroupColor:$groupId:$colorHex');
   }
 
   @override

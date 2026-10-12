@@ -550,9 +550,45 @@ modelos; ainda sem dados): `docs/piloto/`.
   grupo (não em "Sem grupo"): Pausar/Fechar todas abrem `showStatusMessageDialog`, depois uma
   confirmação com a contagem; o menu mostra só as ações que mudam alguma fila e fica desabilitado
   enquanto o lote roda. Golden `home_grouped_*` segue dentro da tolerância (cabeçalho com o menu).
+- **Cor e ordem do grupo (#246):** `owners/{uid}/groups/{gid}` ganha `colorHex?` (uma das 8 cores de
+  `brand_palette.dart`, formato `#RRGGBB`) e `order?` (inteiro 0–1000; o app grava a posição na lista).
+  Rules: `hasOnly(['name','createdAt','colorHex','order'])`; `colorHex` casa `^#[0-9A-Fa-f]{6}$` e
+  `order` é `int` 0..1000 **só quando presentes** (docs legados sem os campos seguem válidos; a
+  regra é de `groups`, não mexe no orçamento de `queues`). `QueueGroup.fromDoc` ignora cor fora da
+  paleta e `order` fora da faixa. `sortGroups`: `order` crescente, nulos por último, depois nome e
+  `createdAt`. `GroupService.reorderGroups(ids)` (batch `order = índice`) e `updateGroupColor(id, hex?)`
+  (`FieldValue.delete()` = "Sem cor"). `GroupsScreen` é um `ReorderableListView` (alça
+  `drag_indicator`; ações semânticas "Mover para cima/baixo"; ordem otimista até o write terminar)
+  e o botão de cor abre `BrandColorPicker` + "Sem cor". A home mostra uma barra de 4 dp na cor do
+  grupo no cabeçalho da seção (`ensureContrast` de `brand_palette.dart` clareia/escurece até 3:1
+  contra o fundo; o nome continua sendo o portador da informação). `GroupService.forTesting`.
+- **Mover várias filas (#247):** modo de seleção na home (long-press num card de dono ou ícone
+  "Selecionar filas" no AppBar; checkboxes só nos cards de dono, a seção "Sou operador" nunca entra;
+  `PopScope(canPop: !_selecting)` sai do modo antes de sair da home; AppBar vira X + contador e o
+  FAB fica oculto com `Visibility(maintainState)` por causa da `GlobalKey` do tour). Barra inferior
+  com contador e "Mover para grupo…" (`showMoveToGroupSheet`: Sem grupo, grupos existentes ou
+  "Novo grupo…", que cria e usa o grupo). `GroupService.setQueuesGroup(ids, groupId?)` lê as filas
+  com `ownerId == uid` (ignora `deleting`, ids alheios/inexistentes), grava `groupId`
+  (`FieldValue.delete()` = Sem grupo) em `WriteBatch` de 450 e devolve `GroupBatchResult`
+  (`GroupStatusResult` é um typedef dele); lote que falha não aborta os demais. Sucesso total sai do
+  modo; parcial/falha mantém a seleção e mostra o SnackBar. Sem mudança de rules.
+  `showGroupNameDialog` agora é um `StatefulWidget` (o controller era descartado durante a animação
+  de saída).
+- **Alertas em lote (#249):** o menu ⋮ do cabeçalho do grupo ganhou "Aplicar alertas a todas as
+  filas" (sempre habilitado, fora do "Sem grupo"). Abre um diálogo com o `AlertsForm` controlado,
+  pré-preenchido com o `alerts` da primeira fila do grupo que tem config (senão o padrão
+  desligado); "Continuar" só habilita com `AlertsConfig.validate() == null`; depois uma confirmação
+  com a contagem e o SnackBar de sucesso/parcial (`groupBatchPartial`). `QueueService.applyGroupAlerts
+  (groupId, config)` segue o padrão de `updateGroupStatus` (filas `ownerId == uid` + `groupId`, sem
+  `deleting`, `WriteBatch` de 450, falha de lote não aborta os demais) e grava só `alerts`
+  (`config.toMap()`, o objeto como está, inclusive `enabled: false`, e **substitui** o map inteiro);
+  nunca toca `alertState`. Sem mudança de functions nem rules (`evaluateQueueAlerts` lê
+  `queues/{id}.alerts`; a validação de `alerts` nas rules do update segue valendo).
 - **Ordem de deploy**: rules do Firestore (`firebase deploy --only
   firestore:rules`) → APK. APK novo com rules antigas recebe `permission-denied`
-  nas operações de grupo (o app mostra mensagem) e ao gravar `groupId`.
+  nas operações de grupo (o app mostra mensagem) e ao gravar `groupId`; com #246, também ao
+  reordenar/colorir grupos (o doc ganha `colorHex`/`order`, que as rules antigas rejeitam por
+  `hasOnly`).
 
 ## Alertas operacionais
 
