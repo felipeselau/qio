@@ -494,6 +494,23 @@ modelos; ainda sem dados): `docs/piloto/`.
   `GroupService.watchGroups()` assinado **uma vez** no `HomeController` (`groupsSource`);
   `permission-denied` ou qualquer erro viram lista vazia (home plana, sem erro visível).
   Golden novo `home_grouped_390_{light,dark}`.
+- **Chip, contagem e ação em lote (#241, #242):** `GroupChip` (`widgets/group_chip.dart`) mostra o
+  nome do grupo no card da home só na lista plana (nunca dentro de seção, que já tem o nome no
+  cabeçalho; a busca hoje mantém as seções, então na prática o chip da home só aparece se a lista
+  plana voltar a ter filas agrupadas) e no topo do corpo do painel do **dono** (`PanelGroupChip`
+  assina `watchGroups`; operador, `groupId` órfão ou erro de leitura = sem chip). `GroupsScreen`
+  mostra "N filas"/"1 fila"/"Sem filas" por grupo (conta `watchOwnerQueues` por `resolveGroupId`;
+  sem a contagem disponível some o texto) e o diálogo de exclusão diz "N filas ficarão sem grupo"
+  (zero ou contagem indisponível = texto antigo).
+  `QueueService.updateGroupStatus(groupId, status, {message, resumeAt})` consulta as filas com
+  `ownerId == uid` e `groupId`, ignora `deleting`, grava `status`/`statusMessage`/`resumeAt` em
+  `WriteBatch` de `groupBatchLimit` (450, `chunkList`) e devolve `GroupStatusResult(total, updated)`;
+  lote que falha não aborta os seguintes (`isPartial`, "3 de 5 atualizadas"). Só Firestore (o
+  `mirrorQueueToRtdb` replica); reabrir limpa mensagem e retorno; sem mudança de rules. A home
+  ganhou o menu ⋮ (`GroupBatchMenu`, `widgets/group_batch_menu.dart`) no cabeçalho de cada seção de
+  grupo (não em "Sem grupo"): Pausar/Fechar todas abrem `showStatusMessageDialog`, depois uma
+  confirmação com a contagem; o menu mostra só as ações que mudam alguma fila e fica desabilitado
+  enquanto o lote roda. Golden `home_grouped_*` regenerado (cabeçalho com o menu).
 - **Ordem de deploy**: rules do Firestore (`firebase deploy --only
   firestore:rules`) → APK. APK novo com rules antigas recebe `permission-denied`
   nas operações de grupo (o app mostra mensagem) e ao gravar `groupId`.

@@ -25,6 +25,8 @@ import '../services/operator_service.dart';
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
+import '../widgets/group_batch_menu.dart';
+import '../widgets/group_chip.dart';
 import '../widgets/qio_avatar.dart';
 import '../widgets/qio_badge.dart';
 import '../widgets/onboarding_tour.dart';
@@ -104,6 +106,27 @@ class _HomeScreenState extends State<HomeScreen> {
       return (widget.groups ?? GroupService.instance).watchGroups();
     } catch (_) {
       return Stream.value(const <QueueGroup>[]);
+    }
+  }
+
+  final Set<String> _batchBusy = {};
+
+  Future<void> _groupBatch(HomeSection s, GroupBatchAction action) async {
+    final group = s.group;
+    if (group == null || !_batchBusy.add(group.id)) return;
+    setState(() {});
+    try {
+      await runGroupBatch(
+        context,
+        service: _queues,
+        groupId: group.id,
+        groupName: group.name,
+        count: s.queues.length,
+        action: action,
+      );
+    } finally {
+      _batchBusy.remove(group.id);
+      if (mounted) setState(() {});
     }
   }
 
@@ -451,6 +474,7 @@ class _HomeScreenState extends State<HomeScreen> {
         : list;
     final sections = buildHomeSections(owned, _controller.groups);
     final grouped = sections.isNotEmpty;
+    final fullSections = {for (final s in sections) s.id: s};
     final visibleSections = [
       for (final s in sections)
         if (arrange(s.queues) case final qs when qs.isNotEmpty)
@@ -460,7 +484,12 @@ class _HomeScreenState extends State<HomeScreen> {
         ? [for (final s in visibleSections) ...s.queues]
         : arrange(owned);
     var firstKeyUsed = false;
-    Widget ownerCard(Queue q, {bool visibleNow = true}) {
+    final groupNames = {for (final g in _controller.groups) g.id: g.name};
+    Widget ownerCard(
+      Queue q, {
+      bool visibleNow = true,
+      bool showGroup = false,
+    }) {
       final useKey = visibleNow && !firstKeyUsed;
       if (useKey) firstKeyUsed = true;
       return Column(
@@ -474,6 +503,9 @@ class _HomeScreenState extends State<HomeScreen> {
               isOwner: true,
               waiting: _waiting[q.id] ?? 0,
               queues: _queues,
+              groupName: showGroup
+                  ? groupNames[resolveGroupId(q, _controller.groups)]
+                  : null,
             ),
           ),
           const SizedBox(height: 16),
@@ -507,6 +539,14 @@ class _HomeScreenState extends State<HomeScreen> {
               queueCount: s.queues.length,
               waiting: sumWaiting(s.queues, _waiting),
               expanded: searching || !_collapsed.contains(s.id),
+              batchMenu: s.group == null
+                  ? null
+                  : GroupBatchMenu(
+                      groupName: s.group!.name,
+                      queues: fullSections[s.id]!.queues,
+                      enabled: !_batchBusy.contains(s.id),
+                      onSelected: (a) => _groupBatch(fullSections[s.id]!, a),
+                    ),
               onToggle: searching ? null : () => _toggleSection(s.id),
               children: [
                 for (final q in s.queues)
@@ -517,7 +557,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             )
         else
-          for (final q in visible) ownerCard(q),
+          for (final q in visible) ownerCard(q, showGroup: true),
         if (operating.isNotEmpty) _sectionTitle(l10n.sectionOperator),
         for (final op in operating) ...[
           _OperatorQueueCard(
@@ -620,6 +660,7 @@ class _GroupSection extends StatelessWidget {
     required this.expanded,
     required this.onToggle,
     required this.children,
+    this.batchMenu,
   });
 
   final String title;
@@ -628,6 +669,7 @@ class _GroupSection extends StatelessWidget {
   final bool expanded;
   final VoidCallback? onToggle;
   final List<Widget> children;
+  final Widget? batchMenu;
 
   @override
   Widget build(BuildContext context) {
@@ -644,61 +686,68 @@ class _GroupSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Semantics(
-          container: true,
-          button: onToggle != null,
-          expanded: expanded,
-          label: l10n.groupSectionSemantics(
-            title,
-            queuesText,
-            waitingText,
-            stateText,
-          ),
-          excludeSemantics: true,
-          onTap: onToggle,
-          child: InkWell(
-            borderRadius: BorderRadius.circular(8),
-            onTap: onToggle,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 48),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+        Row(
+          children: [
+            Expanded(
+              child: Semantics(
+                container: true,
+                button: onToggle != null,
+                expanded: expanded,
+                label: l10n.groupSectionSemantics(
+                  title,
+                  queuesText,
+                  waitingText,
+                  stateText,
+                ),
+                excludeSemantics: true,
+                onTap: onToggle,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: onToggle,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 48),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
                         children: [
-                          Text(
-                            title,
-                            style: context.qioText.heading3.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: context.qio.textPrimary,
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  title,
+                                  style: context.qioText.heading3.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: context.qio.textPrimary,
+                                  ),
+                                ),
+                                Text(
+                                  '$queuesText · $waitingText',
+                                  style: context.qioText.caption.copyWith(
+                                    fontSize: 12,
+                                    color: context.qio.gray700,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          Text(
-                            '$queuesText · $waitingText',
-                            style: context.qioText.caption.copyWith(
-                              fontSize: 12,
+                          AnimatedRotation(
+                            turns: expanded ? 0 : -0.25,
+                            duration: duration,
+                            child: Icon(
+                              Icons.expand_more,
                               color: context.qio.gray700,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    AnimatedRotation(
-                      turns: expanded ? 0 : -0.25,
-                      duration: duration,
-                      child: Icon(
-                        Icons.expand_more,
-                        color: context.qio.gray700,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
             ),
-          ),
+            ?batchMenu,
+          ],
         ),
         const SizedBox(height: 8),
         if (animate)
@@ -729,12 +778,14 @@ class _QueueCard extends StatefulWidget {
     required this.isOwner,
     required this.waiting,
     required this.queues,
+    this.groupName,
   });
 
   final Queue queue;
   final bool isOwner;
   final int waiting;
   final QueueService queues;
+  final String? groupName;
 
   @override
   State<_QueueCard> createState() => _QueueCardState();
@@ -846,6 +897,13 @@ class _QueueCardState extends State<_QueueCard> {
                         ),
                       ],
                     ),
+                    if (widget.groupName != null) ...[
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: GroupChip(name: widget.groupName!),
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     Text(
                       l10n.waitingCount(widget.waiting),

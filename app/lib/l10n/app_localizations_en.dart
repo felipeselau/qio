@@ -2164,4 +2164,98 @@ class AppLocalizationsEn extends AppLocalizations {
   ) {
     return '$name, $queues, $waiting, $state';
   }
+
+  @override
+  String groupChipSemantics(String name) {
+    return 'Group: $name';
+  }
+
+  @override
+  String groupQueueCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count queues',
+      one: '1 queue',
+      zero: 'No queues',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupDeleteConfirmCount(String name, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count queues will become ungrouped.',
+      one: '1 queue will become ungrouped.',
+    );
+    return 'Delete the group \"$name\"? $_temp0';
+  }
+
+  @override
+  String groupBatchMenuLabel(String name) {
+    return 'Batch actions for group $name';
+  }
+
+  @override
+  String get groupPauseAll => 'Pause all';
+
+  @override
+  String get groupCloseAll => 'Close all';
+
+  @override
+  String get groupReopenAll => 'Reopen all';
+
+  @override
+  String groupBatchConfirmPause(int count, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count queues',
+      one: '1 queue',
+    );
+    return 'Pause $_temp0 in group \"$name\"?';
+  }
+
+  @override
+  String groupBatchConfirmClose(int count, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count queues',
+      one: '1 queue',
+    );
+    return 'Close $_temp0 in group \"$name\"?';
+  }
+
+  @override
+  String groupBatchConfirmReopen(int count, String name) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count queues',
+      one: '1 queue',
+    );
+    return 'Reopen $_temp0 in group \"$name\"?';
+  }
+
+  @override
+  String groupBatchDone(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count queues updated',
+      one: '1 queue updated',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String groupBatchPartial(int done, int total) {
+    return '$done of $total updated. Try again for the rest.';
+  }
+
+  @override
+  String get groupBatchEmpty => 'No queues in the group to update.';
 }
