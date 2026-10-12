@@ -4124,6 +4124,54 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Nenhuma fila do grupo para atualizar.'**
   String get groupBatchEmpty;
+
+  /// No description provided for @groupHistoryTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Histórico do grupo'**
+  String get groupHistoryTitle;
+
+  /// No description provided for @groupHistoryOpen.
+  ///
+  /// In pt, this message translates to:
+  /// **'Histórico do grupo'**
+  String get groupHistoryOpen;
+
+  /// No description provided for @groupHistoryNoQueues.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma fila neste grupo'**
+  String get groupHistoryNoQueues;
+
+  /// No description provided for @groupHistoryNoQueuesHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Coloque filas no grupo para ver o histórico consolidado.'**
+  String get groupHistoryNoQueuesHint;
+
+  /// No description provided for @groupHistoryTruncated.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostrando só os {limit} registros mais recentes de cada fila. Filas com histórico cortado: {queues}.'**
+  String groupHistoryTruncated(int limit, String queues);
+
+  /// No description provided for @groupHistoryShowMore.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostrar mais ({shown} de {total})'**
+  String groupHistoryShowMore(int shown, int total);
+
+  /// No description provided for @historyQueueOrigin.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fila: {name}'**
+  String historyQueueOrigin(String name);
+
+  /// No description provided for @colQueue.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fila'**
+  String get colQueue;
 }
 
 class _AppLocalizationsDelegate

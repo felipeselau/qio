@@ -714,5 +714,16 @@
   "groupBatchConfirmReopen": "Reopen {count, plural, =1{1 queue} other{{count} queues}} in group \"{name}\"?",
   "groupBatchDone": "{count, plural, =1{1 queue updated} other{{count} queues updated}}",
   "groupBatchPartial": "{done} of {total} updated. Try again for the rest.",
-  "groupBatchEmpty": "No queues in the group to update."
+  "groupBatchEmpty": "No queues in the group to update.",
+  "groupHistoryTitle": "Group history",
+  "groupHistoryOpen": "Group history",
+  "groupHistoryNoQueues": "No queues in this group",
+  "groupHistoryNoQueuesHint": "Add queues to the group to see the combined history.",
+  "groupHistoryTruncated": "Showing only the {limit} most recent records of each queue. Queues with truncated history: {queues}.",
+  "@groupHistoryTruncated": {"placeholders": {"limit": {"type": "int"}, "queues": {"type": "String"}}},
+  "groupHistoryShowMore": "Show more ({shown} of {total})",
+  "@groupHistoryShowMore": {"placeholders": {"shown": {"type": "int"}, "total": {"type": "int"}}},
+  "historyQueueOrigin": "Queue: {name}",
+  "@historyQueueOrigin": {"placeholders": {"name": {"type": "String"}}},
+  "colQueue": "Queue"
 }

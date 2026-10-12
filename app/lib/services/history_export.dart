@@ -7,7 +7,12 @@ import '../l10n/app_localizations.dart';
 import '../models/history_entry.dart';
 import 'history_metrics.dart';
 
-List<String> _csvHeader(AppLocalizations l10n, bool includePhone) => [
+List<String> _csvHeader(
+  AppLocalizations l10n,
+  bool includePhone,
+  bool includeQueue,
+) => [
+  if (includeQueue) l10n.csvQueue,
   l10n.csvTicket,
   l10n.csvName,
   if (includePhone) l10n.csvPhone,
@@ -47,18 +52,21 @@ String buildHistoryCsv(
   AppLocalizations l10n,
   List<HistoryEntry> entries, {
   bool includePhone = false,
+  List<String>? queueNames,
 }) {
+  assert(queueNames == null || queueNames.length == entries.length);
   final rows = <List<String>>[
-    _csvHeader(l10n, includePhone),
-    for (final e in entries)
+    _csvHeader(l10n, includePhone, queueNames != null),
+    for (var i = 0; i < entries.length; i++)
       [
-        '${e.ticket}',
-        e.name,
-        if (includePhone) e.phone ?? '',
-        resultLabel(l10n, e.result),
-        formatExportDateTime(e.joinedAt),
-        formatExportDateTime(e.calledAt),
-        formatExportDateTime(e.finishedAt),
+        if (queueNames != null) queueNames[i],
+        '${entries[i].ticket}',
+        entries[i].name,
+        if (includePhone) entries[i].phone ?? '',
+        resultLabel(l10n, entries[i].result),
+        formatExportDateTime(entries[i].joinedAt),
+        formatExportDateTime(entries[i].calledAt),
+        formatExportDateTime(entries[i].finishedAt),
       ],
   ];
   return '﻿${rows.map((r) => r.map(csvCell).join(',')).join('\r\n')}\r\n';
@@ -76,7 +84,9 @@ Future<Uint8List> buildHistoryPdf({
   required List<HistoryEntry> entries,
   required DateTime generatedAt,
   bool includePhone = false,
+  List<String>? queueNames,
 }) {
+  assert(queueNames == null || queueNames.length == entries.length);
   final metrics = computeHistoryMetrics(entries);
   final pct = (metrics.noShowRate * 100).round();
   final doc = pw.Document();
@@ -126,6 +136,7 @@ Future<Uint8List> buildHistoryPdf({
         else
           pw.TableHelper.fromTextArray(
             headers: [
+              if (queueNames != null) l10n.colQueue,
               l10n.colTicket,
               l10n.colName,
               if (includePhone) l10n.colPhone,
@@ -135,15 +146,16 @@ Future<Uint8List> buildHistoryPdf({
               l10n.colFinished,
             ],
             data: [
-              for (final e in entries)
+              for (var i = 0; i < entries.length; i++)
                 [
-                  '${e.ticket}',
-                  e.name,
-                  if (includePhone) e.phone ?? '',
-                  resultLabel(l10n, e.result),
-                  _short(e.joinedAt),
-                  _short(e.calledAt),
-                  _short(e.finishedAt),
+                  if (queueNames != null) queueNames[i],
+                  '${entries[i].ticket}',
+                  entries[i].name,
+                  if (includePhone) entries[i].phone ?? '',
+                  resultLabel(l10n, entries[i].result),
+                  _short(entries[i].joinedAt),
+                  _short(entries[i].calledAt),
+                  _short(entries[i].finishedAt),
                 ],
             ],
             headerStyle: pw.TextStyle(

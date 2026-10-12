@@ -113,6 +113,42 @@ void main() {
     expect(withPhone, greaterThan(without));
   });
 
+  test('csv adds the queue column first when queue names are given', () {
+    final lines = buildHistoryCsv(
+      pt,
+      [entry()],
+      queueNames: ['Padaria'],
+    ).substring(1).trim().split('\r\n');
+    expect(lines[0], 'fila,ticket,nome,resultado,entrada,chamado,finalizado');
+    expect(lines[1].startsWith('Padaria,7,Ana,Atendido'), isTrue);
+    expect(lines[1].contains('91234'), isFalse);
+  });
+
+  test('csv with queue and phone keeps the phone after the name', () {
+    final lines = buildHistoryCsv(
+      pt,
+      [entry()],
+      includePhone: true,
+      queueNames: ['Padaria'],
+    ).substring(1).trim().split('\r\n');
+    expect(
+      lines[0],
+      'fila,ticket,nome,telefone,resultado,entrada,chamado,finalizado',
+    );
+    expect(lines[1].startsWith('Padaria,7,Ana,(11) 91234-5678,'), isTrue);
+  });
+
+  test('pdf builds with the queue column', () async {
+    final bytes = await buildHistoryPdf(
+      l10n: pt,
+      queueName: 'Grupo: Balcão',
+      entries: [entry()],
+      generatedAt: DateTime(2026, 10, 6),
+      queueNames: ['Padaria'],
+    );
+    expect(String.fromCharCodes(bytes.take(4)), '%PDF');
+  });
+
   test('pdf builds for another locale', () async {
     final bytes = await buildHistoryPdf(
       l10n: en,
