@@ -1,7 +1,7 @@
 # Qio — Especificação do MVP
 
 > **Documento histórico.** Descreve o desenho do MVP. Várias funcionalidades listadas
-> como "fase 2" na seção 9 já estão em `main` (app 1.5.0+6 em `app/pubspec.yaml`; ver
+> como "fase 2" na seção 9 já estão em `main` (app 1.6.0+7 em `app/pubspec.yaml`; ver
 > `CHANGELOG.md`). Para o estado atual, ver
 > `docs/RESUMO_TECNICO.md`, `CLAUDE.md` e `docs/qualidade.md`.
 

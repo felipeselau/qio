@@ -4,6 +4,30 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
 
 ## [Não lançado]
 
+## [1.6.0] - 2026-10-13 (teste)
+
+Versão do app: 1.6.0+7. Só o app e as rules do Firestore mudam: nenhuma function nem o hosting precisam de deploy.
+
+### Adicionado
+- Criação de fila em fluxo multi-step (wizard de 7 passos: Nome, Entrada, Tempo e limite, Cor, Funcionamento, Alertas e Revisão com "Editar" por seção), com "Criar agora", rascunho persistente, tela "Fila criada" (QR, link e atalhos para logo, link curto, operadores e alertas) e checagem do limite de 20 filas ao abrir (#212 a #225, #231 a #235).
+- Home agrupada e colapsável, com total esperando por grupo; nome do grupo no painel; contagem de filas na tela de grupos e no diálogo de exclusão (#240, #241).
+- Ações em lote por grupo: pausar, fechar e reabrir todas as filas, e aplicar a configuração de alertas a todas (#242, #249); mover várias filas para um grupo por seleção (#247); cor e ordem manual do grupo (#246).
+- Métricas por grupo: visão "Por grupo" no escopo "Todas as filas" (atendimentos, espera média, mediana, P90, no-show, nota e variação), comparativo entre filas do grupo ordenável e exportado no CSV e no PDF, e seletor de escopo hierárquico (#243, #244, #245).
+- Histórico do grupo: lista consolidada dos atendimentos das filas do grupo, com a fila de origem, aviso de truncamento por fila e exportação sem telefone por padrão (#248).
+- `createQueue` aceita expiração de entradas e `duplicateQueue` a copia (#214).
+- Universo demo para desenvolvimento (só emulator): 7 donos e 12 operadores com ~84 mil atendimentos simulados em 120 dias, em `docs/demo/` e `ops/demo-up.sh` (#236).
+
+### Alterado
+- Rules do Firestore: `groups/{gid}` aceita `colorHex` e `order` (validados quando presentes; docs legados continuam válidos). O create de fila no pior caso do wizard cabe num único `add()`, com folga mínima (~2%); não some validações ao `allow create` (#212).
+- Componentes de formulário reutilizáveis (`BrandColorPicker`, `ScheduleForm`, `ExpiryForm`, `AlertsForm`), usados nas configurações e no wizard (#213, #225).
+
+### Corrigido
+- O comparativo entre filas do grupo respeita o período personalizado e o relógio injetado (#238).
+- O stream de grupos deixou de ser reaberto a cada rebuild (#239).
+
+### Testes
+- Goldens do wizard e da home agrupada (render do CI Linux); testes de widget com 320/390/900 px e texto 1.0x a 2.0x.
+
 ## [1.5.0] - 2026-10-09 (teste)
 
 Versão do app: 1.5.0+6.
