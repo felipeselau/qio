@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -14,9 +15,11 @@ import '../widgets/qio_responsive_body.dart';
 import '../theme/qio_palette.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key, this.auth});
+  const LoginScreen({super.key, this.auth, bool? showGoogle})
+    : showGoogle = showGoogle ?? !kIsWeb;
 
   final AuthService? auth;
+  final bool showGoogle;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -205,42 +208,46 @@ class _LoginScreenState extends State<LoginScreen> {
                         isLoading: _isLoading,
                         isFullWidth: true,
                       ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Divider(
-                              height: 1,
-                              thickness: 1,
-                              color: context.qio.gray100,
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            child: Text(
-                              l10n.orSeparator,
-                              style: context.qioText.caption.copyWith(
-                                color: context.qio.gray400,
+                      if (widget.showGoogle) ...[
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Divider(
+                                height: 1,
+                                thickness: 1,
+                                color: context.qio.gray100,
                               ),
                             ),
-                          ),
-                          Expanded(
-                            child: Divider(
-                              height: 1,
-                              thickness: 1,
-                              color: context.qio.gray100,
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              child: Text(
+                                l10n.orSeparator,
+                                style: context.qioText.caption.copyWith(
+                                  color: context.qio.gray400,
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      QioButton(
-                        label: l10n.continueWithGoogle,
-                        variant: QioButtonVariant.secondary,
-                        icon: Icons.g_mobiledata,
-                        onPressed: _google,
-                        isFullWidth: true,
-                      ),
+                            Expanded(
+                              child: Divider(
+                                height: 1,
+                                thickness: 1,
+                                color: context.qio.gray100,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        QioButton(
+                          label: l10n.continueWithGoogle,
+                          variant: QioButtonVariant.secondary,
+                          icon: Icons.g_mobiledata,
+                          onPressed: _google,
+                          isFullWidth: true,
+                        ),
+                      ],
                       const SizedBox(height: 16),
                       TextButton(
                         onPressed: () => setState(() => _isSignUp = !_isSignUp),

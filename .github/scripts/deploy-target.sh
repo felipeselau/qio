@@ -26,12 +26,14 @@ case "$TARGET" in
   rules-firestore) deploy firestore:rules ;;
   rules-storage) deploy storage ;;
   indexes) deploy firestore:indexes ;;
-  hosting) deploy hosting ;;
+  hosting) deploy hosting:qio ;;
+  hosting-app) deploy hosting:qio-app ;;
   all-ordered)
     deploy firestore:indexes
     deploy functions force
     echo "::notice::Backfill (functions/scripts/backfill-*.js) é manual: rode agora, se necessário (docs/deploy.md)."
-    deploy hosting
+    deploy hosting:qio
+    deploy hosting:qio-app
     deploy database
     deploy firestore:rules
     deploy storage

@@ -132,4 +132,23 @@ void main() {
     expect(find.text('Sign in'), findsWidgets);
     expect(tester.takeException(), isNull);
   });
+
+  testWidgets('Google button is hidden when showGoogle is false', (
+    tester,
+  ) async {
+    await pumpApp(
+      tester,
+      LoginScreen(auth: FakeAuthService(), showGoogle: false),
+    );
+    expect(find.text('Continuar com Google'), findsNothing);
+    expect(primary('Entrar'), findsOneWidget);
+  });
+
+  testWidgets('Google button is shown when showGoogle is true', (tester) async {
+    await pumpApp(
+      tester,
+      LoginScreen(auth: FakeAuthService(), showGoogle: true),
+    );
+    expect(find.text('Continuar com Google'), findsOneWidget);
+  });
 }

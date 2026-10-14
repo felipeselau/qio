@@ -967,6 +967,12 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
 - `web/src/lib/useQueue.ts`: listeners do RTDB só são anexados com `ready`
   (auth anônima concluída). Anexar antes faz a leitura ser negada e o `onValue`
   morre sem retry → spinner infinito no primeiro acesso pelo QR.
+- `firebase.json` tem **dois sites** de hosting: `qio` (página do cliente, `web/dist`) e `qio-app`
+  (app do dono em Flutter web, `app/build/web`, https://qio-app.web.app; sem iframe, tudo `no-cache`
+  porque o build não tem hash). O CI publica **só** `hosting:qio`; o app do dono web é manual/assistido
+  (alvo `hosting-app` do `deploy.yml`, que roda `flutter build web --release --pwa-strategy=none`).
+  Na web o app só tem login por e-mail/senha (botão Google oculto com `kIsWeb`); push e Crashlytics são só mobile.
+  Detalhes em `docs/deploy.md`.
 - Deploy hosting é automático no push p/ `main` (`.github/workflows/ci.yml`) **só
   se** `secrets.FIREBASE_TOKEN` existir; sem ele o job passa verde com um warning
   e o site **não** é atualizado. Confira o bundle publicado em `qio.web.app`.
