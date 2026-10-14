@@ -175,4 +175,4 @@ jobs:
         run: echo "::warning::FIREBASE_TOKEN não configurado; hosting não foi publicado."
       - name: Deploy hosting
         if: env.FIREBASE_TOKEN != ''
-        run: firebase deploy --only hosting --project qio-app
+        run: firebase deploy --only hosting:qio --project qio-app

@@ -12,12 +12,12 @@ validação é `firebase deploy --dry-run` + testes com emulators; o primeiro am
 | `.github/workflows/deploy.yml` | `workflow_dispatch`: roda testes, `--dry-run` e, se `dry_run=false`, publica após aprovação |
 | `.github/actions/firebase-setup` | Instala `firebase-tools@15.33.0` (mesma versão do `ci.yml`) e autentica |
 | `.github/scripts/deploy-target.sh` | Mapeia o alvo para `firebase deploy --only ...` na ordem correta |
-| `deploy-hosting` do `ci.yml` | Continua igual: publica hosting no push para `main` só se `FIREBASE_TOKEN` existir |
+| `deploy-hosting` do `ci.yml` | Publica só o site `qio` (`--only hosting:qio`) no push para `main`, se `FIREBASE_TOKEN` existir. Nunca publica o site `qio-app` (não há build do Flutter web no CI) |
 
 ### Inputs
 
 - `target`: `functions` | `rules-rtdb` | `rules-firestore` | `rules-storage` | `indexes` |
-  `hosting` | `all-ordered`.
+  `hosting` | `hosting-app` | `all-ordered`.
 - `dry_run` (padrão **true**): só valida. Com `false`, o job `deploy` roda depois do
   `test` e do `dry-run` e depende da aprovação do environment `production`.
 - `backfill_done` (padrão false): **obrigatório `true` para `all-ordered`** (confirma que o
@@ -34,6 +34,9 @@ Todos usam `ref: ${{ github.sha }}`. Os jobs com credenciais só rodam em `refs/
    - `rules-rtdb`, `rules-firestore`, `rules-storage`: `npm run test:rules` em `rules-tests/`
      (sem functions).
    - `hosting`, `all-ordered`: `npm run lint` + `npm run build` do web (com as `vars.VITE_*`).
+   - `hosting-app`, `all-ordered`: `flutter build web --release --pwa-strategy=none` em `app/`
+     (Flutter 3.44.3, mesma versão do `ci.yml`; sem `--dart-define=USE_EMULATORS`) e upload do
+     artefato `deploy-app-web`.
    - `indexes`: não há teste.
 2. `dry-run` (credencial **somente leitura**, sem environment): `firebase deploy --dry-run`.
 3. `deploy` (só com `dry_run=false` em `main`, `environment: production`): baixa o `dist`
@@ -46,7 +49,7 @@ deploy real disparado enquanto outro roda substitui o que estava pendente.
 
 ### Ordem do `all-ordered`
 
-`indexes` -> `functions` -> (backfill manual) -> `hosting` -> `database` (rules RTDB) ->
+`indexes` -> `functions` -> (backfill manual) -> `hosting` (`hosting:qio`, depois `hosting:qio-app`) -> `database` (rules RTDB) ->
 `firestore:rules` -> `storage` (rules).
 
 Segue o CLAUDE.md (functions -> backfill -> hosting -> rules do RTDB -> rules do Firestore).
@@ -57,6 +60,35 @@ exige credencial Admin e julgamento humano (ver seção 5). Por isso o `all-orde
 `backfill_done=true`. Se o backfill for necessário, rode o alvo `functions`, faça o backfill,
 e então `all-ordered` com `backfill_done=true` (ou `hosting`, `rules-rtdb` e `rules-firestore`
 separados).
+
+### Hosting: dois sites
+
+`firebase.json` tem `hosting` como array com dois sites do projeto `qio-app`:
+
+| Alvo do workflow | Site | URL | Conteúdo | Quem publica |
+| --- | --- | --- | --- | --- |
+| `hosting` | `qio` | https://qio.web.app | página do cliente (`web/dist`) | `ci.yml` (push em `main`) ou workflow assistido |
+| `hosting-app` | `qio-app` | https://qio-app.web.app | app do dono em Flutter web (`app/build/web`) | **só** workflow assistido |
+
+- Como atualizar o app do dono: Actions -> "Deploy (assistido)" -> `target = hosting-app` ->
+  rode com `dry_run=true` e, estando ok, com `dry_run=false` (aprovação do environment
+  `production`). O build roda no job `test`; o deploy reaproveita o artefato. Localmente:
+  `cd app && flutter build web --release --pwa-strategy=none` e
+  `firebase deploy --only hosting:qio-app --project qio-app`.
+- O site `qio-app` não é atualizado pelo push em `main`. Mudança no app que precise ir ao
+  navegador exige disparar o alvo `hosting-app`.
+- Cache: o Flutter web não gera nomes com hash, então `index.html`, `flutter*.js`, `main.dart.js`,
+  `manifest.json`, `version.json`, `assets/**` e `canvaskit/**` saem com `Cache-Control: no-cache`
+  (revalida com ETag a cada acesso; sem `immutable`). Sem service worker (`--pwa-strategy=none`),
+  igual ao web do cliente. O site inteiro envia `frame-ancestors 'none'` e `X-Frame-Options: DENY`.
+- Firebase Auth: `qio-app.web.app` (e `qio-app.firebaseapp.com`) já são domínios autorizados por
+  padrão no projeto; só é preciso autorizar manualmente um domínio próprio (Console -> Authentication
+  -> Settings -> Authorized domains).
+- Login no app web: só e-mail/senha. O botão "Continuar com Google" fica oculto na web
+  (`kIsWeb`): o `google_sign_in` 7.x não usa `authenticate()` na web e exigiria `clientId` web
+  e botão renderizado pelo Google. Push (FCM) e Crashlytics também são só mobile; na web o app não
+  registra token nem reporta crashes. Contas criadas só com Google teriam de definir uma
+  senha pelo "Esqueci a senha" com o mesmo e-mail (caminho não verificado).
 
 Functions é publicado **sem `--force`**: o CLI não apaga função removida do código em modo
 não interativo (o deploy falha apontando quais). Apague à mão com
@@ -172,7 +204,7 @@ As mesmas do `ci.yml`: `VITE_RECAPTCHA_SITE_KEY`, `VITE_VAPID_KEY`, `VITE_MEASUR
 O job `deploy-hosting` do `ci.yml` não foi alterado (continua com `FIREBASE_TOKEN`). Quando
 o WIF estiver validado pelo workflow assistido, o caminho é trocar esse job para usar
 `./.github/actions/firebase-setup` com `permissions: id-token: write` e remover o secret
-`FIREBASE_TOKEN`. Até lá, hosting também pode ser publicado pelo alvo `hosting`.
+`FIREBASE_TOKEN`. Até lá, hosting também pode ser publicado pelo alvo `hosting` (site `qio`).
 
 ## 3. Como usar
 
@@ -228,7 +260,7 @@ Rode depois das functions e antes de hosting/rules.
 
 | Alvo | Como |
 | --- | --- |
-| Hosting | Console -> Hosting -> Histórico de versões -> **Rollback**; ou `firebase hosting:clone qio:<VERSION_ID> qio:live` |
+| Hosting (qualquer site) | Console -> Hosting -> escolha o site -> Histórico de versões -> **Rollback**; ou `firebase hosting:clone qio:<VERSION_ID> qio:live` |
 | Functions | `git revert` do commit e novo deploy do alvo `functions` (não há rollback nativo). Para uma função com defeito, `firebase functions:delete <nome>` só se nada depender dela |
 | Rules (RTDB, Firestore, Storage) | `git revert` e redeploy do alvo da rule. Console -> Rules mostra o histórico e permite republicar uma versão anterior |
 | Índices | Aditivos; remover só se necessário, pelo console (remover derruba consultas que dependem deles) |
@@ -247,7 +279,8 @@ cliente novo.
 - Não cria/ativa App Check, Cloud Scheduler, orçamento, alertas, Analytics (ações do console).
 - Não faz rollback automático nem smoke test pós-deploy.
 - Não tem staging: o dry-run e os emulators são a única validação antes de produção.
-- O `deploy-hosting` do `ci.yml` só funciona com `FIREBASE_TOKEN` (obsoleto).
+- O `deploy-hosting` do `ci.yml` só funciona com `FIREBASE_TOKEN` (obsoleto) e publica só `hosting:qio`.
+- Não publica o app do dono web automaticamente: use o alvo `hosting-app`.
 
 ## 8. Ações manuais acumuladas do roadmap
 
@@ -295,6 +328,7 @@ Conferir antes se já foi feito: `firebase functions:list --project qio-app`.
 ### Hosting, backfill e APK
 
 - [ ] Hosting (`qio.web.app`): push para `main` com `FIREBASE_TOKEN`, ou alvo `hosting`.
+- [ ] App do dono web (`qio-app.web.app`): alvo `hosting-app` (manual; primeiro deploy e toda atualização).
 - [ ] Backfill de `public/` e do contador de espera (seção 5), se faltarem dados.
 - [ ] APK: `flutter build apk --release` (exige `app/android/key.properties`) e distribuição;
       depois das functions e rules correspondentes.

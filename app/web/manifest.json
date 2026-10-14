@@ -1,12 +1,13 @@
 {
-    "name": "qio_app",
-    "short_name": "qio_app",
+    "name": "Qio",
+    "short_name": "Qio",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
-    "orientation": "portrait-primary",
+    "background_color": "#0B1220",
+    "theme_color": "#2563EB",
+    "description": "Painel do dono do Qio: filas presenciais",
+    "lang": "pt-BR",
+    "orientation": "any",
     "prefer_related_applications": false,
     "icons": [
         {
