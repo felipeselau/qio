@@ -124,14 +124,177 @@
   },
   "landing": {
     "title": "Qio",
-    "tagline": "Fila presencial, sin instalar nada.",
-    "about": "Qio organiza la fila de espera del local directamente en tu celular. Entras desde el navegador, sigues tu posición en tiempo real y recibes el aviso cuando sea tu turno.",
-    "howTitle": "Cómo entrar en la fila",
-    "how": "Escanea el código QR del local o abre el enlace que compartió. No necesitas crear cuenta ni instalar nada.",
-    "ownerTitle": "¿Tienes un local?",
-    "ownerLink": "Descarga la app de Qio para crear tu fila",
     "documentTitle": "Qio — Fila presencial, sin instalar nada",
-    "metaDescription": "Entra en la fila del local desde tu celular sin instalar nada: escanea el código QR y sigue tu posición en tiempo real."
+    "metaDescription": "Crea la fila de tu local y genera un código QR. El cliente entra desde el navegador, sin instalar nada, sigue su posición en tiempo real y recibe un aviso cuando sea su turno.",
+    "navCta": "Crear fila",
+    "hero": {
+      "titleA": "Fila presencial,",
+      "titleB": "sin instalar nada.",
+      "sub": "El cliente escanea el código QR, entra en la fila desde el navegador y sigue su posición en el celular. Tú llamas al siguiente desde la app.",
+      "cta": "Crear mi fila",
+      "how": "Ver cómo funciona",
+      "note": "Para el cliente: sin cuenta, sin app, sin registro."
+    },
+    "facts": {
+      "title": "Bueno saber",
+      "items": [
+        {
+          "t": "Nada que instalar.",
+          "b": "El cliente abre el enlace del código QR en el navegador. Funciona en cualquier celular."
+        },
+        {
+          "t": "Tiempo real.",
+          "b": "La posición y la espera estimada se actualizan al instante, sin recargar la página."
+        },
+        {
+          "t": "Aviso en el momento justo.",
+          "b": "Cuando se llama el turno, el celular muestra la pantalla, vibra y puede recibir una notificación."
+        },
+        {
+          "t": "A tu manera.",
+          "b": "Portugués, inglés y español, con modo claro y oscuro."
+        }
+      ]
+    },
+    "highlights": {
+      "title": "Lo destacado",
+      "items": [
+        {
+          "t": "Entrar toma segundos.",
+          "b": "Escanea el código QR o abre el enlace, escribe tu nombre y listo. Sin cuenta y sin app.",
+          "alt": "Pantalla para entrar en la fila en el celular del cliente"
+        },
+        {
+          "t": "Posición siempre a la vista.",
+          "b": "El turno, la posición en la fila y la espera estimada quedan en pantalla, en tiempo real.",
+          "alt": "Turno #5, posición 5.º y espera estimada de 40 minutos"
+        },
+        {
+          "t": "Es tu turno.",
+          "b": "Pantalla completa, sonido y vibración cuando se llama el turno. Nadie lo pierde mirando el mostrador.",
+          "alt": "Pantalla verde \"Es tu turno\" con el turno llamado"
+        },
+        {
+          "t": "El panel de quien atiende.",
+          "b": "Llama al siguiente, llama de nuevo, marca atendido o no se presentó. El QR y el enlace a un toque.",
+          "alt": "Panel del local con código QR y botón Llamar siguiente"
+        },
+        {
+          "t": "Números que ayudan a decidir.",
+          "b": "Atenciones, espera promedio, ausencias y horas pico de cada fila.",
+          "alt": "Pantalla de métricas con gráfico de picos de demanda"
+        }
+      ]
+    },
+    "index": {
+      "title": "Explora todo",
+      "columns": [
+        {
+          "label": "Para el cliente",
+          "items": [
+            {
+              "t": "Código QR o enlace",
+              "b": "entra sin cuenta ni app."
+            },
+            {
+              "t": "Posición y espera",
+              "b": "estimadas en tiempo real."
+            },
+            {
+              "t": "Aviso de turno",
+              "b": "con pantalla, sonido, vibración y notificación."
+            },
+            {
+              "t": "Salir o calificar",
+              "b": "renuncia al turno o califica la atención."
+            }
+          ]
+        },
+        {
+          "label": "Para el local",
+          "items": [
+            {
+              "t": "Llamar",
+              "b": "al siguiente, llamar de nuevo o mover al final."
+            },
+            {
+              "t": "Operadores",
+              "b": "se unen con un código de invitación."
+            },
+            {
+              "t": "Pausar y programar",
+              "b": "cerrada, pausada o por horario de atención."
+            },
+            {
+              "t": "Hora agendada",
+              "b": "horarios con capacidad, además del orden de llegada."
+            },
+            {
+              "t": "Cartel",
+              "b": "con código QR, enlace corto y el color de tu marca."
+            }
+          ]
+        },
+        {
+          "label": "Para decidir mejor",
+          "items": [
+            {
+              "t": "Métricas",
+              "b": "de atención, espera y picos por hora."
+            },
+            {
+              "t": "Historial",
+              "b": "con calificaciones, exportable en CSV y PDF."
+            },
+            {
+              "t": "Grupos",
+              "b": "para organizar varias filas y verlas juntas."
+            },
+            {
+              "t": "Alertas",
+              "b": "cuando la espera crece o la fila se detiene."
+            }
+          ]
+        }
+      ]
+    },
+    "care": {
+      "title": "Hecho con cuidado",
+      "items": [
+        {
+          "t": "Sin cuenta para el cliente.",
+          "b": "Solo el nombre y, si quiere, el teléfono. El acceso es anónimo."
+        },
+        {
+          "t": "Teléfono protegido.",
+          "b": "El número queda solo con el local. Otros clientes nunca lo ven."
+        },
+        {
+          "t": "Historial con plazo.",
+          "b": "Las atenciones y calificaciones se borran a los 180 días, por defecto."
+        },
+        {
+          "t": "Derechos del titular.",
+          "b": "El dueño localiza, exporta y borra los datos de un cliente por teléfono."
+        },
+        {
+          "t": "Eliminación completa.",
+          "b": "Borra una fila o la cuenta entera, con sus datos."
+        },
+        {
+          "t": "Analytics sin datos personales.",
+          "b": "Con opción de desactivar y respeto a Do Not Track."
+        }
+      ],
+      "note": "Borrador técnico de privacidad, no es asesoría legal."
+    },
+    "closing": {
+      "title": "Tu fila lista en minutos.",
+      "sub": "Crea la fila, imprime el cartel con el código QR y empieza a llamar.",
+      "cta": "Crear mi fila",
+      "req": "Para el local: app Android o navegador. Para el cliente: solo un navegador."
+    },
+    "credit": "Qio es un proyecto de TCC."
   },
   "slug": {
     "opening": "Abriendo la fila...",

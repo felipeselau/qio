@@ -124,14 +124,177 @@
   },
   "landing": {
     "title": "Qio",
-    "tagline": "In-person queues, nothing to install.",
-    "about": "Qio manages a venue's waiting line right on your phone. You join from the browser, follow your position in real time and get notified when it is your turn.",
-    "howTitle": "How to join a queue",
-    "how": "Scan the venue's QR code or open the link it shared. No account and no app install needed.",
-    "ownerTitle": "Run a venue?",
-    "ownerLink": "Get the Qio app to create your queue",
     "documentTitle": "Qio — In-person queues, nothing to install",
-    "metaDescription": "Join a venue's queue from your phone without installing an app: scan the QR code and follow your position in real time."
+    "metaDescription": "Create your venue’s queue and get a QR code. Customers join from the browser with no app, follow their position in real time and are notified when it is their turn.",
+    "navCta": "Create queue",
+    "hero": {
+      "titleA": "In-person queues,",
+      "titleB": "nothing to install.",
+      "sub": "Customers scan the QR code, join from the browser and follow their position on their phone. You call the next one from the app.",
+      "cta": "Create my queue",
+      "how": "See how it works",
+      "note": "For customers: no account, no app, no sign-up."
+    },
+    "facts": {
+      "title": "Good to know",
+      "items": [
+        {
+          "t": "Nothing to install.",
+          "b": "Customers open the QR code link in the browser. It works on any phone."
+        },
+        {
+          "t": "Real time.",
+          "b": "Position and estimated wait update instantly, with no page reload."
+        },
+        {
+          "t": "Alerts at the right moment.",
+          "b": "When a ticket is called, the phone shows a screen, vibrates and can get a notification."
+        },
+        {
+          "t": "Your way.",
+          "b": "Portuguese, English and Spanish, with light and dark mode."
+        }
+      ]
+    },
+    "highlights": {
+      "title": "The highlights",
+      "items": [
+        {
+          "t": "Joining takes seconds.",
+          "b": "Scan the QR code or open the link, enter a name and you are in. No account, no app.",
+          "alt": "Join-the-queue screen on the customer’s phone"
+        },
+        {
+          "t": "Position always in view.",
+          "b": "The ticket, the position in line and the estimated wait stay on screen, updated in real time.",
+          "alt": "Ticket #5, 5th in line and an estimated 40-minute wait"
+        },
+        {
+          "t": "It is your turn.",
+          "b": "Full screen, sound and vibration when the ticket is called. Nobody misses a turn watching the counter.",
+          "alt": "Green \"It is your turn\" screen with the called ticket"
+        },
+        {
+          "t": "The dashboard for whoever serves.",
+          "b": "Call next, call again, mark served or no-show. The queue’s QR and link are one tap away.",
+          "alt": "Venue dashboard with QR code and Call next button"
+        },
+        {
+          "t": "Numbers that help you decide.",
+          "b": "Customers served, average wait, no-shows and peak hours for each queue.",
+          "alt": "Metrics screen with a demand peaks chart"
+        }
+      ]
+    },
+    "index": {
+      "title": "Explore everything",
+      "columns": [
+        {
+          "label": "For customers",
+          "items": [
+            {
+              "t": "QR code or link",
+              "b": "join with no account or app."
+            },
+            {
+              "t": "Position and wait",
+              "b": "estimated in real time."
+            },
+            {
+              "t": "Turn alert",
+              "b": "with screen, sound, vibration and notification."
+            },
+            {
+              "t": "Leave or rate",
+              "b": "give up the ticket or rate the service."
+            }
+          ]
+        },
+        {
+          "label": "For venues",
+          "items": [
+            {
+              "t": "Call",
+              "b": "the next one, call again or move to the end."
+            },
+            {
+              "t": "Operators",
+              "b": "join the queue with an invite code."
+            },
+            {
+              "t": "Pause and schedule",
+              "b": "closed, paused or by opening hours."
+            },
+            {
+              "t": "Appointment slots",
+              "b": "time slots with capacity, besides arrival order."
+            },
+            {
+              "t": "Poster",
+              "b": "with QR code, short link and your brand color."
+            }
+          ]
+        },
+        {
+          "label": "To decide better",
+          "items": [
+            {
+              "t": "Metrics",
+              "b": "for service, wait and peaks by hour."
+            },
+            {
+              "t": "History",
+              "b": "with ratings, exportable as CSV and PDF."
+            },
+            {
+              "t": "Groups",
+              "b": "to organize several queues and see them together."
+            },
+            {
+              "t": "Alerts",
+              "b": "when the wait grows or the line stalls."
+            }
+          ]
+        }
+      ]
+    },
+    "care": {
+      "title": "Built with care",
+      "items": [
+        {
+          "t": "No account for customers.",
+          "b": "Just a name and, optionally, a phone. Access is anonymous."
+        },
+        {
+          "t": "Phone kept private.",
+          "b": "The number stays with the venue. Other customers never see it."
+        },
+        {
+          "t": "History with an expiry.",
+          "b": "Visits and ratings are deleted after 180 days by default."
+        },
+        {
+          "t": "Data subject rights.",
+          "b": "The owner finds, exports and erases a customer’s data by phone."
+        },
+        {
+          "t": "Full deletion.",
+          "b": "Delete a queue or the whole account, with its data."
+        },
+        {
+          "t": "Analytics without personal data.",
+          "b": "With an opt-out and Do Not Track support."
+        }
+      ],
+      "note": "Technical privacy draft, not legal advice."
+    },
+    "closing": {
+      "title": "Your queue, ready in minutes.",
+      "sub": "Create the queue, print the QR code poster and start calling.",
+      "cta": "Create my queue",
+      "req": "For venues: Android app or browser. For customers: just a browser."
+    },
+    "credit": "Qio is a capstone project."
   },
   "slug": {
     "opening": "Opening the queue...",
