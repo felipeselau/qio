@@ -8,3 +8,5 @@ export function ownerAppUrl(raw: string | undefined): string | null {
     return null;
   }
 }
+
+export const OWNER_APP_FALLBACK_URL = 'https://qio-app.web.app';
