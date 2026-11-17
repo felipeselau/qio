@@ -19,8 +19,8 @@ describe('landing copy', () => {
     expect(shape(es.landing)).toEqual(shape(pt.landing));
   });
 
-  it('has one image alt per highlight', () => {
-    expect(pt.landing.highlights.items).toHaveLength(5);
-    for (const item of pt.landing.highlights.items) expect(item.alt.length).toBeGreaterThan(0);
+  it('has three steps per story', () => {
+    expect(pt.landing.stories.client.steps).toHaveLength(3);
+    expect(pt.landing.stories.owner.steps).toHaveLength(3);
   });
 });

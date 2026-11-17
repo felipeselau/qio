@@ -5,31 +5,35 @@ import { LANGUAGES, LANGUAGE_LABELS, setLanguage, type Language } from '../i18n'
 import { OWNER_APP_FALLBACK_URL, ownerAppUrl } from '../lib/landing';
 import { PRIVACY_PATH } from '../lib/privacy';
 import { useTheme } from '../lib/theme';
+import { Phone } from './landing/Phone';
+import { PanelScreen, TicketScreen } from './landing/screens';
+import { Story } from './landing/Story';
+import { useReveal } from './landing/useReveal';
+import './landing/landing.css';
 
 const appUrl =
   ownerAppUrl(import.meta.env.VITE_OWNER_APP_URL as string | undefined) ?? OWNER_APP_FALLBACK_URL;
 
 type Item = { t: string; b: string };
-type Highlight = Item & { alt: string };
 type Column = { label: string; items: Item[] };
-
-const HIGHLIGHT_IMAGES = ['join', 'ticket', 'called', 'panel', 'metrics'] as const;
-
-function Phone({ src, alt, className = '' }: { src: string; alt: string; className?: string }) {
-  return (
-    <div className={`lp-phone ${className}`.trim()}>
-      <img src={src} alt={alt} width={560} height={1064} loading="lazy" decoding="async" />
-    </div>
-  );
-}
+type Story = { eyebrow: string; title: string; steps: Item[] };
 
 function Symbol() {
   return (
-    <svg viewBox="46.5 46.5 433.5 433.5" aria-hidden="true" focusable="false" className="lp-symbol">
+    <svg viewBox="46.5 46.5 433.5 433.5" aria-hidden="true" focusable="false">
       <circle cx="225" cy="225" r="123" fill="none" stroke="currentColor" strokeWidth="51" />
       <circle cx="368" cy="368" r="34" fill="currentColor" />
       <circle cx="428" cy="428" r="22" fill="currentColor" opacity="0.6" />
     </svg>
+  );
+}
+
+function Reveal({ className = '', children }: { className?: string; children: React.ReactNode }) {
+  const ref = useReveal<HTMLDivElement>();
+  return (
+    <div ref={ref} className={`rv ${className}`.trim()}>
+      {children}
+    </div>
   );
 }
 
@@ -60,8 +64,9 @@ export default function Landing() {
     };
   }, [documentTitle, metaDescription, i18n.language]);
 
+  const client = t('landing.stories.client', { returnObjects: true }) as Story;
+  const owner = t('landing.stories.owner', { returnObjects: true }) as Story;
   const facts = t('landing.facts.items', { returnObjects: true }) as Item[];
-  const highlights = t('landing.highlights.items', { returnObjects: true }) as Highlight[];
   const columns = t('landing.index.columns', { returnObjects: true }) as Column[];
   const care = t('landing.care.items', { returnObjects: true }) as Item[];
 
@@ -69,8 +74,11 @@ export default function Landing() {
     <div className="lp">
       <header className="lp-nav">
         <a className="lp-brand" href="/" aria-label={t('landing.title')}>
-          <Symbol />
+          <span className="lp-tile">
+            <Symbol />
+          </span>
           <span>{t('landing.title')}</span>
+          <span className="lp-version">v1.6</span>
         </a>
         <div className="lp-nav-actions">
           <button
@@ -93,83 +101,93 @@ export default function Landing() {
               </option>
             ))}
           </select>
-          <a className="btn btn-primary lp-nav-cta" href={appUrl} rel="noopener noreferrer">
-            {t('landing.navCta')}
-          </a>
         </div>
       </header>
 
-      <main className="lp-main">
-        <section className="lp-hero" aria-labelledby="lp-hero-title">
-          <h1 id="lp-hero-title" className="lp-h1">
-            {t('landing.hero.titleA')} <em>{t('landing.hero.titleB')}</em>
-          </h1>
-          <p className="lp-sub">{t('landing.hero.sub')}</p>
-          <div className="lp-cta-row">
-            <a className="btn btn-primary lp-btn" href={appUrl} rel="noopener noreferrer">
-              {t('landing.hero.cta')}
-            </a>
-            <a className="btn btn-secondary lp-btn" href="#destaques">
-              {t('landing.hero.how')}
-            </a>
+      <main>
+        <section className="lp-hero" aria-labelledby="lp-title">
+          <div className="lp-hero-text">
+            <h1 id="lp-title" className="lp-wordmark">
+              {t('landing.title')}
+            </h1>
+            <h2 className="lp-tagline">
+              {t('landing.hero.titleA')} <span>{t('landing.hero.titleB')}</span>
+            </h2>
+            <p className="lp-lede">{t('landing.hero.sub')}</p>
+            <div className="lp-cta-row">
+              <a className="lp-cta" href={appUrl} rel="noopener noreferrer">
+                {t('landing.hero.cta')}
+              </a>
+              <a className="lp-cta lp-cta-ghost" href="#cliente">
+                {t('landing.hero.how')}
+              </a>
+            </div>
+            <p className="lp-note">{t('landing.hero.note')}</p>
           </div>
-          <p className="lp-note">{t('landing.hero.note')}</p>
-          <div className="lp-hero-visual" aria-hidden={false}>
-            <Phone
-              src="/landing/ticket.png"
-              alt={highlights[1]?.alt ?? ''}
-              className="lp-phone-side lp-phone-left lp-phone-crop"
-            />
-            <Phone src="/landing/panel.png" alt={highlights[3]?.alt ?? ''} className="lp-phone-main" />
-            <Phone
-              src="/landing/called.png"
-              alt={highlights[2]?.alt ?? ''}
-              className="lp-phone-side lp-phone-right"
-            />
+          <div className="lp-stage">
+            <div className="lp-dots" />
+            <Phone size={14} className="ph-back" label={t('landing.stories.client.steps.1.t')}>
+              <TicketScreen />
+            </Phone>
+            <Phone size={16} className="ph-front" label={t('landing.stories.owner.steps.1.t')}>
+              <PanelScreen />
+            </Phone>
+            <div className="lp-push" role="img" aria-label={t('landing.mock.push')}>
+              <span className="lp-tile">
+                <Symbol />
+              </span>
+              <div>
+                <b>
+                  {t('landing.title')} <i>{t('landing.mock.now')}</i>
+                </b>
+                <p>{t('landing.mock.push')}</p>
+              </div>
+            </div>
           </div>
         </section>
 
+        <Story
+          id="cliente"
+          eyebrow={client.eyebrow}
+          title={client.title}
+          steps={client.steps}
+          screens={['join', 'ticket', 'called']}
+        />
+        <Story
+          id="dono"
+          eyebrow={owner.eyebrow}
+          title={owner.title}
+          steps={owner.steps}
+          screens={['qr', 'panel', 'metrics']}
+          flip
+        />
+
         <section className="lp-section" aria-labelledby="lp-facts">
-          <h2 id="lp-facts" className="lp-eyebrow">
-            {t('landing.facts.title')}
-          </h2>
+          <Reveal className="lp-section-head">
+            <h2 id="lp-facts" className="lp-h2">
+              {t('landing.facts.title')}
+            </h2>
+          </Reveal>
           <ul className="lp-facts">
-            {facts.map((f) => (
-              <li key={f.t} className="lp-fact">
-                <strong>{f.t}</strong> {f.b}
+            {facts.map((f, i) => (
+              <li key={f.t} className="lp-fact rv-li">
+                <Reveal className={`rv-d${Math.min(i, 3)}`}>
+                  <strong>{f.t}</strong> {f.b}
+                </Reveal>
               </li>
             ))}
           </ul>
         </section>
 
-        <section id="destaques" className="lp-section lp-band" aria-labelledby="lp-highlights">
-          <h2 id="lp-highlights" className="lp-eyebrow">
-            {t('landing.highlights.title')}
-          </h2>
-          <div className="lp-features">
-            {highlights.map((h, i) => (
-              <article key={h.t} className={`lp-feature${i % 2 ? ' lp-feature-flip' : ''}`}>
-                <div className="lp-feature-text">
-                  <h3 className="lp-h3">{h.t}</h3>
-                  <p className="lp-p">{h.b}</p>
-                </div>
-                <Phone
-                  src={`/landing/${HIGHLIGHT_IMAGES[i]}.png`}
-                  alt={h.alt}
-                  className={i < 2 ? 'lp-phone-crop' : ''}
-                />
-              </article>
-            ))}
-          </div>
-        </section>
-
         <section className="lp-section" aria-labelledby="lp-index">
-          <h2 id="lp-index" className="lp-eyebrow">
-            {t('landing.index.title')}
-          </h2>
+          <Reveal className="lp-section-head">
+            <h2 id="lp-index" className="lp-h2">
+              {t('landing.index.title')}
+            </h2>
+          </Reveal>
           <div className="lp-index">
-            {columns.map((c) => (
-              <div key={c.label} className="lp-col">
+            {columns.map((c, i) => (
+              <Reveal key={c.label} className={`lp-col rv-d${i + 1}`}>
                 <h3 className="lp-col-label">{c.label}</h3>
                 <ul>
                   {c.items.map((it) => (
@@ -178,21 +196,23 @@ export default function Landing() {
                     </li>
                   ))}
                 </ul>
-              </div>
+              </Reveal>
             ))}
           </div>
         </section>
 
-        <section className="lp-section lp-band" aria-labelledby="lp-care">
-          <h2 id="lp-care" className="lp-eyebrow">
-            {t('landing.care.title')}
-          </h2>
+        <section className="lp-section" aria-labelledby="lp-care">
+          <Reveal className="lp-section-head">
+            <h2 id="lp-care" className="lp-h2">
+              {t('landing.care.title')}
+            </h2>
+          </Reveal>
           <div className="lp-cards">
-            {care.map((c) => (
-              <div key={c.t} className="lp-card">
+            {care.map((c, i) => (
+              <Reveal key={c.t} className={`lp-card rv-d${i % 3}`}>
                 <h3>{c.t}</h3>
                 <p>{c.b}</p>
-              </div>
+              </Reveal>
             ))}
           </div>
           <p className="lp-fine">
@@ -201,16 +221,21 @@ export default function Landing() {
         </section>
 
         <section className="lp-closing" aria-labelledby="lp-closing">
-          <Symbol />
-          <h2 id="lp-closing" className="lp-h2">
-            {t('landing.closing.title')}
-          </h2>
-          <p className="lp-sub">{t('landing.closing.sub')}</p>
-          <a className="btn btn-primary lp-btn" href={appUrl} rel="noopener noreferrer">
-            {t('landing.closing.cta')}
-          </a>
-          <p className="lp-fine">{t('landing.closing.req')}</p>
-          <p className="lp-fine">{t('landing.credit')}</p>
+          <Reveal className="lp-closing-card">
+            <div className="lp-dots" />
+            <span className="lp-tile">
+              <Symbol />
+            </span>
+            <h2 id="lp-closing" className="lp-h2">
+              {t('landing.closing.title')}
+            </h2>
+            <p className="lp-lede">{t('landing.closing.sub')}</p>
+            <a className="lp-cta" href={appUrl} rel="noopener noreferrer">
+              {t('landing.closing.cta')}
+            </a>
+            <p className="lp-fine">{t('landing.closing.req')}</p>
+            <p className="lp-fine">{t('landing.credit')}</p>
+          </Reveal>
         </section>
       </main>
     </div>
