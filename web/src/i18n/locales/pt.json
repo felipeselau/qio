@@ -130,10 +130,88 @@
     "hero": {
       "titleA": "Fila presencial,",
       "titleB": "sem instalar nada.",
-      "sub": "O cliente escaneia o QR code, entra na fila pelo navegador e acompanha a posição no celular. Você chama o próximo pelo app.",
+      "sub": "O cliente escaneia o QR code e entra na fila pelo navegador. Você chama o próximo pelo app.",
       "cta": "Criar minha fila",
       "how": "Ver como funciona",
       "note": "Para o cliente: sem conta, sem app, sem cadastro."
+    },
+    "stories": {
+      "client": {
+        "eyebrow": "Para quem espera",
+        "title": "Quem espera, acompanha.",
+        "steps": [
+          {
+            "t": "Escaneie e entre.",
+            "b": "O QR code do balcão abre a fila direto no navegador. Informe o nome e pronto: sem conta e sem app."
+          },
+          {
+            "t": "Veja a sua posição.",
+            "b": "Senha, posição e espera estimada ficam na tela e se atualizam sozinhas, em tempo real."
+          },
+          {
+            "t": "É a sua vez.",
+            "b": "Tela cheia, som e vibração quando a senha é chamada. Ninguém perde a vez de olho no balcão."
+          }
+        ]
+      },
+      "owner": {
+        "eyebrow": "Para quem atende",
+        "title": "Quem atende, controla.",
+        "steps": [
+          {
+            "t": "Crie a fila e imprima o QR.",
+            "b": "Em minutos você tem a fila, o link curto e um cartaz com a cor da sua marca."
+          },
+          {
+            "t": "Chame com um toque.",
+            "b": "Próximo, chamar de novo, atendido ou não compareceu. Operadores entram com um código de convite."
+          },
+          {
+            "t": "Entenda o seu movimento.",
+            "b": "Atendimentos, espera média, não comparecimentos e os horários de pico de cada fila."
+          }
+        ]
+      }
+    },
+    "mock": {
+      "clinic": "Clínica Vida",
+      "open": "Aberta",
+      "yourTicket": "Sua senha",
+      "position": "Posição",
+      "wait": "Espera estimada",
+      "waitValue": "~12 min",
+      "keepOpen": "Mantenha esta página aberta. Você será avisado quando chegar a sua vez.",
+      "leave": "Sair da fila",
+      "yourTurn": "É a sua vez!",
+      "ticket": "Senha",
+      "goTo": "Dirija-se ao atendimento.",
+      "joinHint": "Consulta geral — ordem de chegada",
+      "name": "Nome",
+      "namePh": "Seu nome",
+      "phone": "Telefone",
+      "join": "Entrar na fila",
+      "scan": "Escaneie para entrar na fila",
+      "copyLink": "Copiar link",
+      "share": "Compartilhar",
+      "poster": "Cartaz para impressão",
+      "calling": "Chamando agora",
+      "callAgain": "Chamar de novo",
+      "next": "Próximos na fila",
+      "callNext": "Chamar próximo",
+      "served": "Atendido",
+      "noShow": "Não compareceu",
+      "metrics": "Métricas",
+      "today": "Hoje",
+      "week": "7 dias",
+      "all": "Tudo",
+      "servedLabel": "Atendimentos",
+      "noShowLabel": "Não compareceram",
+      "avgWait": "Espera média",
+      "avgService": "Atendimento médio",
+      "peaks": "Picos de demanda",
+      "peakHours": "Horários mais cheios: 14h, 15h, 09h",
+      "push": "Sua senha foi chamada. Dirija-se ao atendimento.",
+      "now": "agora"
     },
     "facts": {
       "title": "Bom saber",
@@ -153,36 +231,6 @@
         {
           "t": "Do seu jeito.",
           "b": "Português, inglês e espanhol, com modo claro e escuro."
-        }
-      ]
-    },
-    "highlights": {
-      "title": "Os destaques",
-      "items": [
-        {
-          "t": "Entrada em segundos.",
-          "b": "Escaneie o QR code ou abra o link, informe o nome e pronto. Sem conta e sem app.",
-          "alt": "Tela de entrada na fila no celular do cliente"
-        },
-        {
-          "t": "Posição sempre à vista.",
-          "b": "A senha, a posição na fila e a espera estimada ficam na tela, atualizadas em tempo real.",
-          "alt": "Senha #5, posição 5º e espera estimada de 40 minutos"
-        },
-        {
-          "t": "É a sua vez.",
-          "b": "Tela cheia, som e vibração quando a senha é chamada. Ninguém perde a vez de olho no balcão.",
-          "alt": "Tela verde \"É a sua vez\" com a senha chamada"
-        },
-        {
-          "t": "O painel de quem atende.",
-          "b": "Chame o próximo, chame de novo, marque atendido ou não compareceu. QR e link da fila a um toque.",
-          "alt": "Painel do estabelecimento com QR code e botão Chamar próximo"
-        },
-        {
-          "t": "Números que ajudam a decidir.",
-          "b": "Atendimentos, espera média, não comparecimentos e os horários de pico de cada fila.",
-          "alt": "Tela de métricas com gráfico de picos de demanda"
         }
       ]
     },

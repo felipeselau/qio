@@ -130,10 +130,88 @@
     "hero": {
       "titleA": "Fila presencial,",
       "titleB": "sin instalar nada.",
-      "sub": "El cliente escanea el código QR, entra en la fila desde el navegador y sigue su posición en el celular. Tú llamas al siguiente desde la app.",
+      "sub": "El cliente escanea el código QR y entra en la fila desde el navegador. Tú llamas al siguiente desde la app.",
       "cta": "Crear mi fila",
       "how": "Ver cómo funciona",
       "note": "Para el cliente: sin cuenta, sin app, sin registro."
+    },
+    "stories": {
+      "client": {
+        "eyebrow": "Para quien espera",
+        "title": "Quien espera, se mantiene al tanto.",
+        "steps": [
+          {
+            "t": "Escanea y entra.",
+            "b": "El código QR del mostrador abre la fila en el navegador. Escribe tu nombre y listo: sin cuenta y sin app."
+          },
+          {
+            "t": "Mira tu posición.",
+            "b": "Turno, posición y espera estimada quedan en pantalla y se actualizan solos, en tiempo real."
+          },
+          {
+            "t": "Es tu turno.",
+            "b": "Pantalla completa, sonido y vibración cuando se llama el turno. Nadie lo pierde mirando el mostrador."
+          }
+        ]
+      },
+      "owner": {
+        "eyebrow": "Para quien atiende",
+        "title": "Quien atiende, tiene el control.",
+        "steps": [
+          {
+            "t": "Crea la fila e imprime el QR.",
+            "b": "En minutos tienes la fila, el enlace corto y un cartel con el color de tu marca."
+          },
+          {
+            "t": "Llama con un toque.",
+            "b": "Siguiente, llamar de nuevo, atendido o no se presentó. Los operadores entran con un código de invitación."
+          },
+          {
+            "t": "Entiende tu movimiento.",
+            "b": "Atenciones, espera promedio, ausencias y horas pico de cada fila."
+          }
+        ]
+      }
+    },
+    "mock": {
+      "clinic": "Clínica Vida",
+      "open": "Abierta",
+      "yourTicket": "Tu turno",
+      "position": "Posición",
+      "wait": "Espera estimada",
+      "waitValue": "~12 min",
+      "keepOpen": "Mantén esta página abierta. Te avisaremos cuando sea tu turno.",
+      "leave": "Salir de la fila",
+      "yourTurn": "¡Es tu turno!",
+      "ticket": "Turno",
+      "goTo": "Dirígete a la atención.",
+      "joinHint": "Consulta general — orden de llegada",
+      "name": "Nombre",
+      "namePh": "Tu nombre",
+      "phone": "Teléfono",
+      "join": "Entrar en la fila",
+      "scan": "Escanea para entrar en la fila",
+      "copyLink": "Copiar enlace",
+      "share": "Compartir",
+      "poster": "Cartel para imprimir",
+      "calling": "Llamando ahora",
+      "callAgain": "Llamar de nuevo",
+      "next": "Siguientes en la fila",
+      "callNext": "Llamar siguiente",
+      "served": "Atendido",
+      "noShow": "No se presentó",
+      "metrics": "Métricas",
+      "today": "Hoy",
+      "week": "7 días",
+      "all": "Todo",
+      "servedLabel": "Atenciones",
+      "noShowLabel": "No se presentaron",
+      "avgWait": "Espera promedio",
+      "avgService": "Atención promedio",
+      "peaks": "Picos de demanda",
+      "peakHours": "Horas más llenas: 14h, 15h, 09h",
+      "push": "Tu turno fue llamado. Dirígete a la atención.",
+      "now": "ahora"
     },
     "facts": {
       "title": "Bueno saber",
@@ -153,36 +231,6 @@
         {
           "t": "A tu manera.",
           "b": "Portugués, inglés y español, con modo claro y oscuro."
-        }
-      ]
-    },
-    "highlights": {
-      "title": "Lo destacado",
-      "items": [
-        {
-          "t": "Entrar toma segundos.",
-          "b": "Escanea el código QR o abre el enlace, escribe tu nombre y listo. Sin cuenta y sin app.",
-          "alt": "Pantalla para entrar en la fila en el celular del cliente"
-        },
-        {
-          "t": "Posición siempre a la vista.",
-          "b": "El turno, la posición en la fila y la espera estimada quedan en pantalla, en tiempo real.",
-          "alt": "Turno #5, posición 5.º y espera estimada de 40 minutos"
-        },
-        {
-          "t": "Es tu turno.",
-          "b": "Pantalla completa, sonido y vibración cuando se llama el turno. Nadie lo pierde mirando el mostrador.",
-          "alt": "Pantalla verde \"Es tu turno\" con el turno llamado"
-        },
-        {
-          "t": "El panel de quien atiende.",
-          "b": "Llama al siguiente, llama de nuevo, marca atendido o no se presentó. El QR y el enlace a un toque.",
-          "alt": "Panel del local con código QR y botón Llamar siguiente"
-        },
-        {
-          "t": "Números que ayudan a decidir.",
-          "b": "Atenciones, espera promedio, ausencias y horas pico de cada fila.",
-          "alt": "Pantalla de métricas con gráfico de picos de demanda"
         }
       ]
     },

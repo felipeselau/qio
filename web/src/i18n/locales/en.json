@@ -130,10 +130,88 @@
     "hero": {
       "titleA": "In-person queues,",
       "titleB": "nothing to install.",
-      "sub": "Customers scan the QR code, join from the browser and follow their position on their phone. You call the next one from the app.",
+      "sub": "Customers scan the QR code and join the queue from the browser. You call the next one from the app.",
       "cta": "Create my queue",
       "how": "See how it works",
       "note": "For customers: no account, no app, no sign-up."
+    },
+    "stories": {
+      "client": {
+        "eyebrow": "For whoever waits",
+        "title": "Those who wait stay in the loop.",
+        "steps": [
+          {
+            "t": "Scan and join.",
+            "b": "The counter’s QR code opens the queue right in the browser. Enter a name and you are in: no account, no app."
+          },
+          {
+            "t": "See your position.",
+            "b": "Ticket, position and estimated wait stay on screen and update on their own, in real time."
+          },
+          {
+            "t": "It is your turn.",
+            "b": "Full screen, sound and vibration when the ticket is called. Nobody misses a turn watching the counter."
+          }
+        ]
+      },
+      "owner": {
+        "eyebrow": "For whoever serves",
+        "title": "Those who serve stay in control.",
+        "steps": [
+          {
+            "t": "Create the queue, print the QR.",
+            "b": "In minutes you have the queue, a short link and a poster in your brand color."
+          },
+          {
+            "t": "Call with one tap.",
+            "b": "Next, call again, served or no-show. Operators join with an invite code."
+          },
+          {
+            "t": "Understand your flow.",
+            "b": "Customers served, average wait, no-shows and peak hours for each queue."
+          }
+        ]
+      }
+    },
+    "mock": {
+      "clinic": "Vida Clinic",
+      "open": "Open",
+      "yourTicket": "Your ticket",
+      "position": "Position",
+      "wait": "Estimated wait",
+      "waitValue": "~12 min",
+      "keepOpen": "Keep this page open. You will be notified when it is your turn.",
+      "leave": "Leave queue",
+      "yourTurn": "It is your turn!",
+      "ticket": "Ticket",
+      "goTo": "Please go to the counter.",
+      "joinHint": "General visit — order of arrival",
+      "name": "Name",
+      "namePh": "Your name",
+      "phone": "Phone",
+      "join": "Join the queue",
+      "scan": "Scan to join the queue",
+      "copyLink": "Copy link",
+      "share": "Share",
+      "poster": "Printable poster",
+      "calling": "Calling now",
+      "callAgain": "Call again",
+      "next": "Next in line",
+      "callNext": "Call next",
+      "served": "Served",
+      "noShow": "No-show",
+      "metrics": "Metrics",
+      "today": "Today",
+      "week": "7 days",
+      "all": "All",
+      "servedLabel": "Served",
+      "noShowLabel": "No-shows",
+      "avgWait": "Average wait",
+      "avgService": "Average service",
+      "peaks": "Demand peaks",
+      "peakHours": "Busiest hours: 2pm, 3pm, 9am",
+      "push": "Your ticket was called. Please go to the counter.",
+      "now": "now"
     },
     "facts": {
       "title": "Good to know",
@@ -153,36 +231,6 @@
         {
           "t": "Your way.",
           "b": "Portuguese, English and Spanish, with light and dark mode."
-        }
-      ]
-    },
-    "highlights": {
-      "title": "The highlights",
-      "items": [
-        {
-          "t": "Joining takes seconds.",
-          "b": "Scan the QR code or open the link, enter a name and you are in. No account, no app.",
-          "alt": "Join-the-queue screen on the customer’s phone"
-        },
-        {
-          "t": "Position always in view.",
-          "b": "The ticket, the position in line and the estimated wait stay on screen, updated in real time.",
-          "alt": "Ticket #5, 5th in line and an estimated 40-minute wait"
-        },
-        {
-          "t": "It is your turn.",
-          "b": "Full screen, sound and vibration when the ticket is called. Nobody misses a turn watching the counter.",
-          "alt": "Green \"It is your turn\" screen with the called ticket"
-        },
-        {
-          "t": "The dashboard for whoever serves.",
-          "b": "Call next, call again, mark served or no-show. The queue’s QR and link are one tap away.",
-          "alt": "Venue dashboard with QR code and Call next button"
-        },
-        {
-          "t": "Numbers that help you decide.",
-          "b": "Customers served, average wait, no-shows and peak hours for each queue.",
-          "alt": "Metrics screen with a demand peaks chart"
         }
       ]
     },
