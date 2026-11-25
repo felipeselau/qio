@@ -2506,4 +2506,1044 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get colQueue => 'Queue';
+
+  @override
+  String infoButtonSemantics(String name) {
+    return 'About this indicator: $name';
+  }
+
+  @override
+  String get infoWhat => 'What it is';
+
+  @override
+  String get infoHow => 'How it is calculated';
+
+  @override
+  String get infoData => 'Data used';
+
+  @override
+  String get infoUse => 'What it is for';
+
+  @override
+  String get infoClose => 'Close';
+
+  @override
+  String get attColService => 'Avg. time';
+
+  @override
+  String get attColDeviation => 'Deviation';
+
+  @override
+  String get attColRate => 'Served/h';
+
+  @override
+  String get attColIdle => 'Idle';
+
+  @override
+  String attInsufficientNote(int samples) {
+    return '— means not enough data (fewer than $samples served or a short window).';
+  }
+
+  @override
+  String attRowSpoken(
+    String name,
+    int served,
+    String service,
+    String deviation,
+    String rate,
+    String idle,
+    int noShow,
+    String rating,
+  ) {
+    return '$name. $served served, average time $service, deviation $deviation, $rate served per hour, idle $idle, $noShow no-shows, rating $rating';
+  }
+
+  @override
+  String get attChartTitleHour => 'Served by hour of day';
+
+  @override
+  String get attChartTitleShift => 'Served by shift';
+
+  @override
+  String get attChartModeHour => 'Hour';
+
+  @override
+  String get attChartModeShift => 'Shift';
+
+  @override
+  String get attChartOperatorLabel => 'Chart attendant';
+
+  @override
+  String get attChartAll => 'All attendants';
+
+  @override
+  String get attChartEmpty => 'No completed service for this chart.';
+
+  @override
+  String attChartPeak(String label, int count) {
+    return 'Most served: $label ($count)';
+  }
+
+  @override
+  String attChartSemantics(String summary) {
+    return 'Served chart. $summary';
+  }
+
+  @override
+  String get attShiftMorning => 'Morning (6am–12pm)';
+
+  @override
+  String get attShiftAfternoon => 'Afternoon (12pm–6pm)';
+
+  @override
+  String get attShiftNight => 'Night (6pm–6am)';
+
+  @override
+  String get csvDeviationPct => 'deviation vs average (%)';
+
+  @override
+  String get csvRatePerHour => 'served per hour (activity window)';
+
+  @override
+  String get csvIdlePct => 'idle (%)';
+
+  @override
+  String get abandonTitle => 'Abandonment';
+
+  @override
+  String get abandonSubtitle =>
+      'People who joined and left before being served. Automatic removals (expiry and closing) are not counted.';
+
+  @override
+  String abandonBand(int start, int end) {
+    return '$start–$end min';
+  }
+
+  @override
+  String abandonBandOpen(int start) {
+    return '$start+ min';
+  }
+
+  @override
+  String get abandonWaitTitle => 'Rate by wait band';
+
+  @override
+  String get abandonWaitHint =>
+      'Abandonment per 10 min of waiting, among those who reached each band.';
+
+  @override
+  String abandonWaitEmpty(int min) {
+    return 'Not enough data: each band needs at least $min people to show a rate.';
+  }
+
+  @override
+  String abandonBarSpoken(String band, int pct) {
+    return '$band: $pct% per 10 min';
+  }
+
+  @override
+  String abandonBarNoData(String band) {
+    return '$band: not enough data';
+  }
+
+  @override
+  String abandonInflectionFound(String band, int limit) {
+    return 'Inflection point: from $band on, abandonment exceeds $limit% per 10 min.';
+  }
+
+  @override
+  String abandonInflectionNone(int limit) {
+    return 'No band exceeds the $limit% per 10 min limit.';
+  }
+
+  @override
+  String get abandonEstimateTitle => 'Rate by estimate shown';
+
+  @override
+  String get abandonEstimateHint =>
+      'Share who left according to the estimate the customer saw when joining.';
+
+  @override
+  String get abandonEstimateEmpty =>
+      'No records with the estimate shown at joining yet. History from before the update that stores the estimate does not have this data.';
+
+  @override
+  String abandonEstimateBarSpoken(String band, int pct) {
+    return 'Estimate $band: $pct% left';
+  }
+
+  @override
+  String abandonEstimateBarNoData(String band) {
+    return 'Estimate $band: not enough data';
+  }
+
+  @override
+  String get estimateAccuracyTitle => 'Estimate accuracy';
+
+  @override
+  String estimateAccuracyMean(String value, int samples) {
+    return 'Actual wait minus estimate: $value min on average ($samples served)';
+  }
+
+  @override
+  String estimateAccuracyAbs(String value) {
+    return 'Mean absolute error: $value min';
+  }
+
+  @override
+  String get estimateAccuracyHint =>
+      'Positive: the wait was longer than promised.';
+
+  @override
+  String estimateAccuracyNone(int min) {
+    return 'Not enough data: $min served entries with a stored estimate are needed.';
+  }
+
+  @override
+  String get abandonHourTitle => 'Abandonment by arrival hour';
+
+  @override
+  String get abandonHourRateLabel => 'Rate';
+
+  @override
+  String get abandonHourCountLabel => 'Left';
+
+  @override
+  String abandonHourEmpty(int min) {
+    return 'Not enough data: each hour needs at least $min people to show a rate.';
+  }
+
+  @override
+  String abandonHourPeak(String hour, int pct, int left, int total) {
+    return 'Highest rate at $hour: $pct% ($left of $total)';
+  }
+
+  @override
+  String abandonHourSpoken(String hour, int pct, int left, int total) {
+    return '$hour: $pct% left ($left of $total)';
+  }
+
+  @override
+  String abandonHourNoRate(String hour, int left, int total) {
+    return '$hour: $left of $total, rate with not enough data';
+  }
+
+  @override
+  String get capacityCardTitle => 'Possible capacity shortage';
+
+  @override
+  String capacityCardBody(String hours, int wait, int rate) {
+    return 'At these hours the average wait is $wait min or more and $rate% or more leave: $hours. Consider adding staff.';
+  }
+
+  @override
+  String get capacityCardNone => 'No critical hours in the period';
+
+  @override
+  String get csvWaitBand => 'wait band (min)';
+
+  @override
+  String get csvEstimateBand => 'estimate band (min)';
+
+  @override
+  String get csvAtRisk => 'reached the band';
+
+  @override
+  String get csvAbandonRatePct => 'abandonment (%)';
+
+  @override
+  String get csvAbandonPer10Pct => 'abandonment per 10 min (%)';
+
+  @override
+  String get csvInflection => 'inflection point';
+
+  @override
+  String get csvCapacityHours => 'hours with capacity signal';
+
+  @override
+  String get csvEstimateErrorMin => 'mean estimate error (min)';
+
+  @override
+  String get csvEstimateAbsErrorMin => 'mean absolute estimate error (min)';
+
+  @override
+  String get biNameAttendantThroughput => 'Served by hour and shift';
+
+  @override
+  String get biWhatAttendantThroughput =>
+      'How many services each attendant completed, spread by hour of day (0 to 23) and by shift (morning 6am–12pm, afternoon 12pm–6pm, night 6pm–6am).';
+
+  @override
+  String get biHowAttendantThroughput =>
+      'Counts served entries grouped by the moment they finished (or were called, if the finish is missing), converted to São Paulo time. No-shows and abandonments are not counted.';
+
+  @override
+  String get biDataAttendantThroughput =>
+      'Result, finish time, call time and who called.';
+
+  @override
+  String get biUseAttendantThroughput =>
+      'See at which hours and shifts each person concentrates work and plan schedules.';
+
+  @override
+  String get biNameAttendantService => 'Average service time';
+
+  @override
+  String get biWhatAttendantService =>
+      'How long, on average, the attendant takes between calling the customer and finishing the service.';
+
+  @override
+  String biHowAttendantService(int min) {
+    return 'Average of (finish − call) for served entries. With fewer than $min valid samples the value is not shown (—).';
+  }
+
+  @override
+  String get biDataAttendantService =>
+      'Call time, finish time and the “served” result.';
+
+  @override
+  String get biUseAttendantService =>
+      'Know each person’s real pace and adjust the average time configured for the queue.';
+
+  @override
+  String get biNameAttendantDeviation => 'Deviation from average';
+
+  @override
+  String get biWhatAttendantDeviation =>
+      'How far the attendant’s average time is from everyone’s average in the selected scope. Negative means faster.';
+
+  @override
+  String biHowAttendantDeviation(int min) {
+    return '(attendant average − scope average) ÷ scope average × 100. The scope average is weighted by samples. Only attendants with at least $min samples take part; others show —.';
+  }
+
+  @override
+  String get biDataAttendantDeviation =>
+      'Service time of each attendant’s served entries.';
+
+  @override
+  String get biUseAttendantDeviation =>
+      'Spot who differs from the norm, for training or reviewing the average time. It does not measure quality: a longer service may be more complex.';
+
+  @override
+  String get biNameAttendantRate => 'Served per hour in the activity window';
+
+  @override
+  String get biWhatAttendantRate =>
+      'The attendant’s pace within the window in which they worked that day. Breaks and gaps between services are inside the window; it is not hours actually worked.';
+
+  @override
+  String biHowAttendantRate(int min, int window) {
+    return 'Per day: served ÷ hours between the first call and the last finish. A day counts only with $min or more services and a window of at least $window min. The value shown adds services and hours of valid days.';
+  }
+
+  @override
+  String get biDataAttendantRate =>
+      'Call time, finish time, result and who called.';
+
+  @override
+  String get biUseAttendantRate =>
+      'Compare productivity without the bias of people who worked few hours.';
+
+  @override
+  String get biNameAttendantIdle => 'Idle time';
+
+  @override
+  String get biWhatAttendantIdle =>
+      'Share of time the attendant stood idle while people were waiting.';
+
+  @override
+  String biHowAttendantIdle(int cap, int min) {
+    return 'Sum of the gaps between the end of one service and the next call, ÷ time observed in the day. A gap counts only if the next customer was already in the queue, is greater than zero and at most $cap min (longer is assumed to be a break) and falls on the same day. Shown only with at least $min completed services.';
+  }
+
+  @override
+  String get biDataAttendantIdle =>
+      'Queue join time, call time and finish time. It is an approximation: the history does not store the queue size at each moment.';
+
+  @override
+  String get biUseAttendantIdle =>
+      'Find time lost between services (slow switching, distraction), separated from an empty queue.';
+
+  @override
+  String get biNameAbandonWait => 'Abandonment by wait band';
+
+  @override
+  String get biWhatAbandonWait =>
+      'Of those who waited at least up to a point, the fraction who left in that band.';
+
+  @override
+  String biHowAbandonWait(String bands, int min) {
+    return 'Bands of $bands min. In each band: people who left in the band ÷ people who reached it (including those who waited longer and were served). Bars show the rate per 10 min (capped at 100%; bands narrower than 5 min use 5 min as the divisor), so bands of different widths can be compared. A band with fewer than $min people shows no rate.';
+  }
+
+  @override
+  String get biDataAbandonWait =>
+      'Result, join, call and finish times, and exit reason. System removals (expired or closed) are excluded. People still in the queue do not appear, so recent long waits may be under-represented.';
+
+  @override
+  String get biUseAbandonWait =>
+      'Show from which wait the customer starts to leave.';
+
+  @override
+  String get biNameAbandonInflection => 'Inflection point';
+
+  @override
+  String get biWhatAbandonInflection =>
+      'The first wait band in which abandonment goes beyond the tolerable.';
+
+  @override
+  String biHowAbandonInflection(int limit) {
+    return 'First band, in ascending order, with more than $limit% abandonment per 10 minutes. Bands without a rate (not enough data) are skipped. If none passes, there is no inflection point.';
+  }
+
+  @override
+  String get biDataAbandonInflection => 'The same rate by wait band.';
+
+  @override
+  String get biUseAbandonInflection =>
+      'Define the maximum wait target and the warning text shown to the customer.';
+
+  @override
+  String get biNameAbandonEstimate => 'Abandonment by estimate shown';
+
+  @override
+  String get biWhatAbandonEstimate =>
+      'The abandonment rate split by the wait estimate the customer saw when joining.';
+
+  @override
+  String biHowAbandonEstimate(String bands, int min) {
+    return 'Groups by estimate ($bands min): people who left ÷ total people who saw that estimate. A band with fewer than $min people shows no rate.';
+  }
+
+  @override
+  String get biDataAbandonEstimate =>
+      'Estimate stored at joining and result. Records from before the update that stores the estimate lack the field and are excluded.';
+
+  @override
+  String get biUseAbandonEstimate =>
+      'Learn whether promising a long wait drives customers away, and whether to show the estimate differently.';
+
+  @override
+  String get biNameEstimateAccuracy => 'Estimate accuracy';
+
+  @override
+  String get biWhatEstimateAccuracy =>
+      'How far off the estimate shown to the customer was, in minutes.';
+
+  @override
+  String biHowEstimateAccuracy(int min) {
+    return 'Average of (actual wait − estimate) for served and no-show entries. Positive: the wait was longer than promised. It also shows the mean absolute error, which keeps positive and negative errors from cancelling out. Fewer than $min samples: not calculated.';
+  }
+
+  @override
+  String get biDataEstimateAccuracy =>
+      'Estimate stored at joining, join time and call time. Records from before the estimate was stored are excluded.';
+
+  @override
+  String get biUseEstimateAccuracy =>
+      'Assess whether the configured average time reflects reality and when to adjust it.';
+
+  @override
+  String get biNameAbandonHour => 'Abandonment by arrival hour';
+
+  @override
+  String get biWhatAbandonHour =>
+      'The rate and number of abandonments by the hour the person joined the queue.';
+
+  @override
+  String biHowAbandonHour(int min) {
+    return 'Groups by join hour (São Paulo time). Rate = people who left ÷ (served + no-show + left). An hour with fewer than $min people shows no rate, but the count still appears.';
+  }
+
+  @override
+  String get biDataAbandonHour =>
+      'Result, join time, wait and exit reason. System removals are excluded.';
+
+  @override
+  String get biUseAbandonHour => 'Locate problematic peak hours.';
+
+  @override
+  String get biNameCapacitySignal => 'Capacity signal';
+
+  @override
+  String get biWhatCapacitySignal =>
+      'The hours in which the queue seems undersized.';
+
+  @override
+  String biHowCapacitySignal(int wait, int rate) {
+    return 'Hours with an average wait of $wait min or more and an abandonment rate of $rate% or more. Hours without a rate (not enough data) are not included.';
+  }
+
+  @override
+  String get biDataCapacitySignal =>
+      'Abandonment by arrival hour and the average wait of each hour.';
+
+  @override
+  String get biUseCapacitySignal =>
+      'Indicate where to add attendants or adjust schedules.';
+
+  @override
+  String abandonBarCounts(int left, int total) {
+    return '$left of $total left';
+  }
+
+  @override
+  String abandonScopeQueue(String name) {
+    return 'Queue: $name (filter from the By attendant section)';
+  }
+
+  @override
+  String get goalsTitle => 'Service goals';
+
+  @override
+  String get goalsNone => 'No goals set';
+
+  @override
+  String goalsValueWait(int min) {
+    return 'Wait up to $min min';
+  }
+
+  @override
+  String goalsValueService(int min) {
+    return 'Service up to $min min';
+  }
+
+  @override
+  String goalsValueTarget(int pct) {
+    return 'target $pct%';
+  }
+
+  @override
+  String get goalsDialogHint =>
+      'Set the acceptable time and the share of people who should meet the goal. Leave blank what you do not want to measure.';
+
+  @override
+  String get goalsWaitLabel => 'Maximum wait (min)';
+
+  @override
+  String get goalsServiceLabel => 'Maximum service time (min)';
+
+  @override
+  String get goalsTargetLabel => 'Compliance target (%)';
+
+  @override
+  String goalsTargetHint(int pct) {
+    return 'Default $pct';
+  }
+
+  @override
+  String goalsErrRange(int min, int max) {
+    return 'Enter $min to $max minutes.';
+  }
+
+  @override
+  String goalsErrTarget(int min, int max) {
+    return 'Enter $min to $max%.';
+  }
+
+  @override
+  String get goalsErrNone => 'Set at least one goal: wait or service time.';
+
+  @override
+  String get goalsRemove => 'Remove goals';
+
+  @override
+  String get goalRiskTitle => 'Wait goal at risk';
+
+  @override
+  String goalRiskBody(int waiting, int est, int goal) {
+    return 'With $waiting in the queue, the estimated wait is $est min, above the $goal min goal.';
+  }
+
+  @override
+  String get goalRiskAction =>
+      'Suggestion: bring in another attendant or open another counter.';
+
+  @override
+  String get goalsSectionTitle => 'Goals';
+
+  @override
+  String get goalsSectionSubtitle =>
+      'How well the goals set on each queue were met, for the chosen period and scope.';
+
+  @override
+  String goalsQueuesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Goals from $count queues in scope',
+      one: 'Goal from 1 queue in scope',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get goalsWaitCardTitle => 'Wait within goal';
+
+  @override
+  String get goalsServiceCardTitle => 'Service within goal';
+
+  @override
+  String goalsTargetLine(int pct) {
+    return 'Target: $pct% within the limit';
+  }
+
+  @override
+  String goalsCounts(int ok, int total) {
+    return '$ok of $total within the limit';
+  }
+
+  @override
+  String get goalsMet => 'Met';
+
+  @override
+  String get goalsNotMet => 'Not met';
+
+  @override
+  String goalsSmallSample(int min) {
+    return 'Small sample: fewer than $min evaluated.';
+  }
+
+  @override
+  String get goalsNoSamples => 'Nothing in the period to evaluate this goal.';
+
+  @override
+  String get goalsNotSet => 'No queue in scope has this goal.';
+
+  @override
+  String get goalsDailyTitle => 'Compliance by day';
+
+  @override
+  String goalsDailySemantics(int days, int missed) {
+    return '$days days evaluated, $missed below target';
+  }
+
+  @override
+  String get goalsMissedTitle => 'Periods when the goal was not met';
+
+  @override
+  String goalsMissedNone(int min) {
+    return 'No day or hour below target with at least $min evaluated.';
+  }
+
+  @override
+  String get goalsKindWait => 'Wait';
+
+  @override
+  String get goalsKindService => 'Service';
+
+  @override
+  String goalsMissedDayRow(
+    String kind,
+    String day,
+    int pct,
+    int ok,
+    int total,
+    int target,
+  ) {
+    return '$kind, $day: $pct% ($ok of $total), target $target%';
+  }
+
+  @override
+  String goalsMissedHoursRow(String kind, String hours) {
+    return '$kind, hours below target: $hours';
+  }
+
+  @override
+  String goalsMissedMore(int count) {
+    return 'and $count more days';
+  }
+
+  @override
+  String goalsWorstWait(int over, String day) {
+    return 'Worst wait violation: $over min over the goal, on $day.';
+  }
+
+  @override
+  String goalsWorstService(int over, String day) {
+    return 'Worst service violation: $over min over the goal, on $day.';
+  }
+
+  @override
+  String get goalsNoViolation => 'No violations in the period.';
+
+  @override
+  String get goalsCtaTitle => 'Set service goals';
+
+  @override
+  String get goalsCtaBody =>
+      'No queue in this scope has goals. Open the queue, go to Settings and use Service goals to track compliance here.';
+
+  @override
+  String get staffTitle => 'Staff planning';
+
+  @override
+  String get staffSubtitle =>
+      'How many attendants each day and hour require, compared with who actually served.';
+
+  @override
+  String staffServiceTime(String min, int samples) {
+    return 'Average service time: $min min ($samples services)';
+  }
+
+  @override
+  String staffServiceNone(int min) {
+    return 'Average time unavailable: at least $min completed services are needed.';
+  }
+
+  @override
+  String staffOccupancy(int pct) {
+    return 'Target occupancy: $pct%';
+  }
+
+  @override
+  String staffCoverage(int days) {
+    return 'Basis: $days days of data';
+  }
+
+  @override
+  String get staffModeRequired => 'Recommended';
+
+  @override
+  String get staffModeObserved => 'Observed';
+
+  @override
+  String get staffModeGap => 'Difference';
+
+  @override
+  String get staffGridTitle => 'Attendants by day and hour';
+
+  @override
+  String staffHintRequired(int pct) {
+    return 'Attendants recommended to absorb the average demand at $pct% target occupancy.';
+  }
+
+  @override
+  String get staffHintObserved =>
+      'Average number of distinct attendants who served in each day and hour.';
+
+  @override
+  String get staffHintGap =>
+      'Recommended minus observed. Positive: understaffed. Negative: spare capacity.';
+
+  @override
+  String get staffLegendDeficit => 'Short';
+
+  @override
+  String get staffLegendOk => 'Balanced';
+
+  @override
+  String get staffLegendSurplus => 'Spare';
+
+  @override
+  String staffCellSpoken(
+    String day,
+    String hour,
+    int required,
+    String observed,
+  ) {
+    return '$day $hour: recommended $required, observed $observed';
+  }
+
+  @override
+  String staffGridSpoken(String mode, String top) {
+    return 'Attendants grid by weekday and hour, $mode mode. $top';
+  }
+
+  @override
+  String get staffTopTitle => 'Largest shortfalls';
+
+  @override
+  String staffTopRow(String day, String hour, int required, String observed) {
+    return '$day $hour: needs $required, has $observed';
+  }
+
+  @override
+  String get staffTopNone =>
+      'No shortfall: the observed team covers the recommended demand.';
+
+  @override
+  String get staffNoData => 'No arrivals in the period to size the team.';
+
+  @override
+  String get staffSeasonTitle => 'Weekly volume and seasonality';
+
+  @override
+  String staffSeasonInsufficient(int need, int have) {
+    return 'Not enough data: at least $need complete weeks with data are needed ($have so far).';
+  }
+
+  @override
+  String staffTrendUp(String pct) {
+    return 'Upward trend: about +$pct% per week.';
+  }
+
+  @override
+  String staffTrendDown(String pct) {
+    return 'Downward trend: about $pct% per week.';
+  }
+
+  @override
+  String staffTrendStable(int pct) {
+    return 'Stable volume: change below $pct% per week.';
+  }
+
+  @override
+  String staffWeekSpoken(String date, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count arrivals',
+      one: '1 arrival',
+    );
+    return 'Week of $date: $_temp0';
+  }
+
+  @override
+  String get staffRecurringTitle => 'Recurring pattern';
+
+  @override
+  String staffRecurringRow(String day, String hour, int weeks, int total) {
+    return '$day $hour: among the busiest in $weeks of $total weeks';
+  }
+
+  @override
+  String staffRecurringNone(int pct) {
+    return 'No hour repeats among the busiest in at least $pct% of the weeks.';
+  }
+
+  @override
+  String get csvGoalIndicator => 'indicator';
+
+  @override
+  String get csvEvaluated => 'evaluated';
+
+  @override
+  String get csvWithinLimit => 'within limit';
+
+  @override
+  String get csvPctWithinLimit => '% within limit';
+
+  @override
+  String get csvTargetPct => 'target %';
+
+  @override
+  String get csvGoalMet => 'goal met';
+
+  @override
+  String get csvWorstOverMin => 'worst violation (min)';
+
+  @override
+  String get csvWorstDay => 'worst violation day';
+
+  @override
+  String get csvMissedDays => 'days below target';
+
+  @override
+  String get csvMissedHours => 'hours below target';
+
+  @override
+  String get csvArrivalsPerHour => 'arrivals per hour';
+
+  @override
+  String get csvRequiredStaff => 'recommended attendants';
+
+  @override
+  String get csvObservedStaff => 'observed attendants';
+
+  @override
+  String get csvGapStaff => 'difference';
+
+  @override
+  String get csvWeekStart => 'week start';
+
+  @override
+  String get csvTrendPct => 'trend (% of mean per week)';
+
+  @override
+  String get csvRecurringWeeks => 'weeks among the busiest';
+
+  @override
+  String get csvOccupancyPct => 'target occupancy %';
+
+  @override
+  String get csvCoverageDays => 'days of data';
+
+  @override
+  String get biNameGoalWait => 'Wait within goal';
+
+  @override
+  String get biWhatGoalWait =>
+      'The share of services where the person waited up to the wait limit set on the queue.';
+
+  @override
+  String biHowGoalWait(int min) {
+    return 'Compares the wait (call time minus join time) of each served and no-show person with the wait goal. Someone who left only counts if they waited longer than the goal, as a miss; leaving below the goal and system removals are excluded. Percentage = within limit ÷ evaluated. The goal is met when the percentage reaches the target (default 80%). With several queues, each person is compared with their own queue goal and the target shown is the average weighted by evaluated people. Below $min evaluated, the result is flagged as a small sample.';
+  }
+
+  @override
+  String get biDataGoalWait =>
+      'Result, join, call and exit (when leaving) times and the queue goals. No phone numbers.';
+
+  @override
+  String get biUseGoalWait =>
+      'Know whether service is within the promised time and when it fails.';
+
+  @override
+  String get biNameGoalService => 'Service within goal';
+
+  @override
+  String get biWhatGoalService =>
+      'The share of completed services that took up to the maximum time set on the queue.';
+
+  @override
+  String biHowGoalService(int min) {
+    return 'Completed (served) services only. Compares the duration (end minus call time) with the service goal. Percentage = within limit ÷ evaluated; the goal is met when it reaches the target. No-shows and people who left are excluded. Below $min evaluated, the result is flagged as a small sample.';
+  }
+
+  @override
+  String get biDataGoalService =>
+      'Result, call and end times and the queue goals.';
+
+  @override
+  String get biUseGoalService =>
+      'Check whether services fit the expected time and find slow days and hours.';
+
+  @override
+  String get biNameGoalMissed => 'Periods when the goal was not met';
+
+  @override
+  String get biWhatGoalMissed =>
+      'Days and hours of day when compliance fell below target, and the worst violation.';
+
+  @override
+  String biHowGoalMissed(int min) {
+    return 'Groups evaluated people by day and by hour of day (São Paulo time). Lists the days and hours with at least $min evaluated and a percentage below target. The worst violation is the largest excess, in minutes, over the wait or service limit. Days and hours with fewer evaluated are not listed.';
+  }
+
+  @override
+  String get biDataGoalMissed =>
+      'The same as the wait and service within goal indicators.';
+
+  @override
+  String get biUseGoalMissed =>
+      'Find when the goal fails repeatedly and reinforce the team in those periods.';
+
+  @override
+  String get biNameStaffingService => 'Average service time';
+
+  @override
+  String get biWhatStaffingService =>
+      'The average duration of completed services, used to estimate how many attendants are needed.';
+
+  @override
+  String biHowStaffingService(int min) {
+    return 'Average of end minus call time of completed (served) services in the scope and period. With fewer than $min services it is not computed and the attendant recommendation is unavailable.';
+  }
+
+  @override
+  String get biDataStaffingService => 'Result, call and end times.';
+
+  @override
+  String get biUseStaffingService =>
+      'Serve as the basis for the recommended attendants calculation.';
+
+  @override
+  String get biNameStaffingRequired => 'Recommended attendants';
+
+  @override
+  String get biWhatStaffingRequired =>
+      'How many attendants each weekday and hour require to absorb the average demand.';
+
+  @override
+  String biHowStaffingRequired(int pct) {
+    return 'Arrivals per hour = arrivals on that weekday and hour ÷ number of times that weekday occurs between the first and last day with data (includes people who left and no-shows). Recommended = round up (arrivals per hour × average service time in hours ÷ $pct% target occupancy). Unavailable without an average service time.';
+  }
+
+  @override
+  String get biDataStaffingRequired =>
+      'Join time of everyone, result, call and end times.';
+
+  @override
+  String get biUseStaffingRequired =>
+      'Build schedules: see on which days and hours the team needs to be larger.';
+
+  @override
+  String get biNameStaffingObserved => 'Observed attendants';
+
+  @override
+  String get biWhatStaffingObserved =>
+      'How many distinct attendants actually served on each weekday and hour.';
+
+  @override
+  String get biHowStaffingObserved =>
+      'For each date and hour, counts the distinct attendants with a service in progress, from call to end (long services count in every hour they span). Sums by weekday and hour and divides by the same number of weekday occurrences used for arrivals. The owner and records without an attendant count as one attendant.';
+
+  @override
+  String get biDataStaffingObserved =>
+      'Attendant, call and end times, result (served or no-show).';
+
+  @override
+  String get biUseStaffingObserved =>
+      'Compare the team that actually worked with the recommended one.';
+
+  @override
+  String get biNameStaffingGap => 'Shortfall and spare capacity';
+
+  @override
+  String get biWhatStaffingGap =>
+      'The difference between recommended and observed attendants on each day and hour.';
+
+  @override
+  String biHowStaffingGap(int n) {
+    return 'Difference = recommended minus observed. Positive is a shortfall (understaffed); negative is spare capacity. The list shows the $n largest positive differences, breaking ties by recommended, day and hour.';
+  }
+
+  @override
+  String get biDataStaffingGap =>
+      'The same as recommended and observed attendants.';
+
+  @override
+  String get biUseStaffingGap =>
+      'Prioritize where to reinforce the team and where capacity is spare.';
+
+  @override
+  String get biNameSeasonVolume => 'Weekly volume and trend';
+
+  @override
+  String get biWhatSeasonVolume =>
+      'How many people joined the queue in each of the last weeks and where the volume is heading.';
+
+  @override
+  String biHowSeasonVolume(int weeks, int band, int min) {
+    return 'Counts arrivals (including people who left and no-shows) per week, Monday to Sunday (São Paulo time), over the last $weeks complete weeks, starting at the first week with data; the week in progress is excluded. The trend is the slope of a line fitted to the weekly volumes, as % of the weekly mean per week; below $band% is considered stable. With fewer than $min weeks, it shows insufficient data.';
+  }
+
+  @override
+  String get biDataSeasonVolume =>
+      'Join time of everyone. Uses all the loaded history of the scope, not only the chosen period.';
+
+  @override
+  String get biUseSeasonVolume =>
+      'Plan staff and space for the coming periods.';
+
+  @override
+  String get biNameSeasonPattern => 'Recurring pattern';
+
+  @override
+  String get biWhatSeasonPattern =>
+      'Weekdays and hours that repeat among the busiest, week after week.';
+
+  @override
+  String biHowSeasonPattern(int top, int pct, int min) {
+    return 'In each observed week, takes the $top cells (weekday × hour) with the most arrivals. A cell is recurring when it appears in that group in at least $pct% of the observed weeks. Requires at least $min weeks.';
+  }
+
+  @override
+  String get biDataSeasonPattern => 'Join time of everyone.';
+
+  @override
+  String get biUseSeasonPattern =>
+      'Know which times are always busy, not by chance.';
 }

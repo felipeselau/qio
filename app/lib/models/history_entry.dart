@@ -15,6 +15,7 @@ class HistoryEntry {
     this.recalls = 0,
     this.skips = 0,
     this.reason,
+    this.estimateMin,
   });
 
   final String id;
@@ -30,6 +31,7 @@ class HistoryEntry {
   final int recalls;
   final int skips;
   final String? reason;
+  final int? estimateMin;
 
   String? get attendantId {
     if (calledBy != null && calledBy!.isNotEmpty) return calledBy;
@@ -78,6 +80,9 @@ class HistoryEntry {
       recalls: _count(data['recalls']),
       skips: _count(data['skips']),
       reason: data['reason'] is String ? data['reason'] as String : null,
+      estimateMin: data['estimateMin'] is num
+          ? (data['estimateMin'] as num).toInt()
+          : null,
     );
   }
 }

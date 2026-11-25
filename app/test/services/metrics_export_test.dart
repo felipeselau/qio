@@ -341,6 +341,10 @@ void main() {
         'Picos de demanda',
         'Filas mais ativas',
         'Por atendente',
+        'Taxa por faixa de espera',
+        'Desistência por hora de chegada',
+        'Planejamento de equipe',
+        'Atendentes por dia e hora',
         'Espera e chamadas',
         'Dias de maior movimento',
         'Mapa de calor: dia × hora',
@@ -389,12 +393,16 @@ void main() {
       final i = l.indexOf('Por atendente');
       expect(
         l[i + 1],
-        'atendente,atendidos,não compareceram,atendimento médio (min),'
-        'nota média,qtd notas',
+        'atendente,atendidos,atendimento médio (min),desvio vs média (%),'
+        'atendimentos por hora (janela de atuação),ociosidade (%),'
+        'não compareceram,nota média,qtd notas',
       );
-      expect(l[i + 2], 'Bia,3,0,13.3,4.0,1');
-      expect(l[i + 3], 'Dono,1,0,,,0');
-      expect(l[i + 4], 'ex-operador,0,1,,,0');
+      expect(l[i + 2], startsWith('Bia,3,13.3,'));
+      expect(l[i + 2], endsWith(',0,4.0,1'));
+      expect(l[i + 3], startsWith('Dono,1,'));
+      expect(l[i + 4], startsWith('ex-operador,0,'));
+      expect(l.where((x) => x == 'Por atendente'), hasLength(1));
+      expect(l.where((x) => x == 'Indicadores por atendente'), isEmpty);
     });
 
     test('wait and calls section', () {
@@ -667,7 +675,7 @@ void main() {
       ];
       final l = lines(pt, report(d));
       final i = l.indexOf('Por atendente');
-      expect(l[i + 2], startsWith('"\'=HYPERLINK(""x"")",1,0'));
+      expect(l[i + 2], startsWith('"\'=HYPERLINK(""x"")",1,'));
     });
 
     test('demand sections close the file', () {

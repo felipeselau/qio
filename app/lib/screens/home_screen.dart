@@ -15,6 +15,7 @@ import '../services/action_errors.dart';
 import '../services/auth_service.dart';
 import '../services/brand_palette.dart';
 import '../services/deep_link.dart';
+import '../services/goal_risk.dart';
 import '../services/group_service.dart';
 import '../services/home_grouping.dart';
 import '../services/join_url.dart';
@@ -1128,6 +1129,37 @@ class _QueueCardState extends State<_QueueCard> {
                         color: context.qio.gray700,
                       ),
                     ),
+                    if (isOwner &&
+                        waitGoalAtRisk(
+                          estimatedWaitMin(
+                            widget.waiting,
+                            manual: q.avgServiceMin,
+                          ),
+                          q.goals,
+                        )) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        key: ValueKey('goal-risk-badge-${q.id}'),
+                        children: [
+                          ExcludeSemantics(
+                            child: Icon(
+                              Icons.warning_amber_rounded,
+                              size: 16,
+                              color: context.qio.statusPausedText,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              l10n.goalRiskTitle,
+                              style: context.qioText.caption.copyWith(
+                                color: context.qio.statusPausedText,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 4),
                     Text(
                       isOwner

@@ -21,9 +21,10 @@ function makeSlots(ranges, stepMin, capacity) {
 }
 
 const OPERATORS = [
-  { key: 'operador1', name: 'Marina Lopes', factor: 0.8 },
-  { key: 'operador2', name: 'Rafael Teixeira', factor: 1.0 },
-  { key: 'operador3', name: 'Juliana Prado', factor: 1.3 },
+  { key: 'operador1', name: 'Ana Lima', factor: 0.6 },
+  { key: 'operador2', name: 'Bruno Reis', factor: 1.0 },
+  { key: 'operador3', name: 'Carla Souza', factor: 1.5 },
+  { key: 'operador6', name: 'Diego Alves', factor: 1.0 },
   { key: 'operador4', name: 'Carlos Mendes', factor: 1.0 },
   { key: 'operador5', name: 'Beatriz Nunes', factor: 1.1 },
   { key: 'barbeiro1', name: 'Thiago Ramos', factor: 0.9 },
@@ -35,6 +36,15 @@ const OPERATORS = [
 ].map((o) => ({ ...o, uid: `${ID_PREFIX}${o.key}`, email: `${o.key}@${EMAIL_DOMAIN}` }));
 
 const WEEKDAY_ALL = [0, 1, 2, 3, 4, 5, 6];
+const DIEGO_PAUSE = { prob: 0.9, min: 8, max: 22 };
+
+function growthTrend(weekly, maxDays) {
+  const points = [];
+  for (let d = 0; d <= maxDays; d += 7) points.push([d, Number((weekly ** (-d / 7)).toFixed(4))]);
+  return points;
+}
+
+const SEASON_PEAKS = { 1: [12], 5: [18], 6: [11] };
 
 const padaria = {
   key: 'padaria',
@@ -54,19 +64,25 @@ const padaria = {
       posterTitle: 'Entre na fila pelo celular',
       createdDaysAgo: 200,
       invite: 'valid',
+      goals: { maxWaitMin: 25, maxServiceMin: 10, targetPct: 80 },
       expiry: { enabled: true, hours: 4, clearOnClose: false, resetTicketDaily: true },
       hours: week([6, 20], [6, 20], [6, 14]),
       hourly: { 6: 0.8, 7: 2.4, 8: 3, 9: 2.2, 10: 1, 11: 1, 12: 1.3, 13: 0.8, 14: 0.6, 15: 0.9, 16: 2, 17: 2.4, 18: 1.4, 19: 0.6 },
-      demand: { base: 150, dow: [1.35, 0.95, 0.9, 0.9, 0.95, 1.05, 1.4], trend: [[120, 1], [32, 1], [26, 1.15], [0, 1.15]], noise: 0.12 },
-      service: { median: 2.2, sigma: 0.35, outlierProb: 0.01, outlierMult: [2, 3] },
-      patience: { median: 14, sigma: 0.6 },
+      demand: { base: 150, dow: [1.2, 0.95, 0.92, 0.92, 1, 1.12, 1.25], trend: [[120, 1], [32, 1], [26, 1.15], [0, 1.15]], noise: 0.12 },
+      service: { median: 5, sigma: 0.35, outlierProb: 0.01, outlierMult: [2, 3] },
+      patience: { median: 22, sigma: 0.6 },
       noShow: { base: 0.015 },
       recallProb: 0.05,
       skipProb: 0.01,
       manualShare: 0.1,
       rating: { mean: 4.75, sd: 0.75, refWait: 5 },
       ratingRate: 0.5,
-      staff: [{ ref: 'owner' }, { ref: 'balconista1', shifts: [[7, 10], [16, 19]], days: [0, 6] }],
+      staff: [
+        { ref: 'operador1', shifts: [[6, 8], [12, 20]] },
+        { ref: 'operador2' },
+        { ref: 'operador3', shifts: [[6, 10], [16, 19]] },
+        { ref: 'operador6', shifts: [[6, 13]], pause: DIEGO_PAUSE },
+      ],
       live: { waiting: 6, called: 1 },
     },
     {
@@ -118,7 +134,7 @@ const clinica = {
       expiry: { enabled: true, hours: 12, clearOnClose: true, resetTicketDaily: true },
       hours: week([8, 17]),
       fill: { base: 0.72, dow: [0, 0.95, 0.85, 0.85, 0.85, 0.75, 0], trend: [[120, 1], [0, 1.05]] },
-      lead: { median: 22, sigma: 0.6 },
+      lead: { median: 9, sigma: 0.5 },
       service: { median: 13, sigma: 0.4, outlierProb: 0.03, outlierMult: [2, 3] },
       patience: { median: 90, sigma: 0.5 },
       noShow: {
@@ -140,18 +156,19 @@ const clinica = {
       name: 'Exames',
       description: 'Coleta de sangue e exames de imagem por ordem de chegada.',
       group: 'centro',
-      avgServiceMin: 8,
+      avgServiceMin: 5,
       brandColor: '#0F766E',
       createdDaysAgo: 220,
       invite: 'expired',
       alerts: { enabled: true, maxWaitMin: 30, maxNoShowPct: 25, idleMin: 45, cooldownMin: 30 },
       alertStateAgoMin: { noShowAt: 95, waitAt: 180 },
+      goals: { maxWaitMin: 30, maxServiceMin: 18, targetPct: 80 },
       expiry: { enabled: true, hours: 12, clearOnClose: true, resetTicketDaily: true },
       hours: week([7, 16], [7, 11]),
       hourly: { 7: 3, 8: 3, 9: 2, 10: 1.4, 11: 1, 12: 0.7, 13: 0.8, 14: 1.2, 15: 0.8 },
-      demand: { base: 52, dow: [0, 1.25, 1, 0.95, 0.95, 0.9, 0.7], noise: 0.15 },
+      demand: { base: 105, dow: [0, 1.2, 0.95, 0.95, 1, 1.15, 0.8], noise: 0.15 },
       service: { median: 8, sigma: 0.5, outlierProb: 0.04, outlierMult: [2, 4] },
-      patience: { median: 45, sigma: 0.6 },
+      patience: { median: 25, sigma: 0.4, quickShare: 0.12, quickMedian: 6 },
       noShow: {
         base: 0.11,
         dow: [0, 0.04, 0, 0, 0, 0.01, 0],
@@ -163,7 +180,12 @@ const clinica = {
       manualShare: 0.12,
       rating: { mean: 4.2, sd: 0.85, refWait: 15 },
       ratingRate: 0.4,
-      staff: [{ ref: 'operador2' }, { ref: 'operador3' }],
+      staff: [
+        { ref: 'operador2' },
+        { ref: 'operador3', shifts: [[7, 13]], off: ({ dow }) => dow === 5 },
+        { ref: 'operador6', shifts: [[9, 16]], pause: DIEGO_PAUSE, off: ({ dow }) => dow === 5 },
+        { ref: 'operador1', shifts: [[12, 16]] },
+      ],
       live: { waiting: 5, called: 1 },
     },
     {
@@ -183,7 +205,7 @@ const clinica = {
       expiry: { enabled: true, hours: 12, clearOnClose: true, resetTicketDaily: true },
       hours: week([8, 17]),
       fill: { base: 0.8, dow: [0, 0.95, 0.85, 0.85, 0.85, 0.8, 0], trend: [[120, 1], [0, 1.05]] },
-      lead: { median: 20, sigma: 0.5 },
+      lead: { median: 9, sigma: 0.5 },
       service: { median: 18, sigma: 0.35, outlierProb: 0.03, outlierMult: [1.8, 2.6] },
       patience: { median: 90, sigma: 0.5 },
       noShow: {
@@ -489,6 +511,62 @@ const OTICA_TYPES = [
   { key: 'lentes', name: 'Lentes de contato', desc: 'Adaptação e entrega de lentes de contato.', base: 5, svc: 15, sigma: 0.45, patience: 30, avg: 15 },
 ];
 
+function applyCentroCast(queue, type) {
+  if (type.key === 'atendimento') {
+    Object.assign(queue, {
+      hours: week([9, 19], [9, 19], [12, 18]),
+      avgServiceMin: 6,
+      hourly: { 9: 0.5, 10: 0.8, 11: 2.4, 12: 2.4, 13: 0.8, 14: 0.6, 15: 0.8, 16: 1, 17: 2.2, 18: 2.2 },
+      demand: { base: 9, dow: [0.6, 0.85, 0.12, 0.12, 0.15, 1.15, 1.5], trend: [[60, 0.75], [20, 0.85], [8, 1.1], [0, 1.3]], noise: 0.2 },
+      bursts: { at: [12, 18], jitter: 0.3, size: [12, 18], spreadMin: 9 },
+      service: { median: 9, sigma: 0.4, outlierProb: 0.02, outlierMult: [2, 3] },
+      patience: { median: 30, sigma: 0.4, quickShare: 0.1, quickMedian: 6 },
+      skipProb: 0.01,
+      goals: { maxWaitMin: 15, maxServiceMin: 12, targetPct: 80 },
+      staff: [
+        { ref: 'operador1', shifts: [[9, 12], [14, 16]] },
+        { ref: 'operador2' },
+        { ref: 'operador3', shifts: [[16, 19]] },
+        { ref: 'operador6', shifts: [[11, 16]], pause: DIEGO_PAUSE },
+      ],
+    });
+    return;
+  }
+  const casts = {
+    exame: ['operador1', 'operador2'],
+    retirada: ['operador1', 'operador2'],
+    assistencia: ['operador3', 'operador6'],
+    lentes: ['operador2', 'operador3'],
+  };
+  queue.staff = casts[type.key].map((ref) => (ref === 'operador6' ? { ref, pause: DIEGO_PAUSE } : { ref }));
+}
+
+function applySeasonCast(queue, store) {
+  const growing = store.key === 'norte';
+  Object.assign(queue, {
+    createdDaysAgo: 100,
+    hours: week([9, 19], [9, 19]),
+    avgServiceMin: 7,
+    hourly: { 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 1, 16: 1, 17: 0, 18: 0 },
+    holidays: false,
+    closureProb: 0,
+    demand: {
+      base: growing ? 7 : 6,
+      dow: [0, 0, 1, 1, 1, 0, 0],
+      trend: growing ? growthTrend(1.08, 100) : undefined,
+      noise: 0.1,
+    },
+    bursts: { byDow: SEASON_PEAKS, offset: 0.05, jitter: 0.03, size: growing ? [6, 8] : [9, 9], spreadMin: 8 },
+    service: { median: 7, sigma: 0.4, outlierProb: 0.02, outlierMult: [2, 3] },
+    patience: { median: 18, sigma: 0.6 },
+    noShow: { base: 0.03 },
+    staff: growing
+      ? [{ ref: 'owner', factor: 0.95 }, { ref: 'operador2' }]
+      : [{ ref: 'owner', factor: 0.98 }, { ref: 'balconista1', shifts: [[9, 11], [13, 18]], days: [1, 2, 3, 4, 5] }],
+  });
+  if (growing) queue.goals = { maxWaitMin: 15, maxServiceMin: 15, targetPct: 80 };
+}
+
 function oticaQueues() {
   const out = [];
   OTICA_STORES.forEach((store, si) => {
@@ -519,7 +597,7 @@ function oticaQueues() {
         queue.mode = 'schedule';
         queue.slotPlan = { ranges: [['09:00', '18:30']], stepMin: 30, capacity: 1 };
         queue.fill = { base: 0.45 * store.mult + 0.25, dow: [0.9, 0.8, 0.8, 0.85, 0.9, 1, 1.2], trend: [[60, 0.9], [0, 1.1]] };
-        queue.lead = { median: 15, sigma: 0.5 };
+        queue.lead = { median: 9, sigma: 0.5 };
       } else {
         queue.hourly = { 10: 1.1, 11: 1.3, 12: 1, 13: 0.8, 14: 1, 15: 1.3, 16: 1.4, 17: 1.4, 18: 1 };
         queue.demand = {
@@ -529,6 +607,8 @@ function oticaQueues() {
           noise: 0.25,
         };
       }
+      if (store.key === 'centro') applyCentroCast(queue, type);
+      if ((store.key === 'norte' || store.key === 'ruaxv') && type.key === 'atendimento') applySeasonCast(queue, store);
       if (n === 3) {
         queue.status = 'paused';
         queue.statusMessage = 'Em manutenção do equipamento. Volta em breve.';

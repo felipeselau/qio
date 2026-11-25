@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../l10n/app_localizations.dart';
 import 'alerts_config.dart';
 import 'expiry_config.dart';
+import 'queue_goals.dart';
 import 'queue_schedule.dart';
 import 'queue_slot.dart';
 
@@ -69,6 +70,7 @@ class Queue {
     this.anonymizePhone = false,
     this.retentionDays,
     this.expiry,
+    this.goals,
   });
 
   final String id;
@@ -95,6 +97,7 @@ class Queue {
   final bool anonymizePhone;
   final int? retentionDays;
   final ExpiryConfig? expiry;
+  final QueueGoals? goals;
 
   bool get hasLimit => maxWaiting > 0;
 
@@ -130,6 +133,7 @@ class Queue {
       anonymizePhone: data['anonymizePhone'] == true,
       retentionDays: (data['retentionDays'] as num?)?.toInt(),
       expiry: ExpiryConfig.fromMap(data['expiry']),
+      goals: QueueGoals.fromMap(data['goals']),
     );
   }
 

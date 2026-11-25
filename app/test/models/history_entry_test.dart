@@ -37,5 +37,14 @@ void main() {
       expect(c.recalls, 0);
       expect(c.skips, 0);
     });
+
+    test('estimateMin ausente vira null e numero e lido', () {
+      expect(HistoryEntry.fromDoc('x', {}).estimateMin, isNull);
+      expect(HistoryEntry.fromDoc('x', {'estimateMin': 25}).estimateMin, 25);
+      expect(
+        HistoryEntry.fromDoc('x', {'estimateMin': 'a'}).estimateMin,
+        isNull,
+      );
+    });
   });
 }

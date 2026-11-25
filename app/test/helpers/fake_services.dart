@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:qio_app/models/alerts_config.dart';
 import 'package:qio_app/models/expiry_config.dart';
+import 'package:qio_app/models/queue_goals.dart';
 import 'package:qio_app/models/history_entry.dart';
 import 'package:qio_app/models/operator.dart';
 import 'package:qio_app/models/queue.dart';
@@ -23,10 +24,14 @@ Queue fakeQueue(
   String? statusMessage,
   String? groupId,
   AlertsConfig? alerts,
+  QueueGoals? goals,
+  int avgServiceMin = 10,
 }) => Queue(
   id: id,
   groupId: groupId,
   alerts: alerts,
+  goals: goals,
+  avgServiceMin: avgServiceMin,
   ownerId: 'uid-1',
   name: name ?? 'Fila $id',
   status: status,
@@ -325,6 +330,7 @@ class FakeQueueService implements QueueService {
     String? brandColor,
     AlertsConfig? alerts,
     ExpiryConfig? expiry,
+    QueueGoals? goals,
   }) async {
     final error = createError;
     if (error != null) throw error;
@@ -387,6 +393,26 @@ class FakeQueueService implements QueueService {
     calls.add(
       'expiry:$queueId:${config.enabled}:${config.hours}:${config.clearOnClose}:${config.resetTicketDaily}',
     );
+  }
+
+  Object? goalsError;
+  double? avgAuto;
+  final Map<String, StreamController<double?>> avgAutoControllers = {};
+
+  @override
+  Future<void> updateGoals(String queueId, QueueGoals? goals) async {
+    calls.add(
+      'goals:$queueId:${goals == null ? 'null' : '${goals.maxWaitMin}:${goals.maxServiceMin}:${goals.targetPct}'}',
+    );
+    if (goalsError != null) throw goalsError!;
+  }
+
+  @override
+  Stream<double?> watchAvgServiceMinAuto(String queueId) async* {
+    yield avgAuto;
+    yield* (avgAutoControllers[queueId] ??=
+            StreamController<double?>.broadcast())
+        .stream;
   }
 
   @override

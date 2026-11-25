@@ -281,7 +281,7 @@ test('contas: 7 donos, pelo menos 4 operadores, senha única', () => {
 
 test('operadores: um em donos diferentes, pedido pendente, rejeitado e removido', () => {
   const ownersOf = (uid) => new Set(universe.queues.filter((q) => q.operatorUids[uid]).map((q) => q.ownerUid));
-  assert.deepEqual([...ownersOf('demo-operador1')].sort(), ['demo-cartorio', 'demo-clinica']);
+  assert.deepEqual([...ownersOf('demo-operador1')].sort(), ['demo-cartorio', 'demo-clinica', 'demo-otica', 'demo-padaria']);
   const statuses = new Set(universe.queues.flatMap((q) => q.requests.map((r) => r.data.status)));
   for (const s of ['pending', 'approved', 'rejected', 'removed']) assert.ok(statuses.has(s), s);
   const pending = universe.queues.flatMap((q) => q.requests).find((r) => r.data.status === 'pending');
@@ -372,7 +372,7 @@ test('clínica: no-show 10-18%, pior na segunda, caindo após lembretes, ao vivo
   assert.ok(byKey.exames.fs.alerts.enabled && byKey.exames.fs.alertState.noShowAt);
   assert.equal(new Set(rows.map((q) => q.fs.groupId)).size, 2);
   const operators = new Set(rows.flatMap((q) => Object.keys(q.operatorUids)));
-  assert.equal(operators.size, 3);
+  assert.equal(operators.size, 4);
   const svc = {};
   for (const q of byKey.consultas.history) {
     if (q.data.result !== 'served') continue;
@@ -447,13 +447,13 @@ test('food truck: ~14 dias, rajadas, muitas desistências, fechada agora', () =>
   assert.ok(dayKeys.some((d, i) => i > 0 && d - dayKeys[i - 1] >= 3), 'buraco entre os dois fins de semana');
 });
 
-test('rede ótica: 20 filas em 4 grupos, histórico leve de 30-60 dias, perfis variados', () => {
+test('rede ótica: 20 filas em 4 grupos, histórico de 30-100 dias, perfis variados', () => {
   const rows = byOwner('otica');
   assert.equal(rows.length, 20);
   assert.equal(new Set(rows.map((q) => q.fs.groupId)).size, 4);
   const spans = rows.map((q) => (NOW - Math.min(...q.history.map((h) => ms(h.data.joinedAt)))) / DAY);
-  assert.ok(Math.max(...spans) <= 62 && Math.min(...spans) >= 20, JSON.stringify(spans));
-  assert.ok(rows.every((q) => q.history.length < 1500));
+  assert.ok(Math.max(...spans) <= 101 && Math.min(...spans) >= 20, JSON.stringify(spans));
+  assert.ok(rows.every((q) => q.history.length < 2000));
   assert.ok(rows.some((q) => q.fs.status === 'paused'));
   assert.ok(rows.some((q) => q.fs.status === 'closed'));
   assert.ok(rows.some((q) => q.fs.mode === 'schedule'));

@@ -4310,6 +4310,1599 @@ abstract class AppLocalizations {
   /// In pt, this message translates to:
   /// **'Fila'**
   String get colQueue;
+
+  /// No description provided for @infoButtonSemantics.
+  ///
+  /// In pt, this message translates to:
+  /// **'Explicação do indicador: {name}'**
+  String infoButtonSemantics(String name);
+
+  /// No description provided for @infoWhat.
+  ///
+  /// In pt, this message translates to:
+  /// **'O que é'**
+  String get infoWhat;
+
+  /// No description provided for @infoHow.
+  ///
+  /// In pt, this message translates to:
+  /// **'Como é calculado'**
+  String get infoHow;
+
+  /// No description provided for @infoData.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dados usados'**
+  String get infoData;
+
+  /// No description provided for @infoUse.
+  ///
+  /// In pt, this message translates to:
+  /// **'Para que serve'**
+  String get infoUse;
+
+  /// No description provided for @infoClose.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fechar'**
+  String get infoClose;
+
+  /// No description provided for @attColService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tempo médio'**
+  String get attColService;
+
+  /// No description provided for @attColDeviation.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desvio'**
+  String get attColDeviation;
+
+  /// No description provided for @attColRate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atend./h'**
+  String get attColRate;
+
+  /// No description provided for @attColIdle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ocioso'**
+  String get attColIdle;
+
+  /// No description provided for @attInsufficientNote.
+  ///
+  /// In pt, this message translates to:
+  /// **'— indica amostra insuficiente (menos de {samples} atendimentos ou janela curta).'**
+  String attInsufficientNote(int samples);
+
+  /// No description provided for @attRowSpoken.
+  ///
+  /// In pt, this message translates to:
+  /// **'{name}. {served} atendimentos, tempo médio {service}, desvio {deviation}, {rate} atendimentos por hora, ociosidade {idle}, {noShow} não compareceram, nota {rating}'**
+  String attRowSpoken(
+    String name,
+    int served,
+    String service,
+    String deviation,
+    String rate,
+    String idle,
+    int noShow,
+    String rating,
+  );
+
+  /// No description provided for @attChartTitleHour.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atendimentos por hora do dia'**
+  String get attChartTitleHour;
+
+  /// No description provided for @attChartTitleShift.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atendimentos por turno'**
+  String get attChartTitleShift;
+
+  /// No description provided for @attChartModeHour.
+  ///
+  /// In pt, this message translates to:
+  /// **'Hora'**
+  String get attChartModeHour;
+
+  /// No description provided for @attChartModeShift.
+  ///
+  /// In pt, this message translates to:
+  /// **'Turno'**
+  String get attChartModeShift;
+
+  /// No description provided for @attChartOperatorLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atendente do gráfico'**
+  String get attChartOperatorLabel;
+
+  /// No description provided for @attChartAll.
+  ///
+  /// In pt, this message translates to:
+  /// **'Todos os atendentes'**
+  String get attChartAll;
+
+  /// No description provided for @attChartEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem atendimentos concluídos para este gráfico.'**
+  String get attChartEmpty;
+
+  /// No description provided for @attChartPeak.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mais atendimentos: {label} ({count})'**
+  String attChartPeak(String label, int count);
+
+  /// No description provided for @attChartSemantics.
+  ///
+  /// In pt, this message translates to:
+  /// **'Gráfico de atendimentos. {summary}'**
+  String attChartSemantics(String summary);
+
+  /// No description provided for @attShiftMorning.
+  ///
+  /// In pt, this message translates to:
+  /// **'Manhã (6h–12h)'**
+  String get attShiftMorning;
+
+  /// No description provided for @attShiftAfternoon.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tarde (12h–18h)'**
+  String get attShiftAfternoon;
+
+  /// No description provided for @attShiftNight.
+  ///
+  /// In pt, this message translates to:
+  /// **'Noite (18h–6h)'**
+  String get attShiftNight;
+
+  /// No description provided for @csvDeviationPct.
+  ///
+  /// In pt, this message translates to:
+  /// **'desvio vs média (%)'**
+  String get csvDeviationPct;
+
+  /// No description provided for @csvRatePerHour.
+  ///
+  /// In pt, this message translates to:
+  /// **'atendimentos por hora (janela de atuação)'**
+  String get csvRatePerHour;
+
+  /// No description provided for @csvIdlePct.
+  ///
+  /// In pt, this message translates to:
+  /// **'ociosidade (%)'**
+  String get csvIdlePct;
+
+  /// No description provided for @abandonTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desistências'**
+  String get abandonTitle;
+
+  /// No description provided for @abandonSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quem entrou e saiu antes de ser atendido. Remoções automáticas (expiração e fechamento) não contam.'**
+  String get abandonSubtitle;
+
+  /// No description provided for @abandonBand.
+  ///
+  /// In pt, this message translates to:
+  /// **'{start}–{end} min'**
+  String abandonBand(int start, int end);
+
+  /// No description provided for @abandonBandOpen.
+  ///
+  /// In pt, this message translates to:
+  /// **'{start}+ min'**
+  String abandonBandOpen(int start);
+
+  /// No description provided for @abandonWaitTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Taxa por faixa de espera'**
+  String get abandonWaitTitle;
+
+  /// No description provided for @abandonWaitHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desistências a cada 10 min de espera, entre quem chegou a cada faixa.'**
+  String get abandonWaitHint;
+
+  /// No description provided for @abandonWaitEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Amostra insuficiente: cada faixa precisa de pelo menos {min} pessoas para mostrar a taxa.'**
+  String abandonWaitEmpty(int min);
+
+  /// No description provided for @abandonBarSpoken.
+  ///
+  /// In pt, this message translates to:
+  /// **'{band}: {pct}% a cada 10 min'**
+  String abandonBarSpoken(String band, int pct);
+
+  /// No description provided for @abandonBarNoData.
+  ///
+  /// In pt, this message translates to:
+  /// **'{band}: dados insuficientes'**
+  String abandonBarNoData(String band);
+
+  /// No description provided for @abandonInflectionFound.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ponto de inflexão: a partir de {band} a desistência passa de {limit}% a cada 10 min.'**
+  String abandonInflectionFound(String band, int limit);
+
+  /// No description provided for @abandonInflectionNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma faixa passa do limite de {limit}% a cada 10 min.'**
+  String abandonInflectionNone(int limit);
+
+  /// No description provided for @abandonEstimateTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Taxa por estimativa mostrada'**
+  String get abandonEstimateTitle;
+
+  /// No description provided for @abandonEstimateHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Percentual de desistência conforme a estimativa que o cliente viu ao entrar.'**
+  String get abandonEstimateHint;
+
+  /// No description provided for @abandonEstimateEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ainda não há registros com a estimativa mostrada na entrada. O histórico anterior à atualização que grava a estimativa não tem esse dado.'**
+  String get abandonEstimateEmpty;
+
+  /// No description provided for @abandonEstimateBarSpoken.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estimativa {band}: {pct}% desistiram'**
+  String abandonEstimateBarSpoken(String band, int pct);
+
+  /// No description provided for @abandonEstimateBarNoData.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estimativa {band}: dados insuficientes'**
+  String abandonEstimateBarNoData(String band);
+
+  /// No description provided for @estimateAccuracyTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Precisão da estimativa'**
+  String get estimateAccuracyTitle;
+
+  /// No description provided for @estimateAccuracyMean.
+  ///
+  /// In pt, this message translates to:
+  /// **'Espera real menos estimativa: {value} min em média ({samples} atendimentos)'**
+  String estimateAccuracyMean(String value, int samples);
+
+  /// No description provided for @estimateAccuracyAbs.
+  ///
+  /// In pt, this message translates to:
+  /// **'Erro absoluto médio: {value} min'**
+  String estimateAccuracyAbs(String value);
+
+  /// No description provided for @estimateAccuracyHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Positivo: a espera foi maior que o prometido.'**
+  String get estimateAccuracyHint;
+
+  /// No description provided for @estimateAccuracyNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Amostra insuficiente: são necessários {min} atendimentos com estimativa gravada.'**
+  String estimateAccuracyNone(int min);
+
+  /// No description provided for @abandonHourTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desistência por hora de chegada'**
+  String get abandonHourTitle;
+
+  /// No description provided for @abandonHourRateLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Taxa'**
+  String get abandonHourRateLabel;
+
+  /// No description provided for @abandonHourCountLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desistentes'**
+  String get abandonHourCountLabel;
+
+  /// No description provided for @abandonHourEmpty.
+  ///
+  /// In pt, this message translates to:
+  /// **'Amostra insuficiente: cada hora precisa de pelo menos {min} pessoas para mostrar a taxa.'**
+  String abandonHourEmpty(int min);
+
+  /// No description provided for @abandonHourPeak.
+  ///
+  /// In pt, this message translates to:
+  /// **'Maior taxa às {hour}: {pct}% ({left} de {total})'**
+  String abandonHourPeak(String hour, int pct, int left, int total);
+
+  /// No description provided for @abandonHourSpoken.
+  ///
+  /// In pt, this message translates to:
+  /// **'{hour}: {pct}% desistiram ({left} de {total})'**
+  String abandonHourSpoken(String hour, int pct, int left, int total);
+
+  /// No description provided for @abandonHourNoRate.
+  ///
+  /// In pt, this message translates to:
+  /// **'{hour}: {left} de {total}, taxa com dados insuficientes'**
+  String abandonHourNoRate(String hour, int left, int total);
+
+  /// No description provided for @capacityCardTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Possível falta de capacidade'**
+  String get capacityCardTitle;
+
+  /// No description provided for @capacityCardBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nestes horários a espera média é de {wait} min ou mais e {rate}% ou mais desistem: {hours}. Considere reforçar o atendimento.'**
+  String capacityCardBody(String hours, int wait, int rate);
+
+  /// No description provided for @capacityCardNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum horário crítico no período'**
+  String get capacityCardNone;
+
+  /// No description provided for @csvWaitBand.
+  ///
+  /// In pt, this message translates to:
+  /// **'faixa de espera (min)'**
+  String get csvWaitBand;
+
+  /// No description provided for @csvEstimateBand.
+  ///
+  /// In pt, this message translates to:
+  /// **'faixa de estimativa (min)'**
+  String get csvEstimateBand;
+
+  /// No description provided for @csvAtRisk.
+  ///
+  /// In pt, this message translates to:
+  /// **'chegaram à faixa'**
+  String get csvAtRisk;
+
+  /// No description provided for @csvAbandonRatePct.
+  ///
+  /// In pt, this message translates to:
+  /// **'desistência (%)'**
+  String get csvAbandonRatePct;
+
+  /// No description provided for @csvAbandonPer10Pct.
+  ///
+  /// In pt, this message translates to:
+  /// **'desistência por 10 min (%)'**
+  String get csvAbandonPer10Pct;
+
+  /// No description provided for @csvInflection.
+  ///
+  /// In pt, this message translates to:
+  /// **'ponto de inflexão'**
+  String get csvInflection;
+
+  /// No description provided for @csvCapacityHours.
+  ///
+  /// In pt, this message translates to:
+  /// **'horas com sinal de capacidade'**
+  String get csvCapacityHours;
+
+  /// No description provided for @csvEstimateErrorMin.
+  ///
+  /// In pt, this message translates to:
+  /// **'erro médio da estimativa (min)'**
+  String get csvEstimateErrorMin;
+
+  /// No description provided for @csvEstimateAbsErrorMin.
+  ///
+  /// In pt, this message translates to:
+  /// **'erro absoluto médio da estimativa (min)'**
+  String get csvEstimateAbsErrorMin;
+
+  /// No description provided for @biNameAttendantThroughput.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atendimentos por hora e turno'**
+  String get biNameAttendantThroughput;
+
+  /// No description provided for @biWhatAttendantThroughput.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quantos atendimentos cada atendente concluiu, distribuídos por hora do dia (0 a 23) e por turno (manhã 6h–12h, tarde 12h–18h, noite 18h–6h).'**
+  String get biWhatAttendantThroughput;
+
+  /// No description provided for @biHowAttendantThroughput.
+  ///
+  /// In pt, this message translates to:
+  /// **'Conta os atendidos agrupados pelo instante em que terminaram (ou foram chamados, se faltar o término), convertido para o horário de São Paulo. Não compareceu e desistência não contam.'**
+  String get biHowAttendantThroughput;
+
+  /// No description provided for @biDataAttendantThroughput.
+  ///
+  /// In pt, this message translates to:
+  /// **'Resultado, horário de término, horário da chamada e quem chamou.'**
+  String get biDataAttendantThroughput;
+
+  /// No description provided for @biUseAttendantThroughput.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ver em que horários e turnos cada pessoa concentra o trabalho e dimensionar a escala.'**
+  String get biUseAttendantThroughput;
+
+  /// No description provided for @biNameAttendantService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tempo médio de serviço'**
+  String get biNameAttendantService;
+
+  /// No description provided for @biWhatAttendantService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quanto tempo, em média, o atendente leva entre chamar o cliente e finalizar o atendimento.'**
+  String get biWhatAttendantService;
+
+  /// No description provided for @biHowAttendantService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Média de (término − chamada) dos atendidos. Com menos de {min} amostras válidas o valor não é mostrado (—).'**
+  String biHowAttendantService(int min);
+
+  /// No description provided for @biDataAttendantService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Horário da chamada, horário de término e resultado “atendido”.'**
+  String get biDataAttendantService;
+
+  /// No description provided for @biUseAttendantService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Conhecer o ritmo real de cada pessoa e ajustar o tempo médio configurado na fila.'**
+  String get biUseAttendantService;
+
+  /// No description provided for @biNameAttendantDeviation.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desvio contra a média'**
+  String get biNameAttendantDeviation;
+
+  /// No description provided for @biWhatAttendantDeviation.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quanto o tempo médio do atendente se afasta da média de todos no escopo selecionado. Negativo significa mais rápido.'**
+  String get biWhatAttendantDeviation;
+
+  /// No description provided for @biHowAttendantDeviation.
+  ///
+  /// In pt, this message translates to:
+  /// **'(média do atendente − média do escopo) ÷ média do escopo × 100. A média do escopo é ponderada pelas amostras. Só entram atendentes com pelo menos {min} amostras; os demais mostram —.'**
+  String biHowAttendantDeviation(int min);
+
+  /// No description provided for @biDataAttendantDeviation.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tempo de serviço dos atendidos de cada atendente.'**
+  String get biDataAttendantDeviation;
+
+  /// No description provided for @biUseAttendantDeviation.
+  ///
+  /// In pt, this message translates to:
+  /// **'Identificar quem destoa do padrão, para treino ou revisão do tempo médio. Não mede qualidade: um atendimento mais longo pode ser mais complexo.'**
+  String get biUseAttendantDeviation;
+
+  /// No description provided for @biNameAttendantRate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atendimentos por hora na janela de atuação'**
+  String get biNameAttendantRate;
+
+  /// No description provided for @biWhatAttendantRate.
+  ///
+  /// In pt, this message translates to:
+  /// **'O ritmo do atendente dentro da janela em que atuou no dia. Pausas e intervalos entre atendimentos entram na janela; não é hora efetivamente trabalhada.'**
+  String get biWhatAttendantRate;
+
+  /// No description provided for @biHowAttendantRate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Por dia: atendidos ÷ horas entre a primeira chamada e o último término. O dia só vale com {min} ou mais atendimentos e janela de pelo menos {window} min. O valor mostrado soma atendimentos e horas dos dias válidos.'**
+  String biHowAttendantRate(int min, int window);
+
+  /// No description provided for @biDataAttendantRate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Horário da chamada, horário de término, resultado e quem chamou.'**
+  String get biDataAttendantRate;
+
+  /// No description provided for @biUseAttendantRate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Comparar produtividade sem o viés de quem trabalhou poucas horas.'**
+  String get biUseAttendantRate;
+
+  /// No description provided for @biNameAttendantIdle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ociosidade'**
+  String get biNameAttendantIdle;
+
+  /// No description provided for @biWhatAttendantIdle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Parcela do tempo em que o atendente ficou parado havendo gente esperando.'**
+  String get biWhatAttendantIdle;
+
+  /// No description provided for @biHowAttendantIdle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Soma dos intervalos entre o fim de um atendimento e a chamada do próximo, ÷ tempo observado no dia. O intervalo só conta se o próximo cliente já estava na fila, se for maior que zero e menor ou igual a {cap} min (acima disso presume-se pausa) e se ocorrer no mesmo dia. Só aparece com pelo menos {min} atendimentos concluídos.'**
+  String biHowAttendantIdle(int cap, int min);
+
+  /// No description provided for @biDataAttendantIdle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Horário de entrada na fila, da chamada e do término. É uma aproximação: o histórico não guarda o tamanho da fila em cada instante.'**
+  String get biDataAttendantIdle;
+
+  /// No description provided for @biUseAttendantIdle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Achar tempo perdido entre atendimentos (troca lenta, distração) separando-o de fila vazia.'**
+  String get biUseAttendantIdle;
+
+  /// No description provided for @biNameAbandonWait.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desistência por faixa de espera'**
+  String get biNameAbandonWait;
+
+  /// No description provided for @biWhatAbandonWait.
+  ///
+  /// In pt, this message translates to:
+  /// **'De quem esperou pelo menos até certo ponto, a fração que desistiu naquela faixa.'**
+  String get biWhatAbandonWait;
+
+  /// No description provided for @biHowAbandonWait.
+  ///
+  /// In pt, this message translates to:
+  /// **'Faixas de {bands} min. Em cada faixa: pessoas que desistiram na faixa ÷ pessoas que chegaram a ela (inclusive quem esperou mais e foi atendido). As barras mostram a taxa a cada 10 min (limitada a 100%; faixas mais estreitas que 5 min usam 5 min no divisor), para comparar faixas de larguras diferentes. Faixa com menos de {min} pessoas não mostra taxa.'**
+  String biHowAbandonWait(String bands, int min);
+
+  /// No description provided for @biDataAbandonWait.
+  ///
+  /// In pt, this message translates to:
+  /// **'Resultado, horário de entrada, chamada e término, e motivo de saída. Remoções do sistema (expirada ou fechada) ficam de fora. Quem ainda está na fila não aparece, então esperas longas recentes podem estar sub-representadas.'**
+  String get biDataAbandonWait;
+
+  /// No description provided for @biUseAbandonWait.
+  ///
+  /// In pt, this message translates to:
+  /// **'Mostrar a partir de que espera o cliente começa a ir embora.'**
+  String get biUseAbandonWait;
+
+  /// No description provided for @biNameAbandonInflection.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ponto de inflexão'**
+  String get biNameAbandonInflection;
+
+  /// No description provided for @biWhatAbandonInflection.
+  ///
+  /// In pt, this message translates to:
+  /// **'A primeira faixa de espera em que a desistência passa do tolerável.'**
+  String get biWhatAbandonInflection;
+
+  /// No description provided for @biHowAbandonInflection.
+  ///
+  /// In pt, this message translates to:
+  /// **'Primeira faixa, em ordem crescente, com mais de {limit}% de desistência a cada 10 minutos. Faixas sem taxa (amostra insuficiente) são puladas. Se nenhuma passar, não há ponto de inflexão.'**
+  String biHowAbandonInflection(int limit);
+
+  /// No description provided for @biDataAbandonInflection.
+  ///
+  /// In pt, this message translates to:
+  /// **'A mesma taxa por faixa de espera.'**
+  String get biDataAbandonInflection;
+
+  /// No description provided for @biUseAbandonInflection.
+  ///
+  /// In pt, this message translates to:
+  /// **'Definir a meta de espera máxima e o texto de aviso ao cliente.'**
+  String get biUseAbandonInflection;
+
+  /// No description provided for @biNameAbandonEstimate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desistência por estimativa mostrada'**
+  String get biNameAbandonEstimate;
+
+  /// No description provided for @biWhatAbandonEstimate.
+  ///
+  /// In pt, this message translates to:
+  /// **'A taxa de desistência separada pela estimativa de espera que o cliente viu ao entrar na fila.'**
+  String get biWhatAbandonEstimate;
+
+  /// No description provided for @biHowAbandonEstimate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Agrupa por estimativa ({bands} min): desistentes ÷ total de pessoas que viram aquela estimativa. Faixa com menos de {min} pessoas não mostra taxa.'**
+  String biHowAbandonEstimate(String bands, int min);
+
+  /// No description provided for @biDataAbandonEstimate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estimativa gravada na entrada e resultado. Registros anteriores à atualização que grava a estimativa não têm o campo e ficam de fora.'**
+  String get biDataAbandonEstimate;
+
+  /// No description provided for @biUseAbandonEstimate.
+  ///
+  /// In pt, this message translates to:
+  /// **'Saber se prometer uma espera longa afasta clientes, e se vale mostrar a estimativa de outra forma.'**
+  String get biUseAbandonEstimate;
+
+  /// No description provided for @biNameEstimateAccuracy.
+  ///
+  /// In pt, this message translates to:
+  /// **'Precisão da estimativa'**
+  String get biNameEstimateAccuracy;
+
+  /// No description provided for @biWhatEstimateAccuracy.
+  ///
+  /// In pt, this message translates to:
+  /// **'O quanto a estimativa mostrada ao cliente errou, em minutos.'**
+  String get biWhatEstimateAccuracy;
+
+  /// No description provided for @biHowEstimateAccuracy.
+  ///
+  /// In pt, this message translates to:
+  /// **'Média de (espera real − estimativa) para atendidos e não compareceu. Positivo: a espera foi maior que o prometido. Também mostra o erro absoluto médio, que não deixa erros positivos e negativos se anularem. Menos de {min} amostras: não calcula.'**
+  String biHowEstimateAccuracy(int min);
+
+  /// No description provided for @biDataEstimateAccuracy.
+  ///
+  /// In pt, this message translates to:
+  /// **'Estimativa gravada na entrada, horário de entrada e de chamada. Registros anteriores à gravação da estimativa ficam de fora.'**
+  String get biDataEstimateAccuracy;
+
+  /// No description provided for @biUseEstimateAccuracy.
+  ///
+  /// In pt, this message translates to:
+  /// **'Avaliar se o tempo médio configurado reflete a realidade e quando ajustá-lo.'**
+  String get biUseEstimateAccuracy;
+
+  /// No description provided for @biNameAbandonHour.
+  ///
+  /// In pt, this message translates to:
+  /// **'Desistência por hora de chegada'**
+  String get biNameAbandonHour;
+
+  /// No description provided for @biWhatAbandonHour.
+  ///
+  /// In pt, this message translates to:
+  /// **'A taxa e a quantidade de desistências conforme a hora em que a pessoa entrou na fila.'**
+  String get biWhatAbandonHour;
+
+  /// No description provided for @biHowAbandonHour.
+  ///
+  /// In pt, this message translates to:
+  /// **'Agrupa pela hora de entrada (São Paulo). Taxa = desistentes ÷ (atendidos + não compareceu + desistentes). Hora com menos de {min} pessoas não mostra taxa, mas a contagem aparece.'**
+  String biHowAbandonHour(int min);
+
+  /// No description provided for @biDataAbandonHour.
+  ///
+  /// In pt, this message translates to:
+  /// **'Resultado, horário de entrada, espera e motivo de saída. Remoções do sistema ficam de fora.'**
+  String get biDataAbandonHour;
+
+  /// No description provided for @biUseAbandonHour.
+  ///
+  /// In pt, this message translates to:
+  /// **'Localizar os horários de pico problemáticos.'**
+  String get biUseAbandonHour;
+
+  /// No description provided for @biNameCapacitySignal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sinal de capacidade'**
+  String get biNameCapacitySignal;
+
+  /// No description provided for @biWhatCapacitySignal.
+  ///
+  /// In pt, this message translates to:
+  /// **'As horas em que a fila parece subdimensionada.'**
+  String get biWhatCapacitySignal;
+
+  /// No description provided for @biHowCapacitySignal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Horas com espera média de {wait} min ou mais e taxa de desistência de {rate}% ou mais. Horas sem taxa (amostra insuficiente) não entram.'**
+  String biHowCapacitySignal(int wait, int rate);
+
+  /// No description provided for @biDataCapacitySignal.
+  ///
+  /// In pt, this message translates to:
+  /// **'A desistência por hora de chegada e a espera média de cada hora.'**
+  String get biDataCapacitySignal;
+
+  /// No description provided for @biUseCapacitySignal.
+  ///
+  /// In pt, this message translates to:
+  /// **'Indicar onde reforçar atendentes ou ajustar horários.'**
+  String get biUseCapacitySignal;
+
+  /// No description provided for @abandonBarCounts.
+  ///
+  /// In pt, this message translates to:
+  /// **'{left} de {total} desistiram'**
+  String abandonBarCounts(int left, int total);
+
+  /// No description provided for @abandonScopeQueue.
+  ///
+  /// In pt, this message translates to:
+  /// **'Fila: {name} (filtro da seção Por atendente)'**
+  String abandonScopeQueue(String name);
+
+  /// No description provided for @goalsTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Metas de atendimento'**
+  String get goalsTitle;
+
+  /// No description provided for @goalsNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem metas definidas'**
+  String get goalsNone;
+
+  /// No description provided for @goalsValueWait.
+  ///
+  /// In pt, this message translates to:
+  /// **'Espera até {min} min'**
+  String goalsValueWait(int min);
+
+  /// No description provided for @goalsValueService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atendimento até {min} min'**
+  String goalsValueService(int min);
+
+  /// No description provided for @goalsValueTarget.
+  ///
+  /// In pt, this message translates to:
+  /// **'alvo {pct}%'**
+  String goalsValueTarget(int pct);
+
+  /// No description provided for @goalsDialogHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Defina o tempo aceitável e a parte dos atendimentos que deve cumprir a meta. Deixe em branco o que não quiser medir.'**
+  String get goalsDialogHint;
+
+  /// No description provided for @goalsWaitLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Espera máxima (min)'**
+  String get goalsWaitLabel;
+
+  /// No description provided for @goalsServiceLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atendimento máximo (min)'**
+  String get goalsServiceLabel;
+
+  /// No description provided for @goalsTargetLabel.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alvo de cumprimento (%)'**
+  String get goalsTargetLabel;
+
+  /// No description provided for @goalsTargetHint.
+  ///
+  /// In pt, this message translates to:
+  /// **'Padrão {pct}'**
+  String goalsTargetHint(int pct);
+
+  /// No description provided for @goalsErrRange.
+  ///
+  /// In pt, this message translates to:
+  /// **'Informe de {min} a {max} minutos.'**
+  String goalsErrRange(int min, int max);
+
+  /// No description provided for @goalsErrTarget.
+  ///
+  /// In pt, this message translates to:
+  /// **'Informe de {min} a {max}%.'**
+  String goalsErrTarget(int min, int max);
+
+  /// No description provided for @goalsErrNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Defina pelo menos uma meta: espera ou atendimento.'**
+  String get goalsErrNone;
+
+  /// No description provided for @goalsRemove.
+  ///
+  /// In pt, this message translates to:
+  /// **'Remover metas'**
+  String get goalsRemove;
+
+  /// No description provided for @goalRiskTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Meta de espera em risco'**
+  String get goalRiskTitle;
+
+  /// No description provided for @goalRiskBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Com {waiting} na fila, a espera estimada é de {est} min, acima da meta de {goal} min.'**
+  String goalRiskBody(int waiting, int est, int goal);
+
+  /// No description provided for @goalRiskAction.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sugestão: chame mais um atendente ou abra outro balcão.'**
+  String get goalRiskAction;
+
+  /// No description provided for @goalsSectionTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Metas'**
+  String get goalsSectionTitle;
+
+  /// No description provided for @goalsSectionSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cumprimento das metas definidas em cada fila, no período e escopo escolhidos.'**
+  String get goalsSectionSubtitle;
+
+  /// No description provided for @goalsQueuesCount.
+  ///
+  /// In pt, this message translates to:
+  /// **'{count, plural, =1{Meta de 1 fila no escopo} other{Metas de {count} filas no escopo}}'**
+  String goalsQueuesCount(int count);
+
+  /// No description provided for @goalsWaitCardTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Espera dentro da meta'**
+  String get goalsWaitCardTitle;
+
+  /// No description provided for @goalsServiceCardTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atendimento dentro da meta'**
+  String get goalsServiceCardTitle;
+
+  /// No description provided for @goalsTargetLine.
+  ///
+  /// In pt, this message translates to:
+  /// **'Alvo: {pct}% dentro do limite'**
+  String goalsTargetLine(int pct);
+
+  /// No description provided for @goalsCounts.
+  ///
+  /// In pt, this message translates to:
+  /// **'{ok} de {total} dentro do limite'**
+  String goalsCounts(int ok, int total);
+
+  /// No description provided for @goalsMet.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atingida'**
+  String get goalsMet;
+
+  /// No description provided for @goalsNotMet.
+  ///
+  /// In pt, this message translates to:
+  /// **'Não atingida'**
+  String get goalsNotMet;
+
+  /// No description provided for @goalsSmallSample.
+  ///
+  /// In pt, this message translates to:
+  /// **'Amostra pequena: menos de {min} atendimentos avaliados.'**
+  String goalsSmallSample(int min);
+
+  /// No description provided for @goalsNoSamples.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem atendimentos no período para avaliar esta meta.'**
+  String get goalsNoSamples;
+
+  /// No description provided for @goalsNotSet.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma fila do escopo tem esta meta.'**
+  String get goalsNotSet;
+
+  /// No description provided for @goalsDailyTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Cumprimento por dia'**
+  String get goalsDailyTitle;
+
+  /// No description provided for @goalsDailySemantics.
+  ///
+  /// In pt, this message translates to:
+  /// **'{days} dias avaliados, {missed} abaixo do alvo'**
+  String goalsDailySemantics(int days, int missed);
+
+  /// No description provided for @goalsMissedTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Períodos em que a meta não foi atingida'**
+  String get goalsMissedTitle;
+
+  /// No description provided for @goalsMissedNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum dia ou hora abaixo do alvo com pelo menos {min} avaliados.'**
+  String goalsMissedNone(int min);
+
+  /// No description provided for @goalsKindWait.
+  ///
+  /// In pt, this message translates to:
+  /// **'Espera'**
+  String get goalsKindWait;
+
+  /// No description provided for @goalsKindService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atendimento'**
+  String get goalsKindService;
+
+  /// No description provided for @goalsMissedDayRow.
+  ///
+  /// In pt, this message translates to:
+  /// **'{kind}, {day}: {pct}% ({ok} de {total}), alvo {target}%'**
+  String goalsMissedDayRow(
+    String kind,
+    String day,
+    int pct,
+    int ok,
+    int total,
+    int target,
+  );
+
+  /// No description provided for @goalsMissedHoursRow.
+  ///
+  /// In pt, this message translates to:
+  /// **'{kind}, horas abaixo do alvo: {hours}'**
+  String goalsMissedHoursRow(String kind, String hours);
+
+  /// No description provided for @goalsMissedMore.
+  ///
+  /// In pt, this message translates to:
+  /// **'e mais {count} dias'**
+  String goalsMissedMore(int count);
+
+  /// No description provided for @goalsWorstWait.
+  ///
+  /// In pt, this message translates to:
+  /// **'Maior violação de espera: {over} min acima da meta, em {day}.'**
+  String goalsWorstWait(int over, String day);
+
+  /// No description provided for @goalsWorstService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Maior violação de atendimento: {over} min acima da meta, em {day}.'**
+  String goalsWorstService(int over, String day);
+
+  /// No description provided for @goalsNoViolation.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma violação no período.'**
+  String get goalsNoViolation;
+
+  /// No description provided for @goalsCtaTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Defina metas de atendimento'**
+  String get goalsCtaTitle;
+
+  /// No description provided for @goalsCtaBody.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma fila deste escopo tem metas. Abra a fila, vá em Configurações e use Metas de atendimento para acompanhar o cumprimento aqui.'**
+  String get goalsCtaBody;
+
+  /// No description provided for @staffTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Planejamento de equipe'**
+  String get staffTitle;
+
+  /// No description provided for @staffSubtitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quantos atendentes cada dia e hora exigem, comparado com quem realmente atendeu.'**
+  String get staffSubtitle;
+
+  /// No description provided for @staffServiceTime.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tempo médio de atendimento: {min} min ({samples} atendimentos)'**
+  String staffServiceTime(String min, int samples);
+
+  /// No description provided for @staffServiceNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tempo médio indisponível: são necessários pelo menos {min} atendimentos concluídos.'**
+  String staffServiceNone(int min);
+
+  /// No description provided for @staffOccupancy.
+  ///
+  /// In pt, this message translates to:
+  /// **'Ocupação-alvo: {pct}%'**
+  String staffOccupancy(int pct);
+
+  /// No description provided for @staffCoverage.
+  ///
+  /// In pt, this message translates to:
+  /// **'Base: {days} dias com dados'**
+  String staffCoverage(int days);
+
+  /// No description provided for @staffModeRequired.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recomendado'**
+  String get staffModeRequired;
+
+  /// No description provided for @staffModeObserved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Observado'**
+  String get staffModeObserved;
+
+  /// No description provided for @staffModeGap.
+  ///
+  /// In pt, this message translates to:
+  /// **'Diferença'**
+  String get staffModeGap;
+
+  /// No description provided for @staffGridTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atendentes por dia e hora'**
+  String get staffGridTitle;
+
+  /// No description provided for @staffHintRequired.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atendentes recomendados para absorver a demanda média, com ocupação-alvo de {pct}%.'**
+  String staffHintRequired(int pct);
+
+  /// No description provided for @staffHintObserved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Média de atendentes distintos que atenderam em cada dia e hora.'**
+  String get staffHintObserved;
+
+  /// No description provided for @staffHintGap.
+  ///
+  /// In pt, this message translates to:
+  /// **'Recomendado menos observado. Positivo: falta gente. Negativo: folga.'**
+  String get staffHintGap;
+
+  /// No description provided for @staffLegendDeficit.
+  ///
+  /// In pt, this message translates to:
+  /// **'Falta'**
+  String get staffLegendDeficit;
+
+  /// No description provided for @staffLegendOk.
+  ///
+  /// In pt, this message translates to:
+  /// **'Equilibrado'**
+  String get staffLegendOk;
+
+  /// No description provided for @staffLegendSurplus.
+  ///
+  /// In pt, this message translates to:
+  /// **'Folga'**
+  String get staffLegendSurplus;
+
+  /// No description provided for @staffCellSpoken.
+  ///
+  /// In pt, this message translates to:
+  /// **'{day} {hour}: recomendado {required}, observado {observed}'**
+  String staffCellSpoken(
+    String day,
+    String hour,
+    int required,
+    String observed,
+  );
+
+  /// No description provided for @staffGridSpoken.
+  ///
+  /// In pt, this message translates to:
+  /// **'Grade de atendentes por dia da semana e hora, modo {mode}. {top}'**
+  String staffGridSpoken(String mode, String top);
+
+  /// No description provided for @staffTopTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Maiores déficits'**
+  String get staffTopTitle;
+
+  /// No description provided for @staffTopRow.
+  ///
+  /// In pt, this message translates to:
+  /// **'{day} {hour}: precisa de {required}, tem {observed}'**
+  String staffTopRow(String day, String hour, int required, String observed);
+
+  /// No description provided for @staffTopNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhum déficit: a equipe observada cobre a demanda recomendada.'**
+  String get staffTopNone;
+
+  /// No description provided for @staffNoData.
+  ///
+  /// In pt, this message translates to:
+  /// **'Sem chegadas no período para dimensionar a equipe.'**
+  String get staffNoData;
+
+  /// No description provided for @staffSeasonTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Volume semanal e sazonalidade'**
+  String get staffSeasonTitle;
+
+  /// No description provided for @staffSeasonInsufficient.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dados insuficientes: são necessárias pelo menos {need} semanas completas com dados (há {have}).'**
+  String staffSeasonInsufficient(int need, int have);
+
+  /// No description provided for @staffTrendUp.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tendência de alta: cerca de +{pct}% por semana.'**
+  String staffTrendUp(String pct);
+
+  /// No description provided for @staffTrendDown.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tendência de queda: cerca de {pct}% por semana.'**
+  String staffTrendDown(String pct);
+
+  /// No description provided for @staffTrendStable.
+  ///
+  /// In pt, this message translates to:
+  /// **'Volume estável: variação abaixo de {pct}% por semana.'**
+  String staffTrendStable(int pct);
+
+  /// No description provided for @staffWeekSpoken.
+  ///
+  /// In pt, this message translates to:
+  /// **'Semana de {date}: {count, plural, =1{1 chegada} other{{count} chegadas}}'**
+  String staffWeekSpoken(String date, int count);
+
+  /// No description provided for @staffRecurringTitle.
+  ///
+  /// In pt, this message translates to:
+  /// **'Padrão recorrente'**
+  String get staffRecurringTitle;
+
+  /// No description provided for @staffRecurringRow.
+  ///
+  /// In pt, this message translates to:
+  /// **'{day} {hour}: entre as mais cheias em {weeks} de {total} semanas'**
+  String staffRecurringRow(String day, String hour, int weeks, int total);
+
+  /// No description provided for @staffRecurringNone.
+  ///
+  /// In pt, this message translates to:
+  /// **'Nenhuma hora se repete entre as mais cheias em pelo menos {pct}% das semanas.'**
+  String staffRecurringNone(int pct);
+
+  /// No description provided for @csvGoalIndicator.
+  ///
+  /// In pt, this message translates to:
+  /// **'indicador'**
+  String get csvGoalIndicator;
+
+  /// No description provided for @csvEvaluated.
+  ///
+  /// In pt, this message translates to:
+  /// **'avaliados'**
+  String get csvEvaluated;
+
+  /// No description provided for @csvWithinLimit.
+  ///
+  /// In pt, this message translates to:
+  /// **'dentro do limite'**
+  String get csvWithinLimit;
+
+  /// No description provided for @csvPctWithinLimit.
+  ///
+  /// In pt, this message translates to:
+  /// **'% dentro do limite'**
+  String get csvPctWithinLimit;
+
+  /// No description provided for @csvTargetPct.
+  ///
+  /// In pt, this message translates to:
+  /// **'alvo %'**
+  String get csvTargetPct;
+
+  /// No description provided for @csvGoalMet.
+  ///
+  /// In pt, this message translates to:
+  /// **'meta atingida'**
+  String get csvGoalMet;
+
+  /// No description provided for @csvWorstOverMin.
+  ///
+  /// In pt, this message translates to:
+  /// **'maior violação (min)'**
+  String get csvWorstOverMin;
+
+  /// No description provided for @csvWorstDay.
+  ///
+  /// In pt, this message translates to:
+  /// **'dia da maior violação'**
+  String get csvWorstDay;
+
+  /// No description provided for @csvMissedDays.
+  ///
+  /// In pt, this message translates to:
+  /// **'dias abaixo do alvo'**
+  String get csvMissedDays;
+
+  /// No description provided for @csvMissedHours.
+  ///
+  /// In pt, this message translates to:
+  /// **'horas abaixo do alvo'**
+  String get csvMissedHours;
+
+  /// No description provided for @csvArrivalsPerHour.
+  ///
+  /// In pt, this message translates to:
+  /// **'chegadas por hora'**
+  String get csvArrivalsPerHour;
+
+  /// No description provided for @csvRequiredStaff.
+  ///
+  /// In pt, this message translates to:
+  /// **'atendentes recomendados'**
+  String get csvRequiredStaff;
+
+  /// No description provided for @csvObservedStaff.
+  ///
+  /// In pt, this message translates to:
+  /// **'atendentes observados'**
+  String get csvObservedStaff;
+
+  /// No description provided for @csvGapStaff.
+  ///
+  /// In pt, this message translates to:
+  /// **'diferença'**
+  String get csvGapStaff;
+
+  /// No description provided for @csvWeekStart.
+  ///
+  /// In pt, this message translates to:
+  /// **'início da semana'**
+  String get csvWeekStart;
+
+  /// No description provided for @csvTrendPct.
+  ///
+  /// In pt, this message translates to:
+  /// **'tendência (% da média por semana)'**
+  String get csvTrendPct;
+
+  /// No description provided for @csvRecurringWeeks.
+  ///
+  /// In pt, this message translates to:
+  /// **'semanas entre as mais cheias'**
+  String get csvRecurringWeeks;
+
+  /// No description provided for @csvOccupancyPct.
+  ///
+  /// In pt, this message translates to:
+  /// **'ocupação-alvo %'**
+  String get csvOccupancyPct;
+
+  /// No description provided for @csvCoverageDays.
+  ///
+  /// In pt, this message translates to:
+  /// **'dias com dados'**
+  String get csvCoverageDays;
+
+  /// No description provided for @biNameGoalWait.
+  ///
+  /// In pt, this message translates to:
+  /// **'Espera dentro da meta'**
+  String get biNameGoalWait;
+
+  /// No description provided for @biWhatGoalWait.
+  ///
+  /// In pt, this message translates to:
+  /// **'A parte dos atendimentos em que a pessoa esperou até o limite de espera definido na fila.'**
+  String get biWhatGoalWait;
+
+  /// No description provided for @biHowGoalWait.
+  ///
+  /// In pt, this message translates to:
+  /// **'Compara a espera (chamada menos entrada) de cada atendido e não compareceu com a meta de espera. Quem desistiu só entra se esperou mais que a meta, e conta como descumprimento; desistência abaixo da meta e remoções do sistema ficam de fora. Percentual = dentro do limite ÷ avaliados. A meta é atingida quando o percentual alcança o alvo (padrão 80%). Com várias filas, cada pessoa é comparada à meta da própria fila e o alvo mostrado é a média ponderada pelos avaliados. Abaixo de {min} avaliados, o resultado é marcado como amostra pequena.'**
+  String biHowGoalWait(int min);
+
+  /// No description provided for @biDataGoalWait.
+  ///
+  /// In pt, this message translates to:
+  /// **'Resultado, horário de entrada, de chamada e de saída (desistência) e as metas da fila. Sem telefone.'**
+  String get biDataGoalWait;
+
+  /// No description provided for @biUseGoalWait.
+  ///
+  /// In pt, this message translates to:
+  /// **'Saber se o serviço está dentro do prazo prometido e quando ele falha.'**
+  String get biUseGoalWait;
+
+  /// No description provided for @biNameGoalService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atendimento dentro da meta'**
+  String get biNameGoalService;
+
+  /// No description provided for @biWhatGoalService.
+  ///
+  /// In pt, this message translates to:
+  /// **'A parte dos atendimentos concluídos que durou até o tempo máximo definido na fila.'**
+  String get biWhatGoalService;
+
+  /// No description provided for @biHowGoalService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Só atendimentos concluídos (atendidos). Compara a duração (fim menos chamada) com a meta de atendimento. Percentual = dentro do limite ÷ avaliados; a meta é atingida quando alcança o alvo. Não comparecimentos e desistências não entram. Abaixo de {min} avaliados, o resultado é marcado como amostra pequena.'**
+  String biHowGoalService(int min);
+
+  /// No description provided for @biDataGoalService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Resultado, horário de chamada e de término e as metas da fila.'**
+  String get biDataGoalService;
+
+  /// No description provided for @biUseGoalService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Verificar se os atendimentos cabem no tempo esperado e achar dias e horas lentos.'**
+  String get biUseGoalService;
+
+  /// No description provided for @biNameGoalMissed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Períodos em que a meta não foi atingida'**
+  String get biNameGoalMissed;
+
+  /// No description provided for @biWhatGoalMissed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dias e horas do dia em que o cumprimento ficou abaixo do alvo, e a maior violação.'**
+  String get biWhatGoalMissed;
+
+  /// No description provided for @biHowGoalMissed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Agrupa os avaliados por dia e por hora do dia (São Paulo). Lista os dias e as horas com pelo menos {min} avaliados e percentual abaixo do alvo. A maior violação é o maior excesso, em minutos, sobre o limite de espera ou de atendimento. Dias e horas com menos avaliados não são listados.'**
+  String biHowGoalMissed(int min);
+
+  /// No description provided for @biDataGoalMissed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os mesmos dos indicadores de espera e de atendimento dentro da meta.'**
+  String get biDataGoalMissed;
+
+  /// No description provided for @biUseGoalMissed.
+  ///
+  /// In pt, this message translates to:
+  /// **'Achar quando a meta falha de forma recorrente e reforçar a equipe nesses períodos.'**
+  String get biUseGoalMissed;
+
+  /// No description provided for @biNameStaffingService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Tempo médio de atendimento'**
+  String get biNameStaffingService;
+
+  /// No description provided for @biWhatStaffingService.
+  ///
+  /// In pt, this message translates to:
+  /// **'A duração média dos atendimentos concluídos, usada para estimar quantos atendentes são necessários.'**
+  String get biWhatStaffingService;
+
+  /// No description provided for @biHowStaffingService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Média de fim menos chamada dos atendimentos concluídos (atendidos) do escopo e período. Com menos de {min} atendimentos não é calculada e a recomendação de atendentes fica indisponível.'**
+  String biHowStaffingService(int min);
+
+  /// No description provided for @biDataStaffingService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Resultado, horário de chamada e de término.'**
+  String get biDataStaffingService;
+
+  /// No description provided for @biUseStaffingService.
+  ///
+  /// In pt, this message translates to:
+  /// **'Servir de base para o cálculo de atendentes recomendados.'**
+  String get biUseStaffingService;
+
+  /// No description provided for @biNameStaffingRequired.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atendentes recomendados'**
+  String get biNameStaffingRequired;
+
+  /// No description provided for @biWhatStaffingRequired.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quantos atendentes cada dia da semana e hora exigem para absorver a demanda média.'**
+  String get biWhatStaffingRequired;
+
+  /// No description provided for @biHowStaffingRequired.
+  ///
+  /// In pt, this message translates to:
+  /// **'Chegadas por hora = chegadas naquele dia da semana e hora ÷ número de vezes que esse dia da semana ocorre entre o primeiro e o último dia com dados (inclui quem desistiu e não compareceu). Recomendados = arredondar para cima (chegadas por hora × tempo médio de atendimento em horas ÷ ocupação-alvo de {pct}%). Indisponível sem tempo médio de atendimento.'**
+  String biHowStaffingRequired(int pct);
+
+  /// No description provided for @biDataStaffingRequired.
+  ///
+  /// In pt, this message translates to:
+  /// **'Hora de entrada de todas as pessoas, resultado, horário de chamada e de término.'**
+  String get biDataStaffingRequired;
+
+  /// No description provided for @biUseStaffingRequired.
+  ///
+  /// In pt, this message translates to:
+  /// **'Montar escalas: ver em que dias e horas a equipe precisa ser maior.'**
+  String get biUseStaffingRequired;
+
+  /// No description provided for @biNameStaffingObserved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atendentes observados'**
+  String get biNameStaffingObserved;
+
+  /// No description provided for @biWhatStaffingObserved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quantos atendentes distintos realmente atenderam em cada dia da semana e hora.'**
+  String get biWhatStaffingObserved;
+
+  /// No description provided for @biHowStaffingObserved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Para cada data e hora, conta os atendentes distintos com atendimento em andamento, da chamada ao fim (atendimentos longos contam em todas as horas que atravessam). Soma por dia da semana e hora e divide pelo mesmo número de ocorrências do dia da semana usado nas chegadas. O dono e registros sem atendente contam como um atendente.'**
+  String get biHowStaffingObserved;
+
+  /// No description provided for @biDataStaffingObserved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Atendente, horário de chamada e de término, resultado (atendido ou não compareceu).'**
+  String get biDataStaffingObserved;
+
+  /// No description provided for @biUseStaffingObserved.
+  ///
+  /// In pt, this message translates to:
+  /// **'Comparar a equipe que de fato atuou com a recomendada.'**
+  String get biUseStaffingObserved;
+
+  /// No description provided for @biNameStaffingGap.
+  ///
+  /// In pt, this message translates to:
+  /// **'Déficit e folga'**
+  String get biNameStaffingGap;
+
+  /// No description provided for @biWhatStaffingGap.
+  ///
+  /// In pt, this message translates to:
+  /// **'A diferença entre atendentes recomendados e observados em cada dia e hora.'**
+  String get biWhatStaffingGap;
+
+  /// No description provided for @biHowStaffingGap.
+  ///
+  /// In pt, this message translates to:
+  /// **'Diferença = recomendados menos observados. Positivo é déficit (falta gente); negativo é folga. A lista mostra as {n} maiores diferenças positivas, desempatando por recomendados, dia e hora.'**
+  String biHowStaffingGap(int n);
+
+  /// No description provided for @biDataStaffingGap.
+  ///
+  /// In pt, this message translates to:
+  /// **'Os mesmos dos atendentes recomendados e observados.'**
+  String get biDataStaffingGap;
+
+  /// No description provided for @biUseStaffingGap.
+  ///
+  /// In pt, this message translates to:
+  /// **'Priorizar onde reforçar a equipe e onde sobra capacidade.'**
+  String get biUseStaffingGap;
+
+  /// No description provided for @biNameSeasonVolume.
+  ///
+  /// In pt, this message translates to:
+  /// **'Volume semanal e tendência'**
+  String get biNameSeasonVolume;
+
+  /// No description provided for @biWhatSeasonVolume.
+  ///
+  /// In pt, this message translates to:
+  /// **'Quantas pessoas entraram na fila em cada uma das últimas semanas e para onde o volume caminha.'**
+  String get biWhatSeasonVolume;
+
+  /// No description provided for @biHowSeasonVolume.
+  ///
+  /// In pt, this message translates to:
+  /// **'Conta as chegadas (inclui desistências e não comparecimentos) por semana, de segunda a domingo (São Paulo), nas últimas {weeks} semanas completas, a partir da primeira semana com dados; a semana em andamento fica de fora. A tendência é a inclinação de uma reta ajustada aos volumes semanais, em % da média semanal por semana; abaixo de {band}% é considerada estável. Com menos de {min} semanas, mostra dados insuficientes.'**
+  String biHowSeasonVolume(int weeks, int band, int min);
+
+  /// No description provided for @biDataSeasonVolume.
+  ///
+  /// In pt, this message translates to:
+  /// **'Hora de entrada de todas as pessoas. Usa todo o histórico carregado do escopo, não só o período escolhido.'**
+  String get biDataSeasonVolume;
+
+  /// No description provided for @biUseSeasonVolume.
+  ///
+  /// In pt, this message translates to:
+  /// **'Planejar equipe e espaço para os próximos períodos.'**
+  String get biUseSeasonVolume;
+
+  /// No description provided for @biNameSeasonPattern.
+  ///
+  /// In pt, this message translates to:
+  /// **'Padrão recorrente'**
+  String get biNameSeasonPattern;
+
+  /// No description provided for @biWhatSeasonPattern.
+  ///
+  /// In pt, this message translates to:
+  /// **'Dias da semana e horas que se repetem entre os mais movimentados, semana após semana.'**
+  String get biWhatSeasonPattern;
+
+  /// No description provided for @biHowSeasonPattern.
+  ///
+  /// In pt, this message translates to:
+  /// **'Em cada semana observada, pega as {top} células (dia da semana × hora) com mais chegadas. Uma célula é recorrente quando aparece nesse grupo em pelo menos {pct}% das semanas observadas. Exige ao menos {min} semanas.'**
+  String biHowSeasonPattern(int top, int pct, int min);
+
+  /// No description provided for @biDataSeasonPattern.
+  ///
+  /// In pt, this message translates to:
+  /// **'Hora de entrada de todas as pessoas.'**
+  String get biDataSeasonPattern;
+
+  /// No description provided for @biUseSeasonPattern.
+  ///
+  /// In pt, this message translates to:
+  /// **'Saber quais horários são movimentados sempre, e não por acaso.'**
+  String get biUseSeasonPattern;
 }
 
 class _AppLocalizationsDelegate

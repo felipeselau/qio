@@ -98,7 +98,27 @@ function rateLimitFromEnv(env = {}) {
   };
 }
 
+const MAX_ESTIMATE_MIN = 100000;
+const DEFAULT_AVG_SERVICE_MIN = 10;
+
+function positiveNumber(value) {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null;
+}
+
+function joinEstimateMin({ waitingAhead, avgServiceMinAuto, avgServiceMin, mode } = {}) {
+  if (mode === 'schedule') return null;
+  if (typeof waitingAhead !== 'number' || !Number.isFinite(waitingAhead) || waitingAhead < 0) {
+    return null;
+  }
+  const avg =
+    positiveNumber(avgServiceMinAuto) ?? positiveNumber(avgServiceMin) ?? DEFAULT_AVG_SERVICE_MIN;
+  const minutes = Math.round((Math.floor(waitingAhead) + 1) * avg);
+  return Math.min(MAX_ESTIMATE_MIN, Math.max(0, minutes));
+}
+
 module.exports = {
+  MAX_ESTIMATE_MIN,
+  joinEstimateMin,
   MAX_NAME_LENGTH,
   DEFAULT_RATE_LIMIT,
   CLAIM_RATE_LIMIT,

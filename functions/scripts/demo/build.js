@@ -103,6 +103,7 @@ function buildQueue({ owner, def, now, days, seed, groupIds }) {
     scheduleLastDesired: schedule ? status === 'open' : undefined,
     brandColor: def.brandColor,
     alerts: def.alerts,
+    goals: def.goals,
     alertState: alertState,
     expiry: def.expiry,
     lastTicketResetDay: resetTicketDaily ? spDayKey(now) : undefined,

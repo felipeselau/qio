@@ -2511,4 +2511,1050 @@ class AppLocalizationsPt extends AppLocalizations {
 
   @override
   String get colQueue => 'Fila';
+
+  @override
+  String infoButtonSemantics(String name) {
+    return 'Explicação do indicador: $name';
+  }
+
+  @override
+  String get infoWhat => 'O que é';
+
+  @override
+  String get infoHow => 'Como é calculado';
+
+  @override
+  String get infoData => 'Dados usados';
+
+  @override
+  String get infoUse => 'Para que serve';
+
+  @override
+  String get infoClose => 'Fechar';
+
+  @override
+  String get attColService => 'Tempo médio';
+
+  @override
+  String get attColDeviation => 'Desvio';
+
+  @override
+  String get attColRate => 'Atend./h';
+
+  @override
+  String get attColIdle => 'Ocioso';
+
+  @override
+  String attInsufficientNote(int samples) {
+    return '— indica amostra insuficiente (menos de $samples atendimentos ou janela curta).';
+  }
+
+  @override
+  String attRowSpoken(
+    String name,
+    int served,
+    String service,
+    String deviation,
+    String rate,
+    String idle,
+    int noShow,
+    String rating,
+  ) {
+    return '$name. $served atendimentos, tempo médio $service, desvio $deviation, $rate atendimentos por hora, ociosidade $idle, $noShow não compareceram, nota $rating';
+  }
+
+  @override
+  String get attChartTitleHour => 'Atendimentos por hora do dia';
+
+  @override
+  String get attChartTitleShift => 'Atendimentos por turno';
+
+  @override
+  String get attChartModeHour => 'Hora';
+
+  @override
+  String get attChartModeShift => 'Turno';
+
+  @override
+  String get attChartOperatorLabel => 'Atendente do gráfico';
+
+  @override
+  String get attChartAll => 'Todos os atendentes';
+
+  @override
+  String get attChartEmpty => 'Sem atendimentos concluídos para este gráfico.';
+
+  @override
+  String attChartPeak(String label, int count) {
+    return 'Mais atendimentos: $label ($count)';
+  }
+
+  @override
+  String attChartSemantics(String summary) {
+    return 'Gráfico de atendimentos. $summary';
+  }
+
+  @override
+  String get attShiftMorning => 'Manhã (6h–12h)';
+
+  @override
+  String get attShiftAfternoon => 'Tarde (12h–18h)';
+
+  @override
+  String get attShiftNight => 'Noite (18h–6h)';
+
+  @override
+  String get csvDeviationPct => 'desvio vs média (%)';
+
+  @override
+  String get csvRatePerHour => 'atendimentos por hora (janela de atuação)';
+
+  @override
+  String get csvIdlePct => 'ociosidade (%)';
+
+  @override
+  String get abandonTitle => 'Desistências';
+
+  @override
+  String get abandonSubtitle =>
+      'Quem entrou e saiu antes de ser atendido. Remoções automáticas (expiração e fechamento) não contam.';
+
+  @override
+  String abandonBand(int start, int end) {
+    return '$start–$end min';
+  }
+
+  @override
+  String abandonBandOpen(int start) {
+    return '$start+ min';
+  }
+
+  @override
+  String get abandonWaitTitle => 'Taxa por faixa de espera';
+
+  @override
+  String get abandonWaitHint =>
+      'Desistências a cada 10 min de espera, entre quem chegou a cada faixa.';
+
+  @override
+  String abandonWaitEmpty(int min) {
+    return 'Amostra insuficiente: cada faixa precisa de pelo menos $min pessoas para mostrar a taxa.';
+  }
+
+  @override
+  String abandonBarSpoken(String band, int pct) {
+    return '$band: $pct% a cada 10 min';
+  }
+
+  @override
+  String abandonBarNoData(String band) {
+    return '$band: dados insuficientes';
+  }
+
+  @override
+  String abandonInflectionFound(String band, int limit) {
+    return 'Ponto de inflexão: a partir de $band a desistência passa de $limit% a cada 10 min.';
+  }
+
+  @override
+  String abandonInflectionNone(int limit) {
+    return 'Nenhuma faixa passa do limite de $limit% a cada 10 min.';
+  }
+
+  @override
+  String get abandonEstimateTitle => 'Taxa por estimativa mostrada';
+
+  @override
+  String get abandonEstimateHint =>
+      'Percentual de desistência conforme a estimativa que o cliente viu ao entrar.';
+
+  @override
+  String get abandonEstimateEmpty =>
+      'Ainda não há registros com a estimativa mostrada na entrada. O histórico anterior à atualização que grava a estimativa não tem esse dado.';
+
+  @override
+  String abandonEstimateBarSpoken(String band, int pct) {
+    return 'Estimativa $band: $pct% desistiram';
+  }
+
+  @override
+  String abandonEstimateBarNoData(String band) {
+    return 'Estimativa $band: dados insuficientes';
+  }
+
+  @override
+  String get estimateAccuracyTitle => 'Precisão da estimativa';
+
+  @override
+  String estimateAccuracyMean(String value, int samples) {
+    return 'Espera real menos estimativa: $value min em média ($samples atendimentos)';
+  }
+
+  @override
+  String estimateAccuracyAbs(String value) {
+    return 'Erro absoluto médio: $value min';
+  }
+
+  @override
+  String get estimateAccuracyHint =>
+      'Positivo: a espera foi maior que o prometido.';
+
+  @override
+  String estimateAccuracyNone(int min) {
+    return 'Amostra insuficiente: são necessários $min atendimentos com estimativa gravada.';
+  }
+
+  @override
+  String get abandonHourTitle => 'Desistência por hora de chegada';
+
+  @override
+  String get abandonHourRateLabel => 'Taxa';
+
+  @override
+  String get abandonHourCountLabel => 'Desistentes';
+
+  @override
+  String abandonHourEmpty(int min) {
+    return 'Amostra insuficiente: cada hora precisa de pelo menos $min pessoas para mostrar a taxa.';
+  }
+
+  @override
+  String abandonHourPeak(String hour, int pct, int left, int total) {
+    return 'Maior taxa às $hour: $pct% ($left de $total)';
+  }
+
+  @override
+  String abandonHourSpoken(String hour, int pct, int left, int total) {
+    return '$hour: $pct% desistiram ($left de $total)';
+  }
+
+  @override
+  String abandonHourNoRate(String hour, int left, int total) {
+    return '$hour: $left de $total, taxa com dados insuficientes';
+  }
+
+  @override
+  String get capacityCardTitle => 'Possível falta de capacidade';
+
+  @override
+  String capacityCardBody(String hours, int wait, int rate) {
+    return 'Nestes horários a espera média é de $wait min ou mais e $rate% ou mais desistem: $hours. Considere reforçar o atendimento.';
+  }
+
+  @override
+  String get capacityCardNone => 'Nenhum horário crítico no período';
+
+  @override
+  String get csvWaitBand => 'faixa de espera (min)';
+
+  @override
+  String get csvEstimateBand => 'faixa de estimativa (min)';
+
+  @override
+  String get csvAtRisk => 'chegaram à faixa';
+
+  @override
+  String get csvAbandonRatePct => 'desistência (%)';
+
+  @override
+  String get csvAbandonPer10Pct => 'desistência por 10 min (%)';
+
+  @override
+  String get csvInflection => 'ponto de inflexão';
+
+  @override
+  String get csvCapacityHours => 'horas com sinal de capacidade';
+
+  @override
+  String get csvEstimateErrorMin => 'erro médio da estimativa (min)';
+
+  @override
+  String get csvEstimateAbsErrorMin =>
+      'erro absoluto médio da estimativa (min)';
+
+  @override
+  String get biNameAttendantThroughput => 'Atendimentos por hora e turno';
+
+  @override
+  String get biWhatAttendantThroughput =>
+      'Quantos atendimentos cada atendente concluiu, distribuídos por hora do dia (0 a 23) e por turno (manhã 6h–12h, tarde 12h–18h, noite 18h–6h).';
+
+  @override
+  String get biHowAttendantThroughput =>
+      'Conta os atendidos agrupados pelo instante em que terminaram (ou foram chamados, se faltar o término), convertido para o horário de São Paulo. Não compareceu e desistência não contam.';
+
+  @override
+  String get biDataAttendantThroughput =>
+      'Resultado, horário de término, horário da chamada e quem chamou.';
+
+  @override
+  String get biUseAttendantThroughput =>
+      'Ver em que horários e turnos cada pessoa concentra o trabalho e dimensionar a escala.';
+
+  @override
+  String get biNameAttendantService => 'Tempo médio de serviço';
+
+  @override
+  String get biWhatAttendantService =>
+      'Quanto tempo, em média, o atendente leva entre chamar o cliente e finalizar o atendimento.';
+
+  @override
+  String biHowAttendantService(int min) {
+    return 'Média de (término − chamada) dos atendidos. Com menos de $min amostras válidas o valor não é mostrado (—).';
+  }
+
+  @override
+  String get biDataAttendantService =>
+      'Horário da chamada, horário de término e resultado “atendido”.';
+
+  @override
+  String get biUseAttendantService =>
+      'Conhecer o ritmo real de cada pessoa e ajustar o tempo médio configurado na fila.';
+
+  @override
+  String get biNameAttendantDeviation => 'Desvio contra a média';
+
+  @override
+  String get biWhatAttendantDeviation =>
+      'Quanto o tempo médio do atendente se afasta da média de todos no escopo selecionado. Negativo significa mais rápido.';
+
+  @override
+  String biHowAttendantDeviation(int min) {
+    return '(média do atendente − média do escopo) ÷ média do escopo × 100. A média do escopo é ponderada pelas amostras. Só entram atendentes com pelo menos $min amostras; os demais mostram —.';
+  }
+
+  @override
+  String get biDataAttendantDeviation =>
+      'Tempo de serviço dos atendidos de cada atendente.';
+
+  @override
+  String get biUseAttendantDeviation =>
+      'Identificar quem destoa do padrão, para treino ou revisão do tempo médio. Não mede qualidade: um atendimento mais longo pode ser mais complexo.';
+
+  @override
+  String get biNameAttendantRate =>
+      'Atendimentos por hora na janela de atuação';
+
+  @override
+  String get biWhatAttendantRate =>
+      'O ritmo do atendente dentro da janela em que atuou no dia. Pausas e intervalos entre atendimentos entram na janela; não é hora efetivamente trabalhada.';
+
+  @override
+  String biHowAttendantRate(int min, int window) {
+    return 'Por dia: atendidos ÷ horas entre a primeira chamada e o último término. O dia só vale com $min ou mais atendimentos e janela de pelo menos $window min. O valor mostrado soma atendimentos e horas dos dias válidos.';
+  }
+
+  @override
+  String get biDataAttendantRate =>
+      'Horário da chamada, horário de término, resultado e quem chamou.';
+
+  @override
+  String get biUseAttendantRate =>
+      'Comparar produtividade sem o viés de quem trabalhou poucas horas.';
+
+  @override
+  String get biNameAttendantIdle => 'Ociosidade';
+
+  @override
+  String get biWhatAttendantIdle =>
+      'Parcela do tempo em que o atendente ficou parado havendo gente esperando.';
+
+  @override
+  String biHowAttendantIdle(int cap, int min) {
+    return 'Soma dos intervalos entre o fim de um atendimento e a chamada do próximo, ÷ tempo observado no dia. O intervalo só conta se o próximo cliente já estava na fila, se for maior que zero e menor ou igual a $cap min (acima disso presume-se pausa) e se ocorrer no mesmo dia. Só aparece com pelo menos $min atendimentos concluídos.';
+  }
+
+  @override
+  String get biDataAttendantIdle =>
+      'Horário de entrada na fila, da chamada e do término. É uma aproximação: o histórico não guarda o tamanho da fila em cada instante.';
+
+  @override
+  String get biUseAttendantIdle =>
+      'Achar tempo perdido entre atendimentos (troca lenta, distração) separando-o de fila vazia.';
+
+  @override
+  String get biNameAbandonWait => 'Desistência por faixa de espera';
+
+  @override
+  String get biWhatAbandonWait =>
+      'De quem esperou pelo menos até certo ponto, a fração que desistiu naquela faixa.';
+
+  @override
+  String biHowAbandonWait(String bands, int min) {
+    return 'Faixas de $bands min. Em cada faixa: pessoas que desistiram na faixa ÷ pessoas que chegaram a ela (inclusive quem esperou mais e foi atendido). As barras mostram a taxa a cada 10 min (limitada a 100%; faixas mais estreitas que 5 min usam 5 min no divisor), para comparar faixas de larguras diferentes. Faixa com menos de $min pessoas não mostra taxa.';
+  }
+
+  @override
+  String get biDataAbandonWait =>
+      'Resultado, horário de entrada, chamada e término, e motivo de saída. Remoções do sistema (expirada ou fechada) ficam de fora. Quem ainda está na fila não aparece, então esperas longas recentes podem estar sub-representadas.';
+
+  @override
+  String get biUseAbandonWait =>
+      'Mostrar a partir de que espera o cliente começa a ir embora.';
+
+  @override
+  String get biNameAbandonInflection => 'Ponto de inflexão';
+
+  @override
+  String get biWhatAbandonInflection =>
+      'A primeira faixa de espera em que a desistência passa do tolerável.';
+
+  @override
+  String biHowAbandonInflection(int limit) {
+    return 'Primeira faixa, em ordem crescente, com mais de $limit% de desistência a cada 10 minutos. Faixas sem taxa (amostra insuficiente) são puladas. Se nenhuma passar, não há ponto de inflexão.';
+  }
+
+  @override
+  String get biDataAbandonInflection => 'A mesma taxa por faixa de espera.';
+
+  @override
+  String get biUseAbandonInflection =>
+      'Definir a meta de espera máxima e o texto de aviso ao cliente.';
+
+  @override
+  String get biNameAbandonEstimate => 'Desistência por estimativa mostrada';
+
+  @override
+  String get biWhatAbandonEstimate =>
+      'A taxa de desistência separada pela estimativa de espera que o cliente viu ao entrar na fila.';
+
+  @override
+  String biHowAbandonEstimate(String bands, int min) {
+    return 'Agrupa por estimativa ($bands min): desistentes ÷ total de pessoas que viram aquela estimativa. Faixa com menos de $min pessoas não mostra taxa.';
+  }
+
+  @override
+  String get biDataAbandonEstimate =>
+      'Estimativa gravada na entrada e resultado. Registros anteriores à atualização que grava a estimativa não têm o campo e ficam de fora.';
+
+  @override
+  String get biUseAbandonEstimate =>
+      'Saber se prometer uma espera longa afasta clientes, e se vale mostrar a estimativa de outra forma.';
+
+  @override
+  String get biNameEstimateAccuracy => 'Precisão da estimativa';
+
+  @override
+  String get biWhatEstimateAccuracy =>
+      'O quanto a estimativa mostrada ao cliente errou, em minutos.';
+
+  @override
+  String biHowEstimateAccuracy(int min) {
+    return 'Média de (espera real − estimativa) para atendidos e não compareceu. Positivo: a espera foi maior que o prometido. Também mostra o erro absoluto médio, que não deixa erros positivos e negativos se anularem. Menos de $min amostras: não calcula.';
+  }
+
+  @override
+  String get biDataEstimateAccuracy =>
+      'Estimativa gravada na entrada, horário de entrada e de chamada. Registros anteriores à gravação da estimativa ficam de fora.';
+
+  @override
+  String get biUseEstimateAccuracy =>
+      'Avaliar se o tempo médio configurado reflete a realidade e quando ajustá-lo.';
+
+  @override
+  String get biNameAbandonHour => 'Desistência por hora de chegada';
+
+  @override
+  String get biWhatAbandonHour =>
+      'A taxa e a quantidade de desistências conforme a hora em que a pessoa entrou na fila.';
+
+  @override
+  String biHowAbandonHour(int min) {
+    return 'Agrupa pela hora de entrada (São Paulo). Taxa = desistentes ÷ (atendidos + não compareceu + desistentes). Hora com menos de $min pessoas não mostra taxa, mas a contagem aparece.';
+  }
+
+  @override
+  String get biDataAbandonHour =>
+      'Resultado, horário de entrada, espera e motivo de saída. Remoções do sistema ficam de fora.';
+
+  @override
+  String get biUseAbandonHour => 'Localizar os horários de pico problemáticos.';
+
+  @override
+  String get biNameCapacitySignal => 'Sinal de capacidade';
+
+  @override
+  String get biWhatCapacitySignal =>
+      'As horas em que a fila parece subdimensionada.';
+
+  @override
+  String biHowCapacitySignal(int wait, int rate) {
+    return 'Horas com espera média de $wait min ou mais e taxa de desistência de $rate% ou mais. Horas sem taxa (amostra insuficiente) não entram.';
+  }
+
+  @override
+  String get biDataCapacitySignal =>
+      'A desistência por hora de chegada e a espera média de cada hora.';
+
+  @override
+  String get biUseCapacitySignal =>
+      'Indicar onde reforçar atendentes ou ajustar horários.';
+
+  @override
+  String abandonBarCounts(int left, int total) {
+    return '$left de $total desistiram';
+  }
+
+  @override
+  String abandonScopeQueue(String name) {
+    return 'Fila: $name (filtro da seção Por atendente)';
+  }
+
+  @override
+  String get goalsTitle => 'Metas de atendimento';
+
+  @override
+  String get goalsNone => 'Sem metas definidas';
+
+  @override
+  String goalsValueWait(int min) {
+    return 'Espera até $min min';
+  }
+
+  @override
+  String goalsValueService(int min) {
+    return 'Atendimento até $min min';
+  }
+
+  @override
+  String goalsValueTarget(int pct) {
+    return 'alvo $pct%';
+  }
+
+  @override
+  String get goalsDialogHint =>
+      'Defina o tempo aceitável e a parte dos atendimentos que deve cumprir a meta. Deixe em branco o que não quiser medir.';
+
+  @override
+  String get goalsWaitLabel => 'Espera máxima (min)';
+
+  @override
+  String get goalsServiceLabel => 'Atendimento máximo (min)';
+
+  @override
+  String get goalsTargetLabel => 'Alvo de cumprimento (%)';
+
+  @override
+  String goalsTargetHint(int pct) {
+    return 'Padrão $pct';
+  }
+
+  @override
+  String goalsErrRange(int min, int max) {
+    return 'Informe de $min a $max minutos.';
+  }
+
+  @override
+  String goalsErrTarget(int min, int max) {
+    return 'Informe de $min a $max%.';
+  }
+
+  @override
+  String get goalsErrNone =>
+      'Defina pelo menos uma meta: espera ou atendimento.';
+
+  @override
+  String get goalsRemove => 'Remover metas';
+
+  @override
+  String get goalRiskTitle => 'Meta de espera em risco';
+
+  @override
+  String goalRiskBody(int waiting, int est, int goal) {
+    return 'Com $waiting na fila, a espera estimada é de $est min, acima da meta de $goal min.';
+  }
+
+  @override
+  String get goalRiskAction =>
+      'Sugestão: chame mais um atendente ou abra outro balcão.';
+
+  @override
+  String get goalsSectionTitle => 'Metas';
+
+  @override
+  String get goalsSectionSubtitle =>
+      'Cumprimento das metas definidas em cada fila, no período e escopo escolhidos.';
+
+  @override
+  String goalsQueuesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Metas de $count filas no escopo',
+      one: 'Meta de 1 fila no escopo',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get goalsWaitCardTitle => 'Espera dentro da meta';
+
+  @override
+  String get goalsServiceCardTitle => 'Atendimento dentro da meta';
+
+  @override
+  String goalsTargetLine(int pct) {
+    return 'Alvo: $pct% dentro do limite';
+  }
+
+  @override
+  String goalsCounts(int ok, int total) {
+    return '$ok de $total dentro do limite';
+  }
+
+  @override
+  String get goalsMet => 'Atingida';
+
+  @override
+  String get goalsNotMet => 'Não atingida';
+
+  @override
+  String goalsSmallSample(int min) {
+    return 'Amostra pequena: menos de $min atendimentos avaliados.';
+  }
+
+  @override
+  String get goalsNoSamples =>
+      'Sem atendimentos no período para avaliar esta meta.';
+
+  @override
+  String get goalsNotSet => 'Nenhuma fila do escopo tem esta meta.';
+
+  @override
+  String get goalsDailyTitle => 'Cumprimento por dia';
+
+  @override
+  String goalsDailySemantics(int days, int missed) {
+    return '$days dias avaliados, $missed abaixo do alvo';
+  }
+
+  @override
+  String get goalsMissedTitle => 'Períodos em que a meta não foi atingida';
+
+  @override
+  String goalsMissedNone(int min) {
+    return 'Nenhum dia ou hora abaixo do alvo com pelo menos $min avaliados.';
+  }
+
+  @override
+  String get goalsKindWait => 'Espera';
+
+  @override
+  String get goalsKindService => 'Atendimento';
+
+  @override
+  String goalsMissedDayRow(
+    String kind,
+    String day,
+    int pct,
+    int ok,
+    int total,
+    int target,
+  ) {
+    return '$kind, $day: $pct% ($ok de $total), alvo $target%';
+  }
+
+  @override
+  String goalsMissedHoursRow(String kind, String hours) {
+    return '$kind, horas abaixo do alvo: $hours';
+  }
+
+  @override
+  String goalsMissedMore(int count) {
+    return 'e mais $count dias';
+  }
+
+  @override
+  String goalsWorstWait(int over, String day) {
+    return 'Maior violação de espera: $over min acima da meta, em $day.';
+  }
+
+  @override
+  String goalsWorstService(int over, String day) {
+    return 'Maior violação de atendimento: $over min acima da meta, em $day.';
+  }
+
+  @override
+  String get goalsNoViolation => 'Nenhuma violação no período.';
+
+  @override
+  String get goalsCtaTitle => 'Defina metas de atendimento';
+
+  @override
+  String get goalsCtaBody =>
+      'Nenhuma fila deste escopo tem metas. Abra a fila, vá em Configurações e use Metas de atendimento para acompanhar o cumprimento aqui.';
+
+  @override
+  String get staffTitle => 'Planejamento de equipe';
+
+  @override
+  String get staffSubtitle =>
+      'Quantos atendentes cada dia e hora exigem, comparado com quem realmente atendeu.';
+
+  @override
+  String staffServiceTime(String min, int samples) {
+    return 'Tempo médio de atendimento: $min min ($samples atendimentos)';
+  }
+
+  @override
+  String staffServiceNone(int min) {
+    return 'Tempo médio indisponível: são necessários pelo menos $min atendimentos concluídos.';
+  }
+
+  @override
+  String staffOccupancy(int pct) {
+    return 'Ocupação-alvo: $pct%';
+  }
+
+  @override
+  String staffCoverage(int days) {
+    return 'Base: $days dias com dados';
+  }
+
+  @override
+  String get staffModeRequired => 'Recomendado';
+
+  @override
+  String get staffModeObserved => 'Observado';
+
+  @override
+  String get staffModeGap => 'Diferença';
+
+  @override
+  String get staffGridTitle => 'Atendentes por dia e hora';
+
+  @override
+  String staffHintRequired(int pct) {
+    return 'Atendentes recomendados para absorver a demanda média, com ocupação-alvo de $pct%.';
+  }
+
+  @override
+  String get staffHintObserved =>
+      'Média de atendentes distintos que atenderam em cada dia e hora.';
+
+  @override
+  String get staffHintGap =>
+      'Recomendado menos observado. Positivo: falta gente. Negativo: folga.';
+
+  @override
+  String get staffLegendDeficit => 'Falta';
+
+  @override
+  String get staffLegendOk => 'Equilibrado';
+
+  @override
+  String get staffLegendSurplus => 'Folga';
+
+  @override
+  String staffCellSpoken(
+    String day,
+    String hour,
+    int required,
+    String observed,
+  ) {
+    return '$day $hour: recomendado $required, observado $observed';
+  }
+
+  @override
+  String staffGridSpoken(String mode, String top) {
+    return 'Grade de atendentes por dia da semana e hora, modo $mode. $top';
+  }
+
+  @override
+  String get staffTopTitle => 'Maiores déficits';
+
+  @override
+  String staffTopRow(String day, String hour, int required, String observed) {
+    return '$day $hour: precisa de $required, tem $observed';
+  }
+
+  @override
+  String get staffTopNone =>
+      'Nenhum déficit: a equipe observada cobre a demanda recomendada.';
+
+  @override
+  String get staffNoData =>
+      'Sem chegadas no período para dimensionar a equipe.';
+
+  @override
+  String get staffSeasonTitle => 'Volume semanal e sazonalidade';
+
+  @override
+  String staffSeasonInsufficient(int need, int have) {
+    return 'Dados insuficientes: são necessárias pelo menos $need semanas completas com dados (há $have).';
+  }
+
+  @override
+  String staffTrendUp(String pct) {
+    return 'Tendência de alta: cerca de +$pct% por semana.';
+  }
+
+  @override
+  String staffTrendDown(String pct) {
+    return 'Tendência de queda: cerca de $pct% por semana.';
+  }
+
+  @override
+  String staffTrendStable(int pct) {
+    return 'Volume estável: variação abaixo de $pct% por semana.';
+  }
+
+  @override
+  String staffWeekSpoken(String date, int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count chegadas',
+      one: '1 chegada',
+    );
+    return 'Semana de $date: $_temp0';
+  }
+
+  @override
+  String get staffRecurringTitle => 'Padrão recorrente';
+
+  @override
+  String staffRecurringRow(String day, String hour, int weeks, int total) {
+    return '$day $hour: entre as mais cheias em $weeks de $total semanas';
+  }
+
+  @override
+  String staffRecurringNone(int pct) {
+    return 'Nenhuma hora se repete entre as mais cheias em pelo menos $pct% das semanas.';
+  }
+
+  @override
+  String get csvGoalIndicator => 'indicador';
+
+  @override
+  String get csvEvaluated => 'avaliados';
+
+  @override
+  String get csvWithinLimit => 'dentro do limite';
+
+  @override
+  String get csvPctWithinLimit => '% dentro do limite';
+
+  @override
+  String get csvTargetPct => 'alvo %';
+
+  @override
+  String get csvGoalMet => 'meta atingida';
+
+  @override
+  String get csvWorstOverMin => 'maior violação (min)';
+
+  @override
+  String get csvWorstDay => 'dia da maior violação';
+
+  @override
+  String get csvMissedDays => 'dias abaixo do alvo';
+
+  @override
+  String get csvMissedHours => 'horas abaixo do alvo';
+
+  @override
+  String get csvArrivalsPerHour => 'chegadas por hora';
+
+  @override
+  String get csvRequiredStaff => 'atendentes recomendados';
+
+  @override
+  String get csvObservedStaff => 'atendentes observados';
+
+  @override
+  String get csvGapStaff => 'diferença';
+
+  @override
+  String get csvWeekStart => 'início da semana';
+
+  @override
+  String get csvTrendPct => 'tendência (% da média por semana)';
+
+  @override
+  String get csvRecurringWeeks => 'semanas entre as mais cheias';
+
+  @override
+  String get csvOccupancyPct => 'ocupação-alvo %';
+
+  @override
+  String get csvCoverageDays => 'dias com dados';
+
+  @override
+  String get biNameGoalWait => 'Espera dentro da meta';
+
+  @override
+  String get biWhatGoalWait =>
+      'A parte dos atendimentos em que a pessoa esperou até o limite de espera definido na fila.';
+
+  @override
+  String biHowGoalWait(int min) {
+    return 'Compara a espera (chamada menos entrada) de cada atendido e não compareceu com a meta de espera. Quem desistiu só entra se esperou mais que a meta, e conta como descumprimento; desistência abaixo da meta e remoções do sistema ficam de fora. Percentual = dentro do limite ÷ avaliados. A meta é atingida quando o percentual alcança o alvo (padrão 80%). Com várias filas, cada pessoa é comparada à meta da própria fila e o alvo mostrado é a média ponderada pelos avaliados. Abaixo de $min avaliados, o resultado é marcado como amostra pequena.';
+  }
+
+  @override
+  String get biDataGoalWait =>
+      'Resultado, horário de entrada, de chamada e de saída (desistência) e as metas da fila. Sem telefone.';
+
+  @override
+  String get biUseGoalWait =>
+      'Saber se o serviço está dentro do prazo prometido e quando ele falha.';
+
+  @override
+  String get biNameGoalService => 'Atendimento dentro da meta';
+
+  @override
+  String get biWhatGoalService =>
+      'A parte dos atendimentos concluídos que durou até o tempo máximo definido na fila.';
+
+  @override
+  String biHowGoalService(int min) {
+    return 'Só atendimentos concluídos (atendidos). Compara a duração (fim menos chamada) com a meta de atendimento. Percentual = dentro do limite ÷ avaliados; a meta é atingida quando alcança o alvo. Não comparecimentos e desistências não entram. Abaixo de $min avaliados, o resultado é marcado como amostra pequena.';
+  }
+
+  @override
+  String get biDataGoalService =>
+      'Resultado, horário de chamada e de término e as metas da fila.';
+
+  @override
+  String get biUseGoalService =>
+      'Verificar se os atendimentos cabem no tempo esperado e achar dias e horas lentos.';
+
+  @override
+  String get biNameGoalMissed => 'Períodos em que a meta não foi atingida';
+
+  @override
+  String get biWhatGoalMissed =>
+      'Dias e horas do dia em que o cumprimento ficou abaixo do alvo, e a maior violação.';
+
+  @override
+  String biHowGoalMissed(int min) {
+    return 'Agrupa os avaliados por dia e por hora do dia (São Paulo). Lista os dias e as horas com pelo menos $min avaliados e percentual abaixo do alvo. A maior violação é o maior excesso, em minutos, sobre o limite de espera ou de atendimento. Dias e horas com menos avaliados não são listados.';
+  }
+
+  @override
+  String get biDataGoalMissed =>
+      'Os mesmos dos indicadores de espera e de atendimento dentro da meta.';
+
+  @override
+  String get biUseGoalMissed =>
+      'Achar quando a meta falha de forma recorrente e reforçar a equipe nesses períodos.';
+
+  @override
+  String get biNameStaffingService => 'Tempo médio de atendimento';
+
+  @override
+  String get biWhatStaffingService =>
+      'A duração média dos atendimentos concluídos, usada para estimar quantos atendentes são necessários.';
+
+  @override
+  String biHowStaffingService(int min) {
+    return 'Média de fim menos chamada dos atendimentos concluídos (atendidos) do escopo e período. Com menos de $min atendimentos não é calculada e a recomendação de atendentes fica indisponível.';
+  }
+
+  @override
+  String get biDataStaffingService =>
+      'Resultado, horário de chamada e de término.';
+
+  @override
+  String get biUseStaffingService =>
+      'Servir de base para o cálculo de atendentes recomendados.';
+
+  @override
+  String get biNameStaffingRequired => 'Atendentes recomendados';
+
+  @override
+  String get biWhatStaffingRequired =>
+      'Quantos atendentes cada dia da semana e hora exigem para absorver a demanda média.';
+
+  @override
+  String biHowStaffingRequired(int pct) {
+    return 'Chegadas por hora = chegadas naquele dia da semana e hora ÷ número de vezes que esse dia da semana ocorre entre o primeiro e o último dia com dados (inclui quem desistiu e não compareceu). Recomendados = arredondar para cima (chegadas por hora × tempo médio de atendimento em horas ÷ ocupação-alvo de $pct%). Indisponível sem tempo médio de atendimento.';
+  }
+
+  @override
+  String get biDataStaffingRequired =>
+      'Hora de entrada de todas as pessoas, resultado, horário de chamada e de término.';
+
+  @override
+  String get biUseStaffingRequired =>
+      'Montar escalas: ver em que dias e horas a equipe precisa ser maior.';
+
+  @override
+  String get biNameStaffingObserved => 'Atendentes observados';
+
+  @override
+  String get biWhatStaffingObserved =>
+      'Quantos atendentes distintos realmente atenderam em cada dia da semana e hora.';
+
+  @override
+  String get biHowStaffingObserved =>
+      'Para cada data e hora, conta os atendentes distintos com atendimento em andamento, da chamada ao fim (atendimentos longos contam em todas as horas que atravessam). Soma por dia da semana e hora e divide pelo mesmo número de ocorrências do dia da semana usado nas chegadas. O dono e registros sem atendente contam como um atendente.';
+
+  @override
+  String get biDataStaffingObserved =>
+      'Atendente, horário de chamada e de término, resultado (atendido ou não compareceu).';
+
+  @override
+  String get biUseStaffingObserved =>
+      'Comparar a equipe que de fato atuou com a recomendada.';
+
+  @override
+  String get biNameStaffingGap => 'Déficit e folga';
+
+  @override
+  String get biWhatStaffingGap =>
+      'A diferença entre atendentes recomendados e observados em cada dia e hora.';
+
+  @override
+  String biHowStaffingGap(int n) {
+    return 'Diferença = recomendados menos observados. Positivo é déficit (falta gente); negativo é folga. A lista mostra as $n maiores diferenças positivas, desempatando por recomendados, dia e hora.';
+  }
+
+  @override
+  String get biDataStaffingGap =>
+      'Os mesmos dos atendentes recomendados e observados.';
+
+  @override
+  String get biUseStaffingGap =>
+      'Priorizar onde reforçar a equipe e onde sobra capacidade.';
+
+  @override
+  String get biNameSeasonVolume => 'Volume semanal e tendência';
+
+  @override
+  String get biWhatSeasonVolume =>
+      'Quantas pessoas entraram na fila em cada uma das últimas semanas e para onde o volume caminha.';
+
+  @override
+  String biHowSeasonVolume(int weeks, int band, int min) {
+    return 'Conta as chegadas (inclui desistências e não comparecimentos) por semana, de segunda a domingo (São Paulo), nas últimas $weeks semanas completas, a partir da primeira semana com dados; a semana em andamento fica de fora. A tendência é a inclinação de uma reta ajustada aos volumes semanais, em % da média semanal por semana; abaixo de $band% é considerada estável. Com menos de $min semanas, mostra dados insuficientes.';
+  }
+
+  @override
+  String get biDataSeasonVolume =>
+      'Hora de entrada de todas as pessoas. Usa todo o histórico carregado do escopo, não só o período escolhido.';
+
+  @override
+  String get biUseSeasonVolume =>
+      'Planejar equipe e espaço para os próximos períodos.';
+
+  @override
+  String get biNameSeasonPattern => 'Padrão recorrente';
+
+  @override
+  String get biWhatSeasonPattern =>
+      'Dias da semana e horas que se repetem entre os mais movimentados, semana após semana.';
+
+  @override
+  String biHowSeasonPattern(int top, int pct, int min) {
+    return 'Em cada semana observada, pega as $top células (dia da semana × hora) com mais chegadas. Uma célula é recorrente quando aparece nesse grupo em pelo menos $pct% das semanas observadas. Exige ao menos $min semanas.';
+  }
+
+  @override
+  String get biDataSeasonPattern => 'Hora de entrada de todas as pessoas.';
+
+  @override
+  String get biUseSeasonPattern =>
+      'Saber quais horários são movimentados sempre, e não por acaso.';
 }

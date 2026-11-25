@@ -51,6 +51,7 @@ class QueueEntry {
     this.slotId,
     this.slotStart,
     this.manual = false,
+    this.estimateMin,
   });
 
   final String id;
@@ -70,6 +71,7 @@ class QueueEntry {
   final String? slotId;
   final DateTime? slotStart;
   final bool manual;
+  final int? estimateMin;
 
   int get sortOrder => order ?? joinedAt.millisecondsSinceEpoch;
 
@@ -112,6 +114,9 @@ class QueueEntry {
             )
           : null,
       manual: data['manual'] == true,
+      estimateMin: data['estimateMin'] is num
+          ? (data['estimateMin'] as num).toInt()
+          : null,
     );
   }
 
