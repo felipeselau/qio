@@ -167,6 +167,17 @@ modelos; ainda sem dados): `docs/piloto/`.
   APK antigo (dono/operador) continua compatível com as rules do join (conferir a ordem de deploy de cada feature). Web antigo em
   cache falha ao entrar na fila até recarregar.
 
+- **Estimativa no join (`estimateMin`):** `joinQueue` grava na entry nova `estimateMin` =
+  `(entries waiting à frente + 1) × (meta/avgServiceMinAuto ?? avgServiceMin ?? 10)`, arredondado
+  e limitado a 0..100000 (`joinEstimateMin` em `functions/src/join.js`, pura e testada). Modo
+  `schedule` não grava; entry existente/reivindicada não muda. Vai ao `history` (`served`/`no_show`
+  por `QueueService._archiveEntry`, `left` por `historyFromLeftEntry`) só quando existe; histórico
+  antigo fica sem (`HistoryEntry.estimateMin` nulo). Rules: RTDB `entries/*/estimateMin` número
+  0..100000, imutável para o cliente (só a callable/dono/operador gravam); Firestore `history` do
+  operador aceita `estimateMin` opcional (número 0..100000). Deploy: functions (`joinQueue`) -> rules
+  (RTDB e Firestore) -> APK. Rules antes das functions é seguro; APK novo com rules antigas recebe
+  `permission-denied` (engolido) no history com `estimateMin`.
+
 ## Reivindicar a própria senha (#145)
 
 - `joinQueue` com telefone igual ao de entry de **outro** uid: só entries `waiting` são
@@ -611,6 +622,34 @@ modelos; ainda sem dados): `docs/piloto/`.
   se perde até o próximo cooldown. Toque abre o painel.
 - Deploy (Blaze + Cloud Scheduler): `--only functions:evaluateQueueAlerts` →
   `--only firestore:rules` → distribuir o APK.
+
+## Metas e planejamento de equipe
+
+- `queues/{id}.goals = {maxWaitMin 1-240, maxServiceMin 1-240, targetPct 50-100}` (todos
+  opcionais; ausente = sem meta; `targetPct` padrão 80). Só Firestore, só o dono escreve, sem
+  espelho no RTDB e sem function. Rules: `validGoals` só no `queueUpdateFieldsOk` (campo
+  alterado, mapa `hasOnly`, inteiros nas faixas, removível); **nada no create** (o cliente
+  valida em `QueueGoals.validate`, e o teste "create do wizard no pior caso" inclui `goals`).
+  A folga do update de `queues` é mínima: somar `goals` ao update sintético "todos os campos"
+  estourou as 1000 expressões, então o app grava `goals` sozinho (`QueueService.updateGoals`,
+  `null` remove) e há teste próprio de `slots + goals`. `duplicateQueue` copia `goals`;
+  o wizard de criação não pede metas.
+- Tile "Metas de atendimento" (`goals_tile.dart`) em `QueueSettingsSections` (só dono).
+  Espera estimada = `waiting x (avgServiceMinAuto ?? avgServiceMin ?? 10)` (`goal_risk.dart`);
+  acima da meta, `GoalRiskBanner` no painel (dono e operador; único listener novo:
+  `watchAvgServiceMinAuto`, só com `maxWaitMin`) e selo no card da home (usa só o tempo
+  **manual**, sem listener novo; pode divergir do painel).
+- Métricas em `services/goal_metrics.dart` (espera e atendimento dentro da meta, séries por
+  dia e hora, períodos não atingidos, maior violação; `left` só conta se esperou mais que a
+  meta) e `services/staffing_metrics.dart` (demanda por dia da semana x hora dividida pelas
+  ocorrências do dia no período coberto, atendentes recomendados com ocupação-alvo 0,85,
+  observados, déficits, sazonalidade das últimas 8 semanas completas e padrão recorrente).
+  Fórmulas e limites: `docs/metricas-bi.md` (grupos 3 e 4). UI na `MetricsScreen`
+  (`goals_section.dart`, `staffing_section.dart`), com "i" por indicador (`BiIndicator`) e
+  CSV/PDF sem PII.
+- **Deploy:** só `firebase deploy --only firestore:rules` → APK (sem functions nem RTDB).
+  APK novo com rules antigas recebe `permission-denied` ao salvar metas; APK antigo ignora
+  `goals`.
 
 ## Limites e validações
 
@@ -1237,6 +1276,13 @@ operador segue restrita a `served`/`no_show`. O app conta `left` como
   `*_EMULATOR_HOST` em localhost. Sobe com `ops/demo-up.sh` (fase 1 sem functions + seed +
   export em `.demo-data/`, fase 2 completa com `--import`; o import não dispara triggers) e
   para com `ops/demo-down.sh`. Gera `.firebase.demo.generated.json` (não altera o `firebase.json`).
+- **Calibração de BI (fase D):** o elenco Ana (`operador1`, 0,6x), Bruno (`operador2`, 1,0x), Carla
+  (`operador3`, 1,5x) e Diego (`operador6`, 1,0x com `pause`: ocioso) atua na padaria Balcão, clínica
+  Exames e ótica Loja Centro; paciência lognormal + `quickShare` dá taxa crescente por faixa de espera;
+  ótica Centro Atendimento geral tem rajadas `bursts.at` e equipe reduzida às 12 h e 17-18 h (card de
+  capacidade); Loja Norte é o contraste calmo. `scripts/demo/bi.js` espelha as fórmulas de
+  `docs/metricas-bi.md`, `expected.js` imprime a tabela do roteiro (`docs/demo/README.md`) e
+  `test/demo-bi.test.js` garante os padrões. O app lê só 500 docs por fila: filas densas truncam.
 - Ids `demo-*` e e-mails `@qio.demo`; cada execução apaga e regrava só esse escopo (idempotente).
   Testes: `functions/test/demo-*.test.js` (`npm test` em `functions/`). Pub/Sub não sobe, então
   as funções agendadas não rodam no demo.

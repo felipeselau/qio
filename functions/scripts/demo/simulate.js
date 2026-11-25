@@ -2,6 +2,7 @@
 
 const { createRng } = require('./rng');
 const { FIRST_NAMES, SURNAMES, COMMENTS } = require('./names');
+const { joinEstimateMin } = require('../../src/join');
 const { MINUTE, HOUR, DAY, spStartOfDay, spDow, spDayKey, spMonthDay } = require('./timeutil');
 
 const FIXED_HOLIDAYS = new Set(['01-01', '04-21', '05-01', '09-07', '10-12', '11-02', '11-15', '12-25']);
@@ -99,10 +100,17 @@ function queueArrivals(profile, ctx) {
     for (let i = 0; i < n; i += 1) out.push({ joinedAt: dayStart + (h + drng.next()) * HOUR });
   }
   if (profile.bursts) {
-    const count = drng.int(profile.bursts.perDay[0], profile.bursts.perDay[1]);
+    const byDow = profile.bursts.byDow;
+    const fixed = byDow ? byDow[dow] ?? [] : profile.bursts.at;
+    const count = fixed ? fixed.length : drng.int(profile.bursts.perDay[0], profile.bursts.perDay[1]);
+    const trendScale = interp(demand.trend, daysAgo, 1);
+    const scale = fixed ? (byDow ? 1 : demand.dow?.[dow] ?? 1) * trendScale : 1;
     for (let b = 0; b < count; b += 1) {
-      const center = dayStart + (open + drng.next() * (close - open)) * HOUR;
-      const size = drng.int(profile.bursts.size[0], profile.bursts.size[1]);
+      if (fixed && (fixed[b] < open || fixed[b] >= close)) continue;
+      const center = fixed
+        ? dayStart + (fixed[b] + (profile.bursts.offset ?? 0) + drng.float(-(profile.bursts.jitter ?? 0.3), profile.bursts.jitter ?? 0.3)) * HOUR
+        : dayStart + (open + drng.next() * (close - open)) * HOUR;
+      const size = Math.round(drng.int(profile.bursts.size[0], profile.bursts.size[1]) * scale);
       for (let i = 0; i < size; i += 1) {
         const t = center + Math.abs(drng.normal(0, profile.bursts.spreadMin)) * MINUTE;
         out.push({ joinedAt: Math.min(t, dayStart + close * HOUR - MINUTE) });
@@ -148,11 +156,12 @@ function noShowProb(profile, daysAgo, dow, early) {
   return clamp(v, 0, 0.6);
 }
 
-function buildServers(profile, dayStart, dow) {
+function buildServers(profile, dayStart, dow, daysAgo) {
   const [open, close] = hoursOf(profile, dow);
   const servers = [];
   for (const s of profile.staff) {
     if (s.days && !s.days.includes(dow)) continue;
+    if (s.off && s.off({ daysAgo, dow })) continue;
     const shifts = s.shifts && s.shifts.length > 0 ? s.shifts : [[open, close]];
     const windows = [];
     for (const [from, to] of shifts) {
@@ -161,7 +170,15 @@ function buildServers(profile, dayStart, dow) {
       if (b <= a) continue;
       windows.push([dayStart + a * HOUR, dayStart + b * HOUR + (b >= close ? OVERTIME_MS : 0)]);
     }
-    if (windows.length > 0) servers.push({ uid: s.uid, factor: s.factor ?? 1, windows, freeAt: 0 });
+    if (windows.length > 0) {
+      servers.push({
+        uid: s.uid,
+        factor: s.factor ?? 1,
+        windows,
+        freeAt: 0,
+        pause: s.pause ? { prob: s.pause.prob, min: s.pause.min, max: s.pause.max } : null,
+      });
+    }
   }
   return servers;
 }
@@ -239,7 +256,10 @@ function simulateQueue(profile, ctx) {
     const day = arrivals.map((a) => {
       ticket += 1;
       const person = customers.pick(drng);
-      const patience = drng.lognormal(profile.patience.median, profile.patience.sigma ?? 0.6) * MINUTE;
+      const quick = profile.patience.quickShare ? drng.chance(profile.patience.quickShare) : false;
+      const patience = quick
+        ? drng.lognormal(profile.patience.quickMedian ?? 4, 0.4) * MINUTE
+        : drng.lognormal(profile.patience.median, profile.patience.sigma ?? 0.6) * MINUTE;
       return {
         ...a,
         ticket,
@@ -252,16 +272,19 @@ function simulateQueue(profile, ctx) {
       };
     });
 
-    const servers = buildServers(profile, dayStart, dow);
+    const servers = buildServers(profile, dayStart, dow, daysAgo);
     const processing = [...day].sort((a, b) => a.order - b.order || a.joinedAt - b.joinedAt || a.ticket - b.ticket);
+    const prng = drng.fork('pause');
 
     for (const c of processing) {
+      c.pauseU = prng.next();
+      c.pauseV = prng.next();
       const earliest = Math.max(c.joinedAt, c.slotStart ?? 0);
       let best = null;
       let bestStart = Infinity;
       for (const s of servers) {
         const st = startFor(s, earliest);
-        if (st < bestStart) {
+        if (st < bestStart || (st === bestStart && best && s.freeAt < best.freeAt)) {
           bestStart = st;
           best = s;
         }
@@ -304,8 +327,20 @@ function simulateQueue(profile, ctx) {
         svc = clamp(svc, 0.6, profile.service.median * 14);
         c.finishedAt = calledAt + Math.floor(svc * MINUTE);
         best.freeAt = Math.max(bestStart + MINUTE, c.finishedAt - delay);
+        if (best.pause && c.pauseU < best.pause.prob) {
+          best.freeAt += (best.pause.min + c.pauseV * (best.pause.max - best.pause.min)) * MINUTE;
+        }
       }
       c.doneAt = c.finishedAt;
+    }
+
+    if (profile.mode !== 'schedule') {
+      for (const c of day) {
+        const ahead = day.filter(
+          (o) => o.ticket < c.ticket && o.joinedAt <= c.joinedAt && (o.result === 'left' ? o.leaveAt : o.calledAt) > c.joinedAt,
+        ).length;
+        c.estimateMin = joinEstimateMin({ waitingAhead: ahead, avgServiceMin: profile.avgServiceMin });
+      }
     }
 
     for (const c of day) {
@@ -357,6 +392,7 @@ function simulateQueue(profile, ctx) {
         operatorId: null,
         finishedAt: Math.min(now - MINUTE, Math.max(entry.joinedAt + MINUTE, cutoff + 15 * MINUTE)),
         ...(entry.slotId ? { slotId: entry.slotId } : {}),
+        ...(entry.estimateMin != null ? { estimateMin: entry.estimateMin } : {}),
       });
     }
     result.live = [];
@@ -385,6 +421,7 @@ function toHistory(c, queueId, dayKey, profile) {
   if (c.skips > 0) doc.skips = c.skips;
   if (c.slotId) doc.slotId = c.slotId;
   if (c.reason) doc.reason = c.reason;
+  if (c.estimateMin != null) doc.estimateMin = c.estimateMin;
   return doc;
 }
 
@@ -414,6 +451,7 @@ function toLive(c, queueId, dayKey, now, drng) {
   };
   if (c.manual) entry.manual = true;
   else entry.uid = `demo-cli-${drng.token(10, CLIENT_ALPHABET)}`;
+  if (c.estimateMin != null) entry.estimateMin = c.estimateMin;
   if (c.slotId) {
     entry.slotId = c.slotId;
     entry.slotStart = c.slotStart;
@@ -487,6 +525,12 @@ function injectLive(profile, result, { now, queueId, rng, customers, cutoff }) {
         result.lastActivity = calledAt;
         result.serving = ticket;
       }
+    }
+    if (profile.mode !== 'schedule') {
+      entry.estimateMin = joinEstimateMin({
+        waitingAhead: natural.filter((e) => e.status === 'waiting').length,
+        avgServiceMin: profile.avgServiceMin,
+      });
     }
     natural.push(entry);
   }

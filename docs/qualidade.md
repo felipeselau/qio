@@ -161,3 +161,12 @@ Testes
   entra no CI.
 - Monitoramento técnico (alertas de erro, uptime check, orçamento, ativação do
   Analytics) é ação manual no console (`docs/monitoring.md`); não verificado aqui.
+
+## Indicadores de BI (atendentes e desistências)
+
+- Motor puro em `app/lib/services/{attendant_metrics,abandonment_metrics,sp_time}.dart`; definições, fórmulas e limitações em `docs/metricas-bi.md`.
+- Testes: `app/test/services/{attendant_metrics,abandonment_metrics,metrics_bi_export}_test.dart`, `app/test/screens/metrics_bi_test.dart` (valores de resposta conhecida, períodos, filtro de fila, vazios, texto 2.0x, 3 idiomas) e `functions/test/demo-bi.test.js` (padrões do seed demo).
+- Cobertura também dos grupos 3 e 4 (metas e planejamento de equipe): `goal_metrics`, `goal_risk`, `staffing_metrics`, `metrics_goals_staffing_*`, `goals_tile`, `goal_risk_banner`.
+- Última execução local: `flutter analyze lib test` sem problemas, `flutter test` 1374 passando, `functions` `npm test` 486 passando, `rules-tests` 286 + 84 passando.
+- Verificação manual no app web contra o emulator (seed demo): Por atendente, Desistências, Metas, Planejamento de equipe, banner de meta em risco e fluxo ao vivo (entrar pela callable, chamar, atender, aparece no histórico).
+- Pendente: goldens `metrics_390_*` só validados no CI Linux.
