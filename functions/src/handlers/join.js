@@ -14,6 +14,7 @@ const {
   uidHash,
   pickClaimable,
   claimEntryUpdate,
+  joinEstimateMin,
 } = require('../join');
 const { isQueueFull } = require('../capacity');
 const { normalizeMode, parseSlots, slotsFromDoc } = require('../slots');
@@ -165,12 +166,14 @@ exports.joinQueue = onCall(
     }
 
     const maxWaiting = metaSnap.child('maxWaiting').val();
-    if (maxWaiting) {
+    let waitingCount = null;
+    if (maxWaiting || mode !== 'schedule') {
       const waitingSnap = await entriesRef
         .orderByChild('status')
         .equalTo('waiting')
         .once('value');
-      if (isQueueFull(maxWaiting, waitingSnap.numChildren())) {
+      waitingCount = waitingSnap.numChildren();
+      if (maxWaiting && isQueueFull(maxWaiting, waitingCount)) {
         throw new HttpsError('resource-exhausted', 'Fila lotada no momento.', {
           reason: 'queue-full',
         });
@@ -200,6 +203,13 @@ exports.joinQueue = onCall(
       .transaction((current) => (current ?? 0) + 1);
     const ticket = ticketResult.snapshot.val();
 
+    const estimateMin = joinEstimateMin({
+      waitingAhead: waitingCount,
+      avgServiceMinAuto: metaSnap.child('avgServiceMinAuto').val(),
+      avgServiceMin: metaSnap.child('avgServiceMin').val(),
+      mode,
+    });
+
     const newRef = entriesRef.push();
     await newRef.set({
       ticket,
@@ -210,6 +220,7 @@ exports.joinQueue = onCall(
       status: 'waiting',
       joinedAt: Date.now(),
       ...(slotFields ?? {}),
+      ...(estimateMin === null ? {} : { estimateMin }),
     });
 
     return { entryId: newRef.key, ticket, existing: false };

@@ -306,6 +306,14 @@ describe('RTDB rules', () => {
       }
     });
 
+    it('estimateMin: dono grava número 0..100000; cliente não altera', async () => {
+      await assertSucceeds(update(ref(rtdb(OWNER), path('entries/e1')), { estimateMin: 25 }));
+      await assertFails(update(ref(rtdb(OWNER), path('entries/e1')), { estimateMin: -1 }));
+      await assertFails(update(ref(rtdb(OWNER), path('entries/e1')), { estimateMin: 100001 }));
+      await assertFails(update(ref(rtdb(OWNER), path('entries/e1')), { estimateMin: '5' }));
+      await assertFails(update(ref(rtdb('client1'), path('entries/e1')), { estimateMin: 1 }));
+    });
+
     it('cliente ainda pode sair da fila (status left)', async () => {
       await assertSucceeds(update(ref(rtdb('client1'), path('entries/e1')), { status: 'left' }));
     });

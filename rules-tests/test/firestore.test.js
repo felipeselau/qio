@@ -7,6 +7,7 @@ import {
   collection,
   collectionGroup,
   deleteDoc,
+  deleteField,
   doc,
   getDoc,
   getCountFromServer,
@@ -416,6 +417,59 @@ describe('Firestore rules', () => {
     });
   });
 
+  describe('metas de atendimento', () => {
+    const queueRef = () => doc(db(OWNER), 'queues', QUEUE);
+    const valid = { maxWaitMin: 15, maxServiceMin: 10, targetPct: 80 };
+
+    it('dono grava metas válidas, parciais e nulas', async () => {
+      await assertSucceeds(updateDoc(queueRef(), { goals: valid }));
+      await assertSucceeds(updateDoc(queueRef(), { goals: { maxWaitMin: 1 } }));
+      await assertSucceeds(updateDoc(queueRef(), { goals: { maxServiceMin: 240, targetPct: 50 } }));
+      await assertSucceeds(updateDoc(queueRef(), { goals: { maxWaitMin: null, maxServiceMin: 5, targetPct: 100 } }));
+    });
+
+    it('dono remove as metas com delete do campo', async () => {
+      await assertSucceeds(updateDoc(queueRef(), { goals: valid }));
+      await assertSucceeds(updateDoc(queueRef(), { goals: deleteField() }));
+    });
+
+    it('operador e estranho não gravam', async () => {
+      await assertFails(updateDoc(doc(db(STRANGER), 'queues', QUEUE), { goals: valid }));
+      await assertFails(updateDoc(doc(db(OPERATOR), 'queues', QUEUE), { goals: valid }));
+    });
+
+    it('nega limites fora do intervalo', async () => {
+      await assertFails(updateDoc(queueRef(), { goals: { ...valid, maxWaitMin: 0 } }));
+      await assertFails(updateDoc(queueRef(), { goals: { ...valid, maxWaitMin: 241 } }));
+      await assertFails(updateDoc(queueRef(), { goals: { ...valid, maxServiceMin: 0 } }));
+      await assertFails(updateDoc(queueRef(), { goals: { ...valid, maxServiceMin: 241 } }));
+      await assertFails(updateDoc(queueRef(), { goals: { ...valid, targetPct: 49 } }));
+      await assertFails(updateDoc(queueRef(), { goals: { ...valid, targetPct: 101 } }));
+    });
+
+    it('nega tipo inválido, double, campo extra e não-map', async () => {
+      await assertFails(updateDoc(queueRef(), { goals: { ...valid, maxWaitMin: '15' } }));
+      await assertFails(updateDoc(queueRef(), { goals: { ...valid, maxWaitMin: 15.5 } }));
+      await assertFails(updateDoc(queueRef(), { goals: { ...valid, extra: 1 } }));
+      await assertFails(updateDoc(queueRef(), { goals: 'x' }));
+      await assertFails(updateDoc(queueRef(), { goals: [15] }));
+    });
+
+    it('metas legadas inválidas inalteradas não bloqueiam outras atualizações', async () => {
+      await env.withSecurityRulesDisabled(async (ctx) => {
+        await setDoc(doc(ctx.firestore(), 'queues', 'legacyGoals'), {
+          ownerId: OWNER,
+          name: 'Legada',
+          status: 'open',
+          goals: { maxWaitMin: 999 },
+        });
+      });
+      const old = doc(db(OWNER), 'queues', 'legacyGoals');
+      await assertSucceeds(updateDoc(old, { statusMessage: 'oi' }));
+      await assertFails(updateDoc(old, { goals: { maxWaitMin: 999, targetPct: 60 } }));
+    });
+  });
+
   describe('pior caso, ownerId, deleting e alertState', () => {
     const ref = () => doc(db(OWNER), 'queues', QUEUE);
     const slots24 = Array.from({ length: 20 }, (_, i) => ({
@@ -465,12 +519,23 @@ describe('Firestore rules', () => {
           },
           brandColor: '#1E88E5',
           alerts,
+          goals: { maxWaitMin: 240, maxServiceMin: 240, targetPct: 100 },
           mode: 'schedule',
           slots: slots24,
           expiry: { enabled: true, hours: 48, clearOnClose: true, resetTicketDaily: true },
           retentionDays: 730,
           anonymizePhone: true,
           createdAt: Timestamp.now(),
+        }),
+      );
+    });
+
+    it('goals no mesmo update de 20 slots e demais campos passa quando só slots+goals mudam', async () => {
+      await assertSucceeds(
+        updateDoc(ref(), {
+          mode: 'schedule',
+          slots: slots24,
+          goals: { maxWaitMin: 15, maxServiceMin: 10, targetPct: 80 },
         }),
       );
     });
@@ -693,6 +758,18 @@ describe('Firestore rules', () => {
     it('operador cria registro com recalls e skips', async () => {
       await assertSucceeds(
         setDoc(doc(db(OPERATOR), 'queues', QUEUE, 'history', 'h3'), { ...historyEntry(OPERATOR), recalls: 2, skips: 1 }),
+      );
+    });
+
+    it('operador cria registro com estimateMin válido e rejeita inválido', async () => {
+      await assertSucceeds(
+        setDoc(doc(db(OPERATOR), 'queues', QUEUE, 'history', 'h4'), { ...historyEntry(OPERATOR), estimateMin: 30 }),
+      );
+      await assertFails(
+        setDoc(doc(db(OPERATOR), 'queues', QUEUE, 'history', 'h5'), { ...historyEntry(OPERATOR), estimateMin: -3 }),
+      );
+      await assertFails(
+        setDoc(doc(db(OPERATOR), 'queues', QUEUE, 'history', 'h6'), { ...historyEntry(OPERATOR), estimateMin: '30' }),
       );
     });
 

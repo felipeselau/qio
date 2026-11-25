@@ -23,6 +23,11 @@ describe('historyFromLeftEntry', () => {
     assert.equal(doc.finishedAt.toMillis(), now);
   });
 
+  it('propaga estimateMin só quando existe', () => {
+    assert.equal(historyFromLeftEntry({ ticket: 1, estimateMin: 25 }, now).estimateMin, 25);
+    assert.ok(!('estimateMin' in historyFromLeftEntry({ ticket: 1 }, now)));
+  });
+
   it('converte calledAt em Timestamp', () => {
     const doc = historyFromLeftEntry({ ticket: 1, name: 'Bia', joinedAt: now - 2000, calledAt: now - 1000 }, now);
     assert.equal(doc.calledAt.toMillis(), now - 1000);

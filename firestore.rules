@@ -49,6 +49,15 @@ service cloud.firestore {
           && validNullableInt(a, 'cooldownMin', 5, 1440));
     }
 
+    function validGoals(g) {
+      return g == null
+        || (g is map
+          && g.keys().hasOnly(['maxWaitMin', 'maxServiceMin', 'targetPct'])
+          && validNullableInt(g, 'maxWaitMin', 1, 240)
+          && validNullableInt(g, 'maxServiceMin', 1, 240)
+          && validNullableInt(g, 'targetPct', 50, 100));
+    }
+
     function alertsOkOnCreate() {
       return validAlerts(request.resource.data.get('alerts', null))
         && !('alertState' in request.resource.data);
@@ -117,7 +126,8 @@ service cloud.firestore {
         && (!('mode' in changed) || d.get('mode', null) in ['queue', 'schedule'])
         && (!('slots' in changed) || validSlots(d.get('slots', null)))
         && (!('alerts' in changed) || validAlerts(d.get('alerts', null)))
-        && (!('expiry' in changed) || d.get('expiry', null) is map);
+        && (!('expiry' in changed) || d.get('expiry', null) is map)
+        && (!('goals' in changed) || validGoals(d.get('goals', null)));
     }
 
     function validRetentionDays(v) {
@@ -260,7 +270,8 @@ service cloud.firestore {
           && isQueueOperator(queueId)
           && request.resource.data.operatorId == request.auth.uid
           && request.resource.data.result in ['served', 'no_show']
-          && request.resource.data.keys().hasOnly(['ticket', 'name', 'phone', 'result', 'joinedAt', 'calledAt', 'calledBy', 'operatorId', 'finishedAt', 'recalls', 'skips'])
+          && request.resource.data.keys().hasOnly(['ticket', 'name', 'phone', 'result', 'joinedAt', 'calledAt', 'calledBy', 'operatorId', 'finishedAt', 'recalls', 'skips', 'estimateMin'])
+          && (!('estimateMin' in request.resource.data) || (request.resource.data.estimateMin is number && request.resource.data.estimateMin >= 0 && request.resource.data.estimateMin <= 100000))
           && request.resource.data.keys().hasAll(['ticket', 'name', 'phone', 'result', 'joinedAt', 'calledAt', 'calledBy', 'operatorId', 'finishedAt']);
       }
 

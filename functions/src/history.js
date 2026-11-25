@@ -17,6 +17,9 @@ function historyFromLeftEntry(entry, nowMs, options = {}) {
     operatorId: null,
     finishedAt: Timestamp.fromMillis(nowMs),
   };
+  if (typeof source.estimateMin === 'number' && Number.isFinite(source.estimateMin)) {
+    doc.estimateMin = source.estimateMin;
+  }
   if (typeof options.reason === 'string' && options.reason) doc.reason = options.reason;
   return doc;
 }

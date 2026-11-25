@@ -230,3 +230,16 @@ describe('chaves de limite de reivindicação', () => {
     assert.deepEqual(CLAIM_PHONE_RATE_LIMIT, { max: 5, windowMs: 600000 });
   });
 });
+
+describe('joinEstimateMin', () => it('posição x média, com fallback e arredondamento', () => {
+  const { joinEstimateMin, MAX_ESTIMATE_MIN } = require('../src/join');
+  assert.equal(joinEstimateMin({ waitingAhead: 0, avgServiceMin: 10 }), 10);
+  assert.equal(joinEstimateMin({ waitingAhead: 3, avgServiceMin: 5 }), 20);
+  assert.equal(joinEstimateMin({ waitingAhead: 2, avgServiceMinAuto: 4.4, avgServiceMin: 10 }), 13);
+  assert.equal(joinEstimateMin({ waitingAhead: 1 }), 20);
+  assert.equal(joinEstimateMin({ waitingAhead: 1, avgServiceMinAuto: 0, avgServiceMin: 6 }), 12);
+  assert.equal(joinEstimateMin({ waitingAhead: 1, avgServiceMin: 5, mode: 'schedule' }), null);
+  assert.equal(joinEstimateMin({ waitingAhead: -1, avgServiceMin: 5 }), null);
+  assert.equal(joinEstimateMin({ waitingAhead: null, avgServiceMin: 5 }), null);
+  assert.equal(joinEstimateMin({ waitingAhead: 1e9, avgServiceMin: 240 }), MAX_ESTIMATE_MIN);
+}));
