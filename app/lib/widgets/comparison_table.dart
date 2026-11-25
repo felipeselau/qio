@@ -244,6 +244,7 @@ class _ComparisonTableState extends State<ComparisonTable> {
     return Semantics(
       button: true,
       selected: active,
+      onTap: () => _sortBy(c),
       label: '${l10n.sortByHint(_columnSpokenLabel(l10n, c))}$state',
       child: ExcludeSemantics(
         child: InkWell(

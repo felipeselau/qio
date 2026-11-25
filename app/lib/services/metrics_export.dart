@@ -1,11 +1,14 @@
-import 'dart:typed_data';
-
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 import '../l10n/app_localizations.dart';
 import '../models/queue_history_input.dart';
+import 'abandonment_metrics.dart';
+import 'goal_metrics.dart';
+import 'staffing_metrics.dart';
+import 'attendant_metrics.dart';
 import 'history_export.dart';
 import 'history_metrics.dart';
 import 'metrics_trend.dart';
@@ -47,11 +50,19 @@ class MetricsReport {
     this.previousWaitStats,
     this.groupRows = const [],
     this.queueRows = const [],
+    this.attendants = const [],
+    this.abandonment,
+    this.goals = GoalReport.empty,
+    this.staffing,
   });
 
   final String? scopeLabel;
   final List<GroupComparison> groupRows;
   final List<QueueComparison> queueRows;
+  final List<AttendantRow> attendants;
+  final AbandonmentReport? abandonment;
+  final GoalReport goals;
+  final StaffingReport? staffing;
   final HistoryPeriod period;
   final String? operatorQueueId;
   final String? operatorQueueName;
@@ -130,21 +141,19 @@ MetricsReport buildMetricsReport({
     for (final d in data)
       for (final o in d.operators) o.uid: o.label,
   };
-  final operators = computeOperatorMetrics(
-    [
-      for (final d in selected)
-        ...filterHistory(
-          d.entries,
-          period: period,
-          now: now,
-          custom: customRange,
-        ),
-    ],
+  final selectedIds = {for (final d in selected) d.queue.id};
+  final operatorEntries = [
+    for (final p in perQueue)
+      if (selectedIds.contains(p.queue.id)) ...p.entries,
+  ];
+  final attendants = buildAttendantRows(
+    operatorEntries,
     ownerUids: {for (final d in selected) d.queue.ownerId},
     feedback: [for (final d in selected) ...d.feedback],
     names: names,
     unknownName: unknownOperatorName,
   );
+  final operators = [for (final a in attendants) a.stats];
   String? queueName;
   for (final d in data) {
     if (d.queue.id == operatorQueueId) queueName = d.queue.name;
@@ -210,11 +219,35 @@ MetricsReport buildMetricsReport({
     previousWaitStats: previousWaitStats,
     groupRows: groupRows,
     queueRows: queueRows,
+    attendants: attendants,
+    abandonment: operatorEntries.isEmpty
+        ? null
+        : buildAbandonmentReport(operatorEntries),
+    goals: computeGoalReport([
+      for (final p in perQueue)
+        if (p.queue.goals != null) GoalQueueInput(p.queue.goals!, p.entries),
+    ]),
+    staffing: all.isEmpty
+        ? null
+        : buildStaffingReport(
+            all,
+            seasonEntries: [for (final d in data) ...d.entries],
+            now: now,
+            ownerUids: {for (final d in data) d.queue.ownerId},
+          ),
   );
 }
 
 String weekdayLabel(String locale, int index) =>
     DateFormat.E(locale).format(DateTime(2024, 1, 1 + index));
+
+String weekdayLongLabel(String locale, int index) =>
+    DateFormat.EEEE(locale).format(DateTime(2024, 1, 1 + index));
+
+String decimal1(String locale, double v) =>
+    NumberFormat('0.0', locale).format(v);
+
+String shortDate(String locale, DateTime d) => DateFormat.Md(locale).format(d);
 
 String hourLabel(int h) => '${h.toString().padLeft(2, '0')}h';
 
@@ -228,17 +261,169 @@ String demandPeakText(AppLocalizations l10n, String locale, DemandPeak peak) =>
 bool _hasDemand(MetricsReport report) =>
     report.weekdays.length == 7 && report.heatmap.length == 7;
 
+String bandLabel(AppLocalizations l10n, int start, int? end) =>
+    end == null ? l10n.abandonBandOpen(start) : l10n.abandonBand(start, end);
+
+String attendantName(
+  AppLocalizations l10n,
+  MetricsReport report,
+  AttendantRow row,
+) => row.attendantId == null
+    ? l10n.ownerAttendant
+    : report.operatorNames[row.attendantId] ?? l10n.formerOperator;
+
 String _num(double? v) => v == null ? '' : v.toStringAsFixed(1);
+
+String _num2(double v) => v.toStringAsFixed(2);
+
+List<(String, GoalIndicator)> _goalKinds(AppLocalizations l10n, GoalReport g) =>
+    [
+      if (g.wait.configured > 0) (l10n.goalsKindWait, g.wait),
+      if (g.service.configured > 0) (l10n.goalsKindService, g.service),
+    ];
+
+List<List<List<Object>>> _goalsCsv(AppLocalizations l10n, MetricsReport r) {
+  if (!r.goals.hasGoals) return const [];
+  final kinds = _goalKinds(l10n, r.goals);
+  return [
+    [
+      [l10n.goalsSectionTitle],
+      [
+        l10n.csvGoalIndicator,
+        l10n.csvEvaluated,
+        l10n.csvWithinLimit,
+        l10n.csvPctWithinLimit,
+        l10n.csvTargetPct,
+        l10n.csvGoalMet,
+        l10n.csvWorstOverMin,
+        l10n.csvWorstDay,
+      ],
+      for (final (name, g) in kinds)
+        [
+          name,
+          '${g.overall.total}',
+          '${g.overall.ok}',
+          _num(g.overall.pct == null ? null : g.overall.pct! * 100),
+          _num(g.overall.targetPct),
+          g.hasData ? (g.overall.met ? l10n.csvYes : l10n.csvNo) : '',
+          _num(g.worstOverMin),
+          g.worstDay == null ? '' : _dayKey(g.worstDay!),
+        ],
+    ],
+    [
+      [l10n.goalsMissedTitle],
+      [
+        l10n.csvGoalIndicator,
+        l10n.csvDate,
+        l10n.csvEvaluated,
+        l10n.csvWithinLimit,
+        l10n.csvPctWithinLimit,
+        l10n.csvTargetPct,
+      ],
+      for (final (name, g) in kinds)
+        for (final d in g.missedDays)
+          [
+            name,
+            _dayKey(d.day),
+            '${d.bucket.total}',
+            '${d.bucket.ok}',
+            _num(d.bucket.pct! * 100),
+            _num(d.bucket.targetPct),
+          ],
+      for (final (name, g) in kinds)
+        if (g.missedHours.isNotEmpty)
+          [
+            name,
+            l10n.csvMissedHours,
+            g.missedHours.map((h) => h.hour).join(' '),
+          ],
+    ],
+  ];
+}
+
+List<List<List<Object>>> _staffingCsv(AppLocalizations l10n, MetricsReport r) {
+  final st = r.staffing;
+  if (st == null || !st.hasData) return const [];
+  final locale = l10n.localeName;
+  final g = st.grid;
+  final season = st.seasonality;
+  return [
+    [
+      [l10n.staffTitle],
+      [l10n.csvMetric, l10n.csvValue],
+      [l10n.csvAvgServiceMin, _num(g.avgServiceMin)],
+      [l10n.csvOccupancyPct, '${(g.occupancy * 100).round()}'],
+      [l10n.csvCoverageDays, '${g.coverageDays}'],
+    ],
+    if (g.hasArrivals)
+      [
+        [l10n.staffGridTitle],
+        [
+          l10n.csvWeekday,
+          l10n.csvHour,
+          l10n.csvArrivalsPerHour,
+          l10n.csvRequiredStaff,
+          l10n.csvObservedStaff,
+          l10n.csvGapStaff,
+        ],
+        for (final row in g.cells)
+          for (final c in row)
+            if (c.arrivals > 0 || c.observed > 0)
+              [
+                weekdayLabel(locale, c.weekday),
+                '${c.hour}',
+                _num2(c.arrivals),
+                g.hasRequirement ? '${c.required}' : '',
+                _num2(c.observed),
+                g.hasRequirement ? _SignedCell(c.gap) : '',
+              ],
+      ],
+    if (g.topDeficits.isNotEmpty)
+      [
+        [l10n.staffTopTitle],
+        [
+          l10n.csvWeekday,
+          l10n.csvHour,
+          l10n.csvRequiredStaff,
+          l10n.csvObservedStaff,
+          l10n.csvGapStaff,
+        ],
+        for (final c in g.topDeficits)
+          [
+            weekdayLabel(locale, c.weekday),
+            '${c.hour}',
+            '${c.required}',
+            _num2(c.observed),
+            _SignedCell(c.gap),
+          ],
+      ],
+    if (season.weeks.isNotEmpty)
+      [
+        [l10n.staffSeasonTitle],
+        [l10n.csvWeekStart, l10n.csvArrivals],
+        for (final w in season.weeks) [_dayKey(w.weekStart), '${w.volume}'],
+        if (season.trendPct != null)
+          [l10n.csvTrendPct, _SignedCell(season.trendPct!)],
+        if (season.insufficient)
+          [l10n.staffSeasonInsufficient(minSeasonWeeks, season.observedWeeks)],
+      ],
+    if (season.recurring.isNotEmpty)
+      [
+        [l10n.staffRecurringTitle],
+        [l10n.csvWeekday, l10n.csvHour, l10n.csvRecurringWeeks, l10n.csvTotal],
+        for (final c in season.recurring)
+          [
+            weekdayLabel(locale, c.weekday),
+            '${c.hour}',
+            '${c.weeks}',
+            '${c.observedWeeks}',
+          ],
+      ],
+  ];
+}
 
 String _scopeLabel(AppLocalizations l10n, MetricsReport report) =>
     report.operatorQueueName ?? l10n.operatorFilterAll;
-
-String _operatorName(AppLocalizations l10n, MetricsReport report, int i) =>
-    report.operatorLabel(
-      report.operators[i],
-      ownerLabel: l10n.ownerAttendant,
-      unknownLabel: l10n.formerOperator,
-    );
 
 List<String> _bucketLabels(AppLocalizations l10n) => [
   l10n.waitBucketUnder5,
@@ -321,28 +506,113 @@ String buildMetricsCsv(
       ),
     [
       [l10n.byOperatorTitle],
-      if (report.operators.isEmpty)
+      if (report.attendants.isEmpty)
         [l10n.noOperatorData]
       else ...[
         [
           l10n.csvAttendant,
           l10n.csvServed,
-          l10n.csvNoShow,
           l10n.csvAvgServiceMin,
+          l10n.csvDeviationPct,
+          l10n.csvRatePerHour,
+          l10n.csvIdlePct,
+          l10n.csvNoShow,
           l10n.csvAvgRating,
           l10n.csvRatingCount,
         ],
-        for (var i = 0; i < report.operators.length; i++)
+        for (final a in report.attendants)
           [
-            _operatorName(l10n, report, i),
-            '${report.operators[i].served}',
-            '${report.operators[i].noShow}',
-            _num(report.operators[i].avgServiceMin),
-            _num(report.operators[i].feedback.average),
-            '${report.operators[i].feedback.count}',
+            attendantName(l10n, report, a),
+            '${a.stats.served}',
+            _num(a.stats.avgServiceMin),
+            a.deviationPct == null ? '' : _SignedCell(a.deviationPct!),
+            _num(a.perHour),
+            _num(a.idlePct == null ? null : a.idlePct! * 100),
+            '${a.stats.noShow}',
+            _num(a.stats.feedback.average),
+            '${a.stats.feedback.count}',
           ],
       ],
     ],
+    if (report.abandonment != null && report.abandonment!.hasData) ...[
+      [
+        [l10n.abandonWaitTitle],
+        [
+          l10n.csvWaitBand,
+          l10n.csvAtRisk,
+          l10n.csvLeft,
+          l10n.csvAbandonRatePct,
+          l10n.csvAbandonPer10Pct,
+        ],
+        for (final b in report.abandonment!.waitBands)
+          [
+            bandLabel(l10n, b.startMin, b.endMin),
+            '${b.atRisk}',
+            '${b.left}',
+            _num(b.rate == null ? null : b.rate! * 100),
+            _num(b.ratePer10Min == null ? null : b.ratePer10Min! * 100),
+          ],
+        [
+          l10n.csvInflection,
+          report.abandonment!.inflection == null
+              ? ''
+              : bandLabel(
+                  l10n,
+                  report.abandonment!.inflection!.startMin,
+                  report.abandonment!.inflection!.endMin,
+                ),
+        ],
+      ],
+      if (report.abandonment!.hasEstimates)
+        [
+          [l10n.abandonEstimateTitle],
+          [
+            l10n.csvEstimateBand,
+            l10n.csvTotal,
+            l10n.csvLeft,
+            l10n.csvAbandonRatePct,
+          ],
+          for (final b in report.abandonment!.estimateBands)
+            [
+              bandLabel(l10n, b.startMin, b.endMin),
+              '${b.total}',
+              '${b.left}',
+              _num(b.rate == null ? null : b.rate! * 100),
+            ],
+          [
+            l10n.csvEstimateErrorMin,
+            report.abandonment!.accuracy.meanErrorMin == null
+                ? ''
+                : _SignedCell(report.abandonment!.accuracy.meanErrorMin!),
+          ],
+          [
+            l10n.csvEstimateAbsErrorMin,
+            _num(report.abandonment!.accuracy.meanAbsErrorMin),
+          ],
+        ],
+      [
+        [l10n.abandonHourTitle],
+        [
+          l10n.csvHour,
+          l10n.csvTotal,
+          l10n.csvLeft,
+          l10n.csvAbandonRatePct,
+          l10n.csvAvgWaitMin,
+        ],
+        for (final h in report.abandonment!.hours)
+          if (h.total > 0)
+            [
+              '${h.hour}',
+              '${h.total}',
+              '${h.left}',
+              _num(h.rate == null ? null : h.rate! * 100),
+              _num(h.avgWaitMin),
+            ],
+        [l10n.csvCapacityHours, report.abandonment!.capacityHours.join(' ')],
+      ],
+    ],
+    ..._goalsCsv(l10n, report),
+    ..._staffingCsv(l10n, report),
     [
       [l10n.waitDistributionTitle],
       [l10n.csvMetric, l10n.csvValue],
@@ -564,10 +834,6 @@ String _minutesLabel(AppLocalizations l10n, double? v) {
   return l10n.durationMinutes(v.round());
 }
 
-String _ratingLabel(OperatorStats s) => s.feedback.average == null
-    ? '-'
-    : '${s.feedback.average!.toStringAsFixed(1)} (${s.feedback.count})';
-
 String _pdfDelta(MetricKey key, Delta? d) {
   if (d == null) return '-';
   if (key == MetricKey.noShowRate) return '${_signed(d.abs)} p.p.';
@@ -681,6 +947,274 @@ List<pw.Widget> _demandPdf(AppLocalizations l10n, MetricsReport report) {
   ];
 }
 
+String _pdfBand(AppLocalizations l10n, int start, int? end) =>
+    bandLabel(l10n, start, end).replaceAll('\u2013', '-');
+
+List<pw.Widget> _abandonmentPdf(AppLocalizations l10n, AbandonmentReport a) {
+  String pct(double? v) => v == null ? '-' : (v * 100).toStringAsFixed(1);
+  return [
+    _section(l10n.abandonWaitTitle),
+    _table(
+      [
+        l10n.csvWaitBand,
+        l10n.csvAtRisk,
+        l10n.csvLeft,
+        l10n.csvAbandonRatePct,
+        l10n.csvAbandonPer10Pct,
+      ],
+      [
+        for (final b in a.waitBands)
+          [
+            _pdfBand(l10n, b.startMin, b.endMin),
+            '${b.atRisk}',
+            '${b.left}',
+            pct(b.rate),
+            pct(b.ratePer10Min),
+          ],
+      ],
+    ),
+    pw.SizedBox(height: 6),
+    pw.Text(
+      a.inflection == null
+          ? l10n.abandonInflectionNone(
+              (defaultInflectionThreshold * 100).round(),
+            )
+          : l10n.abandonInflectionFound(
+              _pdfBand(l10n, a.inflection!.startMin, a.inflection!.endMin),
+              (defaultInflectionThreshold * 100).round(),
+            ),
+      style: const pw.TextStyle(fontSize: 10),
+    ),
+    if (a.hasEstimates) ...[
+      _section(l10n.abandonEstimateTitle),
+      _table(
+        [
+          l10n.csvEstimateBand,
+          l10n.csvTotal,
+          l10n.csvLeft,
+          l10n.csvAbandonRatePct,
+        ],
+        [
+          for (final b in a.estimateBands)
+            [
+              _pdfBand(l10n, b.startMin, b.endMin),
+              '${b.total}',
+              '${b.left}',
+              pct(b.rate),
+            ],
+        ],
+      ),
+      pw.SizedBox(height: 6),
+      pw.Text(
+        '${l10n.csvEstimateErrorMin}: ${a.accuracy.meanErrorMin == null ? '-' : a.accuracy.meanErrorMin!.toStringAsFixed(1)}'
+        ' | ${l10n.csvEstimateAbsErrorMin}: ${a.accuracy.meanAbsErrorMin == null ? '-' : a.accuracy.meanAbsErrorMin!.toStringAsFixed(1)}',
+        style: const pw.TextStyle(fontSize: 10),
+      ),
+    ],
+    _section(l10n.abandonHourTitle),
+    _table(
+      [
+        l10n.csvHour,
+        l10n.csvTotal,
+        l10n.csvLeft,
+        l10n.csvAbandonRatePct,
+        l10n.csvAvgWaitMin,
+      ],
+      [
+        for (final h in a.hours)
+          if (h.total > 0)
+            [
+              hourLabel(h.hour),
+              '${h.total}',
+              '${h.left}',
+              pct(h.rate),
+              h.avgWaitMin == null ? '-' : h.avgWaitMin!.toStringAsFixed(1),
+            ],
+      ],
+    ),
+    pw.SizedBox(height: 6),
+    pw.Text(
+      '${l10n.csvCapacityHours}: ${a.capacityHours.isEmpty ? '-' : a.capacityHours.map(hourLabel).join(', ')}',
+      style: const pw.TextStyle(fontSize: 10),
+    ),
+  ];
+}
+
+List<pw.Widget> _goalsPdf(AppLocalizations l10n, MetricsReport r) {
+  if (!r.goals.hasGoals) return const [];
+  final kinds = _goalKinds(l10n, r.goals);
+  String pct(double? v) => v == null ? '-' : v.toStringAsFixed(1);
+  return [
+    _section(l10n.goalsSectionTitle),
+    _table(
+      [
+        l10n.csvGoalIndicator,
+        l10n.csvEvaluated,
+        l10n.csvWithinLimit,
+        l10n.csvPctWithinLimit,
+        l10n.csvTargetPct,
+        l10n.csvGoalMet,
+        l10n.csvWorstOverMin,
+      ],
+      [
+        for (final (name, g) in kinds)
+          [
+            name,
+            '${g.overall.total}',
+            '${g.overall.ok}',
+            pct(g.overall.pct == null ? null : g.overall.pct! * 100),
+            pct(g.overall.targetPct),
+            g.hasData ? (g.overall.met ? l10n.csvYes : l10n.csvNo) : '-',
+            pct(g.worstOverMin),
+          ],
+      ],
+    ),
+    _section(l10n.goalsMissedTitle),
+    if (kinds.every((k) => k.$2.missedDays.isEmpty && k.$2.missedHours.isEmpty))
+      pw.Text(
+        l10n.goalsMissedNone(defaultGoalMinSamples),
+        style: const pw.TextStyle(fontSize: 10),
+      )
+    else ...[
+      _table(
+        [
+          l10n.csvGoalIndicator,
+          l10n.csvDate,
+          l10n.csvEvaluated,
+          l10n.csvWithinLimit,
+          l10n.csvPctWithinLimit,
+          l10n.csvTargetPct,
+        ],
+        [
+          for (final (name, g) in kinds)
+            for (final d in g.missedDays)
+              [
+                name,
+                _dayKey(d.day),
+                '${d.bucket.total}',
+                '${d.bucket.ok}',
+                pct(d.bucket.pct! * 100),
+                pct(d.bucket.targetPct),
+              ],
+        ],
+      ),
+      for (final (name, g) in kinds)
+        if (g.missedHours.isNotEmpty)
+          pw.Padding(
+            padding: const pw.EdgeInsets.only(top: 4),
+            child: pw.Text(
+              '$name - ${l10n.csvMissedHours}: ${g.missedHours.map((h) => hourLabel(h.hour)).join(', ')}',
+              style: const pw.TextStyle(fontSize: 10),
+            ),
+          ),
+    ],
+  ];
+}
+
+List<pw.Widget> _staffingPdf(AppLocalizations l10n, MetricsReport r) {
+  final st = r.staffing;
+  if (st == null || !st.hasData) return const [];
+  final locale = l10n.localeName;
+  final g = st.grid;
+  final season = st.seasonality;
+  String signed(double v) => '${v > 0 ? '+' : ''}${v.toStringAsFixed(1)}';
+  return [
+    _section(l10n.staffTitle),
+    pw.Text(
+      '${l10n.csvAvgServiceMin}: ${g.avgServiceMin == null ? '-' : g.avgServiceMin!.toStringAsFixed(1)}'
+      ' | ${l10n.csvOccupancyPct}: ${(g.occupancy * 100).round()}'
+      ' | ${l10n.csvCoverageDays}: ${g.coverageDays}',
+      style: const pw.TextStyle(fontSize: 10),
+    ),
+    if (g.hasArrivals) ...[
+      pw.SizedBox(height: 6),
+      _table(
+        [
+          l10n.csvWeekday,
+          l10n.csvHour,
+          l10n.csvArrivalsPerHour,
+          l10n.csvRequiredStaff,
+          l10n.csvObservedStaff,
+          l10n.csvGapStaff,
+        ],
+        [
+          for (final row in g.cells)
+            for (final c in row)
+              if (c.arrivals > 0 || c.observed > 0)
+                [
+                  weekdayLabel(locale, c.weekday),
+                  hourLabel(c.hour),
+                  c.arrivals.toStringAsFixed(2),
+                  g.hasRequirement ? '${c.required}' : '-',
+                  c.observed.toStringAsFixed(2),
+                  g.hasRequirement ? signed(c.gap) : '-',
+                ],
+        ],
+      ),
+    ],
+    if (g.topDeficits.isNotEmpty) ...[
+      _section(l10n.staffTopTitle),
+      _table(
+        [
+          l10n.csvWeekday,
+          l10n.csvHour,
+          l10n.csvRequiredStaff,
+          l10n.csvObservedStaff,
+          l10n.csvGapStaff,
+        ],
+        [
+          for (final c in g.topDeficits)
+            [
+              weekdayLabel(locale, c.weekday),
+              hourLabel(c.hour),
+              '${c.required}',
+              c.observed.toStringAsFixed(2),
+              signed(c.gap),
+            ],
+        ],
+      ),
+    ],
+    if (season.weeks.isNotEmpty) ...[
+      _section(l10n.staffSeasonTitle),
+      if (season.insufficient)
+        pw.Text(
+          l10n.staffSeasonInsufficient(minSeasonWeeks, season.observedWeeks),
+          style: const pw.TextStyle(fontSize: 10),
+        )
+      else ...[
+        _table(
+          [l10n.csvWeekStart, l10n.csvArrivals],
+          [
+            for (final w in season.weeks) [_dayKey(w.weekStart), '${w.volume}'],
+          ],
+        ),
+        if (season.trendPct != null) ...[
+          pw.SizedBox(height: 6),
+          pw.Text(
+            '${l10n.csvTrendPct}: ${signed(season.trendPct!)}',
+            style: const pw.TextStyle(fontSize: 10),
+          ),
+        ],
+      ],
+    ],
+    if (season.recurring.isNotEmpty) ...[
+      _section(l10n.staffRecurringTitle),
+      _table(
+        [l10n.csvWeekday, l10n.csvHour, l10n.csvRecurringWeeks, l10n.csvTotal],
+        [
+          for (final c in season.recurring)
+            [
+              weekdayLabel(locale, c.weekday),
+              hourLabel(c.hour),
+              '${c.weeks}',
+              '${c.observedWeeks}',
+            ],
+        ],
+      ),
+    ],
+  ];
+}
+
 pw.Widget _comparisonPdf(
   AppLocalizations l10n,
   String firstHeader,
@@ -718,10 +1252,11 @@ Future<Uint8List> buildMetricsPdf({
   required AppLocalizations l10n,
   required MetricsReport report,
   required DateTime generatedAt,
+  @visibleForTesting bool compress = true,
 }) {
   final m = report.metrics;
   final pct = (m.noShowRate * 100).round();
-  final doc = pw.Document();
+  final doc = pw.Document(compress: compress);
   doc.addPage(
     pw.MultiPage(
       pageFormat: PdfPageFormat.a4,
@@ -834,28 +1369,42 @@ Future<Uint8List> buildMetricsPdf({
             style: const pw.TextStyle(fontSize: 10),
           ),
           pw.SizedBox(height: 6),
-          if (report.operators.isEmpty)
+          if (report.attendants.isEmpty)
             pw.Text(l10n.noOperatorData)
           else
             _table(
               [
                 l10n.csvAttendant,
                 l10n.csvServed,
-                l10n.csvNoShow,
                 l10n.csvAvgServiceMin,
+                l10n.csvDeviationPct,
+                l10n.csvRatePerHour,
+                l10n.csvIdlePct,
+                l10n.csvNoShow,
                 l10n.csvAvgRating,
               ],
               [
-                for (var i = 0; i < report.operators.length; i++)
+                for (final a in report.attendants)
                   [
-                    _operatorName(l10n, report, i),
-                    '${report.operators[i].served}',
-                    '${report.operators[i].noShow}',
-                    _minutesLabel(l10n, report.operators[i].avgServiceMin),
-                    _ratingLabel(report.operators[i]),
+                    attendantName(l10n, report, a),
+                    '${a.stats.served}',
+                    _minutesLabel(l10n, a.stats.avgServiceMin),
+                    a.deviationPct == null ? '-' : _signed(a.deviationPct!),
+                    a.perHour == null ? '-' : a.perHour!.toStringAsFixed(1),
+                    a.idlePct == null
+                        ? '-'
+                        : (a.idlePct! * 100).toStringAsFixed(1),
+                    '${a.stats.noShow}',
+                    a.stats.feedback.average == null
+                        ? '-'
+                        : a.stats.feedback.average!.toStringAsFixed(1),
                   ],
               ],
             ),
+          if (report.abandonment != null && report.abandonment!.hasData)
+            ..._abandonmentPdf(l10n, report.abandonment!),
+          ..._goalsPdf(l10n, report),
+          ..._staffingPdf(l10n, report),
           _section(l10n.waitDistributionTitle),
           pw.Wrap(
             spacing: 24,

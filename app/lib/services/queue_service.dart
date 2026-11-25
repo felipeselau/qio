@@ -8,6 +8,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 
 import '../models/alerts_config.dart';
 import '../models/expiry_config.dart';
+import '../models/queue_goals.dart';
 import '../models/history_entry.dart';
 import '../models/queue.dart';
 import '../models/queue_info.dart';
@@ -103,6 +104,7 @@ class QueueService {
     String? brandColor,
     AlertsConfig? alerts,
     ExpiryConfig? expiry,
+    QueueGoals? goals,
   }) async {
     await ensureUnderQueueLimit(_uid);
     final info = QueueInfo(
@@ -129,6 +131,7 @@ class QueueService {
       'brandColor': ?brandColor,
       if (alerts != null) 'alerts': alerts.toMap(),
       if (expiry != null && expiry.enabled) 'expiry': expiry.toMap(),
+      if (goals != null && goals.hasGoal) 'goals': goals.toMap(),
       if (mode == QueueMode.schedule) ...{
         'mode': mode.value,
         'slots': [for (final s in slots) s.toMap()],
@@ -179,6 +182,7 @@ class QueueService {
       brandColor: brandColor,
       alerts: alerts,
       expiry: expiry != null && expiry.enabled ? expiry : null,
+      goals: goals != null && goals.hasGoal ? goals : null,
       mode: mode,
       slots: slots,
     );
@@ -499,6 +503,14 @@ class QueueService {
     });
   }
 
+  Future<void> updateGoals(String queueId, QueueGoals? goals) async {
+    final error = goals?.validate();
+    if (error != null) throw FormatException(error.name);
+    await _firestore.collection('queues').doc(queueId).update({
+      'goals': goals == null ? FieldValue.delete() : goals.toMap(),
+    });
+  }
+
   Future<bool> _shouldAnonymizePhone(String queueId, bool? known) {
     return resolveAnonymizePhone(
       known: known ?? _anonymizeKnown[queueId],
@@ -572,6 +584,7 @@ class QueueService {
       brandColor: source.brandColor,
       alerts: source.alerts,
       expiry: source.expiry,
+      goals: source.goals,
     );
   }
 
@@ -707,6 +720,12 @@ class QueueService {
         .onValue
         .map((event) => event.snapshot.value),
   );
+
+  Stream<double?> watchAvgServiceMinAuto(String queueId) =>
+      _rtdb.ref('queues/$queueId/meta/avgServiceMinAuto').onValue.map((event) {
+        final v = event.snapshot.value;
+        return v is num && v.isFinite && v > 0 ? v.toDouble() : null;
+      });
 
   Future<QueueEntry?> callNext(String queueId) async {
     final metaRef = _rtdb.ref('queues/$queueId/meta');
@@ -883,6 +902,7 @@ class QueueService {
             'finishedAt': FieldValue.serverTimestamp(),
             if (entry.recalls > 0) 'recalls': entry.recalls,
             if (entry.skips > 0) 'skips': entry.skips,
+            if (entry.estimateMin != null) 'estimateMin': entry.estimateMin,
           });
     } on FirebaseException catch (e) {
       if (e.code != 'permission-denied') rethrow;

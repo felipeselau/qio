@@ -12,6 +12,7 @@ import '../../widgets/qio_responsive_body.dart';
 import '../../widgets/queue_panel/current_called_card.dart';
 import '../../widgets/queue_panel/waiting_tile.dart';
 import 'animated_entry_list.dart';
+import 'goal_risk_banner.dart';
 import 'queue_settings_sections.dart';
 import '../../theme/qio_palette.dart';
 
@@ -153,6 +154,13 @@ class QueuePanelBody extends StatelessWidget {
         final current = mine.isNotEmpty ? mine.first : null;
 
         final queueSection = <Widget>[
+          GoalRiskBanner(
+            queueId: queueId,
+            goals: queueSnap.data?.goals,
+            waiting: waiting.length,
+            manualAvgMin: queueSnap.data?.avgServiceMin ?? 10,
+            queues: service,
+          ),
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 250),
             switchInCurve: Curves.easeOut,

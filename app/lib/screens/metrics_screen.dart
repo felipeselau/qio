@@ -16,15 +16,19 @@ import '../services/group_service.dart';
 import '../services/history_metrics.dart';
 import '../services/metrics_export.dart';
 import '../services/metrics_trend.dart';
-import '../services/operator_metrics.dart';
+import '../services/attendant_metrics.dart';
 import '../services/operator_service.dart';
 import '../services/queue_analytics.dart';
 import '../services/queue_service.dart';
 import '../theme/qio_colors.dart';
 import '../theme/qio_text_styles.dart';
+import '../widgets/abandonment_section.dart';
+import '../widgets/attendants_section.dart';
+import '../widgets/bi_bars.dart';
 import '../widgets/demand_charts.dart';
 import '../widgets/delta_badge.dart';
 import '../widgets/group_compare_card.dart';
+import '../widgets/goals_section.dart';
 import '../widgets/group_overview_section.dart';
 import '../widgets/metrics_scope_picker.dart';
 import '../widgets/qio_card.dart';
@@ -33,7 +37,49 @@ import '../widgets/qio_skeleton.dart';
 import '../widgets/trend_chart.dart';
 import '../widgets/wait_effort_card.dart';
 import '../widgets/qio_responsive_body.dart';
+import '../widgets/staffing_section.dart';
 import '../theme/qio_palette.dart';
+
+@visibleForTesting
+int metricsReportBuilds = 0;
+
+class _ReportKey {
+  const _ReportKey({
+    required this.data,
+    required this.groups,
+    required this.period,
+    required this.custom,
+    required this.scope,
+    required this.operatorQueueId,
+    required this.locale,
+    required this.minute,
+  });
+
+  final List<QueueHistoryInput> data;
+  final List<QueueGroup> groups;
+  final HistoryPeriod period;
+  final DateRange? custom;
+  final MetricsScope scope;
+  final String? operatorQueueId;
+  final String locale;
+  final int minute;
+
+  @override
+  bool operator ==(Object other) =>
+      other is _ReportKey &&
+      identical(other.data, data) &&
+      identical(other.groups, groups) &&
+      other.period == period &&
+      other.custom == custom &&
+      other.scope == scope &&
+      other.operatorQueueId == operatorQueueId &&
+      other.locale == locale &&
+      other.minute == minute;
+
+  @override
+  int get hashCode =>
+      Object.hash(period, custom, scope, operatorQueueId, locale, minute);
+}
 
 class MetricsScreen extends StatefulWidget {
   const MetricsScreen({
@@ -195,9 +241,36 @@ class _MetricsScreenState extends State<MetricsScreen> {
     }
   }
 
+  _ReportKey? _reportKey;
+  MetricsReport? _reportValue;
+
   MetricsReport _report(AppLocalizations l10n, List<QueueHistoryInput> data) {
-    final scoped = filterByScope(data, _groups, _scope);
     final now = (widget.clock ?? DateTime.now)();
+    final key = _ReportKey(
+      data: data,
+      groups: _groups,
+      period: _period,
+      custom: _custom,
+      scope: _scope,
+      operatorQueueId: _operatorQueueId,
+      locale: l10n.localeName,
+      minute: now.millisecondsSinceEpoch ~/ 60000,
+    );
+    final cached = _reportValue;
+    if (cached != null && _reportKey == key) return cached;
+    metricsReportBuilds++;
+    final report = _buildReport(l10n, data, now);
+    _reportKey = key;
+    _reportValue = report;
+    return report;
+  }
+
+  MetricsReport _buildReport(
+    AppLocalizations l10n,
+    List<QueueHistoryInput> data,
+    DateTime now,
+  ) {
+    final scoped = filterByScope(data, _groups, _scope);
     return buildMetricsReport(
       data: scoped,
       scopeLabel: _scopeLabel(l10n),
@@ -592,6 +665,21 @@ class _MetricsScreenState extends State<MetricsScreen> {
             const SizedBox(height: 16),
           ],
           _buildOperatorSection(l10n, scoped, report),
+          if (report.abandonment != null && report.abandonment!.hasData) ...[
+            const SizedBox(height: 16),
+            AbandonmentSection(
+              report: report.abandonment!,
+              queueName: report.operatorQueueName,
+              truncated: report.truncated,
+              historyLimit: report.historyLimit,
+            ),
+          ],
+          const SizedBox(height: 16),
+          GoalsSection(report: report.goals),
+          if (report.staffing != null && report.staffing!.hasData) ...[
+            const SizedBox(height: 16),
+            StaffingSection(report: report.staffing!),
+          ],
           DemandCharts(report: report),
         ],
       ],
@@ -615,13 +703,20 @@ class _MetricsScreenState extends State<MetricsScreen> {
     List<QueueHistoryInput> data,
     MetricsReport report,
   ) {
-    final merged = report.operators;
+    final attendants = report.attendants;
     final truncated = report.truncated;
     final names = report.operatorNames;
+    String nameOf(AttendantRow r) => r.attendantId == null
+        ? l10n.ownerAttendant
+        : names[r.attendantId] ?? l10n.formerOperator;
     return Column(
+      key: const ValueKey('attendants-section'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(l10n.byOperatorTitle, style: context.qioText.heading3),
+        Semantics(
+          header: true,
+          child: Text(l10n.byOperatorTitle, style: context.qioText.heading3),
+        ),
         const SizedBox(height: 8),
         Semantics(
           label: l10n.operatorFilterLabel,
@@ -653,22 +748,13 @@ class _MetricsScreenState extends State<MetricsScreen> {
           ),
         ],
         const SizedBox(height: 8),
-        if (merged.isEmpty)
+        if (attendants.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: Text(l10n.noOperatorData, style: context.qioText.body),
           )
         else
-          for (final s in merged)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: _OperatorRow(
-                stats: s,
-                name: s.attendantId == null
-                    ? l10n.ownerAttendant
-                    : names[s.attendantId] ?? l10n.formerOperator,
-              ),
-            ),
+          AttendantsBody(rows: attendants, nameOf: nameOf),
       ],
     );
   }
@@ -678,45 +764,6 @@ String _minutes(AppLocalizations l10n, double? v) {
   if (v == null) return '—';
   if (v < 1) return l10n.durationLessThanMinute;
   return l10n.durationMinutes(v.round());
-}
-
-class _OperatorRow extends StatelessWidget {
-  const _OperatorRow({required this.stats, required this.name});
-
-  final OperatorStats stats;
-  final String name;
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final counts = l10n.operatorCountsLine(stats.served, stats.noShow);
-    final rating = stats.feedback.average == null
-        ? '—'
-        : '${stats.feedback.average!.toStringAsFixed(1)} ★ (${stats.feedback.count})';
-    final detail = l10n.operatorDetailLine(
-      _minutes(l10n, stats.avgServiceMin),
-      rating,
-    );
-    return Semantics(
-      label: '$name. $counts. $detail',
-      child: ExcludeSemantics(
-        child: SizedBox(
-          width: double.infinity,
-          child: QioCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(name, style: context.qioText.bodyMedium),
-                const SizedBox(height: 2),
-                Text(counts, style: context.qioText.caption),
-                Text(detail, style: context.qioText.caption),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _Stat extends StatelessWidget {
@@ -751,45 +798,9 @@ class _HourlyChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final max = distribution.fold<int>(0, (m, v) => v > m ? v : m);
-    return Semantics(
-      label: summary,
-      child: ExcludeSemantics(
-        child: Column(
-          children: [
-            SizedBox(
-              height: 100,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  for (var h = 0; h < 24; h++)
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 1),
-                        child: Container(
-                          height: max == 0 ? 2 : 2 + 98 * distribution[h] / max,
-                          decoration: BoxDecoration(
-                            color: distribution[h] == 0
-                                ? context.qio.gray200
-                                : QioColors.primary,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 4),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                for (final h in const [0, 6, 12, 18, 23])
-                  Text('${h}h', style: context.qioText.caption),
-              ],
-            ),
-          ],
-        ),
-      ),
+    return HourBars(
+      fractions: [for (final v in distribution) fractionOf(v, max)],
+      semantics: summary,
     );
   }
 }
